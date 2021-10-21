@@ -1,0 +1,3 @@
+(library
+ (public_name dromedary.typing)
+ (name dromedary_typing))
