@@ -1,0 +1,4 @@
+(executable
+ (public_name dromedary)
+ (name main)
+ (libraries dromedary))
