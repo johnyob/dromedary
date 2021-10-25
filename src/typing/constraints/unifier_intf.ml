@@ -21,6 +21,7 @@
    known as the [terminal]. *)
 
 open Intf
+open Base
 
 (* ------------------------------------------------------------------------- *)
 
@@ -85,10 +86,6 @@ module type S = sig
   val get_metadata : variable -> metadata
   val set_metadata : variable -> metadata -> unit
 
-  (* [hash var] computes the hash of the variable [var]. *)
-
-  val hash : variable -> int
-
   (* [is_rigid var] returns true if [var] is a rigid variable. *)
 
   val is_rigid : variable -> bool
@@ -133,6 +130,32 @@ module type S = sig
   exception Cycle of variable
 
   val occurs_check : variable -> unit
+
+  (* [hash var] computes the hash of the variable [var]. 
+     Based on it's integer field: id. *)
+
+  val hash : variable -> int
+
+  (* [Variable_hash_key] is a module implementation for [Hashtbl.Key.S]
+     for variables. 
+     
+     We extensively make use of efficient (imperivative) datastructures
+     such as [Hashtbl] or [Hash_set]. *)
+
+  module Variable_hash_key : Hashtbl.Key.S with type t = variable
+
+  (* [fold var ~leaf ~node ~init] will perform a bottom-up fold
+     over the (assumed) acyclic graph defined by the variable [var]. 
+     
+     [leaf] is performed when we reach a variable with no terminal (a leaf).
+     [node] is performed when we reach a variable with a terminal (a node).
+     [init] is the initial accumulator value. *)
+
+  val fold
+    :  variable
+    -> leaf:(variable -> 'a)
+    -> node:('a former -> 'a)
+    -> 'a
 end
 
 (* ------------------------------------------------------------------------- *)
