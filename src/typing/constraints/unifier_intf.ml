@@ -54,108 +54,88 @@ module type S = sig
   type 'a former
   type metadata
 
-  (* There are two kinds of variables. A [Flexible] variable can
-      be unified with other variables and types. A [Rigid] (in general) 
-      cannot be unified. *)
+  module Type : sig
 
-  type variable_kind =
-    | Flexible
-    | Rigid
-  [@@deriving sexp_of, eq]
+    (* There are two kinds of variables. A [Flexible] variable can
+       be unified with other variables and types. A [Rigid] (in general) 
+       cannot be unified. *)
 
-  (* sexp-able for error reporting and prettying printing. *)
+    type flexibility =
+      | Flexible
+      | Rigid
+    [@@deriving sexp_of, eq]
 
-  (* Unification involves [variable]s, which are nodes within 
-      a multi-equation. *)
+    (* sexp-able for error reporting and prettying printing. *)
 
-  type variable [@@deriving sexp_of, compare]
+    type t [@@deriving sexp_of, compare]
 
-  (* Each variable consists of:
-      - a unique identifier [id] (used to define a total ordering).
-      - a variable kind [kind].
-      - a mutable [terminal], which contains the [terminal] of the 
-        multi-equation.
-      - a mutable piece of [metadata]. 
-      
+    type structure
+
+    (* Each graph type node consists of:
+        - a unique identifier [id] (used to define a total ordering).
+        - a mutable [structure], which contains the node structure.
+        - a mutable piece of [metadata]. 
+        
       They are accessed via setters and getters: *)
 
-  val id : variable -> int
-  val kind : variable -> variable_kind
-  val get_terminal : variable -> variable former option
-  val set_terminal : variable -> variable former option -> unit
-  val get_metadata : variable -> metadata
-  val set_metadata : variable -> metadata -> unit
+    val id : t -> int
+    
+    val get_structure : t -> structure
+    val set_structure : t -> structure -> unit
+    
+    val get_metadata : t -> metadata
+    val set_metadata : t -> metadata -> unit    
 
-  (* [is_rigid var] returns true if [var] is a rigid variable. *)
+    (* [hash t] computes the hash of the graph type node [t]. 
+       Based on it's integer field: id. *)
 
-  val is_rigid : variable -> bool
+    val hash : t -> int
 
-  (* [is_flexible var] returns true if [var] is a flexible variable. *)
+  end
 
-  val is_flexible : variable -> bool
+  (* [fresh_var flex data] returns a fresh variable node 
+     with flexibility [flex], and metadata [data]. *)
 
-  (* [fresh kind ~terminal ~data ()] returns a fresh variable with kind [kind],
-      terminal [terminal] (optional argument) and data [data]. *)
+  val fresh_var
+    :  Type.flexibility
+    -> metadata
+    -> Type.t
 
-  val fresh
-    :  variable_kind
-    -> ?terminal:variable former
-    -> metadata:metadata
-    -> unit
-    -> variable
+  (* [fresh_form form data] returns a fresh type former node
+    with metadata [data]. *)
 
-  (* [unify var1 var2] equates the variables [var1] and [var2], 
-      and their associated multi-equations.
+  val fresh_form
+    :  Type.t former
+    -> metadata
+    -> Type.t
+
+  (* [unify t1 t2] equates the graph type nodes [t1] and [t2], 
+     and forms a multi-equation node.
       
-      Identifiers are merged arbitrarily. 
-      Terminal are unified recursively, using [iter2]. 
-      Metadata are merged using [Metadata.merge].
+     Identifiers are merged arbitrarily. 
+     Formers are unified recursively, using [iter2]. 
+     Metadata are merged using [Metadata.merge].
 
-      [Unify (var1, var2)] is raised if the two variables cannot
-      be unified. This occurs with rigid variables or incompatable
-      terminals. 
+     [Unify (t1, t2)] is raised if the two node cannot
+     be unified. This occurs with rigid variables or incompatable
+     formers. 
 
-      No occurs check is implemented (this is separate from 
-      unification). See {!occurs_check}. *)
+     No occurs check is implemented (this is separate from 
+     unification). See {!occurs_check}. *)
 
-  exception Unify of variable * variable
+  exception Unify of Type.t * Type.t
 
-  val unify : variable -> variable -> unit
+  val unify : Type.t -> Type.t -> unit
 
-  (* [occurs_check var] detects whether there is 
-      a cycle in the multi-equation associated with var. 
+  (* [occurs_check t] detects whether there is 
+      a cycle in the graph type [t]. 
       
-      If a cycle is detected, [Cycle var] is raised. *)
+      If a cycle is detected, [Cycle t] is raised. *)
 
-  exception Cycle of variable
+  exception Cycle of Type.t
 
-  val occurs_check : variable -> unit
+  val occurs_check : Type.t -> unit
 
-  (* [hash var] computes the hash of the variable [var]. 
-     Based on it's integer field: id. *)
-
-  val hash : variable -> int
-
-  (* [Variable_hash_key] is a module implementation for [Hashtbl.Key.S]
-     for variables. 
-     
-     We extensively make use of efficient (imperivative) datastructures
-     such as [Hashtbl] or [Hash_set]. *)
-
-  module Variable_hash_key : Hashtbl.Key.S with type t = variable
-
-  (* [fold var ~leaf ~node ~init] will perform a bottom-up fold
-     over the (assumed) acyclic graph defined by the variable [var]. 
-     
-     [leaf] is performed when we reach a variable with no terminal (a leaf).
-     [node] is performed when we reach a variable with a terminal (a node).
-     [init] is the initial accumulator value. *)
-
-  val fold
-    :  variable
-    -> leaf:(variable -> 'a)
-    -> node:('a former -> 'a)
-    -> 'a
 end
 
 (* ------------------------------------------------------------------------- *)

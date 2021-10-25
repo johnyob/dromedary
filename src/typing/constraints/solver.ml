@@ -14,11 +14,14 @@
 (* This module implements a constraint solver, based on unification
    under a mixed prefix (rigid variables). *)
 
-open Base
-open Intf
+(* open Base
+open Intf *)
 
 (* ------------------------------------------------------------------------- *)
 
+(* TODO: Refactor solver *)
+
+(* 
 module Make (Term_var : Term_var) (Types : Types) = struct
   (* ----------------------------------------------------------------------- *)
 
@@ -177,4 +180,4 @@ module Make (Term_var : Term_var) (Types : Types) = struct
   (* ----------------------------------------------------------------------- *)
 
 
-end
+end *)

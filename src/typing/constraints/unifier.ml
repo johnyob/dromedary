@@ -33,100 +33,90 @@ include Unifier_intf
 
 module Make (Former : Type_former) (Metadata : Metadata) :
   S with type 'a former := 'a Former.t and type metadata := Metadata.t = struct
-  (* TODO: Investigate usage of variable_kind at the type level *)
+  (* Unification involves unification types, using the union-find 
+     data structure. 
+     
+     These are referred to as "graph types" in the dissertation. 
+     While are formalization doesn't exactly match our implementation, 
+     the notion provides useful insight. *)
 
-  (* Unification involves [variable]s, using the union-find data structure. *)
+  module Type = struct
+    (* A variable is either flexible or rigid.
 
-  (* A variable is either flexible or rigid.
-     A flexible variable may be unified with other types / variables.
-     Whereas a rigid variable cannot, it acts as a "skolem constant". *)
+       A flexible variable may be unified with other types / variables.
+       Whereas a rigid variable cannot, it acts as a "skolem constant". *)
 
-  type variable_kind =
-    | Flexible
-    | Rigid
-  [@@deriving sexp_of, eq]
+    type flexibility =
+      | Flexible
+      | Rigid
+    [@@deriving sexp_of, eq]
 
-  type variable = variable_desc Union_find.t [@@deriving sexp_of]
+    (* A graph type consists of a [Union_find] node,
+       allowing reasoning w/ multi-equations of nodes. *)
 
-  (* Unification descriptors contain information related to the variable.
-   
-     Variables may be viewed as pointers into "multi-equitions", since
-     [Union_find.node] denotes a node in an equivalence class, with 
-     descriptors describing the equivalence class. 
+    type t = desc Union_find.t [@@deriving sexp_of]
 
-    Every multi-equation is assigned a global identifier [id].
-    On [fresh], an identifier is allocated. On [union], an arbitrary
-    identifier is used from the 2 arguments.
-    
-    Every multi-equation contains a set of variables of a given 
-    [kind]. See {!variable_kind}.
+    (* Graph type node descriptors contain information related to the 
+       node that dominates the multi-equation.
 
-    Every multi-equation is either standard, or non-standard. 
-    In a non-standard multi-equation, there is no terminal,
-    hence the field [terminal] is [None]. In a standard multi-equvation
-    [terminal] is [Some t], where [t] is the non-variable member of the 
-    equation. 
-    
-    Note that we use "shallow-types" (namely type formers whose arguments
-    are variables), this is an optimization. *)
-  and variable_desc =
-    { id : int
-    ; kind : variable_kind
-    ; mutable terminal : variable Former.t option
-    ; mutable metadata : Metadata.t
-    }
+       Each node contains a global unique identifier [id]. 
+       This is allocated on [fresh]. On [union], an arbitrary 
+       identifier is used from the 2 arguments. 
+       
+       We use this identifier [id] for a total ordering on nodes, often 
+       used for efficient datastructures such as [Hashtbl] or [Hash_set]. 
 
-  (* ------------------------------------------------------------------------- *)
+       Each descriptor stores the node structure [structure].
+       It is either a variable or a type former (with graph type node 
+       children). 
+       
+       Each node also maintains some mutable metadata [metadata], whose
+       purpose is not related to unification. 
+       
+       Note: the only operation performed by the unifier wrt metadata is
+       the merging of metadata on unification. No further traversals / updates
+       are implemented here. *)
+    and desc =
+      { id : int
+      ; mutable structure : structure
+      ; mutable metadata : Metadata.t
+      }
 
-  (* Setters and Getters *)
+    (* Graph type node structures are either variables or type
+       formers. 
+       
+       A variable denotes it's flexibility, using {!flexibility}.
+       This is required for unification under a mixed prefix. *)
+    and structure =
+      | Var of { mutable flexibility : flexibility }
+      | Form of t Former.t
 
-  let id var = (Union_find.find var).id
-  let kind var = (Union_find.find var).kind
-  let get_terminal var = (Union_find.find var).terminal
-  let set_terminal var terminal = (Union_find.find var).terminal <- terminal
-  let get_metadata var = (Union_find.find var).metadata
-  let set_metadata var metadata = (Union_find.find var).metadata <- metadata
+    (* --------------------------------------------------------------------- *)
 
-  (* ------------------------------------------------------------------------- *)
+    (* Setters and Getters *)
 
-  (* [is_rigid var] returns true if [var] is a rigid variable. *)
-  let is_rigid var =
-    match kind var with
-    | Rigid -> true
-    | Flexible -> false
+    let id t = (Union_find.find t).id
+    let get_structure t = (Union_find.find t).structure
+    let set_structure t structure = (Union_find.find t).structure <- structure
+    let get_metadata t = (Union_find.find t).metadata
+    let set_metadata t metadata = (Union_find.find t).metadata <- metadata
 
+    (* --------------------------------------------------------------------- *)
 
-  (* [is_flexible] returns true if [var] is a flexible variable. *)
-  let is_flexible var =
-    match kind var with
-    | Flexible -> true
-    | Rigid -> false
+    (* [compare t1 t2] computes the ordering of [t1, t2],
+      based on their unique identifiers. *)
 
+    let compare t1 t2 = Int.compare (id t1) (id t2)
 
-  (* [is_unifiable_desc desc1 desc2] determines whether 2
-     multi-equations w/ descriptors [desc1] [desc2] can be unified.  *)
-  let is_unifiable_desc desc1 desc2 =
-    (* There are 2 cases where rigid variables may be unified:
-        - a : Rigid, a : Rigid 
-        - a : Rigid, 'a : Flexible and 'a is belongs to a 
-          non-standard multi-equation. 
-          
-       The first case is handled by {union_find.ml}. *)
-    not
-      ((equal_variable_kind desc1.kind Rigid && Option.is_some desc2.terminal)
-      || (equal_variable_kind desc2.kind Rigid && Option.is_some desc1.terminal)
-      )
+    (* [hash t] computes the hash of the graph type [t]. 
+       Based on it's integer field: id. *)
 
+    let hash t = Hashtbl.hash (id t)
+  end
 
-  (* [merge_kind_desc desc1 desc2] computes the resultant kind
-     of the multi-equation after unification. *)
-  let merge_kind_desc desc1 desc2 =
-    match desc1.kind, desc2.kind with
-    | Rigid, _ | _, Rigid -> Rigid
-    | _ -> Flexible
+  open Type
 
-
-  (* ------------------------------------------------------------------------- *)
+  (* ----------------------------------------------------------------------- *)
 
   (* See: https://github.com/janestreet/base/issues/121 *)
   let post_incr r =
@@ -135,146 +125,158 @@ module Make (Former : Type_former) (Metadata : Metadata) :
     result
 
 
-  (* [fresh kind ?terminal ~metadata ()] creates a fresh variable. *)
+  (* [fresh structure metadata] creates a fresh node. *)
   let fresh =
     let id = ref 0 in
-    fun kind ?terminal ~metadata () ->
-      Union_find.fresh { id = post_incr id; kind; terminal; metadata }
+    fun structure metadata ->
+      Union_find.fresh { id = post_incr id; structure; metadata }
 
 
   (* TODO: fresh_list *)
 
-  (* ------------------------------------------------------------------------- *)
+  (* [fresh_var flexibility metadata] creates a fresh variable node. *)
+  let fresh_var flexibility metadata = fresh (Var { flexibility }) metadata
 
-  exception Unify_desc
-  exception Unify of variable * variable
+  (* [fresh_form form metadata] creates a fresh type former node. *)
+  let fresh_form form metadata = fresh (Form form) metadata
 
-  let rec unify_ = Union_find.union ~f:unify_desc
+  (* ----------------------------------------------------------------------- *)
+
+  exception Unify_rigid
+
+  (* [unify_exn] unifies two graph types. No exception handling is 
+     performed here. This is an internal function.
+     
+     Possible exceptions include:
+     - [Former.Iter2], raised when executing Former.iter2 in {unify_form}.
+     - [Unify_rigid], raised when incorrectly unifying a rigid variable.
+
+     See {!unify}. *)
+
+  let rec unify_exn = Union_find.union ~f:unify_desc
+
+  (* ----------------------------------------------------------------------- *)
+
+  (* [unify_desc desc1 desc2] unifies the descriptors of the graph types
+     (of multi-equations). *)
 
   and unify_desc desc1 desc2 =
-    if is_unifiable_desc desc1 desc2
-    then
-      { id = desc1.id
-      ; kind = merge_kind_desc desc1 desc2
-      ; terminal = unify_terminal desc1.terminal desc2.terminal
-      ; metadata = Metadata.merge desc1.metadata desc2.metadata
-      }
-    else raise Unify_desc
+    { id = desc1.id
+    ; structure = unify_structure desc1.structure desc2.structure
+    ; metadata = Metadata.merge desc1.metadata desc2.metadata
+    }
+
+  (* ----------------------------------------------------------------------- *)
+
+  (* [unify_structure structure1 structure2] unifies two graph type node
+     structures. We handle rigid variables here. *)
+
+  and unify_structure structure1 structure2 =
+    match structure1, structure2 with
+    (* Unification of variables. *)
+
+    (* Unification is permitted between distinct variables only if 
+       both variables are *not* rigid.
+  
+       In the case of 2 rigid variable, we raise [Unify_rigid].
+
+       We may unify a rigid variable with itself. However, this case does 
+       not arise here since [Union_find.union] checks physical equality 
+       before before [unify_structure] is executed. *)
+
+    | Var { flexibility = Rigid }, Var { flexibility = Rigid } ->
+      raise Unify_rigid
+    
+    | Var { flexibility = Rigid }, Var { flexibility = Flexible }
+    | Var { flexibility = Flexible }, Var { flexibility = Rigid } ->
+      Var { flexibility = Rigid }
+    
+    | Var { flexibility = Flexible }, Var { flexibility = Flexible } ->
+      Var { flexibility = Flexible }
+
+    (* Unification of variables (leaves) and type formers (internal nodes). *)
+
+    (* We may unify a flexible variable with a type former, yielding
+       the same type former. 
+
+       Note that no propagation of metadata is performed. This is required
+       by external modules. See {!generalization.ml}. *)
+    | Var { flexibility = Flexible }, Form form
+    
+    (* Unification between a rigid variable and a type former is not 
+       permitted. We raise [Unify_rigid]. *)
+    
+    | Form form, Var { flexibility = Flexible } -> Form form
+    | Var { flexibility = Rigid }, Form _ | Form _, Var { flexibility = Rigid }
+      -> raise Unify_rigid 
+    
+    (* Unification between type formers. *)
+    
+    (* We may unify type formers recursively. See {!unify_form}. *)
+    | Form form1, Form form2 -> Form (unify_form form1 form2)
 
 
-  and unify_terminal terminal1 terminal2 =
-    Option.merge
-      ~f:(fun typ1 typ2 ->
-        Former.iter2 ~f:unify_ typ1 typ2;
-        typ1)
-      terminal1
-      terminal2
+  (* ----------------------------------------------------------------------- *)
+
+  (* [unify_form form1 form2] recursively unifies 2 type formers.
+
+     Here we use our internal unification function [unify_exn],
+     to allow exception propagation to the top-level call. *)
+
+  and unify_form form1 form2 =
+    Former.iter2 ~f:unify_exn form1 form2;
+    form1
 
 
-  let unify var1 var2 =
-    try unify_ var1 var2 with
-    | _ -> raise (Unify (var1, var2))
+  (* ----------------------------------------------------------------------- *)
+
+  exception Unify of Type.t * Type.t
+
+  let unify t1 t2 =
+    try unify_exn t1 t2 with
+    | Former.Iter2 | Unify_rigid -> raise (Unify (t1, t2))
 
 
-  (* ------------------------------------------------------------------------- *)
+  (* ----------------------------------------------------------------------- *)
 
-  (* [compare_variable var1 var2] computes the ordering of [var1, var2],
-     based on their unique identifiers. *)
+  exception Cycle of Type.t
 
-  let compare_variable var1 var2 = Int.compare (id var1) (id var2)
-
-  (* [hash var] computes the hash of the variable [var]. 
-     Based on it's integer field: id. *)
-
-  let hash var = Hashtbl.hash (id var)
-
-  (* [Variable_hash_key] is a module implementation for [Hashtbl.Key.S]
-     for variables. 
-     
-     We extensively make use of efficient (imperivative) datastructures
-     such as [Hashtbl] or [Hash_set]. *)
-
-  module Variable_hash_key : Hashtbl.Key.S with type t = variable = struct
-    type t = variable
-
-    let compare = compare_variable
-    let hash = hash
-    let sexp_of_t = sexp_of_variable
-  end
-
-  (* ------------------------------------------------------------------------- *)
-
-  exception Cycle of variable
-
-  (* [occurs_check var] detects whether there is 
-     a cycle in the multi-equation associated with [var]. 
+  (* [occurs_check t] detects whether there is 
+     a cycle in the graph type [t]. 
       
-     If a cycle is detected, [Cycle var] is raised.
+     If a cycle is detected, [Cycle t] is raised.
      
      It is named [occurs_check] for historical reasons. *)
 
   let occurs_check =
     (* Hash table records the variables that are grey ([false])
        or black ([true]). *)
-    let table = Hashtbl.create (module Variable_hash_key) in
+    let table = Hashtbl.create (module Type) in
     (* Recursive loop that traverses the graph, checking 
        for cycles. *)
-    let rec loop var =
+    let rec loop t =
       try
         (* We raise an exception [Not_found_s] instead of using
            an option, since it is more efficient.
            
            No heap allocation. *)
-        let visited = Hashtbl.find_exn table var in
+        let visited = Hashtbl.find_exn table t in
         (* A cycle has occurred is the variable is grey. *)
-        if not visited then raise (Cycle var)
+        if not visited then raise (Cycle t)
       with
       | Not_found_s _ ->
-        (* Mark this variable as grey. *)
-        Hashtbl.set table ~key:var ~data:false;
-        (* Visit children *)
-        Option.iter ~f:(Former.iter ~f:loop) (get_terminal var);
-        (* Mark this variable as black. *)
-        Hashtbl.set table ~key:var ~data:true
+        (match get_structure t with
+        | Var _ ->
+          (* A variable is a leaf. Hence no traversal is
+             required, so simply mark as visited. *)
+          Hashtbl.set table ~key:t ~data:true
+        | Form form ->
+          (* Mark this node as grey. *)
+          Hashtbl.set table ~key:t ~data:false;
+          (* Visit children *)
+          Former.iter ~f:loop form;
+          (* Mark this variable as black. *)
+          Hashtbl.set table ~key:t ~data:true)
     in
     loop
-
-
-  (* ------------------------------------------------------------------------- *)
-
-  (* [fold var ~leaf ~node ~init] will perform a bottom-up fold
-     over the (assumed) acyclic graph defined by the variable [var]. 
-     
-     [leaf] is performed when we reach a variable with no terminal (a leaf).
-     [node] is performed when we reach a variable with a terminal (a node).
-     [init] is the initial accumulator value. *)
-
-  let fold
-      (type a)
-      var
-      ~(leaf : variable -> a)
-      ~(node : a Former.t -> a)
-      : a
-    =
-    (* Hash table records whether variable has been visited, and 
-       it's computed value. *)
-    let visited : (variable, a) Hashtbl.t =
-      Hashtbl.create (module Variable_hash_key)
-    in
-    (* Recursive loop, folding over the graph, with accumulator
-       [acc]. *)
-    let rec loop var =
-      try Hashtbl.find_exn visited var with
-      | Not_found_s _ ->
-        let result =
-          match get_terminal var with
-          | None -> leaf var
-          | Some t -> node (Former.map ~f:loop t)
-        in
-        (* We assume we can set [var] in [visited] *after* traversing
-           it's children, since the graph is acyclic. *)
-        Hashtbl.set visited ~key:var ~data:result;
-        result
-    in
-    loop var
 end
