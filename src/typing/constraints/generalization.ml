@@ -83,6 +83,8 @@ module Make (Former : Type_former) = struct
 
   type level = int [@@deriving sexp_of]
 
+  let outermost_level = 0
+
   (* To merge two arbitrary levels, we take their minimum. *)
 
   let merge_level = min
@@ -126,9 +128,7 @@ module Make (Former : Type_former) = struct
 
   let set_level typ level = Tag.set_level (U.Type.get_metadata typ) level
   let get_level typ = Tag.get_level (U.Type.get_metadata typ)
-
-  let is_generic typ = 
-    Tag.is_generic (U.Type.get_metadata typ)
+  let is_generic typ = Tag.is_generic (U.Type.get_metadata typ)
 
   let is_generic_at typ level =
     let tag = U.Type.get_metadata typ in
@@ -185,7 +185,7 @@ module Make (Former : Type_former) = struct
 
   (* The current number of stack frames. *)
 
-  let current_level : level ref = ref 0
+  let current_level : level ref = ref outermost_level
 
   (* Active regions. *)
 
@@ -203,17 +203,54 @@ module Make (Former : Type_former) = struct
   (* [exit ()] exits the current stack frame. *)
 
   let exit () =
-    Hash_set.clear (Vec.get_exn regions !current_level);
     Int.decr current_level
+
 
   let set_region typ = Hash_set.add (Vec.get_exn regions (get_level typ)) typ
 
   (* ----------------------------------------------------------------------- *)
 
   (* Generalization: TODO *)
-  let update_levels () = assert false
 
-  let generalize _typ = assert false
+  (* TODO: Document
+     Assumptions: Acyclic
+     Problems: Visits nodes multiple times! *)
+
+  let update_level typ level = if level < get_level typ then set_level typ level
+  let is_young typ = Hash_set.mem (Vec.get_exn regions !current_level) typ
+  let young_generation () = Vec.get_exn regions !current_level
+
+  let update_levels () =
+    let rec loop typ level =
+      update_level typ level;
+      if is_young typ
+      then (
+        match U.Type.get_structure typ with
+        | U.Type.Var _ -> ()
+        | U.Type.Form form ->
+          update_level
+            typ
+            (Former.fold
+               form
+               ~f:(fun typ acc ->
+                 loop typ level;
+                 max (get_level typ) acc)
+               ~init:outermost_level))
+    in
+    Hash_set.iter ~f:(fun typ -> loop typ (get_level typ)) (young_generation ())
+
+
+  let update_regions () =
+    Hash_set.iter (young_generation ()) ~f:(fun typ ->
+        if get_level typ < !current_level then set_region typ else lift typ)
+    
+  let generalize typ =
+    U.occurs_check typ;
+    update_levels ();
+    update_regions ();
+    Hash_set.clear (Vec.get_exn regions !current_level);
+    { root = typ; level = !current_level } 
+
 
   (* ----------------------------------------------------------------------- *)
 
@@ -239,10 +276,12 @@ module Make (Former : Type_former) = struct
     in
     Hash_set.add variable_set typ
 
+
   let[@inline] empty_variables () =
     { flexible = Hash_set.create (module U.Type)
     ; rigid = Hash_set.create (module U.Type)
     }
+
 
   (* ----------------------------------------------------------------------- *)
 
