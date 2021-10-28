@@ -94,37 +94,29 @@ module Make (Former : Type_former) = struct
   (* See above discussion for the motiviation of tags. *)
 
   module Tag = struct
-    exception Generic_mutation 
+    exception Generic_mutation
 
     type t =
-      | Instance of { mutable level : level }
-      | Generic of level
+      { mutable level : level
+      ; mutable is_generic : bool
+      }
     [@@deriving sexp_of]
 
     (* TODO: Add additional information to the exception. *)
     let merge t1 t2 =
-      match t1, t2 with
-      | Instance { level = l1 }, Instance { level = l2 } ->
-        Instance { level = merge_level l1 l2 }
-      | _, _ -> raise Generic_mutation
+      if t1.is_generic || t2.is_generic then raise Generic_mutation;
+      { level = merge_level t1.level t2.level; is_generic = false }
 
-    let set_level t level' = 
-      match t with
-      | Instance level -> level.level <- level'
-      | Generic _ -> raise Generic_mutation
 
-    let get_level t = 
-      match t with
-      | Instance { level } -> level
-      | Generic level -> level
+    let set_level t level =
+      if t.is_generic then raise Generic_mutation;
+      t.level <- level
 
-    let lift t = 
-      match t with
-      | Instance { level } -> Generic level 
-      | _ -> t
 
+    let get_level t = t.level
+    let is_generic t = t.is_generic
+    let lift t = t.is_generic <- true
   end
-
 
   (* ----------------------------------------------------------------------- *)
 
@@ -133,33 +125,23 @@ module Make (Former : Type_former) = struct
   module U = Unifier.Make (Former) (Tag)
 
   let set_level typ level = Tag.set_level (U.Type.get_metadata typ) level
-
   let get_level typ = Tag.get_level (U.Type.get_metadata typ)
 
-  (* TODO: Consider replacing set w/ update => set is now a derived 
-     operator? *)
+  let is_generic typ = 
+    Tag.is_generic (U.Type.get_metadata typ)
 
-  let lift typ = U.Type.set_metadata typ (Tag.lift (U.Type.get_metadata typ))
+  let is_generic_at typ level =
+    let tag = U.Type.get_metadata typ in
+    Tag.is_generic tag && Tag.get_level tag = level
 
-  let fresh_var flexibility level = U.fresh_var flexibility (Instance { level })
 
-  (* ----------------------------------------------------------------------- *)
+  let lift typ = Tag.lift (U.Type.get_metadata typ)
 
-  (* Generalization state *)
+  let fresh_var flexibility level =
+    U.fresh_var flexibility { level; is_generic = false }
 
-  (* We maintain the current level of the stack frame. *)
 
-  let current_level = ref 0
-
-  (* [enter ()] creates a new stack frame and enter it. *)
-
-  let enter () = 
-    Int.incr current_level
-
-  (* [exit ()] exits the current stack frame. *)
-
-  let exit () = 
-    Int.decr current_level
+  let fresh_form form level = U.fresh_form form { level; is_generic = false }
 
   (* ----------------------------------------------------------------------- *)
 
@@ -167,9 +149,188 @@ module Make (Former : Type_former) = struct
 
   (* TODO: Document! *)
 
-  type scheme = { t : U.Type.t; level: level }
+  type scheme =
+    { root : U.Type.t
+    ; level : level
+    }
+
+  (* ----------------------------------------------------------------------- *)
+
+  (* Generalization regions *)
+
+  (* Types (and variables) are partitioned into distincted regions,
+     each region related to the stack frame of the type (See levels). 
+     
+     This allows us to update levels in a lazy manner, as described
+     here: ??. 
+     
+     When we unify two variables, we merge their levels, however, we 
+     do not propagate this throughout the type. We perform this update
+     on levels at generalization (after occurs checks). 
+     
+     To perform this update, we need regions to keep track of
+     the nodes w/ a given level. *)
+
+  type region = U.Type.t Hash_set.t
+
+  (* ----------------------------------------------------------------------- *)
+
+  (* Generalization state *)
+
+  (* We have two elements of persistent state in generalization.
+     
+     The current level (the number of stack frames) and the regions (1 for 
+     each current stack frame). Hence the length of regions is bounded by 
+     the current level. *)
+
+  (* The current number of stack frames. *)
+
+  let current_level : level ref = ref 0
+
+  (* Active regions. *)
+
+  let regions : (region, [ `R | `W ]) Vec.t = Vec.make ()
+
+  (* ----------------------------------------------------------------------- *)
+
+  (* [enter ()] creates a new stack frame and enter it. *)
+
+  let enter () =
+    Int.incr current_level;
+    Vec.set_exn regions !current_level (Hash_set.create (module U.Type))
 
 
+  (* [exit ()] exits the current stack frame. *)
+
+  let exit () =
+    Hash_set.clear (Vec.get_exn regions !current_level);
+    Int.decr current_level
+
+  let set_region typ = Hash_set.add (Vec.get_exn regions (get_level typ)) typ
+
+  (* ----------------------------------------------------------------------- *)
+
+  (* Generalization: TODO *)
+  let update_levels () = assert false
+
+  let generalize _typ = assert false
+
+  (* ----------------------------------------------------------------------- *)
+
+  (* The notion of variables is common in schemes, especially 
+     instantiation. 
+     
+     It is also used in [generic_variables], which returns the generic
+     variables of a scheme. 
+     
+     We use [Hash_set] implementation, since ordering does not matter. *)
+
+  type variables =
+    { flexible : U.Type.t Hash_set.t
+    ; rigid : U.Type.t Hash_set.t
+    }
+
+  let[@inline] add_variable variables flexibility typ =
+    (* TODO: Add assertion for variable structure *)
+    let variable_set =
+      match flexibility with
+      | U.Type.Flexible -> variables.flexible
+      | U.Type.Rigid -> variables.rigid
+    in
+    Hash_set.add variable_set typ
+
+  let[@inline] empty_variables () =
+    { flexible = Hash_set.create (module U.Type)
+    ; rigid = Hash_set.create (module U.Type)
+    }
+
+  (* ----------------------------------------------------------------------- *)
+
+  let root { root; _ } = root
+
+  let generic_variables { root; level } =
+    (* Hash set records whether we've visited a given 
+       graphic type node. Prevents cyclic execution of [loop]. *)
+    let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
+    let generic_variables = empty_variables () in
+    let rec loop typ =
+      (* A type [typ] contains a generic variable if it is generic
+         w/ level [level]. *)
+      if is_generic_at typ level && not (Hash_set.mem visited typ)
+      then (
+        (* We mark node visited here to ensure that 
+           when we recurse below, we don't reach an infinite loop
+           due to cycles in [root]. *)
+        Hash_set.add visited typ;
+        (* Check the structure of the type [typ]. 
+           If [Var], add to the relevant quantifier list,
+           otherwise recurse.  *)
+        match U.Type.get_structure typ with
+        | U.Type.Var { flexibility } ->
+          add_variable generic_variables flexibility typ
+        | U.Type.Form form -> Former.iter ~f:loop form)
+    in
+    loop root;
+    generic_variables
 
 
+  (* ----------------------------------------------------------------------- *)
+
+  (* When instantiating a scheme [scheme], we must traverse it's body, 
+    creating new (copied) variables for each generic variable, returning 
+    the new root and new variables.
+  
+    This is equivalent to the theortical notion of a "substitution". *)
+
+  let instantiate { root; level } =
+    (* The [copied] hash table stores a mapping from graphic type nodes 
+        to their related copied forms. This ensures only 1 copy per 
+        variable. *)
+    let copied : (U.Type.t, U.Type.t) Hashtbl.t =
+      Hashtbl.create (module U.Type)
+    in
+    (* We also need to keep track of the instantiated variables,
+       using a [instance variables] record. *)
+    let instance_variables = empty_variables () in
+    (* We traverse the type, if it is generic, then we copy it
+       and recursivly traverse. Otherwise, we return the type 
+       as is. *)
+    let rec copy typ =
+      (* We use [is_generic] instead of [is_generic_at],
+         since we may have to copy generic variables that
+         have been generalized by a different scheme. *)
+      if not (is_generic typ)
+      then typ
+      else (
+        try Hashtbl.find_exn copied typ with
+        | Not_found_s _ ->
+          (* Create arbitrary node. We use a variable initially,
+             but will set the structure later on. See below. *)
+          let typ' = fresh_var Flexible !current_level in
+          (* We set the region of the type [typ']. This
+             will add it to the current region (due to a
+             level of [!current_level]).
+             
+             We also set the mapping from [typ] to [typ']
+             in copied. *)
+          set_region typ';
+          Hashtbl.set copied ~key:typ ~data:typ';
+          (* We now update the structure according to the original 
+             structure of [typ].  *)
+          let structure' =
+            match U.Type.get_structure typ with
+            | U.Type.Var { flexibility } ->
+              (* The condition [get_level typ = level] now asserts
+                 [is_generic_at typ level], hence we need to instantiate
+                 the variable, adding it to the instance variables. *)
+              if get_level typ = level
+              then add_variable instance_variables flexibility typ';
+              U.Type.Var { flexibility }
+            | U.Type.Form form -> U.Type.Form (Former.map ~f:copy form)
+          in
+          U.Type.set_structure typ' structure';
+          typ')
+    in
+    (* Copy the root, yielding the instance variables (as a side-effect). *)
+    instance_variables, copy root
 end
