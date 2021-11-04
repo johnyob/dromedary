@@ -38,6 +38,7 @@ module Make (Former : Type_former) = struct
      to generalization. *)
 
   (* Our approach differs compared the approach describe by Oleg.
+     
      There are several problems with representing a "scheme"
      as a type with some quantified variables (determined at generalization).
 
@@ -49,10 +50,11 @@ module Make (Former : Type_former) = struct
        indeed rely on invariants.  
 
      - We must generalize immediately after exiting (due to mutable data in 
-       graph). Thus interface defines implementation behavior. BAD!
+       graph). Thus the interface defines implementation behavior. BAD!
      
-     - TODO: DOCUMENT OTHER PROBLEMS 
-     
+     - Cannot recompute quantified variables after generalization (due to mutated data).
+       This doesn't fit well with notions of higher-rank polymorphism.  
+
      Requirements of  solution:
      
      - Quantified variables are re-computable in any given level
@@ -61,7 +63,7 @@ module Make (Former : Type_former) = struct
 
   (* Solution:
      
-     To re=compute generic variables, we need 2 pieces of information,
+     To re-compute generic variables, we need 2 pieces of information,
      the level of scheme and the level of every variable (including generic 
      ones). 
 
@@ -76,10 +78,9 @@ module Make (Former : Type_former) = struct
       | Instance of { mutable level: level }
       | Generic of level 
       
-      This removes the notion of a "generic level". 
-      
-      TODO: Investigate performance (run benchmark). 
-      Consider unboxing? *)
+     This removes the notion of a "generic level" (used within the OCaml type 
+     checker). Our actual representation is optimized (but provides a similar 
+     interface to the one above). *)
 
   type level = int [@@deriving sexp_of]
 
@@ -124,10 +125,16 @@ module Make (Former : Type_former) = struct
 
   (* Instantiating the unifier with level metadata. *)
 
-  module U = Unifier.Make (Former) (Tag)
+  module Unifier = Unifier.Make (Former) (Tag)
+
+  (* Alias, used throughout code below *)
+  module U = Unifier
 
   let set_level typ level = Tag.set_level (U.Type.get_metadata typ) level
   let get_level typ = Tag.get_level (U.Type.get_metadata typ)
+
+  let update_level typ level = if level < get_level typ then set_level typ level
+  
   let is_generic typ = Tag.is_generic (U.Type.get_metadata typ)
 
   let is_generic_at typ level =
@@ -145,9 +152,16 @@ module Make (Former : Type_former) = struct
 
   (* ----------------------------------------------------------------------- *)
 
-  (* Generalization and instantiation *)
-
-  (* TODO: Document! *)
+  (* A scheme in "graphic types" simply consists of a node w/ a pointer
+     to a graphic type node. 
+     
+     For generalization and levels, we add the notion of the "bound level"
+     to a scheme node within the graphic type. 
+     
+     Graphic type nodes are marked generic if they are variables
+     and their level >= the bound level. The notion of the bound 
+     level also allows for the reconstruction of all quantified
+     variables within the type. *)
 
   type scheme =
     { root : U.Type.t
@@ -199,35 +213,94 @@ module Make (Former : Type_former) = struct
     Int.incr current_level;
     Vec.set_exn regions !current_level (Hash_set.create (module U.Type))
 
-
   (* [exit ()] exits the current stack frame. *)
 
   let exit () =
     Int.decr current_level
 
+  (* ----------------------------------------------------------------------- *)
+  
+  (* Region management. *)
+  
+  (* [set_region typ] adds [typ] to it's region (defined by [typ]'s level). *)
 
   let set_region typ = Hash_set.add (Vec.get_exn regions (get_level typ)) typ
 
+  (* When performing region updates, we often only care about maintaing
+     and update nodes within the "young" region (the current region),
+     leaving updates in older regions to later phases of generalization. *)
+
+  (* [is_young typ] determines whether [typ] is in the young region. *)
+
+  let is_young typ = Hash_set.mem (Vec.get_exn regions !current_level) typ
+
+  (* [young_region] returns the "young" region. *)
+
+  let young_region () = Vec.get_exn regions !current_level
+
   (* ----------------------------------------------------------------------- *)
 
-  (* Generalization: TODO *)
+  (* Generalization *)
 
-  (* TODO: Document
-     Assumptions: Acyclic
-     Problems: Visits nodes multiple times! *)
+  (* Generalization performs two functions:
+      1) Propagate delayed level updated to nodes
+      2) Generalize variables or update regions of variables
+      3) Clear the current region
+      
+     As such, these phases have been split into the following
+     relevant functions:
+      1) [update_levels]
+      2) [update_regions]
+      3) [generalize]
+      
+     See below for documentation of the various functions. *)
 
-  let update_level typ level = if level < get_level typ then set_level typ level
-  let is_young typ = Hash_set.mem (Vec.get_exn regions !current_level) typ
-  let young_generation () = Vec.get_exn regions !current_level
+  (* [update_levels] updates the levels of all types within the 
+     young region. 
+     
+     It traverses all nodes (as roots) from the young generation, 
+     using a depth-frst traversal. The traversal stops when we 
+     reach nodes within the old region. 
+
+     This function assumes that all types within the current region
+     are acyclic (a problem!)
+
+     Moreover this function visited nodes multiple times! 
+     
+     The point of update levels is to ensure that every 
+     node within young generation has it's correct level. *)
+
+  (* TODO: 
+  
+     Observe: Levels only decrease => processing nodes in a level
+     order ensures a partial order within updated nodes! 
+     
+     Flesh this idea out more! *)
 
   let update_levels () =
     let rec loop typ level =
+      (* Regardless of whether a node is young or old, 
+         we update it's level. *)
       update_level typ level;
+      (* If a node is old, then we stop traversing (hence the [is_young] check). *)
       if is_young typ
       then (
         match U.Type.get_structure typ with
-        | U.Type.Var _ -> ()
+        | U.Type.Var _ -> 
+          (* In the variable case, we cannot traverse any further
+             and no updates need be performed (since the level update)
+             is performed above. *)
+          ()
         | U.Type.Form form ->
+          (* If the node is a type former, then we need to traverse it's 
+             children and determine it's correct level.
+             
+             Levels must satisfy the following monotonicty condition:
+             get_level typ <= k => get_type typ' <= k where typ' is a 
+             child of typ. 
+             
+             Thus we take the [max] of children with [outermost_level]
+             being our unit element. *)
           update_level
             typ
             (Former.fold
@@ -237,13 +310,25 @@ module Make (Former : Type_former) = struct
                  max (get_level typ) acc)
                ~init:outermost_level))
     in
-    Hash_set.iter ~f:(fun typ -> loop typ (get_level typ)) (young_generation ())
-
-
+    young_region ()
+    |> Hash_set.iter ~f:(fun typ -> 
+      (* Perform occurs check *)
+      U.occurs_check typ;
+      (* Then traverse using [loop] *)
+      loop typ (get_level typ)) 
+  
+  (* [update_regions] updates the regions according to the new levels
+     propagated by [update_levels].
+     
+     If a node has a level < !current_level, then it belongs in an 
+     older region. It is moved using [set_region].
+     
+     Otherwise, if the node has level = !current_level, then it may 
+     be generalized, using [lift]. *)
   let update_regions () =
-    Hash_set.iter (young_generation ()) ~f:(fun typ ->
+    Hash_set.iter (young_region ()) ~f:(fun typ ->
         if get_level typ < !current_level then set_region typ else lift typ)
-    
+
   let generalize typ =
     U.occurs_check typ;
     update_levels ();
