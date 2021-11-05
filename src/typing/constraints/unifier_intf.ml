@@ -69,7 +69,9 @@ module type S = sig
 
     type t [@@deriving sexp_of, compare]
 
-    type structure
+    type structure = 
+      | Var of { mutable flexibility : flexibility }
+      | Form of t former
 
     (* Each graph type node consists of:
         - a unique identifier [id] (used to define a total ordering).
@@ -92,6 +94,11 @@ module type S = sig
     val hash : t -> int
 
   end
+
+  val fresh 
+    :  Type.structure
+    -> metadata
+    -> Type.t
 
   (* [fresh_var flex data] returns a fresh variable node 
      with flexibility [flex], and metadata [data]. *)

@@ -11,173 +11,66 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-(* This module implements a constraint solver, based on unification
-   under a mixed prefix (rigid variables). *)
+(* This module implements a constraint solver and term elaborator,
+   based on F. Pottier's paper ??. *)
 
-(* open Base
-open Intf *)
+open Base
+open Intf
 
 (* ------------------------------------------------------------------------- *)
 
-(* TODO: Refactor solver *)
-
-(* 
 module Make (Term_var : Term_var) (Types : Types) = struct
   (* ----------------------------------------------------------------------- *)
 
-  (* Instantiate the constraints definition *)
-
-  module Constraint = Constraint.Make (Term_var) (Types)
+  module C = Constraint.Make (Term_var) (Types)
+  module G = Generalization.Make (Types.Former)
+  module U = G.Unifier
 
   (* ----------------------------------------------------------------------- *)
 
-  (* Generalization. *)
+  (* Applicative structure used for elaboration. *)
 
-  (* Levels *)
+  module Elaborate = struct
+    type 'a t = unit -> 'a
 
-  (* We implement efficient level-based generalization by Remy [??]. 
-    Each unification variable has a "level" (or "rank"). 
-    
-    Each variable within the current scope (stack frame [S])
-    has a level, with the outermost level being 0. The level is isomorphic to a 
-    de Bruijn level, namely, when we [cst1] in 
-    [let a1 ... an [cst1] (x1: a1 and ... and xn: an)], we increment the level 
-    by 1. 
-    
-    Variables not within the current scope, but within the environment frame,
-    has the level [generic]. *)
+    let run t = t ()
+    let return x () = x
+    let map t ~f () = f (t ())
+    let both t1 t2 () = t1 (), t2 ()
 
-  (* As opposed to the traditional int representation, we use an [int option]. 
-     This allows us to distinguish between levels and no-levels. *)
-
-  type level = int
-
-  let merge = min
-
-  (* As opposed to using a really large number, as suggested here: Oleg [??],
-     Our generic level is level < 0. This also fits better w/ our stack frame 
-     formalization. *)
-  let generic_level = -1
-
-  (* Positive levels are all valid (non-generic) levels. *)
-  let base_level = 0
-
-  (* Mapping a level to each variable consists of adding it to
-     the variable's mutable metadata.  *)
-
-  module Level_metadata = struct
-    type t = level
-
-    let sexp_of_t = Int.sexp_of_t
-    let merge = merge
+    module Let_syntax = struct
+      module Let_syntax = struct
+        let return = return
+        let map = map
+        let both = both
+      end
+    end
   end
 
-  (* Instantiating the unifier with level metadata. *)
+  (* ----------------------------------------------------------------------- *)
 
-  module U = Unifier.Make (Types.Former) (Level_metadata)
+  (* An environment in our constraint solver is defined as a 
+     partial finite function from term variables to schemes. 
+     
+     We implement this using a [Map]. 
+     
+     We favor [Map] over [Hashtbl] here since we want immutability 
+     for recursive calls, as modifications in a local block shouldn't
+     affect the overall environment 
 
-  (* Wrappers on existing unifier functions. *)
+     e.g. let x : 'a ... 'b. [ let y : 'c ... 'd. [ C ] in C' ] in C'',
+     here binding y shouldn't affect the environment for C''. 
+     This would not be the case for a mutable mapping (using side-effecting
+     operations). 
+     
+     Using [Hashtbl] would implement a dynamically scoped environment
+     as opposed to a lexically scoped one. *)
 
-  let set_level var level = U.set_metadata var level
-  let get_level var = U.get_metadata var
-  let fresh kind ?terminal level = U.fresh kind ?terminal ~metadata:level
+  module Term_var_comparator = Comparator.Make (Term_var)
 
-  (* We maintain the current level of the stack frame. *)
-
-  let current_level : level ref = ref base_level
-
-  (* [enter ()] creates a new stack frame and enter it. *)
-
-  let enter () = Int.incr current_level
-
-  (* [exit ()] exits the current stack frame. *)
-
-  let exit () = Int.decr current_level
+  type env =
+    (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
 
   (* ----------------------------------------------------------------------- *)
 
-  (* Generalization and instantiation *)
-
-  (* Our internal notion of a type scheme is a list of variables,
-     known as quantified variables and a body (a variable). 
-     
-     The list of variables are "generic". *)
-
-  type scheme = U.variable list * U.variable
-
-
-  let generalize var =
-    (* Before generalizing a type, we perform an occurs check.
-     
-     This ensures that [var] is acyclic and also ensures soundness
-     of generalization. *)
-    U.occurs_check var;
-    (* When generalizing, we traverse the variable,
-     determining the set of "generalizable" variables. 
-     
-     A variable is generalizable if it's level >= the current level
-     and it has no terminal. 
-     
-     Ideally would prefer to implement this traversal using
-     [U.fold], but implementation relied on (@) (very slow!). *)
-    let quantified_variables =
-      let visited : U.variable Hash_set.t =
-        Hash_set.create (module U.Variable_hash_key)
-      in
-      let rec loop var acc =
-        if (not (get_level var > !current_level)) || Hash_set.mem visited var
-        then acc
-        else (
-          Hash_set.add visited var;
-          match U.get_terminal var with
-          | None ->
-            set_level var generic_level;
-            var :: acc
-          | Some t -> Types.Former.fold t ~f:loop ~init:acc)
-      in
-      loop var []
-    in
-    quantified_variables, var
-
-
-  (* When instantiating a scheme [scheme], we must traverse it's body, 
-    creating new (copied) variables for each generic variable, returning 
-    the new body and new variables.
-    
-    This is equivalent to the theortical notion of a "substitution". *)
-
-  let instantiate scheme =
-    match scheme with
-    | [], body ->
-      (* No generic quantified variables, return the scheme as-is. *)
-      [], body
-    | quantified_variables, body ->
-      (* The [copied] hash table stores a mapping from variables to their
-         related copied variables. This ensures only 1 copy per variable. *)
-      let copied : (U.variable, U.variable) Hashtbl.t =
-        Hashtbl.create (module U.Variable_hash_key)
-      in
-      (* We traverse the variable, if it is generic, then we copy it
-         and recursivly traverse. Otherwise, we return the variable 
-         as is. *)
-      let rec loop var =
-        if get_level var <> generic_level
-        then var
-        else (
-          try Hashtbl.find_exn copied var with
-          | Not_found_s _ ->
-            let var' = fresh (U.kind var) !current_level () in
-            U.set_terminal
-              var'
-              (Option.map (U.get_terminal var) ~f:(Types.Former.map ~f:loop));
-            Hashtbl.set copied ~key:var ~data:var';
-            var')
-      in
-      (* Copy the quantified variables, then the body to instantiate the 
-         sceheme. *)
-      List.map ~f:loop quantified_variables, loop body
-
-  (* ----------------------------------------------------------------------- *)
-
-
-end *)
+end
