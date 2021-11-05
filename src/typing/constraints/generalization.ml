@@ -17,6 +17,15 @@
 open Base
 open Intf
 
+(* ------------------------------------------------------------------------- *)
+
+(* Include module types and type definitions from the [_intf] file. *)
+
+include Generalization_intf
+
+(* ------------------------------------------------------------------------- *)
+
+
 module Make (Former : Type_former) = struct
   (* ----------------------------------------------------------------------- *)
 
@@ -130,11 +139,12 @@ module Make (Former : Type_former) = struct
   (* Alias, used throughout code below *)
   module U = Unifier
 
+  (* getters, setters and helper functions wrapping on [Unifier] getters and 
+     setters. *)
+
   let set_level typ level = Tag.set_level (U.Type.get_metadata typ) level
   let get_level typ = Tag.get_level (U.Type.get_metadata typ)
-
   let update_level typ level = if level < get_level typ then set_level typ level
-  
   let is_generic typ = Tag.is_generic (U.Type.get_metadata typ)
 
   let is_generic_at typ level =
@@ -144,29 +154,13 @@ module Make (Former : Type_former) = struct
 
   let lift typ = Tag.lift (U.Type.get_metadata typ)
 
-  let fresh_var flexibility level =
+  (* Internal functions for creating new nodes at a given
+     level [level]. *)
+
+  let fresh_var_ flexibility level =
     U.fresh_var flexibility { level; is_generic = false }
 
-
-  let fresh_form form level = U.fresh_form form { level; is_generic = false }
-
-  (* ----------------------------------------------------------------------- *)
-
-  (* A scheme in "graphic types" simply consists of a node w/ a pointer
-     to a graphic type node. 
-     
-     For generalization and levels, we add the notion of the "bound level"
-     to a scheme node within the graphic type. 
-     
-     Graphic type nodes are marked generic if they are variables
-     and their level >= the bound level. The notion of the bound 
-     level also allows for the reconstruction of all quantified
-     variables within the type. *)
-
-  type scheme =
-    { root : U.Type.t
-    ; level : level
-    }
+  let fresh_form_ form level = U.fresh_form form { level; is_generic = false }
 
   (* ----------------------------------------------------------------------- *)
 
@@ -189,7 +183,7 @@ module Make (Former : Type_former) = struct
 
   (* ----------------------------------------------------------------------- *)
 
-  (* Generalization state *)
+  (* State *)
 
   (* We have two elements of persistent state in generalization.
      
@@ -197,34 +191,79 @@ module Make (Former : Type_former) = struct
      each current stack frame). Hence the length of regions is bounded by 
      the current level. *)
 
-  (* The current number of stack frames. *)
+  type state =
+    { mutable current_level : level
+    ; regions : (region, [ `R | `W ]) Vec.t
+    }
 
-  let current_level : level ref = ref outermost_level
+  (* [make_state ()] makes a new empty state. *)
 
-  (* Active regions. *)
+  let make_state () = { current_level = 0; regions = Vec.make () }
 
-  let regions : (region, [ `R | `W ]) Vec.t = Vec.make ()
+  (* [set_region typ] adds [typ] to it's region (defined by [typ]'s level). *)
 
-  (* ----------------------------------------------------------------------- *)
+  let set_region state typ =
+    Hash_set.add (Vec.get_exn state.regions (get_level typ)) typ
+
+
+  (* [fresh_var] creates a fresh unification variable, setting it's level
+     and region. *)
+
+  let fresh_var state flexibility =
+    let var = fresh_var_ flexibility state.current_level in
+    set_region state var;
+    var
+
+
+  (** [fresh_form] creates a fresh unification type node 
+      w/ the structure provided by the former [form]. 
+      
+      It initialize the level to the current level. *)
+
+  let fresh_form state form =
+    let form = fresh_form_ form state.current_level in
+    set_region state form;
+    form
+
 
   (* [enter ()] creates a new stack frame and enter it. *)
 
-  let enter () =
-    Int.incr current_level;
-    Vec.set_exn regions !current_level (Hash_set.create (module U.Type))
+  let enter state =
+    state.current_level <- state.current_level + 1;
+    Vec.set_exn
+      state.regions
+      state.current_level
+      (Hash_set.create (module U.Type))
+
 
   (* [exit ()] exits the current stack frame. *)
 
-  let exit () =
-    Int.decr current_level
+  let exit state =
+    Hash_set.clear (Vec.get_exn state.regions state.current_level);
+    state.current_level <- state.current_level - 1
+
 
   (* ----------------------------------------------------------------------- *)
-  
-  (* Region management. *)
-  
-  (* [set_region typ] adds [typ] to it's region (defined by [typ]'s level). *)
 
-  let set_region typ = Hash_set.add (Vec.get_exn regions (get_level typ)) typ
+  (* A scheme in "graphic types" simply consists of a node w/ a pointer
+     to a graphic type node. 
+     
+     For generalization and levels, we add the notion of the "bound level"
+     to a scheme node within the graphic type. 
+     
+     Graphic type nodes are marked generic if they are variables
+     and their level >= the bound level. The notion of the bound 
+     level also allows for the reconstruction of all quantified
+     variables within the type. *)
+
+  type scheme =
+    { root : U.Type.t
+    ; level : level
+    }
+
+  (* ----------------------------------------------------------------------- *)
+
+  (* Region management. *)
 
   (* When performing region updates, we often only care about maintaing
      and update nodes within the "young" region (the current region),
@@ -232,11 +271,13 @@ module Make (Former : Type_former) = struct
 
   (* [is_young typ] determines whether [typ] is in the young region. *)
 
-  let is_young typ = Hash_set.mem (Vec.get_exn regions !current_level) typ
+  let is_young state typ =
+    Hash_set.mem (Vec.get_exn state.regions state.current_level) typ
+
 
   (* [young_region] returns the "young" region. *)
 
-  let young_region () = Vec.get_exn regions !current_level
+  let young_region state = Vec.get_exn state.regions state.current_level
 
   (* ----------------------------------------------------------------------- *)
 
@@ -277,30 +318,49 @@ module Make (Former : Type_former) = struct
      
      Flesh this idea out more! *)
 
-  let update_levels () =
+  let update_levels state =
+    (* We note that levels only decrease (since we take the minimum when merging),
+       hence we process nodes in level order. 
+       
+       This allows us to only visit each node once, providing the invariant that 
+       at the current level [level], all nodes visited are of level [<= level]. 
+       
+       To implement this, we convert the young region into a sorted array
+       which we iterate over to begin the traversal. *)
+    let young_region = young_region state |> Hash_set.to_array in
+    Array.sort young_region ~compare:(fun t1 t2 ->
+        Int.compare (get_level t1) (get_level t2));
+    (* Hash set records whether we've visited a given 
+    graphic type node. Prevents cyclic execution of [loop]. *)
+    let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
     let rec loop typ level =
+      if not (Hash_set.mem visited typ)
+      then
+        (* Mark as visited first. This is required with graphic types
+           containing cycles. Allows us to reduce # of occurs checks. *)
+        Hash_set.add visited typ;
       (* Regardless of whether a node is young or old, 
-         we update it's level. *)
+          we update it's level. *)
       update_level typ level;
       (* If a node is old, then we stop traversing (hence the [is_young] check). *)
-      if is_young typ
+      if is_young state typ
       then (
         match U.Type.get_structure typ with
-        | U.Type.Var _ -> 
+        | U.Type.Var _ ->
           (* In the variable case, we cannot traverse any further
-             and no updates need be performed (since the level update)
-             is performed above. *)
+              and no updates need be performed (since the level update)
+              is performed above. *)
           ()
         | U.Type.Form form ->
           (* If the node is a type former, then we need to traverse it's 
-             children and determine it's correct level.
-             
-             Levels must satisfy the following monotonicty condition:
-             get_level typ <= k => get_type typ' <= k where typ' is a 
-             child of typ. 
-             
-             Thus we take the [max] of children with [outermost_level]
-             being our unit element. *)
+              children and determine it's correct level.
+              
+              Levels must satisfy the following monotonicty condition:
+              get_level typ <= k => get_type typ' <= k where typ' is a 
+              child of typ. 
+              
+              Thus we take the [max] of children with [outermost_level]
+              being our unit element. *)
           update_level
             typ
             (Former.fold
@@ -310,13 +370,9 @@ module Make (Former : Type_former) = struct
                  max (get_level typ) acc)
                ~init:outermost_level))
     in
-    young_region ()
-    |> Hash_set.iter ~f:(fun typ -> 
-      (* Perform occurs check *)
-      U.occurs_check typ;
-      (* Then traverse using [loop] *)
-      loop typ (get_level typ)) 
-  
+    Array.iter ~f:(fun typ -> loop typ (get_level typ)) young_region
+
+
   (* [update_regions] updates the regions according to the new levels
      propagated by [update_levels].
      
@@ -325,16 +381,19 @@ module Make (Former : Type_former) = struct
      
      Otherwise, if the node has level = !current_level, then it may 
      be generalized, using [lift]. *)
-  let update_regions () =
-    Hash_set.iter (young_region ()) ~f:(fun typ ->
-        if get_level typ < !current_level then set_region typ else lift typ)
+  let update_regions state =
+    Hash_set.iter (young_region state) ~f:(fun typ ->
+        if get_level typ < state.current_level
+        then set_region state typ
+        else lift typ)
 
-  let generalize typ =
+
+  let generalize state typ =
     U.occurs_check typ;
-    update_levels ();
-    update_regions ();
-    Hash_set.clear (Vec.get_exn regions !current_level);
-    { root = typ; level = !current_level } 
+    update_levels state;
+    update_regions state;
+    Hash_set.clear (Vec.get_exn state.regions state.current_level);
+    { root = typ; level = state.current_level }
 
 
   (* ----------------------------------------------------------------------- *)
@@ -342,41 +401,31 @@ module Make (Former : Type_former) = struct
   (* The notion of variables is common in schemes, especially 
      instantiation. 
      
-     It is also used in [generic_variables], which returns the generic
-     variables of a scheme. 
-     
-     We use [Hash_set] implementation, since ordering does not matter. *)
+     It is also used in [variables], which returns the generic
+     variables of a scheme. *)
 
   type variables =
-    { flexible : U.Type.t Hash_set.t
-    ; rigid : U.Type.t Hash_set.t
+    { flexible : U.Type.t list
+    ; rigid : U.Type.t list
     }
 
-  let[@inline] add_variable variables flexibility typ =
-    (* TODO: Add assertion for variable structure *)
-    let variable_set =
-      match flexibility with
-      | U.Type.Flexible -> variables.flexible
-      | U.Type.Rigid -> variables.rigid
-    in
-    Hash_set.add variable_set typ
-
-
-  let[@inline] empty_variables () =
-    { flexible = Hash_set.create (module U.Type)
-    ; rigid = Hash_set.create (module U.Type)
-    }
-
+  let[@inline] add_variable variables var flexibility =
+    match flexibility with
+    | U.Type.Flexible -> 
+      variables := { !variables with flexible = var :: !variables.flexible }
+    | U.Type.Rigid -> 
+      variables := { !variables with rigid = var :: !variables.rigid }
+    
 
   (* ----------------------------------------------------------------------- *)
 
   let root { root; _ } = root
 
-  let generic_variables { root; level } =
+  let variables { root; level } =
     (* Hash set records whether we've visited a given 
        graphic type node. Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
-    let generic_variables = empty_variables () in
+    let variables = ref { flexible = []; rigid = [] } in
     let rec loop typ =
       (* A type [typ] contains a generic variable if it is generic
          w/ level [level]. *)
@@ -391,11 +440,11 @@ module Make (Former : Type_former) = struct
            otherwise recurse.  *)
         match U.Type.get_structure typ with
         | U.Type.Var { flexibility } ->
-          add_variable generic_variables flexibility typ
+          add_variable variables typ flexibility
         | U.Type.Form form -> Former.iter ~f:loop form)
     in
     loop root;
-    generic_variables
+    !variables
 
 
   (* ----------------------------------------------------------------------- *)
@@ -406,7 +455,7 @@ module Make (Former : Type_former) = struct
   
     This is equivalent to the theortical notion of a "substitution". *)
 
-  let instantiate { root; level } =
+  let instantiate state { root; level } =
     (* The [copied] hash table stores a mapping from graphic type nodes 
         to their related copied forms. This ensures only 1 copy per 
         variable. *)
@@ -415,7 +464,7 @@ module Make (Former : Type_former) = struct
     in
     (* We also need to keep track of the instantiated variables,
        using a [instance variables] record. *)
-    let instance_variables = empty_variables () in
+    let instance_variables = ref { flexible = []; rigid = [] } in
     (* We traverse the type, if it is generic, then we copy it
        and recursivly traverse. Otherwise, we return the type 
        as is. *)
@@ -430,14 +479,9 @@ module Make (Former : Type_former) = struct
         | Not_found_s _ ->
           (* Create arbitrary node. We use a variable initially,
              but will set the structure later on. See below. *)
-          let typ' = fresh_var Flexible !current_level in
-          (* We set the region of the type [typ']. This
-             will add it to the current region (due to a
-             level of [!current_level]).
-             
-             We also set the mapping from [typ] to [typ']
-             in copied. *)
-          set_region typ';
+          let typ' = fresh_var state Flexible in
+          (* Set the mapping from the original node to the copied 
+             node. *)
           Hashtbl.set copied ~key:typ ~data:typ';
           (* We now update the structure according to the original 
              structure of [typ].  *)
@@ -448,7 +492,7 @@ module Make (Former : Type_former) = struct
                  [is_generic_at typ level], hence we need to instantiate
                  the variable, adding it to the instance variables. *)
               if get_level typ = level
-              then add_variable instance_variables flexibility typ';
+              then add_variable instance_variables typ' flexibility;
               U.Type.Var { flexibility }
             | U.Type.Form form -> U.Type.Form (Former.map ~f:copy form)
           in
@@ -456,5 +500,5 @@ module Make (Former : Type_former) = struct
           typ')
     in
     (* Copy the root, yielding the instance variables (as a side-effect). *)
-    instance_variables, copy root
+    !instance_variables, copy root
 end
