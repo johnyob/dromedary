@@ -37,17 +37,30 @@ module type S = sig
       and type schemes. See {!Intf.Types}. *)
 
   type typ
-  type scheme
+  type typ_scheme
 
   (* ----------------------------------------------------------------------- *)
 
   (** [variable] is the abstract type for constraint variables. *)
 
-  type variable
+  type variable = int
 
   (** [fresh ()] creates a fresh constraint variable. *)
 
   val fresh : unit -> variable
+
+  (* ----------------------------------------------------------------------- *)
+
+  (** TODO: Document! *)
+
+  module Type : sig
+    type t =
+      | Var of variable
+      | Form of t typ_former
+
+    val var : variable -> t
+    val form : t typ_former -> t
+  end
 
   (* ----------------------------------------------------------------------- *)
 
@@ -60,34 +73,37 @@ module type S = sig
   type _ t =
     | Cst_true : unit t (** [true] *)
     | Cst_false : empty t (** [false] *)
-    (* Cst_conj : 'ts constraint_list -> 'ts t *)
-    (* constraint_list = Dependent_list (struct type nonrec 'a t = 'a t).t *)
     | Cst_conj : 'a t * 'b t -> ('a * 'b) t (** [C1 && C2] *)
-    | Cst_eq : variable * variable -> unit t (** [a1 = a2] *)
-    | Cst_exist : variable * 'a t -> 'a t (** [exists a. C] *)
-    | Cst_forall : variable * 'a t -> 'a t (** [forall a. C] *)
-    | Cst_instance : term_var * variable -> typ list t (** [x <= a] *)
+    | Cst_eq : Type.t * Type.t -> unit t (** [t1 =  t2] *)
+    | Cst_exist : variable list * 'a t -> 'a t (** [exists a. C] *)
+    | Cst_forall : variable list * 'a t -> 'a t (** [forall a. C] *)
+    | Cst_instance : term_var * Type.t -> typ list t (** [x <= t] *)
     | Cst_def : def_binding list * 'a t -> 'a t
-        (** [def x1 : a1 and ... and xn : an in C] *)
-    | Cst_let : 'a let_binding * 'b t -> ((term_var * scheme) * 'a bound * 'b) t
-        (** [let b1 ... bn [C]. (x1 : b1 and ... xn : bn) in C']. *)
+        (** [def x1 : t1 and ... and xn : tn in C] *)
+    | Cst_let : 'a let_binding * 'b t -> (term_binding list * 'a bound * 'b) t
+        (** [let a1 ... am [C]. (x1 : t1 and ... xk : tk) in C']. *)
     | Cst_map : 'a t * ('a -> 'b) -> 'b t (** [map C f]. *)
     | Cst_match : 'a t * 'b case list -> ('a * 'b list) t
-        (** [match C with (... | (x1 : a1 ... xn : an) -> Ci | ...)]. *)
+        (** [match C with (... | (x1 : t1 ... xn : tn) -> Ci | ...)]. *)
 
-  and binding =
-    { cb_tevar : term_var
-    ; cb_var : variable
-    }
+  and term_binding = term_var * typ_scheme
+
+  and binding = term_var * Type.t
 
   and def_binding = binding
 
+  and 'a scheme =
+    { csch_flexible_vars : variable list
+    ; csch_rigid_vars : variable list
+    ; csch_cst : 'a t
+    }
+
   and 'a let_binding =
-    { clb_cst : 'a t
+    { clb_sch : 'a scheme
     ; clb_bs : binding list
     }
 
-  and 'a bound = typ_var list * 'a t
+  and 'a bound = typ_var list * 'a
 
   and 'a case =
     { ccase_bs : binding list
@@ -103,13 +119,11 @@ module type Make_S = functor (Term_var : Term_var) (Types : Types) ->
      and type typ_var := Types.Var.t
      and type 'a typ_former := 'a Types.Former.t
      and type typ := Types.Type.t
-     and type scheme := Types.scheme
+     and type typ_scheme := Types.scheme
 
 (* ------------------------------------------------------------------------- *)
 
 module type Intf = sig
-
   (* The functor [Make]. *)
   module Make : Make_S
-
 end
