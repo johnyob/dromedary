@@ -335,7 +335,7 @@ module Make (Former : Type_former) = struct
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
     let rec loop typ level =
       if not (Hash_set.mem visited typ)
-      then
+      then (
         (* Mark as visited first. This is required with graphic types
            containing cycles. Allows us to reduce # of occurs checks. *)
         Hash_set.add visited typ;
@@ -368,7 +368,7 @@ module Make (Former : Type_former) = struct
                ~f:(fun typ acc ->
                  loop typ level;
                  max (get_level typ) acc)
-               ~init:outermost_level))
+               ~init:outermost_level)))
     in
     Array.iter ~f:(fun typ -> loop typ (get_level typ)) young_region
 
@@ -387,13 +387,27 @@ module Make (Former : Type_former) = struct
         then set_region state typ
         else lift typ)
 
+  let generalizable state = 
+    (* Invariant, all nodes in young region are generic. 
+    
+       We now iterate over the region, filtering out 
+       non-variable nodes to compute the list of generializable
+       variables. *)
+    young_region state
+    |> Hash_set.filter ~f:(fun typ ->
+        match U.Type.get_structure typ with
+        | U.Type.Var flex -> flex.flexibility <- Rigid; true
+        | U.Type.Form _ -> false)
+    |> Hash_set.to_list
+    
 
-  let generalize state typ =
-    U.occurs_check typ;
+  let generalize state typs =
+    List.iter ~f:U.occurs_check typs;
     update_levels state;
     update_regions state;
+    let generalizable = generalizable state in
     Hash_set.clear (Vec.get_exn state.regions state.current_level);
-    { root = typ; level = state.current_level }
+    generalizable, List.map ~f:(fun typ -> { root = typ; level = state.current_level }) typs
 
 
   (* ----------------------------------------------------------------------- *)
@@ -404,18 +418,15 @@ module Make (Former : Type_former) = struct
      It is also used in [variables], which returns the generic
      variables of a scheme. *)
 
-  type variables =
-    { flexible : U.Type.t list
-    ; rigid : U.Type.t list
-    }
-
+  type variables = U.Type.t list
+(* 
   let[@inline] add_variable variables var flexibility =
     match flexibility with
     | U.Type.Flexible -> 
       variables := { !variables with flexible = var :: !variables.flexible }
     | U.Type.Rigid -> 
       variables := { !variables with rigid = var :: !variables.rigid }
-    
+     *)
 
   (* ----------------------------------------------------------------------- *)
 
@@ -425,7 +436,7 @@ module Make (Former : Type_former) = struct
     (* Hash set records whether we've visited a given 
        graphic type node. Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
-    let variables = ref { flexible = []; rigid = [] } in
+    let variables = ref [] in
     let rec loop typ =
       (* A type [typ] contains a generic variable if it is generic
          w/ level [level]. *)
@@ -439,13 +450,13 @@ module Make (Former : Type_former) = struct
            If [Var], add to the relevant quantifier list,
            otherwise recurse.  *)
         match U.Type.get_structure typ with
-        | U.Type.Var { flexibility } ->
-          add_variable variables typ flexibility
+        | U.Type.Var _ -> variables := typ :: !variables
         | U.Type.Form form -> Former.iter ~f:loop form)
     in
     loop root;
     !variables
 
+  let monoscheme typ = { root = typ; level = get_level typ + 1 }
 
   (* ----------------------------------------------------------------------- *)
 
@@ -464,7 +475,7 @@ module Make (Former : Type_former) = struct
     in
     (* We also need to keep track of the instantiated variables,
        using a [instance variables] record. *)
-    let instance_variables = ref { flexible = []; rigid = [] } in
+    let instance_variables = ref [] in
     (* We traverse the type, if it is generic, then we copy it
        and recursivly traverse. Otherwise, we return the type 
        as is. *)
@@ -487,13 +498,13 @@ module Make (Former : Type_former) = struct
              structure of [typ].  *)
           let structure' =
             match U.Type.get_structure typ with
-            | U.Type.Var { flexibility } ->
+            | U.Type.Var _ ->
               (* The condition [get_level typ = level] now asserts
                  [is_generic_at typ level], hence we need to instantiate
                  the variable, adding it to the instance variables. *)
               if get_level typ = level
-              then add_variable instance_variables typ' flexibility;
-              U.Type.Var { flexibility }
+              then instance_variables := typ :: !instance_variables;
+              U.Type.Var { flexibility = Flexible }
             | U.Type.Form form -> U.Type.Form (Former.map ~f:copy form)
           in
           U.Type.set_structure typ' structure';

@@ -43,7 +43,10 @@ module type S = sig
       "graphic" types.
       
       A scheme has a notion of "bound" variables, this is encoded in the
-      type [variables]. *)
+      type [variables]. 
+      
+      We note that all bound variables to a *generalized* scheme
+      are *rigid*. *)
 
   type scheme
   
@@ -51,10 +54,7 @@ module type S = sig
       instantiation and computing the set of generic variables,
       given a scheme. *)
 
-  type variables = 
-    { flexible : Unifier.Type.t list 
-    ; rigid : Unifier.Type.t list
-    }
+  type variables = Unifier.Type.t list 
 
   (** [root sch] returns the root node, or quantifier "body" of the
       scheme [sch]. *)
@@ -63,6 +63,8 @@ module type S = sig
   (** [variables sch] computes the bound variables of a scheme [sch]. *)
   val variables : scheme -> variables
 
+  (** [monoscheme] creates a scheme with no generic variables. *)
+  val monoscheme : Unifier.Type.t -> scheme
 
   (* ----------------------------------------------------------------------- *)
   
@@ -112,7 +114,7 @@ module type S = sig
 
   val instantiate : state -> scheme -> variables * Unifier.Type.t
 
-  val generalize : state -> Unifier.Type.t -> scheme
+  val generalize : state -> Unifier.Type.t list -> variables * scheme list
 
 end
 
