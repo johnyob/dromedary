@@ -279,4 +279,37 @@ module Make (Former : Type_former) (Metadata : Metadata) :
           Hashtbl.set table ~key:t ~data:true)
     in
     loop
+
+  (* ----------------------------------------------------------------------- *)
+
+  (* [fold typ ~leaf ~node] will perform a bottom-up fold
+     over the (assumed) acyclic graph defined by the type [typ]. *)
+
+  let fold
+     (type a)
+     typ
+     ~(var : Type.t -> flexibility -> a)
+     ~(form : a Former.t -> a)
+     : a
+   =
+   (* Hash table records whether node has been visited, and 
+      it's computed value. *)
+   let visited : (Type.t, a) Hashtbl.t =
+     Hashtbl.create (module Type)
+   in
+   (* Recursive loop, folding over the graph *)
+   let rec loop typ =
+     try Hashtbl.find_exn visited typ with
+     | Not_found_s _ ->
+       let result =
+         match get_structure typ with
+         | Var { flexibility } -> var typ flexibility 
+         | Form form' -> form (Former.map ~f:loop form')
+       in
+       (* We assume we can set [typ] in [visited] *after* traversing
+          it's children, since the graph is acyclic. *)
+       Hashtbl.set visited ~key:typ ~data:result;
+       result
+   in
+   loop typ
 end

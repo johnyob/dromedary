@@ -143,6 +143,15 @@ module type S = sig
 
   val occurs_check : Type.t -> unit
 
+  (* [fold typ ~var ~form] will perform a bottom-up fold
+    over the (assumed) acyclic graph defined by the type [typ].  *)
+
+  val fold
+  :  Type.t
+  -> var:(Type.t -> Type.flexibility -> 'a)
+  -> form:('a former -> 'a)
+  -> 'a
+
 end
 
 (* ------------------------------------------------------------------------- *)
