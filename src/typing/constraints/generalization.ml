@@ -25,7 +25,6 @@ include Generalization_intf
 
 (* ------------------------------------------------------------------------- *)
 
-
 module Make (Former : Type_former) = struct
   (* ----------------------------------------------------------------------- *)
 
@@ -160,6 +159,7 @@ module Make (Former : Type_former) = struct
   let fresh_var_ flexibility level =
     U.fresh_var flexibility { level; is_generic = false }
 
+
   let fresh_form_ form level = U.fresh_form form { level; is_generic = false }
 
   (* ----------------------------------------------------------------------- *)
@@ -236,13 +236,6 @@ module Make (Former : Type_former) = struct
       (Hash_set.create (module U.Type))
 
 
-  (* [exit ()] exits the current stack frame. *)
-
-  let exit state =
-    Hash_set.clear (Vec.get_exn state.regions state.current_level);
-    state.current_level <- state.current_level - 1
-
-
   (* ----------------------------------------------------------------------- *)
 
   (* A scheme in "graphic types" simply consists of a node w/ a pointer
@@ -281,12 +274,13 @@ module Make (Former : Type_former) = struct
 
   (* ----------------------------------------------------------------------- *)
 
-  (* Generalization *)
+  (* Generalization (exiting) *)
 
   (* Generalization performs two functions:
       1) Propagate delayed level updated to nodes
-      2) Generalize variables or update regions of variables
-      3) Clear the current region
+      2) Check no rigid variables have escpaed
+      3) Generalize variables or update regions of variables
+      4) Clear the current region
       
      As such, these phases have been split into the following
      relevant functions:
@@ -335,24 +329,24 @@ module Make (Former : Type_former) = struct
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
     let rec loop typ level =
       if not (Hash_set.mem visited typ)
-      then
+      then (
         (* Mark as visited first. This is required with graphic types
            containing cycles. Allows us to reduce # of occurs checks. *)
         Hash_set.add visited typ;
-      (* Regardless of whether a node is young or old, 
+        (* Regardless of whether a node is young or old, 
           we update it's level. *)
-      update_level typ level;
-      (* If a node is old, then we stop traversing (hence the [is_young] check). *)
-      if is_young state typ
-      then (
-        match U.Type.get_structure typ with
-        | U.Type.Var _ ->
-          (* In the variable case, we cannot traverse any further
+        update_level typ level;
+        (* If a node is old, then we stop traversing (hence the [is_young] check). *)
+        if is_young state typ
+        then (
+          match U.Type.get_structure typ with
+          | U.Type.Var _ ->
+            (* In the variable case, we cannot traverse any further
               and no updates need be performed (since the level update)
               is performed above. *)
-          ()
-        | U.Type.Form form ->
-          (* If the node is a type former, then we need to traverse it's 
+            ()
+          | U.Type.Form form ->
+            (* If the node is a type former, then we need to traverse it's 
               children and determine it's correct level.
               
               Levels must satisfy the following monotonicty condition:
@@ -361,39 +355,81 @@ module Make (Former : Type_former) = struct
               
               Thus we take the [max] of children with [outermost_level]
               being our unit element. *)
-          update_level
-            typ
-            (Former.fold
-               form
-               ~f:(fun typ acc ->
-                 loop typ level;
-                 max (get_level typ) acc)
-               ~init:outermost_level))
+            update_level
+              typ
+              (Former.fold
+                 form
+                 ~f:(fun typ acc ->
+                   loop typ level;
+                   max (get_level typ) acc)
+                 ~init:outermost_level)))
     in
     Array.iter ~f:(fun typ -> loop typ (get_level typ)) young_region
 
 
-  (* [update_regions] updates the regions according to the new levels
-     propagated by [update_levels].
+  (* [generalize] generalizes variables in the current
+     region according to the new levels propagated by [update_levels].
      
      If a node has a level < !current_level, then it belongs in an 
      older region. It is moved using [set_region].
      
      Otherwise, if the node has level = !current_level, then it may 
-     be generalized, using [lift]. *)
-  let update_regions state =
-    Hash_set.iter (young_region state) ~f:(fun typ ->
+     be generalized, using [lift]. 
+     
+     Once generalized, we compute the list of generalizable
+     variables. *)
+  let generalize state =
+    (* Get the young region, since we will be performing several traversals
+       of it. *)
+    let region = young_region state in
+    (* Iterate through the young region, generalizing variables 
+       (or updating their region).  *)
+    Hash_set.iter region ~f:(fun typ ->
         if get_level typ < state.current_level
         then set_region state typ
-        else lift typ)
+        else lift typ);
+    (* Iterate through the young region, computing the list
+       of generalizable variables. *)
+    let generalizable =
+      region
+      (* Invariant, all nodes in [region] are now generic *)
+      |> Hash_set.filter ~f:(fun typ ->
+             match U.Type.get_structure typ with
+             | U.Type.Var flex ->
+               flex.flexibility <- Rigid;
+               true
+             | U.Type.Form _ -> false)
+      |> Hash_set.to_list
+    in
+    (* Clear the young region now *)
+    Hash_set.clear region;
+    generalizable
 
 
-  let generalize state typ =
-    U.occurs_check typ;
+  exception Rigid_var_escape
+
+  (* [exit] *)
+
+  let exit state ~rigid_vars ~roots =
+    (* Detect cycles in roots. *)
+    List.iter ~f:U.occurs_check roots;
+    (* Now update the lazily updated levels of every node in the young
+       region. *)
     update_levels state;
-    update_regions state;
-    Hash_set.clear (Vec.get_exn state.regions state.current_level);
-    { root = typ; level = state.current_level }
+    (* Check that rigid variables have no escaped. *)
+    if List.exists rigid_vars ~f:(fun var ->
+           get_level var < state.current_level)
+    then raise Rigid_var_escape;
+    (* Generalize variables. *)
+    let generalizable = generalize state in
+    (* Helper function for constructing a new type scheme *)
+    let make_scheme =
+      let level = state.current_level in
+      fun root -> { root; level }
+    in
+    (* Exit the current region *)
+    state.current_level <- state.current_level - 1;
+    generalizable, List.map ~f:make_scheme roots
 
 
   (* ----------------------------------------------------------------------- *)
@@ -404,18 +440,7 @@ module Make (Former : Type_former) = struct
      It is also used in [variables], which returns the generic
      variables of a scheme. *)
 
-  type variables =
-    { flexible : U.Type.t list
-    ; rigid : U.Type.t list
-    }
-
-  let[@inline] add_variable variables var flexibility =
-    match flexibility with
-    | U.Type.Flexible -> 
-      variables := { !variables with flexible = var :: !variables.flexible }
-    | U.Type.Rigid -> 
-      variables := { !variables with rigid = var :: !variables.rigid }
-    
+  type variables = U.Type.t list
 
   (* ----------------------------------------------------------------------- *)
 
@@ -425,7 +450,7 @@ module Make (Former : Type_former) = struct
     (* Hash set records whether we've visited a given 
        graphic type node. Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
-    let variables = ref { flexible = []; rigid = [] } in
+    let variables = ref [] in
     let rec loop typ =
       (* A type [typ] contains a generic variable if it is generic
          w/ level [level]. *)
@@ -439,13 +464,14 @@ module Make (Former : Type_former) = struct
            If [Var], add to the relevant quantifier list,
            otherwise recurse.  *)
         match U.Type.get_structure typ with
-        | U.Type.Var { flexibility } ->
-          add_variable variables typ flexibility
+        | U.Type.Var _ -> variables := typ :: !variables
         | U.Type.Form form -> Former.iter ~f:loop form)
     in
     loop root;
     !variables
 
+
+  let monoscheme typ = { root = typ; level = get_level typ + 1 }
 
   (* ----------------------------------------------------------------------- *)
 
@@ -464,7 +490,7 @@ module Make (Former : Type_former) = struct
     in
     (* We also need to keep track of the instantiated variables,
        using a [instance variables] record. *)
-    let instance_variables = ref { flexible = []; rigid = [] } in
+    let instance_variables = ref [] in
     (* We traverse the type, if it is generic, then we copy it
        and recursivly traverse. Otherwise, we return the type 
        as is. *)
@@ -487,13 +513,13 @@ module Make (Former : Type_former) = struct
              structure of [typ].  *)
           let structure' =
             match U.Type.get_structure typ with
-            | U.Type.Var { flexibility } ->
+            | U.Type.Var _ ->
               (* The condition [get_level typ = level] now asserts
                  [is_generic_at typ level], hence we need to instantiate
                  the variable, adding it to the instance variables. *)
               if get_level typ = level
-              then add_variable instance_variables typ' flexibility;
-              U.Type.Var { flexibility }
+              then instance_variables := typ :: !instance_variables;
+              U.Type.Var { flexibility = Flexible }
             | U.Type.Form form -> U.Type.Form (Former.map ~f:copy form)
           in
           U.Type.set_structure typ' structure';
