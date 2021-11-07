@@ -134,6 +134,89 @@ and 'a case =
   ; ccase_cst : 'a t
   }  
 
+(* ------------------------------------------------------------------------- *)
+
+(* Constraints ['a t] form an applicative functor. *)
+
+let return x = Cst_map (Cst_true, fun () -> x)
+
+let map t ~f = Cst_map (t, f)
+
+let (>>|) t f = map t ~f
+
+let both t1 t2 = Cst_conj (t1, t2)
+
+module Let_syntax = struct
+  let return = return
+  let map = map
+  let both = both
+end
+
+(* ------------------------------------------------------------------------- *)
+
+(* The function [&~] is an infix alias for [both] *)
+
+let (&~) = both
+
+(* The function [>>] constructs a constraint from [t1] and [t2], 
+   returning the value of [t2]. *)
+
+let (>>) t1 t2 = (t1 &~ t2) >>| snd
+
+
+let ( =~ ) typ1 typ2 = Cst_eq (typ1, typ2)
+
+let inst var typ = Cst_instance (var, typ)
+
+(* ------------------------------------------------------------------------- *)
+
+(* Quantifiers *)
+
+
+let existsn n f = 
+  let vars = List.init n ~f:(fun _ -> fresh ()) in
+  let cst = f vars in
+  match cst with
+  | Cst_exist (vars', cst) -> Cst_exist (vars @ vars', cst)
+  | _ -> Cst_exist (vars, cst)
+
+let exists1 f = 
+  existsn 1 (fun vars -> f (List.hd_exn vars))
+
+let foralln n f = 
+  let vars = List.init n ~f:(fun _ -> fresh ()) in
+  let cst = f vars in
+  match cst with
+  | Cst_forall (vars', cst) -> Cst_forall (vars @ vars', cst)
+  | _ -> Cst_forall (vars, cst)
+
+let forall1 f = 
+  foralln 1 (fun vars -> f (List.hd_exn vars))
+  
+(* ------------------------------------------------------------------------- *)
+
+(* Environmental constraints (binders) *)
+
+
+let (#=) x typ : binding = (x, typ)
+
+let def bindings cst = Cst_def (bindings, cst)
+
+let scheme csch_rigid_vars csch_flexible_vars csch_cst
+  = { csch_rigid_vars; csch_flexible_vars; csch_cst }
+
+let let_ m n f1 bindings cst2 = 
+  (* Initialize [m] rigid variables and [n] flexible variables. *)
+  let rigid_vars = List.init m ~f:(fun _ -> fresh ()) 
+  and flexible_vars = List.init n ~f:(fun _ -> fresh ()) in
+  (* Pass these variables to the [bindings] function and the 
+     first constraint *)
+  let cst1 = f1 rigid_vars flexible_vars in
+  let bindings = bindings rigid_vars flexible_vars in
+  (* Build let constraint. *)
+  let sch = scheme rigid_vars flexible_vars cst1 in
+  Cst_let ({ clb_sch = sch; clb_bs = bindings} , cst2)
+
 end 
 
 
