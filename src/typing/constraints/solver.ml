@@ -120,8 +120,9 @@ module Make (Term_var : Term_var) (Types : Types) = struct
   (* TODO: Find a representation for \mu types! *)
   exception Cycle of U.Type.t
 
-  let generalize state typ =
-    try G.generalize state typ with
+  (* TODO: Add exception handling for rigid var check! *)
+  let exit state ~rigid_vars ~roots =
+    try G.exit state ~rigid_vars ~roots with
     | U.Cycle typ -> raise (Cycle typ)
 
 
@@ -203,14 +204,7 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           (* Solve the constraint of the let binding *)
           let v1 = solve ~env clb_sch.csch_cst in
           (* Generalize and exit *)
-          let generalizable, schs = generalize state typs in
-          G.exit state;
-          (* Check rigid variables haven't escaped the scope *)
-          if not
-               (List.for_all
-                  rigid_vars
-                  ~f:(List.mem generalizable ~equal:phys_equal))
-          then assert false;
+          let generalizable, schs = exit state ~rigid_vars ~roots:typs in
           (* Extend environment *)
           let env, bindings =
             List.zip_exn clb_bs schs
@@ -236,14 +230,7 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           (* Solve the constraint *)
           let v = solve ~env cst in
           (* Generalize and exit *)
-          let generalizable, _ = generalize state [] in
-          G.exit state;
-          (* Check rigid variables haven't escaped the scope *)
-          if not
-               (List.for_all
-                  rigid_vars
-                  ~f:(List.mem generalizable ~equal:phys_equal))
-          then assert false;
+          ignore (exit state ~rigid_vars ~roots:[]);
           v
     in
     Elaborate.run (solve ~env:Env.empty cst) 
