@@ -17,7 +17,7 @@ open Intf
 
 (* ----------------------------------------------------------------------- *)
 
-module type S = sig 
+module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
   (** The type ['a former] is the type formers (with children of type ['a]), 
@@ -26,19 +26,18 @@ module type S = sig
   type 'a former
 
   (* ----------------------------------------------------------------------- *)
-  
+
   (* Instantiating the unifier *)
 
   module Tag : sig
     type t [@@deriving sexp_of]
   end
 
-  module Unifier : Unifier.S 
-    with type 'a former := 'a former
-    and type metadata := Tag.t
+  module Unifier :
+    Unifier.S with type 'a former := 'a former and type metadata := Tag.t
 
   (* ----------------------------------------------------------------------- *)
-  
+
   (** The type [scheme] defines the abstract notion of a scheme in 
       "graphic" types.
       
@@ -49,12 +48,12 @@ module type S = sig
       are *rigid*. *)
 
   type scheme
-  
+
   (** The notion of "bound" variables for a scheme is shared between
       instantiation and computing the set of generic variables,
       given a scheme. *)
 
-  type variables = Unifier.Type.t list 
+  type variables = Unifier.Type.t list
 
   (** [root sch] returns the root node, or quantifier "body" of the
       scheme [sch]. *)
@@ -67,7 +66,7 @@ module type S = sig
   val monoscheme : Unifier.Type.t -> scheme
 
   (* ----------------------------------------------------------------------- *)
-  
+
   (** The generalization module maintains several bits of mutable
       state related to it's implemented of efficient level-based
       generalization.
@@ -91,8 +90,6 @@ module type S = sig
 
   val enter : state -> unit
 
-  (** [exit state] exits the current stack frame, clearing the region as well. *)
-  val exit : state -> unit
 
   (** [fresh_var] creates a fresh unification variable. *)
 
@@ -102,9 +99,9 @@ module type S = sig
       w/ the structure provided by the former. *)
 
   val fresh_form : state -> Unifier.Type.t former -> Unifier.Type.t
-  
+
   (* ----------------------------------------------------------------------- *)
-  
+
   (** [instantiate sch] instantates the scheme [sch]. It does so, by
       taking fresh copies of the generic variables, without necessarily
       copying other bits of the type. 
@@ -114,8 +111,13 @@ module type S = sig
 
   val instantiate : state -> scheme -> variables * Unifier.Type.t
 
-  val generalize : state -> Unifier.Type.t list -> variables * scheme list
+  exception Rigid_var_escape
 
+  val exit
+    :  state
+    -> rigid_vars: Unifier.Type.t list
+    -> roots: Unifier.Type.t list
+    -> variables * scheme list
 end
 
 (* ------------------------------------------------------------------------- *)
@@ -126,7 +128,5 @@ module type Intf = sig
   module type S = S
 
   (* The functor [Make]. *)
-  module Make (Former : Type_former) :
-    S with type 'a former := 'a Former.t 
+  module Make (Former : Type_former) : S with type 'a former := 'a Former.t
 end
-
