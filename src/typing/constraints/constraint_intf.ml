@@ -47,7 +47,7 @@ module type S = sig
 
   (** [fresh ()] creates a fresh constraint variable. *)
 
-  val fresh : unit -> variable
+  (* val fresh : unit -> variable *)
 
   (* ----------------------------------------------------------------------- *)
 
@@ -109,6 +109,41 @@ module type S = sig
     { ccase_bs : binding list
     ; ccase_cst : 'a t
     }
+
+  (* ----------------------------------------------------------------------- *)
+
+  (* Combinators *)
+
+  val return : 'a -> 'a t
+  val map : 'a t -> f:('a -> 'b) -> 'b t
+  val ( >>| ) : 'a t -> ('a -> 'b) -> 'b t
+  val both : 'a t -> 'b t -> ('a * 'b) t
+
+  module Let_syntax : sig
+    val return : 'a -> 'a t
+    val map : 'a t -> f:('a -> 'b) -> 'b t
+    val both : 'a t -> 'b t -> ('a * 'b) t
+  end
+
+  val ( &~ ) : 'a t -> 'b t -> ('a * 'b) t
+  val ( >> ) : 'a t -> 'b t -> 'b t
+  val ( =~ ) : Type.t -> Type.t -> unit t
+  val inst : term_var -> Type.t -> typ list t
+  val existsn : int -> (variable list -> 'a t) -> 'a t
+  val exists1 : (variable -> 'a t) -> 'a t
+  val foralln : int -> (variable list -> 'a t) -> 'a t
+  val forall1 : (variable -> 'a t) -> 'a t
+  val ( #= ) : term_var -> Type.t -> binding
+  val def : def_binding list -> 'a t -> 'a t
+  val scheme : variable list -> variable list -> 'a t -> 'a scheme
+
+  val let_
+    :  int
+    -> int
+    -> (variable list -> variable list -> 'a t)
+    -> (variable list -> variable list -> def_binding list)
+    -> 'b t
+    -> (term_binding list * 'a bound * 'b) t
 end
 
 (* The type of the functor [Make]. *)
