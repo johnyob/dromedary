@@ -101,7 +101,7 @@ module Make (Term_var : Term_var) (Types : Types) = struct
   let decode_variable typ = Type_var.of_int (U.Type.id typ) 
 
   let decode : decoder =
-    U.fold ~var:(fun typ _ -> Type.var (decode_variable typ)) ~form:Type.con
+    U.fold ~var:(fun typ _ -> Type.var (decode_variable typ)) ~form:Type.form
 
 
   let decode_scheme sch =

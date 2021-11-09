@@ -21,7 +21,7 @@
 
 module type Term_var = sig
   (* The type of term variables. *)
-  type t [@@deriving sexp, compare]
+  type t [@@deriving sexp_of, compare]
 
   (* Term variables are sexp-able for pretty printing and error reporting.  *)
 
@@ -92,7 +92,7 @@ module type Type = sig
 
   (* [form f] is the representation of the concrete type former [f] in
     type [t]. See [Form] above. *)
-  val con : t former -> t
+  val form : t former -> t
 end
 
 (** This is the signature of types after reconstruction *)
