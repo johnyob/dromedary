@@ -11,7 +11,8 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Ast_types
+
+open Base
 
 (* ------------------------------------------------------------------------- *)
 
@@ -26,8 +27,9 @@ type type_expr =
   (** Product (or "tuple") types. *)
   | Ttyp_constr of type_constr
   (** Type constructors. *)
-  | Ttyp_forall of string * type_expr
+  | Ttyp_forall of string * type_expr 
   (** Forall type. *)
+  [@@deriving sexp_of]
 
 and type_constr = type_expr list * string
 
