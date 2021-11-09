@@ -1,3 +1,4 @@
 (library
  (public_name dromedary.typing)
- (name dromedary_typing))
+ (name dromedary_typing)
+ (libraries dromedary_parsing))
