@@ -1,0 +1,5 @@
+(library
+ (public_name dromedary.misc)
+ (name misc)
+ (preprocess (pps ppx_sexp_conv ppx_compare ppx_deriving.eq))
+ (libraries base))

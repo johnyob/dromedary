@@ -11,9 +11,10 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-(* This module implements a constraint solver and term elaborator,
-   based on F. Pottier's paper ??. *)
+(* This module implements a constraint solver and term elaborator, based on F.
+   Pottier's paper ??. *)
 
+open Misc
 open Base
 open Intf
 
@@ -51,22 +52,21 @@ module Make (Term_var : Term_var) (Types : Types) = struct
 
   (* ----------------------------------------------------------------------- *)
 
-  (* An environment in our constraint solver is defined as a 
-     partial finite function from term variables to schemes. 
-     
-     We implement this using a [Map]. 
-     
-     We favor [Map] over [Hashtbl] here since we want immutability 
-     for recursive calls, as modifications in a local block shouldn't
-     affect the overall environment 
+  (* An environment in our constraint solver is defined as a partial finite
+     function from term variables to schemes.
 
-     e.g. let x : 'a ... 'b. [ let y : 'c ... 'd. [ C ] in C' ] in C'',
-     here binding y shouldn't affect the environment for C''. 
-     This would not be the case for a mutable mapping (using side-effecting
-     operations). 
-     
-     Using [Hashtbl] would implement a dynamically scoped environment
-     as opposed to a lexically scoped one. *)
+     We implement this using a [Map].
+
+     We favor [Map] over [Hashtbl] here since we want immutability for recursive
+     calls, as modifications in a local block shouldn't affect the overall
+     environment
+
+     e.g. let x : 'a ... 'b. [ let y : 'c ... 'd. [ C ] in C' ] in C'', here
+     binding y shouldn't affect the environment for C''. This would not be the
+     case for a mutable mapping (using side-effecting operations).
+
+     Using [Hashtbl] would implement a dynamically scoped environment as opposed
+     to a lexically scoped one. *)
 
   module Env = struct
     module Term_var_comparator = struct
@@ -82,9 +82,8 @@ module Make (Term_var : Term_var) (Types : Types) = struct
     let extend t var sch = Map.add_exn t ~key:var ~data:sch
     let find t var = Map.find_exn t var
 
-    (* let extends_schs t bindings = 
-      List.fold_left bindings ~init:t ~f:(fun t (var, sch) ->
-        extend t var sch) *)
+    (* let extends_schs t bindings = List.fold_left bindings ~init:t ~f:(fun t
+       (var, sch) -> extend t var sch) *)
 
     let extends_typs t bindings =
       List.fold_left bindings ~init:t ~f:(fun t (var, typ) ->
@@ -98,7 +97,7 @@ module Make (Term_var : Term_var) (Types : Types) = struct
 
   type decoder = U.Type.t -> Types.Type.t
 
-  let decode_variable typ = Type_var.of_int (U.Type.id typ) 
+  let decode_variable typ = Type_var.of_int (U.Type.id typ)
 
   let decode : decoder =
     U.fold ~var:(fun typ _ -> Type.var (decode_variable typ)) ~form:Type.form
@@ -132,7 +131,7 @@ module Make (Term_var : Term_var) (Types : Types) = struct
     let open Constraint in
     (* Initialize generalization state. *)
     let state = G.make_state () in
-    (* Constaint variables are encoded using immutable integers. When solving, 
+    (* Constaint variables are encoded using immutable integers. When solving,
        we need to map these to unification variables. *)
     let cst_var_env = Hashtbl.create (module Int) in
     (* A lookup function for constraint variables. TODO: Error handling *)
@@ -181,7 +180,8 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           in
           both v (list vs)
         | Cst_exist (vars, cst) ->
-          List.iter vars ~f:(fun var -> ignore (bind_cst_var var Flexible));
+          Sized_list.to_list vars
+          |> List.iter ~f:(fun var -> ignore (bind_cst_var var Flexible));
           solve ~env cst
         | Cst_instance (x, t) ->
           let sch = Env.find env x in
@@ -193,11 +193,11 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           G.enter state;
           (* Initialize fresh flexible and rigid variables *)
           let _flexible_vars =
-            List.map clb_sch.csch_flexible_vars ~f:(fun var ->
-                bind_cst_var var Flexible)
+            Sized_list.to_list clb_sch.csch_flexible_vars
+            |> List.map ~f:(fun var -> bind_cst_var var Flexible)
           and rigid_vars =
-            List.map clb_sch.csch_rigid_vars ~f:(fun var ->
-                bind_cst_var var Rigid)
+            Sized_list.to_list clb_sch.csch_rigid_vars
+            |> List.map ~f:(fun var -> bind_cst_var var Rigid)
           in
           (* Convert the constraint types into graphic types *)
           let typs = List.map clb_bs ~f:(fun (_, typ) -> convert_cst_typ typ) in
@@ -225,7 +225,8 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           G.enter state;
           (* Introduce the rigid variables *)
           let rigid_vars =
-            List.map vars ~f:(fun var -> bind_cst_var var Rigid)
+            Sized_list.to_list vars
+            |> List.map ~f:(fun var -> bind_cst_var var Rigid)
           in
           (* Solve the constraint *)
           let v = solve ~env cst in
@@ -233,5 +234,5 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           ignore (exit state ~rigid_vars ~roots:[]);
           v
     in
-    Elaborate.run (solve ~env:Env.empty cst) 
+    Elaborate.run (solve ~env:Env.empty cst)
 end
