@@ -49,9 +49,11 @@ functor
       Int.incr r;
       result
 
+
     let fresh =
       let next = ref 0 in
       fun () -> post_incr next
+
 
     (* --------------------------------------------------------------------- *)
 
@@ -105,6 +107,7 @@ functor
       | Cst_map : 'a t * ('a -> 'b) -> 'b t (** [map C f]. *)
       | Cst_match : 'a t * 'b case list -> ('a * 'b list) t
           (** [match C with (... | (x1 : t1 ... xn : tn) -> Ci | ...)]. *)
+      | Cst_decode : Type.t -> Output_type.t t
 
     and term_binding = Term_var.t * Types.scheme
 
@@ -137,18 +140,32 @@ functor
     (* Constraints ['a t] form an applicative functor. *)
 
     include Applicative.Make (struct
-
       type nonrec 'a t = 'a t
-    
+
       let return x = Cst_map (Cst_true, fun () -> x)
-      
       let map = `Custom (fun t ~f -> Cst_map (t, f))
-
-      let apply t1 t2 = Cst_map (Cst_conj (t1, t2), fun (f, x) -> f x) 
-
+      let apply t1 t2 = Cst_map (Cst_conj (t1, t2), fun (f, x) -> f x)
     end)
 
     let both t1 t2 = Cst_conj (t1, t2)
+
+    module Open_on_rhs_intf = struct
+      module type S = sig end
+    end
+
+    module Let_syntax = struct
+      let return = return
+
+      include Applicative_infix
+
+      module Let_syntax = struct
+        let return = return
+        let map = map
+        let both = both
+
+        module Open_on_rhs = struct end
+      end
+    end
 
     (* --------------------------------------------------------------------- *)
 
@@ -162,33 +179,29 @@ functor
     let ( >> ) t1 t2 = t1 &~ t2 >>| snd
     let ( =~ ) typ1 typ2 = Cst_eq (typ1, typ2)
     let inst var typ = Cst_instance (var, typ)
+    let decode typ = Cst_decode typ
 
     (* --------------------------------------------------------------------- *)
 
     (* Quantifiers, binders and continuations *)
 
     module Continuation = struct
-
       (** A continuation of the type [('a, 'b) cont] is a continuation for
-          constraint computations. 
-          
-          An example usage is binders: e.g. [exists]. However, we also
-          use them for typing patterns, etc. 
-          
+          constraint computations.
+
+          An example usage is binders: e.g. [exists]. However, we also use them
+          for typing patterns, etc.
+
           As with standard continuations, they form a monadic structure. *)
       type nonrec ('a, 'b) t = ('a -> 'b t) -> 'b t
-    
+
       include Monad.Make2 (struct
         type nonrec ('a, 'b) t = ('a, 'b) t
 
-        let return x = fun k -> k x
-
-        let bind t ~f = 
-          fun k -> t (fun a -> f a k)
-        
+        let return x k = k x
+        let bind t ~f k = t (fun a -> f a k)
         let map = `Define_using_bind
       end)
-
     end
 
     (* [('n, 'a) binder] is a binder that binds ['n] variables. *)
@@ -196,16 +209,18 @@ functor
     type ('n, 'a) binder = ('n variables, 'a) Continuation.t
 
     (* [('m, 'n, 'a) binder2] is the 2 kinded version of [binder], bindings ['m]
-      and ['n] rigid and flexible variables, respectively. *)
+       and ['n] rigid and flexible variables, respectively. *)
     type ('m, 'n, 'a) binder2 = ('m variables * 'n variables, 'a) Continuation.t
 
-    let exists n binder = 
+    let exists n binder =
       let vars = Sized_list.init n ~f:(fun _ -> fresh ()) in
       Cst_exist (vars, binder vars)
- 
-    let forall n binder = 
+
+
+    let forall n binder =
       let vars = Sized_list.init n ~f:(fun _ -> fresh ()) in
       Cst_forall (vars, binder vars)
+
 
     (* --------------------------------------------------------------------- *)
 
@@ -217,17 +232,17 @@ functor
     let scheme csch_rigid_vars csch_flexible_vars csch_cst =
       { csch_rigid_vars; csch_flexible_vars; csch_cst }
 
-    let let_  m n cst1 bindings cst2 = 
+
+    let let_ m n cst1 bindings cst2 =
       (* Initialize [m] rigid variables and [n] flexible variables. *)
       let rigid_vars = Sized_list.init m ~f:(fun _ -> fresh ())
       and flexible_vars = Sized_list.init n ~f:(fun _ -> fresh ()) in
       (* Pass variables to the bindings binder and first constraint *)
-      let cst1 = cst1 (rigid_vars, flexible_vars) 
+      let cst1 = cst1 (rigid_vars, flexible_vars)
       and bindings = bindings (rigid_vars, flexible_vars) in
       (* Build let constraint. *)
       let sch = scheme rigid_vars flexible_vars cst1 in
       Cst_let ({ clb_sch = sch; clb_bs = bindings }, cst2)
-
   end
 
 (* TODO: Investigate the feasibility of using a dependent list:

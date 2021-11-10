@@ -128,6 +128,8 @@ module Make (Term_var : Term_var) (Types : Types) = struct
   (* ----------------------------------------------------------------------- *)
 
   let solve cst =
+    (* [decode] is shadowed when opening [Constraint]. *)
+    let decode_ = decode in
     let open Constraint in
     (* Initialize generalization state. *)
     let state = G.make_state () in
@@ -187,7 +189,7 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           let sch = Env.find env x in
           let instance_variables, typ = G.instantiate state sch in
           unify (convert_cst_typ t) typ;
-          fun () -> List.map ~f:decode instance_variables
+          fun () -> List.map ~f:decode_ instance_variables
         | Cst_let ({ clb_sch; clb_bs }, cst) ->
           (* Enter a new region *)
           G.enter state;
@@ -233,6 +235,8 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           (* Generalize and exit *)
           ignore (exit state ~rigid_vars ~roots:[]);
           v
+        | Cst_decode typ ->
+          fun () -> decode_ (convert_cst_typ typ)
     in
     Elaborate.run (solve ~env:Env.empty cst)
 end

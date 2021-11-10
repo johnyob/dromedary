@@ -97,6 +97,7 @@ module type S = sig
     | Cst_map : 'a t * ('a -> 'b) -> 'b t (** [map C f]. *)
     | Cst_match : 'a t * 'b case list -> ('a * 'b list) t
         (** [match C with (... | (x1 : t1 ... xn : tn) -> Ci | ...)]. *)
+    | Cst_decode : Type.t -> typ t
 
   and term_binding = term_var * typ_scheme
 
@@ -130,6 +131,8 @@ module type S = sig
 
   include Applicative.S with type 'a t := 'a t
 
+  include Applicative.Let_syntax with type 'a t := 'a t
+
   (* ----------------------------------------------------------------------- *)
 
   (* Combinators *)
@@ -138,6 +141,8 @@ module type S = sig
   val ( >> ) : 'a t -> 'b t -> 'b t
   val ( =~ ) : Type.t -> Type.t -> unit t
   val inst : term_var -> Type.t -> typ list t
+
+  val decode : Type.t -> typ t
 
   (* ----------------------------------------------------------------------- *)
 
