@@ -152,6 +152,8 @@ open Typedtree
 
 (* Patterns *)
 
+(* Adding a monoid signature might be nice here? *)
+
 module Fragment = struct
   exception Non_linear_pattern of string
 
@@ -165,86 +167,128 @@ module Fragment = struct
     | _ -> raise (Non_linear_pattern x)
 
 
-  let merge t1 t2 =
+  let merge (t1 : t) (t2 : t) : t =
     Map.merge_skewed t1 t2 ~combine:(fun ~key _ _ ->
         raise (Non_linear_pattern key))
 end
 
-let infer_pat env pat typ
-    : (Fragment.t * Typedtree.pattern Constraint.t, 'a) Continuation.t
+(* TODO: Find a library that does this, or write one yourself *)
+
+module Pattern_monad : sig
+  type ('a, 'b) t
+
+  (* Monad transformer code: *)
+
+  val lift : ('a, 'b) Continuation.t -> ('a, 'b) t
+  val run : ('a, 'b) t -> (Fragment.t * 'a, 'b) Continuation.t
+
+  (* Writer monad code: *)
+
+  val write : Fragment.t -> (unit, 'b) t
+  val read : ('a, 'b) t -> (Fragment.t, 'b) t
+  val listen : ('a, 'b) t -> (Fragment.t * 'a, 'b) t
+  val extend : string -> Type.t -> (unit, 'b) t
+
+  include Monad.S2 with type ('a, 'b) t := ('a, 'b) t
+end = struct
+  type ('a, 'b) t = (Fragment.t * 'a, 'b) Continuation.t
+
+  open Continuation.Let_syntax
+
+  module Basic = struct
+    type nonrec ('a, 'b) t = ('a, 'b) t
+
+    let return x = return (Fragment.empty, x)
+
+    let bind t ~f =
+      let%bind fragment1, x = t in
+      let%map fragment2, y = f x in
+      Fragment.merge fragment1 fragment2, y
+
+
+    let map = `Custom (fun t ~f -> t >>| fun (fragment, x) -> fragment, f x)
+  end
+
+  let write fragment = return (fragment, ())
+  let read t = t >>| fun (fragment, _) -> fragment, fragment
+  let listen t = t >>| fun (fragment, x) -> fragment, (fragment, x)
+  let run t = t
+  let lift t = t >>| fun x -> Fragment.empty, x
+  let extend x typ = write (Fragment.singleton x typ)
+
+  include Monad.Make2 (Basic)
+end
+
+let infer_pat env pat pat_type
+    : (Typedtree.pattern Constraint.t, 'a) Pattern_monad.t
   =
-  (* Infer pattern is split into 2 mutually recursive functions, infering the
-     pattern and inferring the pattern_desc *)
-  let module Cst = Constraint in
-  let module Cnt = Continuation in
-  let rec infer_pat pat typ
-      : (Fragment.t * Typedtree.pattern Constraint.t, 'a) Continuation.t
+  let module C = Constraint in
+  let open Pattern_monad in
+  let open Let_syntax in
+  let rec infer_pat pat pat_type
+      : (Typedtree.pattern Constraint.t, 'a) Pattern_monad.t
     =
-    let open Cnt.Let_syntax in
-    let%bind fragment, pat_desc = infer_pat_desc pat typ in
-    return
-      ( fragment
-      , let%map.Cst pat_desc = pat_desc
-        and pat_type = decode typ in
-        { pat_desc; pat_type } )
-  and infer_pat_desc pat typ
-      : (Fragment.t * Typedtree.pattern_desc Constraint.t, 'a) Continuation.t
+    let%map pat_desc = infer_pat_desc pat pat_type in
+    let%map.C pat_desc = pat_desc
+    and pat_type = decode pat_type in
+    { pat_desc; pat_type }
+  and infer_pat_desc pat pat_type
+      : (Typedtree.pattern_desc Constraint.t, 'a) Pattern_monad.t
     =
-    let open Cnt.Let_syntax in
     match pat with
-    | Ppat_any -> return (Fragment.empty, Cst.return Tpat_any)
-    | Ppat_var x -> return (Fragment.singleton x typ, Cst.return (Tpat_var x))
+    | Ppat_any -> return (C.return Tpat_any)
+    | Ppat_var x -> return (C.return (Tpat_var x))
     | Ppat_alias (pat, x) ->
-      let%bind fragment, pat = infer_pat pat typ in
-      return
-        ( Fragment.extend fragment x typ
-        , let%map.Cst pat = pat in
-          Tpat_alias (pat, x) )
+      let%bind pat = infer_pat pat pat_type in
+      let%map () = extend x pat_type in
+      let%map.C pat = pat in
+      Tpat_alias (pat, x)
     | Ppat_constant constant ->
       return
-        ( Fragment.empty
-        , let%map.Cst () = typ =~ infer_constant constant in
-          Tpat_constant constant )
+        (let%map.C () = pat_type =~ infer_constant constant in
+         Tpat_constant constant)
     | Ppat_tuple pats ->
-      let%bind fragment, vars, pats =
-        List.fold_left
-          pats
-          ~init:(return (Fragment.empty, [], []))
-          ~f:(fun accum pat ->
-            let%bind [ var ] = exists Size.one
-            and fragment1, pat = infer_pat pat (Type.Var var)
-            and fragment2, vars, pats = accum in
-            return (Fragment.merge fragment1 fragment2, var :: vars, pat :: pats))
+      let%map vars, pats = infer_pats pats in
+      let%map.C () = pat_type =~ tuple (List.map vars ~f:(fun v -> Type.Var v))
+      and pats = C.all pats in
+      Tpat_tuple pats
+    | Ppat_construct (constr, None) ->
+      let%bind constr_desc, arg_pat_type =
+        infer_constructor env constr pat_type
       in
-      return
-        ( fragment
-        , let%map.Cst () =
-            typ =~ tuple (List.map vars ~f:(fun var -> Type.Var var))
-          and pats = Cst.all pats in
-          Tpat_tuple pats )
-    | Ppat_construct (constr, arg_pat) ->
-      let%bind constr_desc, arg_pat_typ = infer_constructor env constr typ in
-      let%bind fragment, arg_pat =
-        match arg_pat, arg_pat_typ with
-        | None, None -> return (Fragment.empty, Cst.return None)
-        | Some arg_pat, Some arg_pat_typ ->
-          infer_pat arg_pat arg_pat_typ
-          >>| fun (fragment, cst) -> fragment, Cst.map cst ~f:Option.some
-        | _, _ -> assert false
+      (match%map arg_pat_type with
+      | Some _ -> assert false
+      | None ->
+        let%map.C constr_desc = constr_desc in
+        Tpat_construct (constr_desc, None))
+    | Ppat_construct (constr, Some arg_pat) ->
+      let%bind constr_desc, arg_pat_type =
+        infer_constructor env constr pat_type
       in
-      return
-        ( fragment
-        , let%map.Cst constr_desc = constr_desc
-          and arg_pat = arg_pat in
-          Tpat_construct (constr_desc, arg_pat) )
-    | Ppat_constraint (pat, typ') ->
-      let%bind typ' = convert_typ typ' in
-      let%bind fragment, pat = infer_pat pat typ' in
-      return
-        ( fragment
-        , let%map.Cst () = typ =~ typ'
-          and pat = pat in
-          pat.pat_desc )
-    | Ppat_record _ -> failwith "Implement later"
+      let%map arg_pat = infer_pat arg_pat arg_pat_type in
+      let%map.C constr_desc = constr_desc
+      and arg_pat = arg_pat in
+      Tpat_construct (constr_desc, Some arg_pat)
+    | Ppat_constraint (pat, pat_type') ->
+      let%bind pat_type' = convert_core_type pat_type' in
+      let%map pat_desc = infer_pat_desc pat pat_type' in
+      let%map.C () = pat_type =~ pat_type'
+      and pat_desc = pat_desc in
+      pat_desc
+
+  and infer_pats pats
+      : ( variable list * Typedtree.pattern Constraint.t list, 'a )
+      Pattern_monad.t
+    =
+    List.fold_left
+      pats
+      ~init:(return ([], []))
+      ~f:(fun accum pat ->
+        let%bind [ var ] = lift (exists Size.one) in
+        let%map pat = infer_pat pat (Type.Var var)
+        and vars, pats = accum in
+        var :: vars, pat :: pats)
   in
-  infer_pat pat typ
+  infer_pat pat pat_type
+
+(* ------------------------------------------------------------------------- *)

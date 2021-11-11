@@ -38,8 +38,6 @@ and pattern_desc =
   (** (P1, ..., Pn). Invariant n >= 2. *)
   | Tpat_construct of constructor_description * pattern option 
   (** [C <P>]. *)
-  | Tpat_record of (label_description * pattern) list
-  (** { l1=P1; ...; ln=Pn } *)
 
 type expression = 
   { exp_desc : expression_desc

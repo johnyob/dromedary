@@ -50,8 +50,6 @@ type pattern =
   (** (P1, ..., Pn). Invariant n >= 2. *)
   | Ppat_construct of string * pattern option
   (** [C <P>]. *)
-  | Ppat_record of (string * pattern) list 
-  (** { l1=P1; ...; ln = Pn } *)
   | Ppat_constraint of pattern * core_type
   (** [(P : T)]. *)
 
