@@ -60,7 +60,7 @@ type expression =
   (** Primitive operations [%prim p]. e.g. [%prim +], [%prim -], etc. *)
   | Pexp_const of constant
   (** Constants [c]. e.g. [1, true, ()]. *)
-  | Pexp_fun of pattern list * expression
+  | Pexp_fun of pattern * expression
   (** The function (or lambda) abstraction [fun P -> E].  
       Note that: 
         - [let x P1 ... Pn = E in ...] is encoding using 

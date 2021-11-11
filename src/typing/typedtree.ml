@@ -45,15 +45,13 @@ type expression =
   } 
   
 and expression_desc =
-  | Texp_var of string 
+  | Texp_var of string instance
   (** [x]. *)
   | Texp_prim of primitive
   (** Primitive operations [%prim p]. e.g. [%prim +], [%prim -], etc. *)
-  | Texp_const of constant 
+  | Texp_const of constant
   (** Constants [c]. e.g. [1, true, ()]. *)
-  | Texp_constraint of expression * type_expr
-  (** An expression "constraint" or typing annotation [(E : T)]. *)
-  | Texp_fun of pattern list * expression
+  | Texp_fun of pattern * expression
   (** The function (or lambda) abstraction [fun P -> E].  
       Note that: 
         - [let x P1 ... Pn = E in ...] is encoding using 
@@ -62,11 +60,6 @@ and expression_desc =
   (** Function application [E1 E2]. *)
   | Pexp_let of rec_flag * value_binding * expression
   (** Let expressions *)
-  | Texp_forall of string list * expression
-  (** Explicit "forall" quantifier [forall 'a1 ... 'an -> E]. 
-      Invariant n >= 1. *)
-  | Texp_tapp of expression * type_expr
-  (** Explicit type application *)
   | Texp_construct of constructor_description * expression option
       (** An applied algebraic data type constructor [C <E>]. *)
   | Texp_record of (label_description * expression) list 
@@ -76,7 +69,7 @@ and expression_desc =
   | Texp_tuple of expression list
   (** Tuples [(E1, ..., En)]. 
       Invariant: n >= 2. *)
-  | Texp_match of expression * case list
+  | Texp_match of expression * type_expr * case list
   (** Match (or "case") expressions [match E with (P1 -> E1 | ... | Pn -> En)]. *)
   | Texp_ifthenelse of expression * expression * expression
   (** If (or ternary) expressions [if E then E1 else E2]. *)
@@ -84,7 +77,7 @@ and expression_desc =
 (** [P = E]. *)
 and value_binding =
   { tvb_pat : pattern
-  ; tvb_expr : expression
+  ; tvb_expr : expression abstraction
   }
 
 (** [P -> E]. *)
@@ -92,3 +85,7 @@ and case =
   { tc_lhs : pattern
   ; tc_rhs : expression
   }
+
+and 'a instance = 'a * type_expr list
+
+and 'a abstraction = string list * 'a
