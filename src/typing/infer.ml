@@ -11,7 +11,7 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Misc
+(* open Misc
 open Parsing
 open Base
 
@@ -431,4 +431,4 @@ let infer_exp env exp exp_type =
         { tc_lhs; tc_rhs })
     |> Continuation.all
   in
-  Continuation.run (infer_exp exp exp_type) (fun x -> x)
+  Continuation.run (infer_exp exp exp_type) (fun x -> x) *)

@@ -14,9 +14,9 @@
 (* This module implements a constraint solver and term elaborator, based on F.
    Pottier's paper ??. *)
 
-open Misc
 open Base
-open Intf
+
+open Constraint.Intf
 
 (* ------------------------------------------------------------------------- *)
 
@@ -137,7 +137,7 @@ module Make (Term_var : Term_var) (Types : Types) = struct
        we need to map these to unification variables. *)
     let cst_var_env = Hashtbl.create (module Int) in
     (* A lookup function for constraint variables. TODO: Error handling *)
-    let find_cst_var var = Hashtbl.find_exn cst_var_env var in
+    let find_cst_var (var : variable) = Hashtbl.find_exn cst_var_env (var :> int) in
     (* A conversion function between constraint types and graphic types. *)
     let rec convert_cst_typ typ =
       match typ with
@@ -146,9 +146,9 @@ module Make (Term_var : Term_var) (Types : Types) = struct
         G.fresh_form state (Type_former.map form ~f:convert_cst_typ)
     in
     (* A binding function for constraint variables *)
-    let bind_cst_var cst_var flexibility =
+    let bind_cst_var (cst_var : variable) flexibility =
       let typ = G.fresh_var state flexibility in
-      Hashtbl.set cst_var_env ~key:cst_var ~data:typ;
+      Hashtbl.set cst_var_env ~key:(cst_var :> int) ~data:typ;
       typ
     in
     (* Helper function for extending an env w/ several binders *)
@@ -162,7 +162,6 @@ module Make (Term_var : Term_var) (Types : Types) = struct
       fun ~env cst ->
         match cst with
         | Cst_true -> return ()
-        | Cst_false -> assert false
         | Cst_map (cst, f) ->
           let v = solve ~env cst in
           map v ~f
@@ -182,8 +181,7 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           in
           both v (list vs)
         | Cst_exist (vars, cst) ->
-          Sized_list.to_list vars
-          |> List.iter ~f:(fun var -> ignore (bind_cst_var var Flexible));
+          List.iter ~f:(fun var -> ignore (bind_cst_var var Flexible)) vars;
           solve ~env cst
         | Cst_instance (x, t) ->
           let sch = Env.find env x in
@@ -195,11 +193,9 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           G.enter state;
           (* Initialize fresh flexible and rigid variables *)
           let _flexible_vars =
-            Sized_list.to_list clb_sch.csch_flexible_vars
-            |> List.map ~f:(fun var -> bind_cst_var var Flexible)
+            List.map ~f:(fun var -> bind_cst_var var Flexible) clb_sch.csch_flexible_vars
           and rigid_vars =
-            Sized_list.to_list clb_sch.csch_rigid_vars
-            |> List.map ~f:(fun var -> bind_cst_var var Rigid)
+            List.map ~f:(fun var -> bind_cst_var var Rigid) clb_sch.csch_rigid_vars
           in
           (* Convert the constraint types into graphic types *)
           let typs = List.map clb_bs ~f:(fun (_, typ) -> convert_cst_typ typ) in
@@ -227,8 +223,7 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           G.enter state;
           (* Introduce the rigid variables *)
           let rigid_vars =
-            Sized_list.to_list vars
-            |> List.map ~f:(fun var -> bind_cst_var var Rigid)
+            List.map ~f:(fun var -> bind_cst_var var Rigid) vars
           in
           (* Solve the constraint *)
           let v = solve ~env cst in

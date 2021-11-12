@@ -20,7 +20,8 @@
    A multi-equation is standard iff it contains 1 non-variable member,
    known as the [terminal]. *)
 
-open Intf
+open Constraint.Intf
+
 open Base
 
 (* ------------------------------------------------------------------------- *)

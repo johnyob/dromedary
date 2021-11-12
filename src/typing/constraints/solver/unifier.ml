@@ -21,7 +21,8 @@
    known as the [terminal]. *)
 
 open Base
-open Intf
+
+open Constraint.Intf
 
 (* ------------------------------------------------------------------------- *)
 

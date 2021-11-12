@@ -1,0 +1,5 @@
+(library
+ (public_name dromedary.typing.constraints.constraint)
+ (name constraint)
+ (preprocess (pps ppx_sexp_conv ppx_compare ppx_deriving.eq))
+ (libraries base dromedary.misc))
