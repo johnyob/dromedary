@@ -13,29 +13,17 @@
 
 (** This module implements the constraint syntax. *)
 
-open Base
-open Misc
-
-(* ------------------------------------------------------------------------- *)
-
-(** [Intf] provides the interfaces required for constraints. *)
-
-module Intf = Intf
-
-(* ------------------------------------------------------------------------- *)
-
-open Intf
+open! Import
+module Module_types = Module_types
+open Module_types
 
 (** The [Make] functor defines the constraint syntax, parameterized
-    by term variables [Term_var] and decoded types [Types].  *)
+    by the Algebra.  *)
 
-module Make (Term_var : Term_var) (Types : Types) : sig
-  (* Useful aliases *)
-
+module Make (Algebra : Algebra) : sig
+  open Algebra
   module Type_var := Types.Var
   module Type_former := Types.Former
-
-  (* ----------------------------------------------------------------------- *)
 
   (** [variable] is the type for constraint "type" variables. *)
 
@@ -44,8 +32,6 @@ module Make (Term_var : Term_var) (Types : Types) : sig
   (** [fresh ()] creates a fresh constraint variable. *)
 
   val fresh : unit -> variable
-
-  (* ----------------------------------------------------------------------- *)
 
   (** A concrete representation of types using constraint variables. It is the
       free monad of the functor [Type_former.t] with variables [variable].
@@ -59,7 +45,8 @@ module Make (Term_var : Term_var) (Types : Types) : sig
 
       Graphic type nodes consist of a "structure", either a variable of a type
       former (isomorphic to what we define below, given a mapping between
-      constraint variables and graphic nodes.) *)
+      constraint variables and graphic nodes.) 
+  *)
 
   module Type : sig
     type t =
@@ -75,8 +62,6 @@ module Make (Term_var : Term_var) (Types : Types) : sig
     val form : t Type_former.t -> t
   end
 
-  (* ----------------------------------------------------------------------- *)
-
   (** ['a t] is a constraint with value type ['a]. 
           
       In the meta-theory, the constraint language has a defined type
@@ -84,46 +69,34 @@ module Make (Term_var : Term_var) (Types : Types) : sig
       
       In our implementation, we use GADTs to implement the 
       type system, where the type parameter ['a] denotes the type of 
-      the constraint. *)
+      the constraint. 
+  *)
 
   type _ t =
-    | Cst_true : unit t 
-    (** [true] *)
-    | Cst_conj : 'a t * 'b t -> ('a * 'b) t 
-    (** [C1 && C2] *)
-    | Cst_eq : Type.t * Type.t -> unit t 
-    (** [t1 = t2] *)
-    | Cst_exist : variable list * 'a t -> 'a t 
-    (** [exists a. C] *)
-    | Cst_forall : variable list * 'a t -> 'a t 
-    (** [forall a. C] *)
-    | Cst_instance : Term_var.t * Type.t -> Types.Type.t list t 
-    (** [x <= t] *)
-    | Cst_def : def_binding list * 'a t -> 'a t
-    (** [def x1 : t1 and ... and xn : tn in C] *)
-    | Cst_let : 'a let_binding * 'b t -> (term_binding list * 'a bound * 'b) t
-    (** [let a1 ... am [C]. (x1 : t1 and ... xk : tk) in C']. *)
-    | Cst_map : 'a t * ('a -> 'b) -> 'b t 
-    (** [map C f]. *)
+    | Cst_true : unit t (** [true] *)
+    | Cst_conj : 'a t * 'b t -> ('a * 'b) t (** [C1 && C2] *)
+    | Cst_eq : Type.t * Type.t -> unit t (** [t1 = t2] *)
+    | Cst_exist : variable list * 'a t -> 'a t (** [exists a. C] *)
+    | Cst_forall : variable list * 'a t -> 'a t (** [forall a. C] *)
+    | Cst_instance : Term_var.t * Type.t -> Types.Type.t list t (** [x <= t] *)
+    | Cst_def : binding list * 'a t -> 'a t
+        (** [def x1 : t1 and ... and xn : tn in C] *)
+    | Cst_let : 'a scheme * 'b t -> (term_binding list * 'a bound * 'b) t
+        (** [let a1 ... am [C]. (x1 : t1 and ... xk : tk) in C']. *)
+    | Cst_map : 'a t * ('a -> 'b) -> 'b t (** [map C f]. *)
     | Cst_match : 'a t * 'b case list -> ('a * 'b list) t
-    (** [match C with (... | (x1 : t1 ... xn : tn) -> Ci | ...)]. *)
+        (** [match C with (... | (x1 : t1 ... xn : tn) -> Ci | ...)]. *)
     | Cst_decode : Type.t -> Types.Type.t t (** [decode t] *)
 
   and term_binding = Term_var.t * Types.scheme
 
   and binding = Term_var.t * Type.t
 
-  and def_binding = binding
-
   and 'a scheme =
     { csch_rigid_vars : variable list
     ; csch_flexible_vars : variable list
     ; csch_cst : 'a t
-    }
-
-  and 'a let_binding =
-    { clb_sch : 'a scheme
-    ; clb_bs : binding list
+    ; csch_bindings : binding list
     }
 
   and 'a bound = Type_var.t list * 'a
@@ -133,75 +106,63 @@ module Make (Term_var : Term_var) (Types : Types) : sig
     ; ccase_cst : 'a t
     }
 
-  (* ----------------------------------------------------------------------- *)
+  (** ['a t] forms an applicative functor, allowing us to combine
+      many constraints into a single one using [let%map]:
 
-  (* ['a t] forms an applicative functor *)
+      {[
+        val pat : Typedtree.pattern Constraint.t
+        val exp : Typedtree.expression Constraint.t
+
+        let%map pat and exp in
+        Texp_fun (pat, ..., exp)
+      ]}  
+  *)
 
   include Applicative.S with type 'a t := 'a t
   include Applicative.Let_syntax with type 'a t := 'a t
 
-  (* ----------------------------------------------------------------------- *)
-
   (* Combinators *)
 
+  (** [&~] is an infix alias for [both]. *)
   val ( &~ ) : 'a t -> 'b t -> ('a * 'b) t
+
+  (** [c1 >> c2 >> ... >> cn] solves [c1, ..., cn] yielding the value 
+      of [cn]. It is the monodial operator of constraints. *)
   val ( >> ) : 'a t -> 'b t -> 'b t
+
+  (** [t =~ t'] is an infix alias for [Cst_eq], denoting the equality
+      constraint on types. *)
   val ( =~ ) : Type.t -> Type.t -> unit t
+
+  (** [inst x t] is the constraint that instantiates [x] to [t].
+      It returns the type variable substitution. *)
   val inst : Term_var.t -> Type.t -> Types.Type.t list t
+
+  (** [decode t] is a constraint that evaluates to the decoded
+      type of [t]. *)
   val decode : Type.t -> Types.Type.t t
 
-  (* ----------------------------------------------------------------------- *)
+  (** [exists vars t] binds [vars] as existentially quantified variables. *)
+  val exists : variable list -> 'a t -> 'a t
 
-  (* Continuations, binders and quantifiers *)
+  (** [forall vars f]  binds [vars] as universally quantifier variables. *)
+  val forall : variable list -> 'a t -> 'a t
 
-  module Continuation : sig
-    (** A continuation of the type [('a, 'b) t] is a continuation for
-        constraint computations.
-
-        An example usage is binders: e.g. [exists]. However, we also use them
-        for typing patterns, etc.
-
-        As with standard continuations, they form a monadic structure. *)
-    type ('a, 'b) t
-
-    include Monad.S2 with type ('a, 'b) t := ('a, 'b) t
-
-    (* TODO: Make into transformer! *)
-
-  end
-
-  (* [('n, 'a) binder] is a binder that binds ['n] variables. *)
-
-  type ('n, 'a) binder = ('n variables, 'a) Continuation.t
-
-  (* ['n variables] encodes the type of a list containing n variables
-         (where n is the type-level natural number representation). *)
-  and 'n variables = (variable, 'n) Sized_list.t
-
-  (* [('m, 'n, 'a) binder2] is the 2 kinded version of [binder], bindings ['m]
-         and ['n] rigid and flexible variables, respectively. *)
-  type ('m, 'n, 'a) binder2 = ('m variables * 'n variables, 'a) Continuation.t
-
-  (* [exists n f] binds [n] existentially quantified variables, *)
-  val exists : 'n Size.t -> ('n, 'a) binder
-  val forall : 'n Size.t -> ('n, 'a) binder
-
-  (* ----------------------------------------------------------------------- *)
-
+  (** [x #= t] yields the binder that binds [x] to [t].
+      It is equivalent to [(x, t)]. *)
   val ( #= ) : Term_var.t -> Type.t -> binding
-  val def : def_binding list -> 'a t -> 'a t
 
-  val scheme
-    :  rigid:variable list
-    -> flexible:variable list
-    -> 'a t
-    -> 'a scheme
+  (** [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
+  val def : bindings:binding list -> in_:'a t -> 'a t
 
+  (** [let_ ~rigid ~flexible:n ~bindings ~in_] bindings [rigid]
+      variables and [flexible] variables in [bindings]. 
+      The bindings are then bound in [in_]. *)
   val let_
-    :  'm Size.t
-    -> 'n Size.t
-    -> ('m variables * 'n variables -> 'a t)
-    -> ('m variables * 'n variables -> def_binding list)
-    -> 'b t
+    :  rigid: variable list
+    -> flexible: variable list
+    -> bindings:('a t * binding list)
+    -> in_:'b t
     -> (term_binding list * 'a bound * 'b) t
+
 end

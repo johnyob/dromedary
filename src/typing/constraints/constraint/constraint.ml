@@ -11,21 +11,22 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Misc
-open Base
+open! Import
 
 (* ------------------------------------------------------------------------- *)
 
 (* [Intf] provides the interfaces required for constraints. *)
 
-module Intf = Intf
+module Module_types = Module_types
 
 (* ------------------------------------------------------------------------- *)
 
-open Intf
+open Module_types
 
-module Make (Term_var : Term_var) (Types : Types) = struct
+module Make (Algebra : Algebra) = struct
   (* --------------------------------------------------------------------- *)
+
+  open Algebra
 
   (* Add relevant modules from [Types]. *)
 
@@ -80,15 +81,15 @@ module Make (Term_var : Term_var) (Types : Types) = struct
   (* ['a t] is a constraint with value type ['a]. *)
 
   type _ t =
-    | Cst_true : unit t 
-    | Cst_conj : 'a t * 'b t -> ('a * 'b) t 
-    | Cst_eq : Type.t * Type.t -> unit t 
-    | Cst_exist : variable list * 'a t -> 'a t 
-    | Cst_forall : variable list * 'a t -> 'a t 
-    | Cst_instance : Term_var.t * Type.t -> Types.Type.t list t 
-    | Cst_def : def_binding list * 'a t -> 'a t
-    | Cst_let : 'a let_binding * 'b t -> (term_binding list * 'a bound * 'b) t
-    | Cst_map : 'a t * ('a -> 'b) -> 'b t 
+    | Cst_true : unit t
+    | Cst_conj : 'a t * 'b t -> ('a * 'b) t
+    | Cst_eq : Type.t * Type.t -> unit t
+    | Cst_exist : variable list * 'a t -> 'a t
+    | Cst_forall : variable list * 'a t -> 'a t
+    | Cst_instance : Term_var.t * Type.t -> Types.Type.t list t
+    | Cst_def : binding list * 'a t -> 'a t
+    | Cst_let : 'a scheme * 'b t -> (term_binding list * 'a bound * 'b) t
+    | Cst_map : 'a t * ('a -> 'b) -> 'b t
     | Cst_match : 'a t * 'b case list -> ('a * 'b list) t
     | Cst_decode : Type.t -> Types.Type.t t
 
@@ -96,17 +97,11 @@ module Make (Term_var : Term_var) (Types : Types) = struct
 
   and binding = Term_var.t * Type.t
 
-  and def_binding = binding
-
   and 'a scheme =
     { csch_rigid_vars : variable list
     ; csch_flexible_vars : variable list
     ; csch_cst : 'a t
-    }
-
-  and 'a let_binding =
-    { clb_sch : 'a scheme
-    ; clb_bs : binding list
+    ; csch_bindings : binding list
     }
 
   and 'a bound = Type_var.t list * 'a
@@ -163,85 +158,29 @@ module Make (Term_var : Term_var) (Types : Types) = struct
   let inst var typ = Cst_instance (var, typ)
   let decode typ = Cst_decode typ
 
-  (* --------------------------------------------------------------------- *)
-
-  (* Quantifiers, binders and continuations *)
-
-  module Continuation = struct
-    (* A continuation of the type [('a, 'b) cont] is a continuation for
-       constraint computations.
-
-       An example usage is binders: e.g. [exists]. However, we also use them
-       for typing patterns, etc.
-
-       As with standard continuations, they form a monadic structure. *)
-    type nonrec ('a, 'b) t = ('a -> 'b t) -> 'b t
-
-    include Monad.Make2 (struct
-      type nonrec ('a, 'b) t = ('a, 'b) t
-
-      let return x k = k x
-      let bind t ~f k = t (fun a -> f a k)
-      let map = `Define_using_bind
-    end)
-  end
-
-  (* [('n, 'a) binder] is a binder that binds ['n] variables. *)
-
-  type ('n, 'a) binder = ('n variables, 'a) Continuation.t
-
-  (* ['n variables] encodes the type of a list containing n variables
-     (where n is the type-level natural number representation). *)
-  and 'n variables = (variable, 'n) Sized_list.t
-
-  (* [('m, 'n, 'a) binder2] is the 2 kinded version of [binder], bindings ['m]
-       and ['n] rigid and flexible variables, respectively. *)
-  type ('m, 'n, 'a) binder2 = ('m variables * 'n variables, 'a) Continuation.t
-
-  let exists n binder =
-    let n_vars = Sized_list.init n ~f:(fun _ -> fresh ()) in
-    let t = binder n_vars
-    and vars = Sized_list.to_list n_vars in
+  let exists vars t =
     match t with
     | Cst_exist (vars', t) -> Cst_exist (vars @ vars', t)
-    | _ -> Cst_exist (vars, t)
+    | t -> Cst_exist (vars, t)
 
 
-  let forall n binder =
-    let n_vars = Sized_list.init n ~f:(fun _ -> fresh ()) in
-    let t = binder n_vars
-    and vars = Sized_list.to_list n_vars in
+  let forall vars t =
     match t with
-    | Cst_forall (vars', t) -> Cst_forall (vars @ vars', t)
-    | _ -> Cst_forall (vars, t)
+    | Cst_exist (vars', t) -> Cst_exist (vars @ vars', t)
+    | t -> Cst_exist (vars, t)
 
-
-  (* --------------------------------------------------------------------- *)
-
-  (* Environmental constraints (binders) *)
 
   let ( #= ) x typ : binding = x, typ
-  let def bindings cst = Cst_def (bindings, cst)
+  let def ~bindings ~in_ = Cst_def (bindings, in_)
 
-  let scheme ~rigid ~flexible csch_cst =
-    { csch_rigid_vars = rigid; csch_flexible_vars = flexible; csch_cst }
-
-
-  let let_ m n cst1 bindings cst2 =
-    (* Initialize [m] rigid variables and [n] flexible variables. *)
-    let m_rigid_vars = Sized_list.init m ~f:(fun _ -> fresh ())
-    and n_flexible_vars = Sized_list.init n ~f:(fun _ -> fresh ()) in
-    (* Pass variables to the bindings binder and first constraint *)
-    let cst1 = cst1 (m_rigid_vars, n_flexible_vars)
-    and bindings = bindings (m_rigid_vars, n_flexible_vars) in
-    (* Build let constraint. *)
-    let sch =
-      scheme
-        ~rigid:(Sized_list.to_list m_rigid_vars)
-        ~flexible:(Sized_list.to_list n_flexible_vars)
-        cst1
-    in
-    Cst_let ({ clb_sch = sch; clb_bs = bindings }, cst2)
+  let let_ ~rigid ~flexible ~bindings:(t, bindings) ~in_ =
+    Cst_let
+      ( { csch_rigid_vars = rigid
+        ; csch_flexible_vars = flexible
+        ; csch_cst = t
+        ; csch_bindings = bindings
+        }
+      , in_ )
 end
 
 (* TODO: Investigate the feasibility of using a dependent list:
