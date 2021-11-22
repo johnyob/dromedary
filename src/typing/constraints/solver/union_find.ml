@@ -11,10 +11,7 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-(* TODO: Investigate using mutuable feilds for descriptor + rank.
-   Improved efficiency? *)
-
-open Base
+open! Import
 
 (* This module implements an efficient union-find algorithm
    on disjoint sets, based on Tarjan and Huet. See IA notes. *)

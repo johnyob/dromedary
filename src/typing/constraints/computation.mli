@@ -11,12 +11,4 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open! Import
-
-module Module_types = Private.Constraint.Module_types
-
-module Make (Algebra : Algebra) = struct
-  include Private.Constraint.Make (Algebra)
-
-  include Private.Solver.Make (Algebra)
-end
+include Computation_intf.Intf (** @inline *)

@@ -13,10 +13,21 @@
 
 open! Import
 
-module Module_types = Private.Constraint.Module_types
+(* ------------------------------------------------------------------------- *)
 
-module Make (Algebra : Algebra) = struct
-  include Private.Constraint.Make (Algebra)
+module Make (Algebra : Algebra) : sig
 
-  include Private.Solver.Make (Algebra)
+  (* Instantiate constraint types. *)
+
+  module Constraint := Constraint.Make (Algebra)
+
+  (* [solve] takes a ['a Constraint.t], solves it
+     and returns it's "value". 
+     
+     If the constraint is unsolvable (i.e. reduces to Cst_false), 
+     then raises an exception. 
+     
+     TODO: Improve exception interface *)
+
+  val solve : 'a Constraint.t -> 'a
 end
