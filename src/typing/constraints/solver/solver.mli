@@ -11,15 +11,15 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Constraint.Intf
+open! Import
 
 (* ------------------------------------------------------------------------- *)
 
-module Make (Term_var : Term_var) (Types : Types) : sig
+module Make (Algebra : Algebra) : sig
 
   (* Instantiate constraint types. *)
 
-  module Constraint := Constraint.Make(Term_var)(Types)
+  module Constraint := Constraint.Make (Algebra)
 
   (* [solve] takes a ['a Constraint.t], solves it
      and returns it's "value". 

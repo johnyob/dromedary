@@ -13,7 +13,7 @@
 
 (* This module implements the interfaces for generalization. *)
 
-open Constraint.Intf
+open! Import
 
 (* ----------------------------------------------------------------------- *)
 

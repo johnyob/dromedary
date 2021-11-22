@@ -14,9 +14,7 @@
 (* This module implements a notion of generalization based on "graphic 
    types". *)
 
-open Base
-
-open Constraint.Intf
+open! Import
 
 (* ------------------------------------------------------------------------- *)
 

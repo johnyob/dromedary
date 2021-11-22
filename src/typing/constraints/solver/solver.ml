@@ -14,27 +14,27 @@
 (* This module implements a constraint solver and term elaborator, based on F.
    Pottier's paper ??. *)
 
-open Base
-
-open Constraint.Intf
+open! Import
 
 (* ------------------------------------------------------------------------- *)
 
-module Make (Term_var : Term_var) (Types : Types) = struct
+module Make (Algebra : Algebra) = struct
   (* ----------------------------------------------------------------------- *)
 
-  module Constraint = Constraint.Make (Term_var) (Types)
+  open Algebra
 
-  (* Aliases *)
-  module C = Constraint
-  module G = Generalization.Make (Types.Former)
-  module U = G.Unifier
-
-  (* ----------------------------------------------------------------------- *)
+  module Constraint = Constraint.Make (Algebra)
 
   module Type_var = Types.Var
   module Type_former = Types.Former
   module Type = Types.Type
+
+  (* Aliases *)
+  module C = Constraint
+  module G = Generalization.Make (Type_former)
+  module U = G.Unifier
+
+  (* ----------------------------------------------------------------------- *)
 
   (* ----------------------------------------------------------------------- *)
 
@@ -188,24 +188,24 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           let instance_variables, typ = G.instantiate state sch in
           unify (convert_cst_typ t) typ;
           fun () -> List.map ~f:decode_ instance_variables
-        | Cst_let ({ clb_sch; clb_bs }, cst) ->
+        | Cst_let (sch, cst) ->
           (* Enter a new region *)
           G.enter state;
           (* Initialize fresh flexible and rigid variables *)
           let _flexible_vars =
-            List.map ~f:(fun var -> bind_cst_var var Flexible) clb_sch.csch_flexible_vars
+            List.map ~f:(fun var -> bind_cst_var var Flexible) sch.csch_flexible_vars
           and rigid_vars =
-            List.map ~f:(fun var -> bind_cst_var var Rigid) clb_sch.csch_rigid_vars
+            List.map ~f:(fun var -> bind_cst_var var Rigid) sch.csch_rigid_vars
           in
           (* Convert the constraint types into graphic types *)
-          let typs = List.map clb_bs ~f:(fun (_, typ) -> convert_cst_typ typ) in
+          let typs = List.map sch.csch_bindings ~f:(fun (_, typ) -> convert_cst_typ typ) in
           (* Solve the constraint of the let binding *)
-          let v1 = solve ~env clb_sch.csch_cst in
+          let v1 = solve ~env sch.csch_cst in
           (* Generalize and exit *)
           let generalizable, schs = exit state ~rigid_vars ~roots:typs in
           (* Extend environment *)
           let env, bindings =
-            List.zip_exn clb_bs schs
+            List.zip_exn sch.csch_bindings schs
             |> List.fold_left
                  ~init:(env, [])
                  ~f:(fun (env, bindings) ((var, _), sch) ->
