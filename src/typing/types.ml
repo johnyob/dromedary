@@ -47,12 +47,16 @@ and type_decl_kind =
 
 and label_declaration =
   { label_name : string
+  ; label_type_params : string list
+  ; label_arg : type_expr
   ; label_type : type_expr
   }
 
 and constructor_declaration =
   { constructor_name : string
+  ; constructor_type_params : string list
   ; constructor_arg : type_expr option
+  ; constructor_type : type_expr
   }
 
 (* ------------------------------------------------------------------------- *)
@@ -62,7 +66,7 @@ and constructor_declaration =
 type constructor_description = 
   { constructor_name : string
   ; constructor_arg  : type_expr option
-  ; constructor_type : type_expr 
+  ; constructor_type : type_expr
   }
 
 type label_description = 

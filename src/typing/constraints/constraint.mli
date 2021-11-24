@@ -98,6 +98,9 @@ module Make (Algebra : Algebra) : sig
       type of [t]. *)
   val decode : Type.t -> Types.Type.t t
 
+  (** [fresh ()] creates a fresh constraint variable. *)
+  val fresh : unit -> variable
+
   (** [exists vars t] binds [vars] as existentially quantified variables. *)
   val exists : variable list -> 'a t -> 'a t
 

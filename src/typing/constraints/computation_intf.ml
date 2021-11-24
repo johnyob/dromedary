@@ -87,9 +87,7 @@ module type Intf = sig
     module Computation : S
 
     val lift : 'a Constraint.t Basic.t -> 'a Computation.t
-  
     val run : 'a Computation.t -> 'a Constraint.t Basic.t
-
 
     (** [constraint_ cst] creates a computation ['a Computation.t] 
         that returns the constraint [cst]. *)
@@ -122,6 +120,8 @@ module type Intf = sig
         val return : 'a Constraint.t -> 'a Computation.t
         val map : 'a Constraint.t -> f:('a -> 'b) -> 'b Constraint.t
         val both : 'a Constraint.t -> 'b Constraint.t -> ('a * 'b) Constraint.t
+        val bind : 'a Basic.t -> f:('a -> 'b Computation.t) -> 'b Computation.t
+
         val sub
           :  ?here:Source_code_position.t
           -> 'a Computation.t
@@ -141,11 +141,8 @@ module type Intf = sig
     module Constraint := Constraint.Make(Algebra)
     module Computation : S2
 
-    
     val lift : ('a Constraint.t, 'b) Basic.t -> ('a, 'b) Computation.t
-  
     val run : ('a, 'b) Computation.t -> ('a Constraint.t, 'b) Basic.t
-
     val constraint_ : 'a Constraint.t -> ('a, 'b) Computation.t
     val const : 'a -> ('a, 'b) Computation.t
     val pure : 'a Constraint.t -> f:('a -> 'b) -> ('b, 'c) Computation.t
@@ -163,6 +160,11 @@ module type Intf = sig
         val return : 'a Constraint.t -> ('a, 'b) Computation.t
         val map : 'a Constraint.t -> f:('a -> 'b) -> 'b Constraint.t
         val both : 'a Constraint.t -> 'b Constraint.t -> ('a * 'b) Constraint.t
+
+        val bind
+          :  ('a, 'c) Basic.t
+          -> f:('a -> ('b, 'c) Computation.t)
+          -> ('b, 'c) Computation.t
 
         val sub
           :  ?here:Source_code_position.t

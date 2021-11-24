@@ -67,6 +67,7 @@ module Make (Algebra : Algebra) (Basic : Basic) = struct
       let return = return
       let map = Constraint.map
       let both = Constraint.both
+      let bind : 'a 'b. 'a Basic.t -> f:('a -> 'b Computation.t) -> 'b Computation.t = Basic.bind
       let sub ?here:_ t ~f = Basic.bind t ~f
       let arr ?here:_ t ~f = pure t ~f
     end
@@ -126,6 +127,7 @@ module Make2 (Algebra : Algebra) (Basic : Basic2) = struct
       let return = return
       let map = Constraint.map
       let both = Constraint.both
+      let bind : 'a 'b 'c. ('a, 'c) Basic.t -> f:('a -> ('b, 'c) Computation.t) -> ('b, 'c) Computation.t  = Basic.bind
       let sub ?here:_ t ~f = Basic.bind t ~f
       let arr ?here:_ t ~f = pure t ~f
     end
