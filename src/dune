@@ -1,4 +1,4 @@
 (library
  (name dromedary)
- (libraries dromedary_parsing dromedary_typing))
+ (libraries dromedary.parsing dromedary.typing))
 

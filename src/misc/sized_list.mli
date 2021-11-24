@@ -11,12 +11,14 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open! Import
+type ('a, 'n) t = 
+  | [] : ('a, Size.z) t
+  | (::) : 'a * ('a, 'n) t -> ('a, 'n Size.s) t
 
-module Module_types = Private.Constraint.Module_types
+val init : 'n Size.t -> f:(int -> 'a) -> ('a, 'n) t
 
-module Make (Algebra : Algebra) = struct
-  include Private.Constraint.Make (Algebra)
+val map : ('a, 'n) t -> f:('a -> 'b) -> ('b, 'n) t
 
-  include Private.Solver.Make (Algebra)
-end
+val iter : ('a, _) t -> f:('a -> unit) -> unit
+
+val to_list : ('a, _) t -> 'a list

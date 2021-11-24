@@ -13,10 +13,20 @@
 
 open! Import
 
-module Module_types = Private.Constraint.Module_types
+module Make (Algebra : Algebra) : sig
 
-module Make (Algebra : Algebra) = struct
-  include Private.Constraint.Make (Algebra)
+  module Constraint : module type of Constraint.Make (Algebra)
 
-  include Private.Solver.Make (Algebra)
+  module Computation : sig
+    module type Basic = Computation.Basic
+    module type Basic2 = Computation.Basic2
+
+    module type S = Computation.S
+    module type S2 = Computation.S2
+
+    module Make (Basic : Basic) : module type of Computation.Make (Algebra) (Basic)
+
+    module Make2 (Basic : Basic2) : module type of Computation.Make2 (Algebra) (Basic)
+  end
+
 end

@@ -11,23 +11,22 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Intf
+open! Import
 
-(* ------------------------------------------------------------------------- *)
+module Make (Algebra : Algebra) = struct
 
-module Make (Term_var : Term_var) (Types : Types) : sig
+  module Constraint = Constraint.Make (Algebra)
 
-  (* Instantiate constraint types. *)
+  module Computation = struct
+    module type Basic = Computation.Basic
+    module type Basic2 = Computation.Basic2
 
-  module Constraint := Constraint.Make(Term_var)(Types)
+    module type S = Computation.S
+    module type S2 = Computation.S2
 
-  (* [solve] takes a ['a Constraint.t], solves it
-     and returns it's "value". 
-     
-     If the constraint is unsolvable (i.e. reduces to Cst_false), 
-     then raises an exception. 
-     
-     TODO: Improve exception interface *)
+    module Make (Basic : Basic) = Computation.Make (Algebra) (Basic)
 
-  val solve : 'a Constraint.t -> 'a
+    module Make2 (Basic : Basic2) = Computation.Make2 (Algebra) (Basic)
+  end
+
 end

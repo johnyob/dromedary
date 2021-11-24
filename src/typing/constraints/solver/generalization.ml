@@ -14,8 +14,7 @@
 (* This module implements a notion of generalization based on "graphic 
    types". *)
 
-open Base
-open Intf
+open! Import
 
 (* ------------------------------------------------------------------------- *)
 

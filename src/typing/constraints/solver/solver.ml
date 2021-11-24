@@ -11,29 +11,30 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-(* This module implements a constraint solver and term elaborator,
-   based on F. Pottier's paper ??. *)
+(* This module implements a constraint solver and term elaborator, based on F.
+   Pottier's paper ??. *)
 
-open Base
-open Intf
+open! Import
 
 (* ------------------------------------------------------------------------- *)
 
-module Make (Term_var : Term_var) (Types : Types) = struct
+module Make (Algebra : Algebra) = struct
   (* ----------------------------------------------------------------------- *)
 
-  module Constraint = Constraint.Make (Term_var) (Types)
+  open Algebra
 
-  (* Aliases *)
-  module C = Constraint
-  module G = Generalization.Make (Types.Former)
-  module U = G.Unifier
-
-  (* ----------------------------------------------------------------------- *)
+  module Constraint = Constraint.Make (Algebra)
 
   module Type_var = Types.Var
   module Type_former = Types.Former
   module Type = Types.Type
+
+  (* Aliases *)
+  module C = Constraint
+  module G = Generalization.Make (Type_former)
+  module U = G.Unifier
+
+  (* ----------------------------------------------------------------------- *)
 
   (* ----------------------------------------------------------------------- *)
 
@@ -51,22 +52,21 @@ module Make (Term_var : Term_var) (Types : Types) = struct
 
   (* ----------------------------------------------------------------------- *)
 
-  (* An environment in our constraint solver is defined as a 
-     partial finite function from term variables to schemes. 
-     
-     We implement this using a [Map]. 
-     
-     We favor [Map] over [Hashtbl] here since we want immutability 
-     for recursive calls, as modifications in a local block shouldn't
-     affect the overall environment 
+  (* An environment in our constraint solver is defined as a partial finite
+     function from term variables to schemes.
 
-     e.g. let x : 'a ... 'b. [ let y : 'c ... 'd. [ C ] in C' ] in C'',
-     here binding y shouldn't affect the environment for C''. 
-     This would not be the case for a mutable mapping (using side-effecting
-     operations). 
-     
-     Using [Hashtbl] would implement a dynamically scoped environment
-     as opposed to a lexically scoped one. *)
+     We implement this using a [Map].
+
+     We favor [Map] over [Hashtbl] here since we want immutability for recursive
+     calls, as modifications in a local block shouldn't affect the overall
+     environment
+
+     e.g. let x : 'a ... 'b. [ let y : 'c ... 'd. [ C ] in C' ] in C'', here
+     binding y shouldn't affect the environment for C''. This would not be the
+     case for a mutable mapping (using side-effecting operations).
+
+     Using [Hashtbl] would implement a dynamically scoped environment as opposed
+     to a lexically scoped one. *)
 
   module Env = struct
     module Term_var_comparator = struct
@@ -82,9 +82,8 @@ module Make (Term_var : Term_var) (Types : Types) = struct
     let extend t var sch = Map.add_exn t ~key:var ~data:sch
     let find t var = Map.find_exn t var
 
-    (* let extends_schs t bindings = 
-      List.fold_left bindings ~init:t ~f:(fun t (var, sch) ->
-        extend t var sch) *)
+    (* let extends_schs t bindings = List.fold_left bindings ~init:t ~f:(fun t
+       (var, sch) -> extend t var sch) *)
 
     let extends_typs t bindings =
       List.fold_left bindings ~init:t ~f:(fun t (var, typ) ->
@@ -98,10 +97,10 @@ module Make (Term_var : Term_var) (Types : Types) = struct
 
   type decoder = U.Type.t -> Types.Type.t
 
-  let decode_variable typ = Type_var.of_int (U.Type.id typ) 
+  let decode_variable typ = Type_var.of_int (U.Type.id typ)
 
   let decode : decoder =
-    U.fold ~var:(fun typ _ -> Type.var (decode_variable typ)) ~form:Type.con
+    U.fold ~var:(fun typ _ -> Type.var (decode_variable typ)) ~form:Type.form
 
 
   let decode_scheme sch =
@@ -129,14 +128,16 @@ module Make (Term_var : Term_var) (Types : Types) = struct
   (* ----------------------------------------------------------------------- *)
 
   let solve cst =
+    (* [decode] is shadowed when opening [Constraint]. *)
+    let decode_ = decode in
     let open Constraint in
     (* Initialize generalization state. *)
     let state = G.make_state () in
-    (* Constaint variables are encoded using immutable integers. When solving, 
+    (* Constaint variables are encoded using immutable integers. When solving,
        we need to map these to unification variables. *)
     let cst_var_env = Hashtbl.create (module Int) in
     (* A lookup function for constraint variables. TODO: Error handling *)
-    let find_cst_var var = Hashtbl.find_exn cst_var_env var in
+    let find_cst_var (var : variable) = Hashtbl.find_exn cst_var_env (var :> int) in
     (* A conversion function between constraint types and graphic types. *)
     let rec convert_cst_typ typ =
       match typ with
@@ -145,9 +146,9 @@ module Make (Term_var : Term_var) (Types : Types) = struct
         G.fresh_form state (Type_former.map form ~f:convert_cst_typ)
     in
     (* A binding function for constraint variables *)
-    let bind_cst_var cst_var flexibility =
+    let bind_cst_var (cst_var : variable) flexibility =
       let typ = G.fresh_var state flexibility in
-      Hashtbl.set cst_var_env ~key:cst_var ~data:typ;
+      Hashtbl.set cst_var_env ~key:(cst_var :> int) ~data:typ;
       typ
     in
     (* Helper function for extending an env w/ several binders *)
@@ -161,7 +162,6 @@ module Make (Term_var : Term_var) (Types : Types) = struct
       fun ~env cst ->
         match cst with
         | Cst_true -> return ()
-        | Cst_false -> assert false
         | Cst_map (cst, f) ->
           let v = solve ~env cst in
           map v ~f
@@ -181,33 +181,31 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           in
           both v (list vs)
         | Cst_exist (vars, cst) ->
-          List.iter vars ~f:(fun var -> ignore (bind_cst_var var Flexible));
+          List.iter ~f:(fun var -> ignore (bind_cst_var var Flexible)) vars;
           solve ~env cst
         | Cst_instance (x, t) ->
           let sch = Env.find env x in
           let instance_variables, typ = G.instantiate state sch in
           unify (convert_cst_typ t) typ;
-          fun () -> List.map ~f:decode instance_variables
-        | Cst_let ({ clb_sch; clb_bs }, cst) ->
+          fun () -> List.map ~f:decode_ instance_variables
+        | Cst_let (sch, cst) ->
           (* Enter a new region *)
           G.enter state;
           (* Initialize fresh flexible and rigid variables *)
           let _flexible_vars =
-            List.map clb_sch.csch_flexible_vars ~f:(fun var ->
-                bind_cst_var var Flexible)
+            List.map ~f:(fun var -> bind_cst_var var Flexible) sch.csch_flexible_vars
           and rigid_vars =
-            List.map clb_sch.csch_rigid_vars ~f:(fun var ->
-                bind_cst_var var Rigid)
+            List.map ~f:(fun var -> bind_cst_var var Rigid) sch.csch_rigid_vars
           in
           (* Convert the constraint types into graphic types *)
-          let typs = List.map clb_bs ~f:(fun (_, typ) -> convert_cst_typ typ) in
+          let typs = List.map sch.csch_bindings ~f:(fun (_, typ) -> convert_cst_typ typ) in
           (* Solve the constraint of the let binding *)
-          let v1 = solve ~env clb_sch.csch_cst in
+          let v1 = solve ~env sch.csch_cst in
           (* Generalize and exit *)
           let generalizable, schs = exit state ~rigid_vars ~roots:typs in
           (* Extend environment *)
           let env, bindings =
-            List.zip_exn clb_bs schs
+            List.zip_exn sch.csch_bindings schs
             |> List.fold_left
                  ~init:(env, [])
                  ~f:(fun (env, bindings) ((var, _), sch) ->
@@ -225,13 +223,15 @@ module Make (Term_var : Term_var) (Types : Types) = struct
           G.enter state;
           (* Introduce the rigid variables *)
           let rigid_vars =
-            List.map vars ~f:(fun var -> bind_cst_var var Rigid)
+            List.map ~f:(fun var -> bind_cst_var var Rigid) vars
           in
           (* Solve the constraint *)
           let v = solve ~env cst in
           (* Generalize and exit *)
           ignore (exit state ~rigid_vars ~roots:[]);
           v
+        | Cst_decode typ ->
+          fun () -> decode_ (convert_cst_typ typ)
     in
-    Elaborate.run (solve ~env:Env.empty cst) 
+    Elaborate.run (solve ~env:Env.empty cst)
 end

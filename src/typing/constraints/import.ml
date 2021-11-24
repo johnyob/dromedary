@@ -11,12 +11,11 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open! Import
+include Base
 
-module Module_types = Private.Constraint.Module_types
-
-module Make (Algebra : Algebra) = struct
-  include Private.Constraint.Make (Algebra)
-
-  include Private.Solver.Make (Algebra)
+module Private = struct
+  module Constraint = Dromedary_typing_constraints_constraint.Constraint
+  module Solver = Dromedary_typing_constraints_solver.Solver
 end
+
+include Private.Constraint.Module_types

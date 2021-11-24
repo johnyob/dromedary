@@ -23,10 +23,11 @@ type core_type =
   (** Type variables ['a]. *)
   | Ptyp_arrow of core_type * core_type
   (** Function types [T1 -> T2]. *)
-  | Ptyp_int
-  (** [int] type. *)
-  | Ptyp_unit
-  (** [unit] type. *)
+  | Ptyp_tuple of core_type list
+  (** Product (or "tuple") types. *)
+  | Ptyp_constr of core_type list * string
+  (** A type constructor (or "type former"),
+      name "constr" is used for consistency between OCaml and Dromedary code. *)
   
 
 (** [core_schemes] are defined by the grammar: 
@@ -35,7 +36,6 @@ type core_type =
     This "source"-level notion of type schemes is often used
     in annotations in [expression] and [pattern]. *)
 type core_scheme = string list * core_type
-
 
 type pattern = 
   | Ppat_any 
@@ -60,14 +60,14 @@ type expression =
   (** Primitive operations [%prim p]. e.g. [%prim +], [%prim -], etc. *)
   | Pexp_const of constant
   (** Constants [c]. e.g. [1, true, ()]. *)
-  | Pexp_fun of pattern list * expression
+  | Pexp_fun of pattern * expression
   (** The function (or lambda) abstraction [fun P -> E].  
       Note that: 
         - [let x P1 ... Pn = E in ...] is encoding using 
           [Pexp_let ("x", fun P1 ... Pn -> E, ...)]. *)
   | Pexp_app of expression * expression
   (** Function application [E1 E2]. *)
-  | Pexp_let of rec_flag * value_binding list * expression
+  | Pexp_let of rec_flag * value_binding * expression
   (** Let expressions:
       [let P1 = E1 and ... and Pn = En in E]      ([rec_flag = Nonrecursive]).    
       [let rec P1 = E1 and ... Pn = En in E]      ([rec_flag = Recursive]). 
@@ -83,6 +83,10 @@ type expression =
   (** An expression "constraint" or typing annotation [(E : T)]. *)
   | Pexp_construct of string * expression option
   (** An applied algebraic data type constructor [C <E>]. *)
+  | Pexp_record of (string * expression) list
+  (** {l1 = E1; ...; ln = En} *)
+  | Pexp_field of expression * string
+  (** E.l *)
   | Pexp_tuple of expression list
   (** Tuples [(E1, ..., En)]. 
       Invariant: n >= 2. *)
