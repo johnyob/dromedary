@@ -489,8 +489,8 @@ Syntactic sugar:
  . ⊢ . 
 
    Γ ⊢ bs   C₁ ⊢ p : ɑ ~> Δ    C₂ ⊢ e : ɑ
--------------------------------------------------
- Γ, ∀ ɑ₁ .. ɑₙ ∃ Θ, ɑ. C₁ && C₂ => Δ ⊢ bs and p = e 
+---------------------------------------------
+ Γ, ∀ Λ ∃ Θ, ɑ. C₁ && C₂ => Δ ⊢ bs and p = e 
 
 (* C ⊢ p : ɣ ~> Δ *)
 
@@ -520,9 +520,9 @@ fragments     Δ ::= . | Δ, x : ɑ
  C ⊢ K p : ɣ ~> Δ
 
 
-  ∀ 1 <= i <= n. Cᵢ ⊢ pᵢ ~> Δᵢ : τᵢ   
+  ∀ 1 <= i <= n. Cᵢ ⊢ pᵢ : ɑᵢ ~> Δᵢ   
 -------------------------------------------------------------
-  C₁ && .. && Cₙ ⊢ (p₁, .., pₙ) : τ₁ x .. x τₙ ~> Δ₁ x .. x Δₙ
+  C₁ && .. && Cₙ && ɣ = ɑ₁ x .. x ɑₙ ⊢ (p₁, .., pₙ) : ɣ ~> Δ₁ x .. x Δₙ
 
 
   [τ] = Θ |> ɑ    C ⊢ p : ɑ ~> Δ
@@ -543,5 +543,6 @@ fragments     Δ ::= . | Δ, x : ɑ
 Change log:
 
 - All judgement use variables, relying on explicit equivalences via `=`
-- 
+- Initial judgements are surrounded by their initial view (e.g. `C ⊢ e : τ` is converted to `∃ Θ. C ⊢ e : ɑ` where `[τ] = Θ |> ɑ`). 
+- Existential variables are used more often for constructing types.
 
