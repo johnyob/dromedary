@@ -546,3 +546,128 @@ Change log:
 - Initial judgements are surrounded by their initial view (e.g. `C ⊢ e : τ` is converted to `∃ Θ. C ⊢ e : ɑ` where `[τ] = Θ |> ɑ`). 
 - Existential variables are used more often for constructing types.
 
+#
+
+## Implication Constraints
+
+The next type system is an idealized implementation of implication constraints 
+(the constraints added by Haskell's OutsideIn [??]). 
+
+### Constraints and OutsideIn
+
+OutsideIn's idealized type system adds 2 features, "rigid variables" (also known as skolem constants) and implication constraints.
+
+Procaml already has a notion of "rigid variables" due to it's universal quantifier `∀`. Hence the only addition to constraints is the implication constraint. 
+
+```ocaml
+constraints     C ::= ... | C => C
+```
+
+### Constructors, Environments and Fragments
+
+GADTs introduce 2 new features to constructors, the notion of binding local constraints and existential variables. 
+
+We modify the abstract judgments of the environment Ω to account for these:
+```ocaml
+Ω ⊢ K :: ∀ ɑ₁ .. ɑₙ. D => (ɑ₁, .., ɑₙ) F
+  = "In Ω, constant constructor K for type former F binds local constraint D"
+
+Ω ⊢ K e :: ∀ ɑ₁ .. ɑₙ. ∃ βₙ .. βₘ. D => τ -> (ɑ₁, .., ɑₙ) F
+  = "In Ω, constructor K for type former F w arugment of 
+     type τ binds existentials βₙ .. βₘ and local constraint D"
+```
+
+This gives us the following instantiation constraints for GADT constructors: 
+```ocaml
+C ⊢ ∃ ɑ₁ .. ɑₙ. D && τ = (ɑ₁ .. ɑₙ) F    
+Ω ⊢ K :: ∀ ɑ₁ .. ɑₙ. D => (ɑ₁, .., ɑₙ) F   
+---------------------------------------------------
+    C ⊢ K <= τ
+
+
+C ⊢ ∃ ɑ₁ .. ɑₙ. τ = (ɑ₁ .. ɑₙ) F    
+Ω ⊢ K :: ∀ ɑ₁ .. ɑₙ. D => (ɑ₁, .., ɑₙ) F   
+---------------------------------------------------
+    C ⊢ τ <= K ~> D
+
+
+C ⊢ ∃ ɑ₁ .. ɑₙ β₁ .. βₘ. D && τ₁ = τ && τ₂ = (ɑ₁ .. ɑₙ) F    
+Ω ⊢ K :: ∀ ɑ₁ .. ɑₙ. ∃ β₁ .. βₘ. D => τ -> (ɑ₁, .., ɑₙ) F   
+---------------------------------------------------------
+    C ⊢ K <= τ₁ -> τ₂
+
+
+C ⊢ ∃ ɑ₁ .. ɑₙ. ∀ β₁ .. βₘ. τ₁ = τ && τ₂ = (ɑ₁ .. ɑₙ) F    
+Ω ⊢ K :: ∀ ɑ₁ .. ɑₙ. ∃ β₁ .. βₘ. D => τ -> (ɑ₁, .., ɑₙ) F   
+---------------------------------------------------------
+    C ⊢ τ₁ -> τ₂ <= K ~> ∀ β₁ .. βₘ. D
+```
+
+
+Similarly, environment fragments used for pattern matching must be altered 
+to account for locally bound existential variables and local constraints.
+
+```ocaml
+monomorphic env     Ξ ::= . | x : τ
+fragment            Δ ::= ∀  β₁ .. βₘ. D => Ξ
+
+Δ₁ x Δ₂ = ∀ β₁ β₂. D₁ && D₂ => Ξ₁, Ξ₂
+∀ β₁. D₁ => Δ₂ = ∀ β₁ β₂. D₁ && D₂ => Ξ₂
+```
+
+### Type System
+
+```ocaml
+(* C ⊢ e : τ *)
+
+...
+
+ C ⊢ p : τ₁ ~> ∀ β. D => Ξ     E ⊢ e : τ₂   β # τ₂
+---------------------------------------------------
+ C && ∀ β. D => def Ξ in E ⊢ p -> e : τ₁ => τ₂
+
+(* C ⊢ p : τ ~> Δ *)
+
+------------------------
+ C ⊢ _ : τ ~> ∀ .⊤ => .
+
+
+----------------------------
+ C ⊢ x : τ ~> ∀ .⊤ => x : τ
+
+
+        ⊢ const : τ
+----------------------------
+ C ⊢ const : τ ~> ∀ .⊤ => .
+
+
+ C ⊢ τ <= K ~> D 
+--------------------------
+ C ⊢ K : τ ~> ∀. D => .
+
+
+ C ⊢ τ₁ -> τ₂ <= K ~> ∀ β. D
+ C && D ⊢ p : τ₁ ~> Δ
+-----------------------------
+ C ⊢ K p : τ ~> ∀ β. D => Δ
+
+
+  ∀ 1 <= i <= n. Cᵢ ⊢ pᵢ : τᵢ ~> Δᵢ   
+-------------------------------------------------------------
+  C₁ && .. && Cₙ ⊢ (p₁, .., pₙ) : τ₁ x .. x τₙ ~> Δ₁ x .. x Δₙ
+
+
+ C ⊢ p : τ ~> Δ
+----------------------
+ C ⊢ (p : τ) : τ ~> Δ
+
+
+  C ⊢ p : τ ~> Δ         ɑ₁ .. ɑₙ # τ, Δ
+-----------------------------------------
+       ∃ ɑ₁ .. ɑₙ. C ⊢ p : τ ~> Δ
+
+
+  C ⊢ p : τ₁ ~> Δ               
+-----------------------------
+  C && τ₁ = τ₂ ⊢ p : τ₂ ~> Δ
+```
