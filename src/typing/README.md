@@ -179,12 +179,12 @@ The type system is given by:
        C₁ && C₂ ⊢ e₁ e₂ : τ₂
 
 
-  Γ ⊢ bs          C ⊢ e : τ
+  bs : Γ          C ⊢ e : τ
 ------------------------------
  let Γ in C ⊢ let bs in e : τ 
 
 
-  Γ ⊢ bs          C ⊢ e : τ      mode ⊢ bs : rec 
+  bs : Γ          C ⊢ e : τ      mode ⊢ bs : rec 
 -------------------------------------------------
        let rec Γ in C ⊢ let bs in e : τ 
 
@@ -258,14 +258,20 @@ The type system is given by:
 ------------------------
   C && τ₁ = τ₂ ⊢ e : τ₂
 
-(* Γ ⊢ bs *)
+(* b : σ *)
+
+ C₁ ⊢ p : τ ~> Δ    C₂ ⊢ e : τ
+----------------------------------
+ p = e : ∀ ɑ₁ .. ɑₙ. C₁ && C₂ => Δ
+
+(* bs : Γ *)
 
 -------
  . ⊢ . 
 
-   Γ ⊢ bs   C₁ ⊢ p : τ ~> Δ    C₂ ⊢ e : τ
----------------------------------------------
- Γ, ∀ ɑ₁ .. ɑₙ. C₁ && C₂ => Δ ⊢ bs and p = e 
+ bs : Γ   b : σ
+------------------
+ bs and b : Γ, σ
 
 (* C ⊢ p : τ ~> Δ *)
 
@@ -521,7 +527,7 @@ fragments     Δ ::= . | Δ, x : ɑ
 
 
   ∀ 1 <= i <= n. Cᵢ ⊢ pᵢ : ɑᵢ ~> Δᵢ   
--------------------------------------------------------------
+----------------------------------------------------------------------
   C₁ && .. && Cₙ && ɣ = ɑ₁ x .. x ɑₙ ⊢ (p₁, .., pₙ) : ɣ ~> Δ₁ x .. x Δₙ
 
 
@@ -563,7 +569,7 @@ Procaml already has a notion of "rigid variables" due to it's universal quantifi
 constraints     C ::= ... | C => C
 ```
 
-### Constructors, Environments and Fragments
+### Constructors, and Environments
 
 GADTs introduce 2 new features to constructors, the notion of binding local constraints and existential variables. 
 
@@ -603,17 +609,43 @@ C ⊢ ∃ ɑ₁ .. ɑₙ. ∀ β₁ .. βₘ. τ₁ = τ && τ₂ = (ɑ₁ .. ɑ
     C ⊢ τ₁ -> τ₂ <= K ~> ∀ β₁ .. βₘ. D
 ```
 
+### Existential Binders and Fragments
 
-Similarly, environment fragments used for pattern matching must be altered 
-to account for locally bound existential variables and local constraints.
+GADTs introduce local constraints and existential variables, these must also be accounted for in binders
+within constraints. 
 
+Previous formalizations e.g. OutsideIn or HMG focus on the notion of a "fragment" that binds
+constraints and existential variables.
+
+We generalize this notion with existential binders. 
 ```ocaml
-monomorphic env     Ξ ::= . | x : τ
-fragment            Δ ::= ∀  β₁ .. βₘ. D => Ξ
+existential binder            Ɛ ::= ∀ β₁ .. βₘ. D => x : σ
+existential contexts          𝔈 ::= . | 𝔈, Ɛ
+```
+
+This notion of binders is now extended to constraints, with the following new constraints: 
+```
+C ::= ... | def 𝔈 in C | let 𝔈 in C 
+```
+
+Note that recursive binders (e.g. `let rec`) do not bind existentials (TODO: Ask Mistral what the interpretation of binding existentials for recursion would equate to). 
+
+Intuitively, we have the following equivalence: 
+```ocaml
+def ∀ β₁ .. βₘ. D => x : σ in C === ∀ β₁ .. βₘ. D => def x : σ in C
+
+let ∀ β₁ .. βₘ. D => x : σ in C === ∀ β₁ .. βₘ. D => let x : σ in C
+```
+
+Existential fragments are defined as follows: 
+```ocaml
+existential fragment      Δ ::= ∀ β₁ .. βₘ. D => Ξ
 
 Δ₁ x Δ₂ = ∀ β₁ β₂. D₁ && D₂ => Ξ₁, Ξ₂
-∀ β₁. D₁ => Δ₂ = ∀ β₁ β₂. D₁ && D₂ => Ξ₂
 ```
+
+Fragments can implicitly be converted into contexts. 
+
 
 ### Type System
 
@@ -622,9 +654,20 @@ fragment            Δ ::= ∀  β₁ .. βₘ. D => Ξ
 
 ...
 
- C ⊢ p : τ₁ ~> ∀ β. D => Ξ     E ⊢ e : τ₂   β # τ₂
----------------------------------------------------
- C && ∀ β. D => def Ξ in E ⊢ p -> e : τ₁ => τ₂
+ C ⊢ p : τ₁ ~> Δ     D ⊢ e : τ₂   β # τ₂
+------------------------------------------
+ C && def Δ in D ⊢ p -> e : τ₁ => τ₂
+
+
+  bs : 𝔈          C ⊢ e : τ    evs(𝔈) # τ
+------------------------------------------
+       let 𝔈 in C ⊢ let bs in e : τ 
+
+(* b : Ɛ *)
+
+ C₁ ⊢ p : τ ~> ∀ β₁ .. βₘ. D => Ξ     C₂ ⊢ e : τ
+-----------------------------------------------------
+ p = e : ∀ β₁ .. βₘ. D => (∀ ɑ₁ .. ɑₙ. C₁ && C₂ => Ξ)
 
 (* C ⊢ p : τ ~> Δ *)
 
@@ -647,9 +690,9 @@ fragment            Δ ::= ∀  β₁ .. βₘ. D => Ξ
 
 
  C ⊢ τ₁ -> τ₂ <= K ~> ∀ β. D
- C && D ⊢ p : τ₁ ~> Δ
------------------------------
- C ⊢ K p : τ ~> ∀ β. D => Δ
+ E ⊢ p : τ₁ ~> Δ
+-------------------------------------------
+ C && ∀ β. D => E ⊢ K p : τ ~> ∀ β. D => Δ
 
 
   ∀ 1 <= i <= n. Cᵢ ⊢ pᵢ : τᵢ ~> Δᵢ   
@@ -671,3 +714,6 @@ fragment            Δ ::= ∀  β₁ .. βₘ. D => Ξ
 -----------------------------
   C && τ₁ = τ₂ ⊢ p : τ₂ ~> Δ
 ```
+
+# 
+
