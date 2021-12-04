@@ -335,37 +335,36 @@ In the Ambivalent types [??], this is known as the "split view".
 ### Constraints
 
 ```ocaml
-constraints     C ::= 
-                  | ⊥ | ⊤ | ɑ₁ = ɑ₂ | C && C 
-                  | ∃ ɑ. C | ∃ ɑ [ɑ = ρ]. C | ∀ ɑ. C 
-                  | def Γ in C | x <= ɑ | σ <= ɑ
-                  | let Γ in C | let rec Γ in C
+constraints       C ::= 
+                    | ⊥ | ⊤ | C && C | ∃ Θ. C | ∀ Λ. C 
+                    | ɑ₁ = ɑ₂
+                    | def Γ in C | x <= ɑ | σ <= ɑ
+                    | let Σ in C | let rec Σ in C
+                    
+shallow types     ρ ::= ɑ -> ɑ | (ɑ₁, .., ɑₙ) F
 
+schemes           σ ::= ∀ Θ. C => ɑ
 
-shared types    ρ ::= ɑ -> ɑ | (ɑ₁, .., ɑₙ) F
+rigid bindings    Λ ::= . | Λ, ɑ
+flexible bindings Θ ::= . | Θ, ɑ | Θ, ɑ :: ρ
 
-rigid view      Λ ::= . | Λ, ɑ
-flexible view   Θ ::= . | Θ, ɑ | Θ, ɑ = ρ
+mono contexts     Ξ ::= . | x : ɑ
+poly contexts     Γ ::= . | x : σ
 
-shared schemes  σ ::= ∀ Θ. C => ɑ
-
-contexts        Γ ::= . | x : ∀ Λ ∃ Θ. C => ɑ 
+let contexts      Σ ::= . | ∀ Λ. ∃ Θ. C => Ξ
 ```
 
 Change log: 
 
-- Added `∃ ɑ [ɑ = ρ]` for explicitly building types
+- Added `∃ ɑ :: ρ` for explicitly building types
 - Changed equality and instantiation constraints to use variables
-- Updated bindings in contexts `Γ`, now has the notion of binding
-  rigid variables. 
-
-  Used in the `forall` expression for efficient (linear) constraint generation.
+- Added let contexts `Σ` that explicitly bind rigid variables `Λ`. 
 
 ### Type System
 
 Syntactic sugar: 
 ```ocaml
-ɑ = ρ === ∃ β [β = ρ]. ɑ = β
+ɑ = ρ === ∃ β :: ρ. ɑ = β
 ```
 
 ```ocaml
@@ -410,14 +409,14 @@ Syntactic sugar:
   ɑ = β -> ɣ && C₁ && C₂ ⊢ e₁ e₂ : ɣ
 
 
-  Γ ⊢ bs          C ⊢ e : ɣ
+  Σ ⊢ bs          C ⊢ e : ɣ
 ------------------------------
- let Γ in C ⊢ let bs in e : ɣ 
+ let Σ in C ⊢ let bs in e : ɣ 
 
 
-  Γ ⊢ bs          C ⊢ e : ɣ      mode ⊢ bs : rec 
+  Σ ⊢ bs          C ⊢ e : ɣ      mode ⊢ bs : rec 
 -------------------------------------------------
-       let rec Γ in C ⊢ let bs in e : ɣ 
+       let rec Σ in C ⊢ let bs in e : ɣ 
 
 
   C ⊢ e : ɣ               ɑ₁ .. ɑₙ <> ɣ
@@ -489,14 +488,14 @@ Syntactic sugar:
 ------------------------
   C && ɑ = β ⊢ e : β
 
-(* Γ ⊢ bs *)
+(* Σ ⊢ bs *)
 
 -------
  . ⊢ . 
 
-   Γ ⊢ bs   C₁ ⊢ p : ɑ ~> Δ    C₂ ⊢ e : ɑ
----------------------------------------------
- Γ, ∀ Λ ∃ Θ, ɑ. C₁ && C₂ => Δ ⊢ bs and p = e 
+   Σ ⊢ bs     C₁ ⊢ p : ɑ ~> Δ     C₂ ⊢ e : ɑ
+------------------------------------------------------
+ Σ, ∀ Λ ∃ Θ, ɑ. C₁ && C₂ => Δ ⊢ bs and (type Λ) p = e 
 
 (* C ⊢ p : ɣ ~> Δ *)
 
@@ -551,6 +550,8 @@ Change log:
 - All judgement use variables, relying on explicit equivalences via `=`
 - Initial judgements are surrounded by their initial view (e.g. `C ⊢ e : τ` is converted to `∃ Θ. C ⊢ e : ɑ` where `[τ] = Θ |> ɑ`). 
 - Existential variables are used more often for constructing types.
+- Binders now explicitly bind some rigid variables using `(type Λ) p = e`,
+  designed to interact w the new let contexts `Σ`. 
 
 #
 
@@ -624,7 +625,7 @@ existential contexts          𝔈 ::= . | 𝔈, Ɛ
 ```
 
 This notion of binders is now extended to constraints, with the following new constraints: 
-```
+```ocaml
 C ::= ... | def 𝔈 in C | let 𝔈 in C 
 ```
 
