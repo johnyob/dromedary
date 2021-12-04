@@ -504,7 +504,6 @@ fragments     Δ ::= . | Δ, x : ɑ
 ----------------
  C ⊢ _ : ɣ ~> .
 
-
 --------------------
  C ⊢ x : ɣ ~> x : ɣ
 
@@ -618,10 +617,9 @@ within constraints.
 Previous formalizations e.g. OutsideIn or HMG focus on the notion of a "fragment" that binds
 constraints and existential variables.
 
-We generalize this notion with existential binders. 
+We generalize this notion with existential contexts: 
 ```ocaml
-existential binder            Ɛ ::= ∀ β₁ .. βₘ. D => x : σ
-existential contexts          𝔈 ::= . | 𝔈, Ɛ
+existential contexts          𝔈 ::= . | 𝔈, ∀ β₁ .. βₘ. D => x : σ
 ```
 
 This notion of binders is now extended to constraints, with the following new constraints: 
@@ -629,8 +627,7 @@ This notion of binders is now extended to constraints, with the following new co
 C ::= ... | def 𝔈 in C | let 𝔈 in C 
 ```
 
-Note that recursive binders (e.g. `let rec`) do not bind existentials (TODO: Ask Mistral what the interpretation of binding existentials for recursion would equate to). 
-
+Note that recursive binders (e.g. `let rec`) do not bind existentials. 
 Intuitively, we have the following equivalence: 
 ```ocaml
 def ∀ β₁ .. βₘ. D => x : σ in C === ∀ β₁ .. βₘ. D => def x : σ in C
@@ -655,20 +652,20 @@ Fragments can implicitly be converted into contexts.
 
 ...
 
- C ⊢ p : τ₁ ~> Δ     D ⊢ e : τ₂   β # τ₂
-------------------------------------------
+ C ⊢ p : τ₁ ~> Δ     D ⊢ e : τ₂   evs(Δ) # τ₂
+----------------------------------------------
  C && def Δ in D ⊢ p -> e : τ₁ => τ₂
 
 
-  bs : 𝔈          C ⊢ e : τ    evs(𝔈) # τ
+  𝔈 ⊢ bs          C ⊢ e : τ    evs(𝔈) # τ
 ------------------------------------------
        let 𝔈 in C ⊢ let bs in e : τ 
 
-(* b : Ɛ *)
+(* Ɛ ⊢ b *)
 
  C₁ ⊢ p : τ ~> ∀ β₁ .. βₘ. D => Ξ     C₂ ⊢ e : τ
 -----------------------------------------------------
- p = e : ∀ β₁ .. βₘ. D => (∀ ɑ₁ .. ɑₙ. C₁ && C₂ => Ξ)
+ ∀ β₁ .. βₘ. D => (∀ ɑ₁ .. ɑₙ. C₁ && C₂ => Ξ) ⊢ p = e 
 
 (* C ⊢ p : τ ~> Δ *)
 
@@ -718,3 +715,220 @@ Fragments can implicitly be converted into contexts.
 
 # 
 
+## Ambivalent Constraints
+
+This type system combines explicit sharing, implication constraints and ambivalent
+types together. 
+
+We note that implication constraints are required for the constraint-based formalization of Ambivalent types [??], this is a result of logical equivalence between local constraints and ??. 
+
+The core idea of Ambivalent types is representing a type as a set of equivalent types, 
+thus avoiding a choice when the type is ambiguous. 
+
+The equivalence of the types (in an Ambivalent type) must hold under the current constraints. If this doesn't hold, it is known as "Ambivalent leakage"
+
+
+### Constraints
+
+```ocaml
+constraints         C ::= 
+                      | ⊥ | ⊤ | C && C 
+                      | ∃ ɑ. C | ∀ ɑ. C 
+                      | ɑ₁ = ɑ₂ | ɑ :: Ψ 
+                      | def Γ in C | x <= ɑ | σ <= ɑ
+                      | let Σ in C | let rec Σ in C
+                      | def 𝔈 in C | let 𝔈 in C
+
+shallow types       ρ ::= ɑ -> ɑ | (ɑ₁, .., ɑₙ) F
+
+ambivalent          Ψ ::= { ρ₁ = .. = ρₙ }
+types
+
+rigid bindings      Λ ::= . | Λ, ɑ
+flexible bindings   Θ ::= . | Θ, ɑ :: Ψ
+
+schemes             σ ::= ∀ Θ. C => ɑ
+
+contexts            Γ ::= . | x : σ 
+let contexts        Σ ::= . | Σ, x : ∀ Λ ∃ Θ. C => ɑ
+
+existential context 𝔈 ::= . | 𝔈, ∀ Λ. D => (x : ∀ Λ ∃ Θ. C => ɑ)
+```
+
+### Type System
+
+```ocaml
+(* C ⊢ const : ɣ *)
+
+----------------------
+ C && ɣ :: int ⊢ n : ɣ
+
+------------------------
+ C && ɣ :: unit ⊢ () : ɣ
+
+(* C ⊢ prim : ɣ *)
+
+      ⊕ ∈ { (+), (-), (x), (/) }
+--------------------------------------
+  C && ɣ :: int -> int -> int ⊢ ⊕ : ɣ
+
+(* C ⊢ e : ɣ *)
+
+ C ⊢ x <= ɣ
+------------
+ C ⊢ x : ɣ
+
+
+ C ⊢ const : ɣ
+---------------
+ C ⊢ const : ɣ
+
+
+ C ⊢ prim : ɣ
+--------------
+ C ⊢ prim : ɣ
+
+
+      C ⊢ p -> e : ɑ => β
+----------------------------------
+ C && ɣ :: ɑ -> β ⊢ fun p -> e : ɣ
+
+
+    C₁ ⊢ e₁ : ɑ   C₂ ⊢ e₂ : β
+-------------------------------------
+  ɑ :: β -> ɣ && C₁ && C₂ ⊢ e₁ e₂ : ɣ
+
+
+  𝔈 ⊢ bs          C ⊢ e : ɣ
+------------------------------
+ let 𝔈 in C ⊢ let bs in e : ɣ 
+
+
+  Σ ⊢ bs          C ⊢ e : ɣ      mode ⊢ bs : rec 
+-------------------------------------------------
+       let rec Σ in C ⊢ let rec bs in e : ɣ 
+
+
+  C ⊢ e : ɣ               ɑ₁ .. ɑₙ <> ɣ
+-----------------------------------------
+ ∃ ɑ₁ .. ɑₙ. C ⊢ exists ɑ₁ .. ɑₙ -> e : ɣ
+
+
+                            C ⊢ e : ɣ           
+---------------------------------------------------------------------
+ let x : ∀ ɑ₁ .. ɑₙ ∃ β. C => β in x <= ɣ  ⊢ forall ɑ₁ .. ɑₙ -> e : ɣ
+
+
+  [τ] = Θ |> ɑ      C ⊢ e : ɣ
+-------------------------------
+ ∃ Θ. C && ɑ :: ɣ ⊢ (e : τ) : ɣ
+
+
+  ∀ 1 <= i <= n. Cᵢ ⊢ lᵢ = eᵢ : ɣ   
+  Ω ⊢ F { l₁'; .. ; lₙ' }
+  l₁, .., lₙ permutes l₁', .. , lₙ'
+------------------------------------------------------------------------
+  C₁ && .. && Cₙ && ɣ :: (ɑ₁, .., ɑₙ) F ⊢ { l₁ = e₁ ; ..; lₙ = eₙ } : ɣ
+
+
+ C ⊢ e : ɑ
+ C ⊢ l <= ɑ -> ɣ
+-------------------
+  C ⊢ l = e : ɣ
+
+
+ C ⊢ e : ɑ  
+ C ⊢ l <= ɣ -> ɑ 
+-----------------
+  C ⊢ e.l : ɣ
+
+
+ C ⊢ K <= ɣ
+------------
+ C ⊢ K : ɣ
+
+
+ C ⊢ e : ɑ
+ C ⊢ K <= ɑ -> ɣ
+-------------------
+  C ⊢ K e : ɣ
+
+
+ C₁ ⊢ e : ɑ    C₂ ⊢ hs : ɑ => ɣ
+-----------------------------------
+ C₁ && C₂ ⊢ match e with hs : ɣ
+
+
+  ∀ 1 <= i <= n. Cᵢ ⊢ hᵢ : ɑ => β
+-------------------------------------------
+  C₁ && .. && Cₙ ⊢ (h₁ | .. | h₂) : ɑ => β
+
+
+ C₁ ⊢ p : ɑ ~> Δ            C₂ ⊢ e : β
+-----------------------------------------
+ C₁ && def Δ in C₂ ⊢ p -> e : ɑ => β 
+
+
+  C ⊢ e : ɣ               ɑ₁ .. ɑₙ <> ɣ
+-----------------------------------------
+          ∃ ɑ₁ .. ɑₙ. C ⊢ e : ɣ
+
+
+  C ⊢ e : ɑ               
+------------------------
+  C && ɑ = β ⊢ e : β
+
+(* 𝔈 ⊢ bs *)
+
+-------
+ . ⊢ . 
+
+   Γ ⊢ bs      C₁ ⊢ p : ɑ ~> ∀ β. D => Ξ      C₂ ⊢ e : ɑ
+------------------------------------------------------------------
+ Γ, ∀ β. D => (∀ Λ ∃ Θ, ɑ. C₁ && C₂ => Δ) ⊢ bs and (type Λ) p = e 
+
+(* C ⊢ p : ɣ ~> Δ *)
+
+------------------------
+ C ⊢ _ : Ɣ ~> ∀ .⊤ => .
+
+
+----------------------------
+ C ⊢ x : Ɣ ~> ∀ .⊤ => x : Ɣ
+
+
+  C ⊢ const : Ɣ
+----------------------------
+ C ⊢ const : Ɣ ~> ∀ .⊤ => .
+
+
+ C ⊢ Ɣ <= K ~> D 
+--------------------------
+ C ⊢ K : Ɣ ~> ∀. D => .
+
+
+ C ⊢ ɑ -> Ɣ <= K ~> ∀ β. D
+ E ⊢ p : ɑ ~> Δ
+-------------------------------------------
+ C && ∀ β. D => E ⊢ K p : Ɣ ~> ∀ β. D => Δ
+
+
+  ∀ 1 <= i <= n. Cᵢ ⊢ pᵢ : ɑᵢ ~> Δᵢ   
+------------------------------------------------------------------------
+  C₁ && .. && Cₙ && Ɣ :: (ɑ₁, .., ɑₙ) F ⊢ (p₁, .., pₙ) : Ɣ ~> Δ₁ x .. x Δₙ
+
+
+  [τ] = Θ |> ɑ    C ⊢ p : ɑ ~> Δ
+------------------------------------
+ ∃ Θ. C && ɣ = ɑ ⊢ (p : τ) : ɣ ~> Δ
+
+
+  C ⊢ p : ɣ ~> Δ         ɑ₁ .. ɑₙ # ɣ, Δ
+-----------------------------------------
+       ∃ ɑ₁ .. ɑₙ. C ⊢ p : ɣ ~> Δ
+
+
+  C ⊢ p : ɑ ~> Δ               
+-----------------------------
+  C && ɑ = β ⊢ p : β ~> Δ
+```
