@@ -40,3 +40,7 @@ let rec to_list : type a n. (a, n) t -> a list =
   fun t -> match t with
   | [] -> []
   | x :: t -> x :: to_list t
+
+let hd : type a n. (a, n Size.s) t -> a =
+  fun t -> match t with
+  | x :: _ -> x

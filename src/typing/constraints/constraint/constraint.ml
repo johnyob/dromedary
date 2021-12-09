@@ -76,40 +76,84 @@ module Make (Algebra : Algebra) = struct
     let form f = Form f
   end
 
+  module Shallow_type = struct
+    type t = variable Type_former.t
+    type binding = variable * t option
+    type context = binding list
+
+    let of_type t =
+      let bindings = ref [] in
+      let rec loop t =
+        match t with
+        | Type.Var v -> v
+        | Type.Form form ->
+          let var = fresh () in
+          let form = Type_former.map form ~f:loop in
+          bindings := (var, Some form) :: !bindings;
+          var
+      in
+      let var = loop t in
+      !bindings, var
+  end
+
   (* --------------------------------------------------------------------- *)
 
   (* ['a t] is a constraint with value type ['a]. *)
 
   type _ t =
-    | Cst_true : unit t
-    | Cst_conj : 'a t * 'b t -> ('a * 'b) t
-    | Cst_eq : Type.t * Type.t -> unit t
-    | Cst_exist : variable list * 'a t -> 'a t
-    | Cst_forall : variable list * 'a t -> 'a t
-    | Cst_instance : Term_var.t * Type.t -> Types.Type.t list t
-    | Cst_def : binding list * 'a t -> 'a t
-    | Cst_let : 'a scheme * 'b t -> (term_binding list * 'a bound * 'b) t
-    | Cst_map : 'a t * ('a -> 'b) -> 'b t
-    | Cst_match : 'a t * 'b case list -> ('a * 'b list) t
-    | Cst_decode : Type.t -> Types.Type.t t
+    | True : unit t (** [true] *)
+    | Conj : 'a t * 'b t -> ('a * 'b) t (** [C₁ && C₂] *)
+    | Eq : variable * variable -> unit t (** [ɑ₁ = ɑ₂] *)
+    | Exist : Shallow_type.binding list * 'a t -> 'a t (** [exists Δ. C] *)
+    | Forall : variable list * 'a t -> 'a t (** [forall Θ. C] *)
+    | Instance : Term_var.t * variable -> Types.Type.t list t (** [x <= ɑ] *)
+    | Def : binding list * 'a t -> 'a t
+        (** [def x1 : t1 and ... and xn : tn in C] *)
+    | Let : 'a let_binding * 'b t -> ('a term_let_binding * 'b) t
+        (** [let ∀ Θ ∃ Δ. C => (x₁ : Ɣ₁ and ... xₘ : Ɣₘ) in C']. *)
+    | Letn : 'a let_binding list * 'b t -> ('a term_let_binding list * 'b) t
+        (** [let Γ in C] *)
+    | Let_rec : 'a let_rec_binding list * 'b t -> ('a term_let_rec_binding list * 'b) t
+        (** [let rec Γ in C] *)
+    | Map : 'a t * ('a -> 'b) -> 'b t (** [map C f]. *)
+    | Match : 'a t * 'b case list -> ('a * 'b list) t
+        (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
+    | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
 
-  and term_binding = Term_var.t * Types.scheme
+  and binding = Term_var.t * variable
 
-  and binding = Term_var.t * Type.t
+  and def_binding = binding
 
-  and 'a scheme =
-    { csch_rigid_vars : variable list
-    ; csch_flexible_vars : variable list
-    ; csch_cst : 'a t
-    ; csch_bindings : binding list
-    }
+  and 'a let_binding =
+    | Let_binding of
+        { rigid_vars : variable list
+        ; flexible_vars : Shallow_type.binding list
+        ; bindings : binding list
+        ; in_ : 'a t
+        }
+
+  and 'a let_rec_binding = 
+    | Let_rec_binding of
+      { rigid_vars : variable list
+      ; flexible_vars : Shallow_type.binding list
+      ; binding : binding
+      ; in_ : 'a t
+      }
+
+  and 'a case =
+    | Case of
+        { bindings : binding list
+        ; in_ : 'a t
+        }
 
   and 'a bound = Type_var.t list * 'a
 
-  and 'a case =
-    { ccase_bs : binding list
-    ; ccase_cst : 'a t
-    }
+  and term_binding = Term_var.t * Types.scheme
+
+  and 'a term_let_binding = term_binding list * 'a bound
+
+  and 'a term_let_rec_binding = term_binding * 'a bound
+
   (* ----------------------------------------------------------------------*)
 
   (* Constraints ['a t] form an applicative functor. *)
@@ -117,12 +161,12 @@ module Make (Algebra : Algebra) = struct
   include Applicative.Make (struct
     type nonrec 'a t = 'a t
 
-    let return x = Cst_map (Cst_true, fun () -> x)
-    let map = `Custom (fun t ~f -> Cst_map (t, f))
-    let apply t1 t2 = Cst_map (Cst_conj (t1, t2), fun (f, x) -> f x)
+    let return x = Map (True, fun () -> x)
+    let map = `Custom (fun t ~f -> Map (t, f))
+    let apply t1 t2 = Map (Conj (t1, t2), fun (f, x) -> f x)
   end)
 
-  let both t1 t2 = Cst_conj (t1, t2)
+  let both t1 t2 = Conj (t1, t2)
 
   module Open_on_rhs_intf = struct
     module type S = sig end
@@ -146,52 +190,81 @@ module Make (Algebra : Algebra) = struct
 
   (* Combinators *)
 
-  (* The function [&~] is an infix alias for [both] *)
+  module Continuation = struct
+    type nonrec ('a, 'b) t = ('a -> 'b t) -> 'b t
 
+    include Monad.Make2 (struct
+      type nonrec ('a, 'b) t = ('a, 'b) t
+
+      let return x k = k x
+      let bind t ~f k = t (fun a -> f a k)
+      let map = `Define_using_bind
+    end)
+
+    let lift t = t
+    let run t = t
+  end
+
+  type 'n variables = (variable, 'n) Sized_list.t
+  type 'a binder = (variable, 'a) Continuation.t
+  type ('n, 'a) bindern = ('n variables, 'a) Continuation.t
+
+  (* The function [&~] is an infix alias for [both] *)
   let ( &~ ) = both
 
   (* The function [>>] constructs a constraint from [t1] and [t2], returning
      the value of [t2]. *)
-
   let ( >> ) t1 t2 = t1 &~ t2 >>| snd
-  let ( =~ ) typ1 typ2 = Cst_eq (typ1, typ2)
-  let inst var typ = Cst_instance (var, typ)
-  let decode typ = Cst_decode typ
+  let ( =~ ) var1 var2 = Eq (var1, var2)
+  let inst var1 var2 = Instance (var1, var2)
+  let decode var = Decode var
 
-  let exists vars t =
+  let exists bindings t =
     match t with
-    | Cst_exist (vars', t) -> Cst_exist (vars @ vars', t)
-    | t -> Cst_exist (vars, t)
+    | Exist (bindings', t) -> Exist (bindings @ bindings', t)
+    | t -> Exist (bindings, t)
+
+
+  let of_type type_ =
+    Continuation.lift (fun binder ->
+        let bindings, var = Shallow_type.of_type type_ in
+        exists bindings (binder var))
+
+
+  let existsn n binder =
+    let variables = Sized_list.init n ~f:(fun _ -> fresh ()) in
+    exists
+      (Sized_list.to_list variables |> List.map ~f:(fun v -> v, None))
+      (binder variables)
+
+
+  let exists1 binder =
+    let v = fresh () in
+    exists [ v, None ] (binder v)
 
 
   let forall vars t =
     match t with
-    | Cst_exist (vars', t) -> Cst_exist (vars @ vars', t)
-    | t -> Cst_exist (vars, t)
+    | Forall (vars', t) -> Forall (vars @ vars', t)
+    | t -> Forall (vars, t)
+
+
+  let foralln n binder =
+    let variables = Sized_list.init n ~f:(fun _ -> fresh ()) in
+    forall (Sized_list.to_list variables) (binder variables)
+
+
+  let forall1 binder =
+    let v = fresh () in
+    forall [ v ] (binder v)
 
 
   let ( #= ) x typ : binding = x, typ
-  let def ~bindings ~in_ = Cst_def (bindings, in_)
+  let def ~bindings ~in_ = Def (bindings, in_)
 
-  let let_ ~rigid ~flexible ~bindings:(t, bindings) ~in_ =
-    Cst_let
-      ( { csch_rigid_vars = rigid
-        ; csch_flexible_vars = flexible
-        ; csch_cst = t
-        ; csch_bindings = bindings
-        }
-      , in_ )
+  let let_ ~rigid ~flexible ~bindings:(in1_, bindings) ~in2_ =
+    Let
+      ( Let_binding
+          { rigid_vars = rigid; flexible_vars = flexible; bindings; in_ = in1_ }
+      , in2_ )
 end
-
-(* TODO: Investigate the feasibility of using a dependent list:
-
-   module Dependent_list (T : sig type _ t end) = struct
-
-   type _ t = | [] : unit t | (::) : 't T.t * 'ts t -> ('t * 'ts) t
-
-   end
-
-   Would require usage of the recursive module type-only trick:
-
-   module rec M : sig ... end = M and M_list : sig ... end = Dependent_list
-   (M) *)

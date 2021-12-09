@@ -1,4 +1,4 @@
-(* ************************************************************************* *)
+(* *************************************************************************
 (*                                                                           *)
 (*                                Dromedary                                  *)
 (*                                                                           *)
@@ -656,4 +656,4 @@ let infer_exp env exp exp_type =
            { tc_lhs; tc_rhs }))
     |> Infer_computation.Computation.all
   in
-  Infer_computation.run (infer_exp exp exp_type)
+  Infer_computation.run (infer_exp exp exp_type) *)

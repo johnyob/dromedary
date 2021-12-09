@@ -1,4 +1,4 @@
-(* ***************************************************************************
+(*****************************************************************************)
 (*                                                                           *)
 (*                                Dromedary                                  *)
 (*                                                                           *)
@@ -22,10 +22,6 @@ module type Monoid = sig
 end
 
 module Monad_trans = struct
-  module type S1 = sig
-
-  end
-
   module type S2 = sig
     type ('a, 'b) t
     type ('a, 'b) m
@@ -178,11 +174,6 @@ end
 
 module Continuation = struct
 
-  module type S1 = sig
-    include Monad_trans.S1
-    include Monad.S1 with type 'a t := 'a t
-  end
-
   module type S2 = sig
     include Monad_trans.S2
     include Monad.S2 with type ('a, 'b) t := ('a, 'b) t
@@ -202,4 +193,4 @@ module Continuation = struct
 
   let run t = t
 
-end *)
+end 

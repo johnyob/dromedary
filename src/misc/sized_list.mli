@@ -22,3 +22,5 @@ val map : ('a, 'n) t -> f:('a -> 'b) -> ('b, 'n) t
 val iter : ('a, _) t -> f:('a -> unit) -> unit
 
 val to_list : ('a, _) t -> 'a list
+
+val hd : ('a, 'n Size.s) t -> 'a

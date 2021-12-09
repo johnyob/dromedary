@@ -22,9 +22,7 @@ module Make (Algebra : Algebra) = struct
   (* ----------------------------------------------------------------------- *)
 
   open Algebra
-
   module Constraint = Constraint.Make (Algebra)
-
   module Type_var = Types.Var
   module Type_former = Types.Former
   module Type = Types.Type
@@ -47,7 +45,7 @@ module Make (Algebra : Algebra) = struct
     let return x () = x
     let map t ~f () = f (t ())
     let both t1 t2 () = t1 (), t2 ()
-    let list ts () = List.map ts ~f:run
+    let list : type a. a t list -> a list t = fun ts () -> List.map ts ~f:run
   end
 
   (* ----------------------------------------------------------------------- *)
@@ -81,9 +79,6 @@ module Make (Algebra : Algebra) = struct
     let empty = Map.empty (module Term_var_comparator)
     let extend t var sch = Map.add_exn t ~key:var ~data:sch
     let find t var = Map.find_exn t var
-
-    (* let extends_schs t bindings = List.fold_left bindings ~init:t ~f:(fun t
-       (var, sch) -> extend t var sch) *)
 
     let extends_typs t bindings =
       List.fold_left bindings ~init:t ~f:(fun t (var, typ) ->
@@ -127,111 +122,226 @@ module Make (Algebra : Algebra) = struct
 
   (* ----------------------------------------------------------------------- *)
 
+  type state =
+    { generalization_state : G.state
+    ; substitution : (int, U.Type.t) Hashtbl.t
+    }
+
+  let make_state () =
+    { generalization_state = G.make_state ()
+    ; substitution = Hashtbl.create (module Int)
+    }
+
+
+  let find state (var : C.variable) =
+    Hashtbl.find_exn state.substitution (var :> int)
+
+
+  let bind state (var : C.variable) (typ : U.Type.t) =
+    Hashtbl.set state.substitution ~key:(var :> int) ~data:typ;
+    typ
+
+
+  let bind_flexible state ((var : C.variable), form_opt) =
+    let typ =
+      match form_opt with
+      | None -> G.fresh_var state.generalization_state Flexible
+      | Some form ->
+        G.fresh_form
+          state.generalization_state
+          (Type_former.map form ~f:(find state))
+    in
+    bind state var typ
+
+
+  let bind_rigid state (var : C.variable) =
+    let typ = G.fresh_var state.generalization_state Rigid in
+    bind state var typ
+
+
+  (* ----------------------------------------------------------------------- *)
+
   let solve cst =
     (* [decode] is shadowed when opening [Constraint]. *)
     let decode_ = decode in
     let open Constraint in
     (* Initialize generalization state. *)
-    let state = G.make_state () in
-    (* Constaint variables are encoded using immutable integers. When solving,
-       we need to map these to unification variables. *)
-    let cst_var_env = Hashtbl.create (module Int) in
-    (* A lookup function for constraint variables. TODO: Error handling *)
-    let find_cst_var (var : variable) = Hashtbl.find_exn cst_var_env (var :> int) in
-    (* A conversion function between constraint types and graphic types. *)
-    let rec convert_cst_typ typ =
-      match typ with
-      | Type.Var var -> find_cst_var var
-      | Type.Form form ->
-        G.fresh_form state (Type_former.map form ~f:convert_cst_typ)
-    in
-    (* A binding function for constraint variables *)
-    let bind_cst_var (cst_var : variable) flexibility =
-      let typ = G.fresh_var state flexibility in
-      Hashtbl.set cst_var_env ~key:(cst_var :> int) ~data:typ;
-      typ
-    in
+    let state = make_state () in
     (* Helper function for extending an env w/ several binders *)
     let env_extends_bindings env bindings =
       Env.extends_typs
         env
-        (List.map bindings ~f:(fun (var, typ) -> var, convert_cst_typ typ))
+        (List.map bindings ~f:(fun (x, v) -> x, find state v))
     in
     let rec solve : type a. env:Env.t -> a Constraint.t -> a Elaborate.t =
       let open Elaborate in
       fun ~env cst ->
         match cst with
-        | Cst_true -> return ()
-        | Cst_map (cst, f) ->
+        | True -> return ()
+        | Map (cst, f) ->
           let v = solve ~env cst in
           map v ~f
-        | Cst_conj (cst1, cst2) -> both (solve ~env cst1) (solve ~env cst2)
-        | Cst_eq (t1, t2) ->
-          unify (convert_cst_typ t1) (convert_cst_typ t2);
+        | Conj (cst1, cst2) -> both (solve ~env cst1) (solve ~env cst2)
+        | Eq (v, w) ->
+          unify (find state v) (find state w);
           return ()
-        | Cst_def (cdbs, cst) ->
-          let env = env_extends_bindings env cdbs in
-          solve ~env cst
-        | Cst_match (cst, ccases) ->
+        | Def (bindings, in_) ->
+          let env = env_extends_bindings env bindings in
+          solve ~env in_
+        | Match (cst, cases) ->
           let v = solve ~env cst in
           let vs =
-            List.map ccases ~f:(fun { ccase_bs; ccase_cst } ->
-                let env = env_extends_bindings env ccase_bs in
-                solve ~env ccase_cst)
+            List.map cases ~f:(fun (Case { bindings; in_ }) ->
+                let env = env_extends_bindings env bindings in
+                solve ~env in_)
           in
           both v (list vs)
-        | Cst_exist (vars, cst) ->
-          List.iter ~f:(fun var -> ignore (bind_cst_var var Flexible)) vars;
+        | Exist (bindings, cst) ->
+          List.iter ~f:(fun b -> ignore (bind_flexible state b)) bindings;
           solve ~env cst
-        | Cst_instance (x, t) ->
+        | Instance (x, v) ->
           let sch = Env.find env x in
-          let instance_variables, typ = G.instantiate state sch in
-          unify (convert_cst_typ t) typ;
+          let instance_variables, w =
+            G.instantiate state.generalization_state sch
+          in
+          unify (find state v) w;
           fun () -> List.map ~f:decode_ instance_variables
-        | Cst_let (sch, cst) ->
-          (* Enter a new region *)
-          G.enter state;
-          (* Initialize fresh flexible and rigid variables *)
-          let _flexible_vars =
-            List.map ~f:(fun var -> bind_cst_var var Flexible) sch.csch_flexible_vars
-          and rigid_vars =
-            List.map ~f:(fun var -> bind_cst_var var Rigid) sch.csch_rigid_vars
+        | Let (let_binding, cst) ->
+          let let_binding, env = solve_let_binding ~env let_binding in
+          let v = solve ~env cst in
+          both let_binding v
+        | Letn (let_bindings, cst) ->
+          let let_bindings, env = solve_let_bindings ~env let_bindings in
+          let v = solve ~env cst in
+          both let_bindings v
+        | Let_rec (let_rec_bindings, cst) ->
+          let let_rec_bindings, env =
+            solve_let_rec_bindings ~env let_rec_bindings
           in
-          (* Convert the constraint types into graphic types *)
-          let typs = List.map sch.csch_bindings ~f:(fun (_, typ) -> convert_cst_typ typ) in
-          (* Solve the constraint of the let binding *)
-          let v1 = solve ~env sch.csch_cst in
-          (* Generalize and exit *)
-          let generalizable, schs = exit state ~rigid_vars ~roots:typs in
-          (* Extend environment *)
-          let env, bindings =
-            List.zip_exn sch.csch_bindings schs
-            |> List.fold_left
-                 ~init:(env, [])
-                 ~f:(fun (env, bindings) ((var, _), sch) ->
-                   Env.extend env var sch, (var, sch) :: bindings)
-          in
-          (* Solve the 2nd constraint w/ extended environment *)
-          let v2 = solve ~env cst in
-          (* Return *)
-          fun () ->
-            ( List.map ~f:(fun (var, sch) -> var, decode_scheme sch) bindings
-            , (List.map ~f:decode_variable generalizable, v1 ())
-            , v2 () )
-        | Cst_forall (vars, cst) ->
+          let v = solve ~env cst in
+          both let_rec_bindings v
+        | Forall (vars, cst) ->
           (* Enter a new region *)
-          G.enter state;
+          G.enter state.generalization_state;
           (* Introduce the rigid variables *)
-          let rigid_vars =
-            List.map ~f:(fun var -> bind_cst_var var Rigid) vars
-          in
+          let rigid_vars = List.map ~f:(fun var -> bind_rigid state var) vars in
           (* Solve the constraint *)
           let v = solve ~env cst in
           (* Generalize and exit *)
-          ignore (exit state ~rigid_vars ~roots:[]);
+          ignore (exit state.generalization_state ~rigid_vars ~roots:[]);
           v
-        | Cst_decode typ ->
-          fun () -> decode_ (convert_cst_typ typ)
+        | Decode v -> fun () -> decode_ (find state v)
+    and solve_let_rec_bindings
+        : type a.
+          env:Env.t
+          -> a let_rec_binding list
+          -> a term_let_rec_binding list Elaborate.t * Env.t
+      =
+     fun ~env bindings ->
+      G.enter state.generalization_state;
+      (* Initialize the fresh flexible and rigid variables for each of the bindings *)
+      let vars =
+        bindings
+        |> List.map
+             ~f:(fun (Let_rec_binding { flexible_vars; rigid_vars; _ }) ->
+               ( List.map ~f:(bind_flexible state) flexible_vars
+               , List.map ~f:(bind_rigid state) rigid_vars ))
+      in
+      let rigid_vars = vars |> List.map ~f:snd |> List.join in
+      let vars =
+        vars
+        |> List.map ~f:(fun (flexible_vars, rigid_vars) ->
+               flexible_vars @ rigid_vars)
+      in
+      let types =
+        List.map bindings ~f:(fun (Let_rec_binding { binding = _, v; _ }) ->
+            find state v)
+      in
+      let rec_env =
+        env_extends_bindings
+          env
+          (List.map
+             ~f:(fun (Let_rec_binding { binding; _ }) -> binding)
+             bindings)
+      in
+      let values =
+        List.map bindings ~f:(fun (Let_rec_binding { in_; _ }) ->
+            solve ~env:rec_env in_)
+      in
+      let generalizable, schemes =
+        exit state.generalization_state ~rigid_vars ~roots:types
+      in
+      let generalizable =
+        Hash_set.of_list (module G.Unifier.Type) generalizable
+      in
+      let env, bindings =
+        List.zip_exn bindings schemes
+        |> List.fold_left
+             ~init:(env, [])
+             ~f:(fun (env, bindings) (Let_rec_binding { binding = v, _; _ }, s)
+                -> Env.extend env v s, (v, s) :: bindings)
+      in
+      (* Compute bounds of each solved value *)
+      let bound_values =
+        List.map2_exn vars values ~f:(fun vars value () ->
+            ( List.filter vars ~f:(Hash_set.mem generalizable)
+              |> List.map ~f:decode_variable
+            , value () ))
+      in
+      ( List.map2_exn bindings bound_values ~f:(fun (x, s) value () ->
+            (x, decode_scheme s), value ())
+        |> Elaborate.list
+      , env )
+    and solve_let_binding
+        : type a.
+          env:Env.t -> a let_binding -> a term_let_binding Elaborate.t * Env.t
+      =
+     fun ~env (Let_binding { rigid_vars; flexible_vars; bindings; in_ }) ->
+      (* Enter a new region *)
+      G.enter state.generalization_state;
+      (* Initialize fresh flexible and rigid variables *)
+      let _flexible_vars =
+        List.map ~f:(fun b -> bind_flexible state b) flexible_vars
+      and rigid_vars =
+        List.map ~f:(fun var -> bind_rigid state var) rigid_vars
+      in
+      (* Convert the constraint types into graphic types *)
+      let typs = List.map bindings ~f:(fun (_, v) -> find state v) in
+      (* Solve the constraint of the let binding *)
+      let v1 = solve ~env in_ in
+      (* Generalize and exit *)
+      let generalizable, schs =
+        exit state.generalization_state ~rigid_vars ~roots:typs
+      in
+      (* Extend environment *)
+      let env, bindings =
+        List.zip_exn bindings schs
+        |> List.fold_left
+             ~init:(env, [])
+             ~f:(fun (env, bindings) ((var, _), sch) ->
+               Env.extend env var sch, (var, sch) :: bindings)
+      in
+      (* Return binding and extended environment *)
+      ( (fun () ->
+          ( List.map ~f:(fun (var, sch) -> var, decode_scheme sch) bindings
+          , (List.map ~f:decode_variable generalizable, v1 ()) ))
+      , env )
+    and solve_let_bindings
+        : type a.
+          env:Env.t
+          -> a let_binding list
+          -> a term_let_binding list Elaborate.t * Env.t
+      =
+     fun ~env let_bindings ->
+      let let_bindings, env =
+        List.fold_right
+          let_bindings
+          ~f:(fun let_binding (let_bindings, env) ->
+            let let_binding, env = solve_let_binding ~env let_binding in
+            let_binding :: let_bindings, env)
+          ~init:([], env)
+      in
+      Elaborate.list let_bindings, env
     in
     Elaborate.run (solve ~env:Env.empty cst)
 end
