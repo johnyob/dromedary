@@ -11,8 +11,13 @@
 (*                                                                           *)
 (*****************************************************************************)
 
+open Types
 
-include Base
+(** [t] represents the typing environment Ω. *)
+type t
 
-module Constraint = Dromedary_typing_constraints_constraint.Constraint
-include Constraint.Module_types 
+(** [find_constr t constr] returns the constructor declaration w/ constructor name [constr]. *)
+val find_constr : t -> string -> constructor_declaration option
+
+(** [find_label t label] returns the label declaration w/ label name [label]. *)
+val find_label : t -> string -> label_declaration option

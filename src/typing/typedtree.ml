@@ -16,8 +16,6 @@ open Ast_types
 
 open Types
 
-(* ------------------------------------------------------------------------- *)
-
 (** Abstract syntax tree after typing *)
 
 type pattern = 
@@ -27,17 +25,17 @@ type pattern =
 
 and pattern_desc =
   | Tpat_any
-  (** [_] *)
+    (** [_] *)
   | Tpat_var of string 
-  (** [x]. *)
+    (** [x]. *)
   | Tpat_alias of pattern * string 
-  (** [P as x]. *)
+    (** [P as x]. *)
   | Tpat_constant of constant 
-  (** [c]. e.g. [1, true, ()]. *)
+    (** [c]. e.g. [1, true, ()]. *)
   | Tpat_tuple of pattern list 
-  (** (P1, ..., Pn). Invariant n >= 2. *)
+    (** (P1, ..., Pn). Invariant n >= 2. *)
   | Tpat_construct of constructor_description * pattern option 
-  (** [C <P>]. *)
+    (** [C <P>]. *)
 
 type expression = 
   { exp_desc : expression_desc
@@ -46,33 +44,33 @@ type expression =
   
 and expression_desc =
   | Texp_var of string instance
-  (** [x]. *)
+    (** [x]. *)
   | Texp_prim of primitive
-  (** Primitive operations [%prim p]. e.g. [%prim +], [%prim -], etc. *)
+    (** Primitive operations [%prim p]. e.g. [%prim +], [%prim -], etc. *)
   | Texp_const of constant
-  (** Constants [c]. e.g. [1, true, ()]. *)
+    (** Constants [c]. e.g. [1, true, ()]. *)
   | Texp_fun of pattern * expression
-  (** The function (or lambda) abstraction [fun P -> E].  
-      Note that: 
-        - [let x P1 ... Pn = E in ...] is encoding using 
-          [Pexp_let ("x", fun P1 ... Pn -> E, ...)]. *)
+    (** The function (or lambda) abstraction [fun P -> E].  
+        Note that: 
+          - [let x P1 ... Pn = E in ...] is encoding using 
+            [Pexp_let ("x", fun P1 ... Pn -> E, ...)]. 
+    *)
   | Texp_app of expression * expression 
-  (** Function application [E1 E2]. *)
-  | Pexp_let of rec_flag * value_binding * expression
-  (** Let expressions *)
+    (** Function application [E1 E2]. *)
+  | Texp_let of rec_flag * value_binding * expression
+    (** Let expressions *)
   | Texp_construct of constructor_description * expression option
-      (** An applied algebraic data type constructor [C <E>]. *)
+    (** An applied algebraic data type constructor [C <E>]. *)
   | Texp_record of (label_description * expression) list 
-  (** {l1 = E1; ...; ln = En} *)
+    (** {l1 = E1; ...; ln = En} *)
   | Texp_field of expression * label_description 
-  (** E.l *)
+    (** E.l *)
   | Texp_tuple of expression list
-  (** Tuples [(E1, ..., En)]. 
-      Invariant: n >= 2. *)
+    (** Tuples [(E1, ..., En)]. Invariant: n >= 2. *)
   | Texp_match of expression * type_expr * case list
-  (** Match (or "case") expressions [match E with (P1 -> E1 | ... | Pn -> En)]. *)
+    (** Match (or "case") expressions [match E with (P1 -> E1 | ... | Pn -> En)]. *)
   | Texp_ifthenelse of expression * expression * expression
-  (** If (or ternary) expressions [if E then E1 else E2]. *)
+    (** If (or ternary) expressions [if E then E1 else E2]. *)
 
 (** [P = E]. *)
 and value_binding =

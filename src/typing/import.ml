@@ -14,5 +14,7 @@
 
 include Base
 
-module Constraint = Dromedary_typing_constraints_constraint.Constraint
-include Constraint.Module_types 
+module Monad = struct
+  include Base.Monad
+  include Misc.Monad
+end

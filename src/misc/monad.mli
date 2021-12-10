@@ -31,7 +31,23 @@ module Monad_trans : sig
   end
 end
 
-module Writer_monad : sig
+module State : sig
+
+  module type S2 = sig
+    include Monad_trans.S2
+    include Monad.S2 with type ('a, 'b) t := ('a, 'b) t
+
+    type env
+    val put : env -> (unit, _) t
+    val get : unit -> (env, _) t
+    val gets : (env -> 'a) -> ('a, _) t
+    val update : (env -> env) -> (unit, _) t
+  end
+
+
+end
+
+module Writer: sig
   module type S2 = sig
     include Monad_trans.S2
 
@@ -53,7 +69,7 @@ module Writer_monad : sig
        and type ('a, 'b) e := (S.t * 'a, 'b) M.t
 end
 
-module Reader_monad : sig
+module Reader : sig
   module type S2 = sig
     include Monad_trans.S2
 

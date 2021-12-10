@@ -13,6 +13,8 @@
 
 open! Import
 
+module Module_types = Constraint.Module_types
+
 module Make (Algebra : Algebra) = struct
 
   module Constraint = Constraint.Make (Algebra)

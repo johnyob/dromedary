@@ -13,8 +13,6 @@
 
 open Ast_types  
 
-(* ------------------------------------------------------------------------- *)
-
 (** [Parsetree] is the abstract syntax tree produced by parsing
     Dromedary's source code. *)
 

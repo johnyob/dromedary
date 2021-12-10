@@ -1,4 +1,4 @@
-(* *************************************************************************
+(*****************************************************************************)
 (*                                                                           *)
 (*                                Dromedary                                  *)
 (*                                                                           *)
@@ -14,180 +14,98 @@
 open Parsing
 open Base
 
-(* ------------------------------------------------------------------------- *)
-
-(* Implement required interfaces from [Constraints]. *)
-
-module Term_var = struct
-  type t = string [@@deriving sexp_of, compare]
-end
-
-module Type_var = struct
-  type t = string [@@deriving sexp_of]
-
-  let of_int x = "α" ^ Int.to_string x
-end
-
-module Type_former = struct
-  type 'a t =
-    | Arrow of 'a * 'a
-    | Tuple of 'a list
-    | Constr of 'a list * string
-  [@@deriving sexp_of]
-
-  let map t ~f =
-    match t with
-    | Arrow (t1, t2) ->
-      let t1' = f t1 in
-      let t2' = f t2 in
-      Arrow (t1', t2')
-    | Tuple ts -> Tuple (List.map ~f ts)
-    | Constr (ts, constr) -> Constr (List.map ~f ts, constr)
-
-
-  let iter t ~f =
-    let (_ : unit t) = map t ~f in
-    ()
-
-
-  let fold t ~f ~init =
-    match t with
-    | Arrow (t1, t2) ->
-      let init = f t1 init in
-      let init = f t2 init in
-      init
-    | Tuple ts -> List.fold_right ~f ~init ts
-    | Constr (ts, _) -> List.fold_right ~f ~init ts
-
-
-  exception Iter2
-
-  let iter2 t1 t2 ~f =
-    let list_iter2 xs ys ~f =
-      (* Catch the [Base] exception and re-raise our exception *)
-      try List.iter2_exn xs ys ~f with
-      | _ -> raise Iter2
-    in
-    match t1, t2 with
-    | Arrow (t11, t12), Arrow (t21, t22) ->
-      f t11 t21;
-      f t12 t22
-    | Tuple ts1, Tuple ts2 -> list_iter2 ts1 ts2 ~f
-    | Constr (ts1, constr1), Constr (ts2, constr2)
-      when String.equal constr1 constr2 -> list_iter2 ts1 ts2 ~f
-    | _, _ -> raise Iter2
-end
-
-module Type = struct
-  type var = Type_var.t
-  type 'a former = 'a Type_former.t
-  type t = Types.type_expr [@@deriving sexp_of]
-
-  open Types
-
-  let var x = Ttyp_var x
-
-  let form former =
-    match former with
-    | Type_former.Arrow (t1, t2) -> Ttyp_arrow (t1, t2)
-    | Type_former.Tuple ts -> Ttyp_tuple ts
-    | Type_former.Constr (ts, constr) -> Ttyp_constr (ts, constr)
-end
-
-module Algebra = struct
-  module Term_var = Term_var
-
-  module Types = struct
-    module Var = Type_var
-    module Former = Type_former
-    module Type = Type
-
-    type scheme = Var.t list * Type.t
-  end
-end
-
+(* Instantiate the constraints library using the [Algebra] defined in {algebra.ml}. *)
+open Algebra
 module Constraints = Constraints.Make (Algebra)
 open Constraints
-open Constraint
 
-(* ------------------------------------------------------------------------- *)
+(* [t1 @-> t2] returns the arrow type [t1 -> t2]. *)
+let ( @-> ) x y = Type.former (Type_former.Arrow (x, y))
 
-module Env = struct
-  open Types
+(* [tuple [t1; ...; tn]] returns the tuple type [t1 * ... * tn]. *)
+let tuple ts = Type.former (Type_former.Tuple ts)
 
-  type 'a map = (String.t, 'a, String.comparator_witness) Map.t
+(* [constr [t1; ..; tn] constr'] returns the type former (or type constructor) [(t1, .., tn) constr']. *)
+let constr ts constr = Type.former (Type_former.Constr (ts, constr))
 
-  type t =
-    { types : type_declaration map
-    ; constrs : constructor_declaration map
-    ; labels : label_declaration map
-    }
+(* [alias t x] returns the alias type [t as x]. *)
+let alias t x = Type.mu x t
 
-  let find_constr env constr = Map.find_exn env.constrs constr
-  let find_label env label = Map.find_exn env.labels label
-end
-
-(* ------------------------------------------------------------------------- *)
-
-(* Type former combinators *)
-
-let ( @-> ) x y = Type.form (Type_former.Arrow (x, y))
-let tuple ts = Type.form (Type_former.Tuple ts)
-let constr ts constr = Type.form (Type_former.Constr (ts, constr))
-let int = Type.form (Type_former.Constr ([], "int"))
-let bool = Type.form (Type_former.Constr ([], "bool"))
-let unit = Type.form (Type_former.Constr ([], "unit"))
-
-(* ------------------------------------------------------------------------- *)
-
-(* Constraint generation and inference *)
-
-(* We first open the relevant syntax modules. *)
+(* [int, bool] and [unit] are the type formers for the primitive [int, bool, unit] types. *)
+let int = Type.former (Type_former.Constr ([], "int"))
+let bool = Type.former (Type_former.Constr ([], "bool"))
+let unit = Type.former (Type_former.Constr ([], "unit"))
 
 open Ast_types
 open Parsetree
-open Typedtree
+(* open Typedtree *)
 open Types
 
+(* [convert_core_type var_env core_type] converts core type [core_type] to [Type.t]. *)
 let convert_core_type var_env core_type =
   let rec convert_core_type t =
+    let open Result.Let_syntax in
     match t with
-    | Ptyp_var x -> Type.var (Map.find_exn var_env x)
-    | Ptyp_arrow (t1, t2) -> convert_core_type t1 @-> convert_core_type t2
-    | Ptyp_tuple ts -> tuple (List.map ts ~f:convert_core_type)
+    | Ptyp_var x ->
+      Result.of_option (Map.find var_env x) ~error:(`Unbound_type_variable x) >>| Type.var
+    | Ptyp_arrow (t1, t2) ->
+      let%bind t1 = convert_core_type t1 in
+      let%bind t2 = convert_core_type t2 in
+      return (t1 @-> t2)
+    | Ptyp_tuple ts ->
+      let%bind ts = List.map ts ~f:convert_core_type |> Result.all in
+      return (tuple ts)
     | Ptyp_constr (ts, constr') ->
-      constr (List.map ts ~f:convert_core_type) constr'
+      let%bind ts = List.map ts ~f:convert_core_type |> Result.all in
+      return (constr ts constr')
   in
   convert_core_type core_type
 
-
+(* [convert_type_expr var_env type_expr] converts type expression [type_expr] to [Type.t]. *)
 let convert_type_expr var_env t =
   let rec convert_type_expr t =
+    let open Result.Let_syntax in
     match t with
-    | Ttyp_var x -> Type.var (Map.find_exn var_env x)
-    | Ttyp_arrow (t1, t2) -> convert_type_expr t1 @-> convert_type_expr t2
-    | Ttyp_tuple ts -> tuple (List.map ts ~f:convert_type_expr)
+    | Ttyp_var x -> Result.of_option (Map.find var_env x) ~error:(`Unbound_type_variable x) >>| Type.var
+    | Ttyp_arrow (t1, t2) -> 
+      let%bind t1 = convert_type_expr t1 in
+      let%bind t2 = convert_type_expr t2 in
+      return (t1 @-> t2)
+    | Ttyp_tuple ts -> 
+      let%bind ts = List.map ts ~f:convert_type_expr |> Result.all in
+      return (tuple ts)
     | Ttyp_constr (ts, constr') ->
-      constr (List.map ts ~f:convert_type_expr) constr'
+      let%bind ts = List.map ts ~f:convert_type_expr |> Result.all in
+      return (constr ts constr')
+    | Ttyp_alias (t, x) -> 
+      let%bind t = convert_type_expr t in
+      return (alias t x)
   in
   convert_type_expr t
 
-
-(* ------------------------------------------------------------------------- *)
-
-(* Constants and primitives *)
-
+(* [infer_constant const] returns the type of [const]. *)
 let infer_constant const =
   match const with
   | Const_int _ -> int
   | Const_bool _ -> bool
   | Const_unit -> unit
 
-
+(* [infer_primitive prim] returns the type of [prim]. *)
 let infer_primitive prim =
   match prim with
   | Prim_add | Prim_sub | Prim_div | Prim_mul -> int @-> int @-> int
 
+
+module Inference_monad = struct
+  module State = struct
+    type t = (String.t, Constraint.variable, String.comparator_witness) Map.t
+  end
+
+  include Monad.State.Make (State)
+
+end
+
+(* 
 
 (* ------------------------------------------------------------------------- *)
 

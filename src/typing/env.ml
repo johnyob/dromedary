@@ -1,7 +1,18 @@
+(*****************************************************************************)
+(*                                                                           *)
+(*                                Dromedary                                  *)
+(*                                                                           *)
+(*                Alistair O'Brien, University of Cambridge                  *)
+(*                                                                           *)
+(* Copyright 2021 Alistair O'Brien.                                          *)
+(*                                                                           *)
+(* All rights reserved. This file is distributed under the terms of the MIT  *)
+(* license, as described in the file LICENSE.                                *)
+(*                                                                           *)
+(*****************************************************************************)
+
 open Base
 open Types
-
-type 'a map = (String.t, 'a, String.comparator_witness) Map.t
 
 type t =
   { types : type_declaration map
@@ -9,5 +20,7 @@ type t =
   ; labels : label_declaration map
   }
 
-let find_constr env constr = Map.find_exn env.constrs constr
-let find_label env label = Map.find_exn env.labels label
+and 'a map = (String.t, 'a, String.comparator_witness) Map.t
+
+let find_constr env constr = Map.find env.constrs constr
+let find_label env label = Map.find env.labels label

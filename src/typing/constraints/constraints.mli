@@ -13,6 +13,8 @@
 
 open! Import
 
+module Module_types = Constraint.Module_types
+
 module Make (Algebra : Algebra) : sig
 
   module Constraint : module type of Constraint.Make (Algebra)
