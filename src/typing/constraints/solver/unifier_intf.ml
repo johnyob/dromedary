@@ -13,155 +13,164 @@
 
 (* This module implements signatures used by the unifier. *)
 
-(* Unification consists of solving equations between types. 
-   For generalization and efficiency, we use "multi-equations":
-     e ::= [] | t = e
+(** Unification consists of solving equations between types. 
+    For generalization and efficiency, we use "multi-equations":
+      e ::= [] | t = e
    
-   A multi-equation is standard iff it contains 1 non-variable member,
-   known as the [terminal]. *)
+    A multi-equation is standard iff it contains 1 non-variable member,
+    known as the [terminal]. 
+*)
 
 open! Import
 
-(* ------------------------------------------------------------------------- *)
-
-(* For abstract purposes, we wrap all data not related to unification in an 
-   abstract "metadata" type. 
+(** For abstraction purposes, we wrap all data not related to unification in an 
+    abstract "metadata" type. 
     
-   A concrete example of this metadata would be the level used in 
-   generalization. See {!generalization.mli}. 
-    
-   This abstraction forms a commutative monoid. *)
+    A concrete example of this metadata would be the level used in 
+    generalization. See {!generalization.mli}. 
+      
+    This abstraction forms a commutative monoid. 
+*)
 
 module type Metadata = sig
-  (* [t] is the abstract type of the metadata associated with each variable. *)
+  (** [t] is the abstract type of the metadata associated with each types. *)
 
   type t [@@deriving sexp_of]
 
-  (* [merge] is performed when unifying two variables. 
-     We assume that [merge] is associative and commutative. *)
-
+  (** [merge] is performed when unifying two types. 
+      We assume that [merge] is associative and commutative. *)
   val merge : t -> t -> t
 end
 
-(* ------------------------------------------------------------------------- *)
-
-(* This functor describes the signatures of the unifier.  *)
-
 module type S = sig
-  (* Abstract types to be substituted by functor arguments. *)
+  (** Abstract types to be substituted by functor arguments. *)
 
+  (** The type ['a former] is the type formers (with children of type ['a]), 
+      given by the functor argument [Former]. *)
   type 'a former
+
+  (** [metadata] is the type of metadata, given by the functor argument
+      [Metadata]. *)
   type metadata
 
   module Type : sig
-
-    (* There are two kinds of variables. A [Flexible] variable can
-       be unified with other variables and types. A [Rigid] (in general) 
-       cannot be unified. *)
-
+    (** There are two kinds of variables [Flexible] and [Rigid]. 
+    
+        A [Flexible] variable can be unified with other variables and types. 
+        A [Rigid] (in general) cannot be unified. 
+    *)
     type flexibility =
       | Flexible
       | Rigid
     [@@deriving sexp_of, eq]
 
-    (* sexp-able for error reporting and prettying printing. *)
-
+    (** [t] represents a type. See "graphical types". *)
     type t [@@deriving sexp_of, compare]
 
-    type structure = 
+    type structure =
       | Var of { mutable flexibility : flexibility }
-      | Form of t former
+      | Former of t former
 
-    (* Each graph type node consists of:
+    (** Each graphical type node consists of:
         - a unique identifier [id] (used to define a total ordering).
         - a mutable [structure], which contains the node structure.
         - a mutable piece of [metadata]. 
-        
-      They are accessed via setters and getters: *)
+    *)
 
+    (** [id t] returns the unique identifier of the type [t]. *)
     val id : t -> int
-    
+
+    (** [get_structure t] returns the structure of [t]. *)
     val get_structure : t -> structure
+
+    (** [set_structure t structure] sets the structure of [t] to [structure]. *)
     val set_structure : t -> structure -> unit
-    
+
+    (** [get_metadata t] returns the metadata of [t]. *)
     val get_metadata : t -> metadata
-    val set_metadata : t -> metadata -> unit    
 
-    (* [hash t] computes the hash of the graph type node [t]. 
-       Based on it's integer field: id. *)
+    (** [set_metadata t metadata] sets the metadata of [t] to [metadata]. *)
+    val set_metadata : t -> metadata -> unit
 
+    (** [hash t] computes the hash of the graphical type [t]. 
+        Based on it's integer field: id. 
+    *)
     val hash : t -> int
-
   end
 
-  val fresh 
-    :  Type.structure
-    -> metadata
-    -> Type.t
+  (** [make structure metadata] returns a fresh type w/ structure [structure] and
+      metadata [metadata]. *)
+  val make : Type.structure -> metadata -> Type.t
 
-  (* [fresh_var flex data] returns a fresh variable node 
-     with flexibility [flex], and metadata [data]. *)
+  (** [make_var flexibility metadata] returns a fresh variable 
+     with flexibility [flexibility], and metadata [metadata]. *)
+  val make_var : Type.flexibility -> metadata -> Type.t
 
-  val fresh_var
-    :  Type.flexibility
-    -> metadata
-    -> Type.t
+  (** [make_former former metadata] returns a fresh type former
+      with metadata [metadata]. *)
 
-  (* [fresh_form form data] returns a fresh type former node
-    with metadata [data]. *)
+  val make_former : Type.t former -> metadata -> Type.t
 
-  val fresh_form
-    :  Type.t former
-    -> metadata
-    -> Type.t
-
-  (* [unify t1 t2] equates the graph type nodes [t1] and [t2], 
-     and forms a multi-equation node.
+  (** [unify t1 t2] equates the graphical type nodes [t1] and [t2], 
+      and forms a multi-equation node.
       
-     Identifiers are merged arbitrarily. 
-     Formers are unified recursively, using [iter2]. 
-     Metadata are merged using [Metadata.merge].
+      Identifiers are merged arbitrarily.
 
-     [Unify (t1, t2)] is raised if the two node cannot
-     be unified. This occurs with rigid variables or incompatable
-     formers. 
+      Formers are unified recursively, using [iter2]. 
+      
+      Metadata are merged using [Metadata.merge].
 
-     No occurs check is implemented (this is separate from 
-     unification). See {!occurs_check}. *)
+      [Unify (t1, t2)] is raised if the two node cannot
+      be unified. This occurs with rigid variables or incompatable
+      formers. 
+
+      No occurs check is implemented (this is separate from 
+      unification). See {!occurs_check}. 
+  *)
 
   exception Unify of Type.t * Type.t
 
   val unify : Type.t -> Type.t -> unit
 
-  (* [occurs_check t] detects whether there is 
-      a cycle in the graph type [t]. 
+  (** [occurs_check t] detects whether there is a cycle in 
+      the graphical type [t]. 
       
-      If a cycle is detected, [Cycle t] is raised. *)
+      If a cycle is detected, [Cycle t] is raised. 
+  *)
 
   exception Cycle of Type.t
 
   val occurs_check : Type.t -> unit
 
-  (* [fold typ ~var ~form] will perform a bottom-up fold
-    over the (assumed) acyclic graph defined by the type [typ].  *)
+  (** [fold_acyclic type_ ~var ~former] will perform a bottom-up fold
+      over the (assumed) acyclic graph defined by the type [type_].  
+  *)
 
-  val fold
-  :  Type.t
-  -> var:(Type.t -> Type.flexibility -> 'a)
-  -> form:('a former -> 'a)
-  -> 'a
+  val fold_acyclic
+    :  Type.t
+    -> var:(Type.t -> 'a)
+    -> former:('a former -> 'a)
+    -> 'a
 
+  (** [fold_cyclic type_ ~var ~former ~mu] will perform a fold over
+      the (potentially) cyclic graph defined by the type [type_].  
+  *)
+
+  val fold_cyclic
+    :  Type.t
+    -> var:(Type.t -> 'a)
+    -> former:('a former -> 'a)
+    -> mu:(Type.t -> 'a -> 'a)
+    -> 'a  
 end
 
-(* ------------------------------------------------------------------------- *)
-
-(* The interface of {unifier.ml}. *)
+(** The interface of {unifier.ml}. *)
 
 module type Intf = sig
   module type Metadata = Metadata
   module type S = S
 
-  (* The functor [Make]. *)
+  (** The functor [Make]. *)
   module Make (Former : Type_former) (Metadata : Metadata) :
     S with type 'a former := 'a Former.t and type metadata := Metadata.t
 end

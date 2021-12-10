@@ -12,11 +12,12 @@
 (*****************************************************************************)
 
 open! Import
-
 module Module_types = Private.Constraint.Module_types
 
 module Make (Algebra : Algebra) = struct
   include Private.Constraint.Make (Algebra)
 
-  include Private.Solver.Make (Algebra)
+  module Solver = Private.Solver.Make (Algebra)
+  let solve = Solver.solve
+
 end

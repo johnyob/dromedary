@@ -13,19 +13,12 @@
 
 open! Import
 
-(* ------------------------------------------------------------------------- *)
-
-(* [Intf] provides the interfaces required for constraints. *)
+(* [Module_types] provides the interfaces required "abstract" constraints. *)
 
 module Module_types = Module_types
-
-(* ------------------------------------------------------------------------- *)
-
 open Module_types
 
 module Make (Algebra : Algebra) = struct
-  (* --------------------------------------------------------------------- *)
-
   open Algebra
 
   (* Add relevant modules from [Types]. *)
@@ -33,92 +26,108 @@ module Make (Algebra : Algebra) = struct
   module Type_var = Types.Var
   module Type_former = Types.Former
 
-  (* --------------------------------------------------------------------- *)
-
-  (* The type [variable] in constraints. *)
-
   type variable = int
 
-  (* See: https://github.com/janestreet/base/issues/121 *)
-  let post_incr r =
-    let result = !r in
-    Int.incr r;
-    result
-
-
   let fresh =
+    let post_incr r =
+      let result = !r in
+      Int.incr r;
+      result
+    in
     let next = ref 0 in
     fun () -> post_incr next
 
 
-  (* --------------------------------------------------------------------- *)
+  (* The module [Type] provides the concrete representation of types
+     (using constraint type variables) in constraints. 
 
-  (* A concrete representation of types using constraint variables. It is the
-     free monad of the functor [Type_former.t] with variables [variable].
+     It is the free monad of the functor [Type_former.t].
 
-     While previously, we have stated that such a construct is unweidly, using
-     this provides a richer interface between constraints and the rest of the
-     type checker.
-
-     Moreover, this provides a nicer translation between constraints and
-     "graphic types".
-
-     Graphic type nodes consist of a "structure", either a variable of a type
-     former (isomorphic to what we define below, given a mapping between
-     constraint variables and graphic nodes.) *)
+     History: This representation was initially used in constraints [t],
+     however, the refactor for "Sharing" now uses [Shallow_type.t].
+     We however, still use [Type] for a rich interface. 
+  *)
 
   module Type = struct
+    (* [t] represents the type defined by the grammar: 
+       t ::= ɑ | (t, .., t) F *)
     type t =
       | Var of variable
-      | Form of t Type_former.t
+      | Former of t Type_former.t
 
-    let var x = Var x
-    let form f = Form f
+    (* [var a] returns the representation of the type variable [a]. *)
+    let var a = Var a
+
+    (* [former f] returns the representation of the applied type former [f]. *)
+    let former f = Former f
   end
+
+  (* The module [Shallow_type] provides the shallow type definition
+     used within constraints. 
+     
+     This encoding is required for "(Explicit) sharing" of types
+     within constraints.
+
+     Types from [Type] are often referred to as "deep" types. 
+  *)
 
   module Shallow_type = struct
+    (* [t] represents a shallow type [ρ] is defined by the grammar:
+       ρ ::= (ɑ₁, .., ɑ₂) F *)
     type t = variable Type_former.t
+
+    (* [binding] represents a shallow type binding defined by the grammar:
+       b ::= ɑ | ɑ :: ρ *)
     type binding = variable * t option
+
+    (* [context] represents a shallow type context Θ. *)
     type context = binding list
 
-    let of_type t =
-      let bindings = ref [] in
+    (* [of_type type_] returns the shallow encoding [Θ |> ɑ] of the 
+       deep type [type_]. *)
+    let of_type type_ =
+      let context = ref [] in
       let rec loop t =
         match t with
-        | Type.Var v -> v
-        | Type.Form form ->
+        | Type.Var var -> var
+        | Type.Former former ->
           let var = fresh () in
-          let form = Type_former.map form ~f:loop in
-          bindings := (var, Some form) :: !bindings;
+          let former = Type_former.map former ~f:loop in
+          context := (var, Some former) :: !context;
           var
       in
-      let var = loop t in
-      !bindings, var
+      let var = loop type_ in
+      !context, var
   end
 
-  (* --------------------------------------------------------------------- *)
-
   (* ['a t] is a constraint with value type ['a]. *)
-
   type _ t =
-    | True : unit t (** [true] *)
-    | Conj : 'a t * 'b t -> ('a * 'b) t (** [C₁ && C₂] *)
-    | Eq : variable * variable -> unit t (** [ɑ₁ = ɑ₂] *)
-    | Exist : Shallow_type.binding list * 'a t -> 'a t (** [exists Δ. C] *)
-    | Forall : variable list * 'a t -> 'a t (** [forall Θ. C] *)
-    | Instance : Term_var.t * variable -> Types.Type.t list t (** [x <= ɑ] *)
+    | True : unit t 
+      (** [true] *)
+    | Conj : 'a t * 'b t -> ('a * 'b) t 
+      (** [C₁ && C₂] *)
+    | Eq : variable * variable -> unit t 
+      (** [ɑ₁ = ɑ₂] *)
+    | Exist : Shallow_type.binding list * 'a t -> 'a t 
+      (** [exists Θ. C] *)
+    | Forall : variable list * 'a t -> 'a t 
+      (** [forall Λ. C] *)
+    | Instance : Term_var.t * variable -> Types.Type.t list t 
+      (** [x <= ɑ] *)
     | Def : binding list * 'a t -> 'a t
-        (** [def x1 : t1 and ... and xn : tn in C] *)
-    | Let : 'a let_binding * 'b t -> ('a term_let_binding * 'b) t
-        (** [let ∀ Θ ∃ Δ. C => (x₁ : Ɣ₁ and ... xₘ : Ɣₘ) in C']. *)
-    | Letn : 'a let_binding list * 'b t -> ('a term_let_binding list * 'b) t
-        (** [let Γ in C] *)
-    | Let_rec : 'a let_rec_binding list * 'b t -> ('a term_let_rec_binding list * 'b) t
-        (** [let rec Γ in C] *)
-    | Map : 'a t * ('a -> 'b) -> 'b t (** [map C f]. *)
+      (** [def x1 : t1 and ... and xn : tn in C] *)
+    | Let : 'a let_binding list * 'b t -> ('a term_let_binding list * 'b) t
+      (** [let Γ in C] *)
+    | Let_rec :
+        'a let_rec_binding list * 'b t
+        -> ('a term_let_rec_binding list * 'b) t 
+      (** [let rec Γ in C] *)
+    | Map : 'a t * ('a -> 'b) -> 'b t 
+      (** [map C f]. *)
     | Match : 'a t * 'b case list -> ('a * 'b list) t
-        (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
-    | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
+      (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
+    | Decode : variable -> Types.Type.t t 
+      (** [decode ɑ] *)
 
   and binding = Term_var.t * variable
 
@@ -132,13 +141,13 @@ module Make (Algebra : Algebra) = struct
         ; in_ : 'a t
         }
 
-  and 'a let_rec_binding = 
+  and 'a let_rec_binding =
     | Let_rec_binding of
-      { rigid_vars : variable list
-      ; flexible_vars : Shallow_type.binding list
-      ; binding : binding
-      ; in_ : 'a t
-      }
+        { rigid_vars : variable list
+        ; flexible_vars : Shallow_type.binding list
+        ; binding : binding
+        ; in_ : 'a t
+        }
 
   and 'a case =
     | Case of
@@ -154,9 +163,17 @@ module Make (Algebra : Algebra) = struct
 
   and 'a term_let_rec_binding = term_binding * 'a bound
 
-  (* ----------------------------------------------------------------------*)
+  (* ['a t] forms an applicative functor, allowing us to combine
+     many constraints into a single one using [let%map]:
 
-  (* Constraints ['a t] form an applicative functor. *)
+     {[
+       val pat : Typedtree.pattern Constraint.t
+       val exp : Typedtree.expression Constraint.t
+
+       let%map pat and exp in
+       Texp_fun (pat, ..., exp)
+     ]}  
+  *)
 
   include Applicative.Make (struct
     type nonrec 'a t = 'a t
@@ -166,6 +183,7 @@ module Make (Algebra : Algebra) = struct
     let apply t1 t2 = Map (Conj (t1, t2), fun (f, x) -> f x)
   end)
 
+  (* [both] is explicitly defined for efficiency reasons. *)
   let both t1 t2 = Conj (t1, t2)
 
   module Open_on_rhs_intf = struct
@@ -186,10 +204,14 @@ module Make (Algebra : Algebra) = struct
     end
   end
 
-  (* --------------------------------------------------------------------- *)
-
-  (* Combinators *)
-
+  (* A continuation of the type [('a, 'b) Continuation.t] is a continuation 
+     for constraint computations.
+       
+     An example usage is binders: e.g. [exists]. However, we also use them
+     for typing patterns, etc.
+     
+     As with standard continuations, they form a monadic structure. 
+  *)
   module Continuation = struct
     type nonrec ('a, 'b) t = ('a -> 'b t) -> 'b t
 
@@ -205,32 +227,45 @@ module Make (Algebra : Algebra) = struct
     let run t = t
   end
 
-  type 'n variables = (variable, 'n) Sized_list.t
+  (* A binder ['a binder] binds a variable in a constraint
+     during it's construction (computation). *)
   type 'a binder = (variable, 'a) Continuation.t
-  type ('n, 'a) bindern = ('n variables, 'a) Continuation.t
 
-  (* The function [&~] is an infix alias for [both] *)
+  (* ['n variables] encodes the type of a list containing n variables
+     (where n is the type-level natural number representation). *)
+  type 'n variables = (variable, 'n) Sized_list.t
+
+  (* [('n, 'a) binders] is a binder that binds ['n] variables,
+     known as a "polyvardic binder". *)
+  type ('n, 'a) binders = ('n variables, 'a) Continuation.t
+
+  (* [&~] is an infix alias for [both] *)
   let ( &~ ) = both
 
-  (* The function [>>] constructs a constraint from [t1] and [t2], returning
-     the value of [t2]. *)
+  (* [t1 >> t2 >> ... >> tn] solves [t1, ..., tn] yielding the value 
+     of [tn]. It is the monodial operator of constraints. *)
   let ( >> ) t1 t2 = t1 &~ t2 >>| snd
-  let ( =~ ) var1 var2 = Eq (var1, var2)
-  let inst var1 var2 = Instance (var1, var2)
-  let decode var = Decode var
 
+  (* [a =~ a'] is an infix alias for [Eq], denoting the equality
+     constraint on type variables. *)
+  let ( =~ ) a1 a2 = Eq (a1, a2)
+
+  (* [inst x a] is the constraint that instantiates [x] to [a].
+     It returns the type variable substitution. *)
+  let inst x a = Instance (x, a)
+
+  (* [decode a] is a constraint that evaluates to the decoded
+     type of [a]. *)
+  let decode a = Decode a
+
+  (* [exists bindings t] binds [bindings] existentially in [t]. *)
   let exists bindings t =
     match t with
     | Exist (bindings', t) -> Exist (bindings @ bindings', t)
     | t -> Exist (bindings, t)
 
 
-  let of_type type_ =
-    Continuation.lift (fun binder ->
-        let bindings, var = Shallow_type.of_type type_ in
-        exists bindings (binder var))
-
-
+  (* [existsn n] binds [n] variables existentially, returning a binder. *)
   let existsn n binder =
     let variables = Sized_list.init n ~f:(fun _ -> fresh ()) in
     exists
@@ -243,12 +278,23 @@ module Make (Algebra : Algebra) = struct
     exists [ v, None ] (binder v)
 
 
+  (* [of_type type_] constructs the "deep" type [type_], yielding
+     the shallow encoding [Θ |> ɑ], then binding the encoding existentially,
+     yielding the variable representation [ɑ]. *)
+  let of_type type_ =
+    Continuation.lift (fun binder ->
+        let bindings, var = Shallow_type.of_type type_ in
+        exists bindings (binder var))
+
+
+  (* [forall vars t]  binds [vars] as universally quantifier variables in [t]. *)
   let forall vars t =
     match t with
     | Forall (vars', t) -> Forall (vars @ vars', t)
     | t -> Forall (vars, t)
 
 
+  (* [foralln n] binds [n] variables universally, returning a continuation. *)
   let foralln n binder =
     let variables = Sized_list.init n ~f:(fun _ -> fresh ()) in
     forall (Sized_list.to_list variables) (binder variables)
@@ -259,12 +305,37 @@ module Make (Algebra : Algebra) = struct
     forall [ v ] (binder v)
 
 
-  let ( #= ) x typ : binding = x, typ
+  (* [x #= a] yields the binding that binds [x] to [a]. *)
+  let ( #= ) x a : binding = x, a
+
+  (* [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
   let def ~bindings ~in_ = Def (bindings, in_)
 
-  let let_ ~rigid ~flexible ~bindings:(in1_, bindings) ~in2_ =
-    Let
-      ( Let_binding
-          { rigid_vars = rigid; flexible_vars = flexible; bindings; in_ = in1_ }
-      , in2_ )
+  (* [rvs, fvs |. in_ @=> bindings] returns the let binding, that binds 
+     the rigid vars [rvs] and flexible vars [fvs] w/ the constraint [in_]
+     and bindings [bindings]. 
+     
+     We split this across 2 combinators, using the precedence of [ | > @ ] 
+     to ensure that [ |.] binds tighter. Providing a "mixfix" operator. 
+  *)
+  let ( |. ) (rigid_vars, flexible_vars) in_ = rigid_vars, flexible_vars, in_
+
+  let ( @=> ) (rigid_vars, flexible_vars, in_) bindings =
+    Let_binding { rigid_vars; flexible_vars; bindings; in_ }
+
+
+  (* [let_ ~bindings ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
+  let let_ ~bindings ~in_ = Let (bindings, in_)
+
+  (* [rvs, fvs |. in_ @~> binding] returns the let rec binding, that binds 
+     the rigid vars [rvs] and flexible vars [fvs] w/ the constraint [in_]
+     and binding [binding]. 
+  *)
+  let ( @~> ) (rigid_vars, flexible_vars, in_) binding =
+    Let_rec_binding { rigid_vars; flexible_vars; binding; in_ }
+
+
+  (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
+     constraint [in_]. *)
+  let let_rec ~bindings ~in_ = Let_rec (bindings, in_)
 end

@@ -13,21 +13,21 @@
 
 open! Import
 
-(* ------------------------------------------------------------------------- *)
-
 module Make (Algebra : Algebra) : sig
+  open Algebra
+  module Type_var := Types.Var
+  module Type := Types.Type
+  module Constraint := Constraint.Make(Algebra)
 
-  (* Instantiate constraint types. *)
+  (** [solve t] solves [t] and computes it's value. *)
 
-  module Constraint := Constraint.Make (Algebra)
+  type error =
+    [ `Unify of Type.t * Type.t
+    | `Cycle of Type.t
+    | `Unbound_term_variable of Term_var.t
+    | `Unbound_constraint_variable of Constraint.variable
+    | `Rigid_variable_escape of Type_var.t
+    ]
 
-  (* [solve] takes a ['a Constraint.t], solves it
-     and returns it's "value". 
-     
-     If the constraint is unsolvable (i.e. reduces to Cst_false), 
-     then raises an exception. 
-     
-     TODO: Improve exception interface *)
-
-  val solve : 'a Constraint.t -> 'a
+  val solve : 'a Constraint.t -> ('a, error) Result.t
 end

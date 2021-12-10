@@ -19,11 +19,9 @@
 
 type 'a t [@@deriving sexp_of]
 
-(* ------------------------------------------------------------------------- *)
-
-(** [fresh desc] creates a fresh node. It forms it's disjoint set, with 
+(** [make desc] creates a make node. It forms it's disjoint set, with 
     descriptor [desc]. *)
-val fresh : 'a -> 'a t
+val make : 'a -> 'a t
 
 (** [find node] returns the descriptor associated w/ [node]'s set. *)
 val find : 'a t -> 'a
@@ -35,16 +33,7 @@ val set : 'a t -> 'a -> unit
     and [node2]. The descriptors are merged using the function [~f]. *)
 val union : 'a t -> 'a t -> f:('a -> 'a -> 'a) -> unit
 
-(* ------------------------------------------------------------------------- *)
-
 (** [node1 === node2] returns true if [node1] and [node2] belong to the same
     disjoint set. *)
 val ( === ) : 'a t -> 'a t -> bool
 
-(* TODO: Is it worth exposing these? They're based on implementation details *)
-
-(** [is_root node] returns [true] if [node] is a "root" node of the disjoint 
-    set. *)
-val is_root : 'a t -> bool
-
-val is_child : 'a t -> bool

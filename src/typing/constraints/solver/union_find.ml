@@ -20,7 +20,8 @@ open! Import
   with the following operations:
   - [fresh x] : Creates a new set S containing x in D.
   - [find x] : Returns the (unique) set S_x in D that contains x. 
-  - [union x y]: Performs the union of S_x and S_y in D. *)
+  - [union x y]: Performs the union of S_x and S_y in D. 
+*)
 
 (* A disjoint set D is represeted using a forest, 
    a collection of trees, each node in the tree storing it's value, with 
@@ -38,18 +39,19 @@ open! Import
       [r_x], [r_y]. 
       
       If [r_x < r_y] => [t_x] becomes the child of [t_y]. The resulting rank is 
-      given by [if r_x != r_y then max r_x r_y else r_x + 1]. *)
+      given by [if r_x != r_y then max r_x r_y else r_x + 1]. 
+*)
 
 (* Our implementation of union-find makes an initial optimization.
    We define a set of nodes, which are partitioned into (disjoint) equivalence 
    classes. Each equivalence class is associated with an abstract value of type 
-   ['a], which we call a *descriptor*. *)
-
-(* ------------------------------------------------------------------------- *)
+   ['a], which we call a *descriptor*. 
+*)
 
 (* A link [link] is the contents of a node [node]. If [node] is the root of the
    equivalence class, then it contains the rank and descriptor. Otherwise, it 
-   contains a pointer to it's parent vertex. *)
+   contains a pointer to it's parent vertex. 
+*)
 
 type 'a link =
   | Root of (* rank *) int * (* descriptor *) 'a
@@ -58,16 +60,14 @@ type 'a link =
 (* The type ['a t] represents a node in the union-find data structure. *)
 and 'a t = 'a link ref [@@deriving sexp_of]
 
-
-(* ------------------------------------------------------------------------- *)
-
-(* [fresh desc] creates a fresh node. It forms it's own equivalence class, 
+(* [make desc] creates a fresh node. It forms it's own equivalence class, 
    with descriptor [desc] and rank [0]. *)
-let fresh desc = ref (Root (0, desc))
+let make desc = ref (Root (0, desc))
 
 (* [root node] returns the root element of [node]'s equivalence class.
    It is found by traversing pointers. While doing so, we perform 
-   path-compression. *)
+   path-compression. 
+*)
 let rec root node =
   match !node with
   | Root _ -> node
@@ -89,7 +89,7 @@ let rec root node =
       | Link _ -> assert false ]
     However, this inefficient for the root, and children of
     the root and requires an [assert false] (which we prefer to avoid).
-   *)
+*)
 let rec find node =
   match !node with
   | Root (_, desc) -> desc
@@ -107,8 +107,6 @@ let rec set node desc =
     | Root (rank, _) -> node := Root (rank, desc)
     | Link _ -> set (root node) desc)
 
-
-(* ------------------------------------------------------------------------- *)
 
 let link node1 node2 ~f =
   if phys_equal node1 node2
@@ -136,14 +134,12 @@ let union node1 node2 ~f =
   link root1 root2 ~f
 
 
-(* ------------------------------------------------------------------------- *)
-
 (* [node1 === node2] determines whether [node1] and [node2] are in the same
    equivalence class. *)
 let ( === ) node1 node2 =
   phys_equal node1 node2 || phys_equal (root node1) (root node2)
 
-
+(* 
 (* [is_root node] determines whether [node] is a root node. *)
 let is_root node =
   match !node with
@@ -155,4 +151,4 @@ let is_root node =
 let is_child node =
   match !node with
   | Root _ -> false
-  | Link _ -> true
+  | Link _ -> true *)
