@@ -1,0 +1,5 @@
+(test
+ (name test_constraints)
+ (libraries base constraints alcotest qcheck qcheck-alcotest)
+ (preprocess
+  (pps ppx_jane ppx_deriving_qcheck ppx_deriving.eq)))

@@ -354,16 +354,16 @@ module Make (Algebra : Algebra) = struct
       (* Enter a new region. *)
       enter state;
       (* Initialize the fresh flexible and rigid variables for each of the bindings. *)
-      let flexible_and_rigid_vars =
-        bindings
-        |> List.map
-             ~f:(fun (Let_rec_binding { flexible_vars; rigid_vars; _ }) ->
-               ( List.map ~f:(bind_flexible state) flexible_vars
-               , List.map ~f:(bind_rigid state) rigid_vars ))
-      in
-      let _flexible_vars = flexible_and_rigid_vars |> List.map ~f:fst
+      let _flexible_vars =
+        List.map bindings ~f:(fun (Let_rec_binding { flexible_vars; _ }) ->
+            flexible_vars)
+        |> List.concat
+        |> List.map ~f:(bind_flexible state)
       and rigid_vars =
-        flexible_and_rigid_vars |> List.map ~f:snd |> List.join
+        List.map bindings ~f:(fun (Let_rec_binding { rigid_vars; _ }) ->
+            rigid_vars)
+        |> List.concat
+        |> List.map ~f:(bind_rigid state)
       in
       (* Convert the constraint types into graphical types. *)
       let types =
@@ -386,11 +386,6 @@ module Make (Algebra : Algebra) = struct
       in
       (* Generalize and exit *)
       let generalizable, schemes = exit state ~rigid_vars ~types in
-      let generalizable =
-        (* Use of [Hash_set] for efficient membership testing when
-           computing [bound_values]. *)
-        Hash_set.of_list (module G.Unifier.Type) generalizable
-      in
       (* Compute extended environment and bindings. *)
       let env, bindings =
         List.zip_exn bindings schemes
@@ -399,24 +394,14 @@ module Make (Algebra : Algebra) = struct
              ~f:(fun (env, bindings) (Let_rec_binding { binding = x, _; _ }, s)
                 -> Env.extend env x s, (x, s) :: bindings)
       in
-      (* Compute bounds of each solved value *)
-      let bound_values =
-        flexible_and_rigid_vars
-        |> List.map ~f:(fun (flexible_vars, rigid_vars) ->
-               flexible_vars @ rigid_vars)
-        |> List.map2_exn values ~f:(fun value vars () ->
-               ( List.filter vars ~f:(Hash_set.mem generalizable)
-                 |> List.map ~f:Decoder.decode_variable
-               , value () ))
-      in
       (* Helper function for constructing term let rec bindings. *)
       let make_term_let_rec_binding (var, scheme) value
           : _ term_let_rec_binding Elaborate.t
         =
-       fun () -> (var, Decoder.decode_scheme scheme), value ()
+       fun () -> (var, Decoder.decode_scheme scheme), (List.map generalizable ~f:Decoder.decode_variable, value ())
       in
       (* Return recursive bindings and extended environment *)
-      ( List.map2_exn bindings bound_values ~f:make_term_let_rec_binding
+      ( List.map2_exn bindings values ~f:make_term_let_rec_binding
         |> Elaborate.list
       , env )
 
@@ -439,7 +424,6 @@ module Make (Algebra : Algebra) = struct
     | Rigid_variable_escape a -> Error (`Rigid_variable_escape a)
     | Env.Unbound_term_variable x -> Error (`Unbound_term_variable x)
     | Unbound_constraint_variable a -> Error (`Unbound_constraint_variable a)
-
 end
 
 module Private = struct

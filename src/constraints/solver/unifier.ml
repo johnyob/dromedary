@@ -114,15 +114,17 @@ module Make (Former : Type_former) (Metadata : Metadata) :
         ; buffer : Buffer.t
         }
 
-      let basic_shape ~label ~metadata ~shape ~color () : string =
+      let basic_shape ~label ~metadata () : string =
+        let label = String.escaped label in
+        let metadata = String.escaped metadata in
         [%string
-          {|style=filled, tooltip = %{metadata}, shape = "%{shape}", label = "%{label}", fillcolor = "%{color}";|}]
+          {|[style=filled, tooltip = "%{metadata}", shape = oval, label = "%{label}"];|}]
 
 
       let structure_to_string structure : string =
         match structure with
-        | Var { flexibility = Flexible } -> [%string "⋆"]
-        | Var { flexibility = Rigid } -> [%string "⋄"]
+        | Var { flexibility = Flexible } -> [%string "*"]
+        | Var { flexibility = Rigid } -> [%string "!"]
         | Former former ->
           Former.sexp_of_t (fun _ -> Atom "") former |> Sexp.to_string_hum
 
@@ -140,8 +142,6 @@ module Make (Former : Type_former) (Metadata : Metadata) :
           (basic_shape
              ~label:(structure_to_string (get_structure t))
              ~metadata:(metadata_to_string (get_metadata t))
-             ~shape:"oval"
-             ~color:"#FFDD94"
              ());
         Buffer.add_char state.buffer '\n';
         state.id <- state.id + 1;
@@ -152,24 +152,31 @@ module Make (Former : Type_former) (Metadata : Metadata) :
         Buffer.add_string state.buffer [%string "%{from} -> %{to_};\n"]
 
 
-      let rec follow_type state t =
-        let me = register state t in
-        (match get_structure t with
-        | Var _ -> ()
-        | Former former ->
-          Former.iter former ~f:(fun t ->
-              let from = follow_type state t in
-              arrow state ~from ~to_:me));
-        me
+      let follow_type state t =
+        let table = Hashtbl.create (module Int) in
+        let rec loop t =
+          match Hashtbl.find table (id t) with
+          | Some me -> me
+          | None ->
+            let me = register state t in
+            Hashtbl.set table ~key:(id t) ~data:me;
+            (match get_structure t with
+            | Var _ -> ()
+            | Former former ->
+              Former.iter former ~f:(fun t ->
+                  let from = loop t in
+                  arrow state ~from ~to_:me));
+            me
+        in
+        loop t
     end
 
-    let to_dot t = 
+    let to_dot t =
       let open To_dot in
       let state = { id = 0; buffer = Buffer.create 2042 } in
       let _root = follow_type state t in
       let contents = Buffer.contents state.buffer in
       [%string "digraph {\n %{contents}}"]
-
   end
 
   open Type
