@@ -1,5 +1,0 @@
-(library
- (public_name dromedary.typing.constraints.solver)
- (name dromedary_typing_constraints_solver)
- (preprocess (pps ppx_sexp_conv ppx_compare ppx_deriving.eq))
- (libraries base dromedary.typing.constraints.constraint vec))

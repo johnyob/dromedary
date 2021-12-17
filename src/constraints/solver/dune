@@ -1,0 +1,6 @@
+(library
+ (public_name dromedary.constraints.solver)
+ (name dromedary_constraints_solver)
+ (preprocess
+  (pps ppx_jane ppx_deriving.eq))
+ (libraries base dromedary.constraints.constraint vec))

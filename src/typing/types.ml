@@ -14,8 +14,6 @@
 
 open Base
 
-(* ------------------------------------------------------------------------- *)
-
 (** Representation of types and declarations  *)
 
 type type_expr =
@@ -27,11 +25,10 @@ type type_expr =
   (** Product (or "tuple") types. *)
   | Ttyp_constr of type_constr
   (** Type constructors. *)
+  | Ttyp_alias of type_expr * string
   [@@deriving sexp_of]
 
 and type_constr = type_expr list * string
-
-(* ------------------------------------------------------------------------- *)
 
 (* Type definitions *)
 
@@ -58,8 +55,6 @@ and constructor_declaration =
   ; constructor_arg : type_expr option
   ; constructor_type : type_expr
   }
-
-(* ------------------------------------------------------------------------- *)
 
 (* Constructor and record label descriptions *)
 
