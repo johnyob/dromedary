@@ -13,70 +13,66 @@
 
 open Parsing
 open Ast_types
-
 open Types
 
 (** Abstract syntax tree after typing *)
 
-type pattern = 
+type pattern =
   { pat_desc : pattern_desc
   ; pat_type : type_expr
   }
 
 and pattern_desc =
-  | Tpat_any
-    (** [_] *)
-  | Tpat_var of string 
-    (** [x]. *)
-  | Tpat_alias of pattern * string 
-    (** [P as x]. *)
-  | Tpat_constant of constant 
-    (** [c]. e.g. [1, true, ()]. *)
-  | Tpat_tuple of pattern list 
-    (** (P1, ..., Pn). Invariant n >= 2. *)
-  | Tpat_construct of constructor_description * pattern option 
-    (** [C <P>]. *)
+  | Tpat_any (** [_] *)
+  | Tpat_var of string (** [x]. *)
+  | Tpat_alias of pattern * string (** [P as x]. *)
+  | Tpat_const of constant (** [c]. e.g. [1, true, ()]. *)
+  | Tpat_tuple of pattern list (** (P1, ..., Pn). Invariant n >= 2. *)
+  | Tpat_construct of constructor_description * pattern option (** [C <P>]. *)
 
-type expression = 
+type expression =
   { exp_desc : expression_desc
   ; exp_type : type_expr
-  } 
-  
+  }
+
 and expression_desc =
-  | Texp_var of string instance
-    (** [x]. *)
+  | Texp_var of string instance (** [x]. *)
   | Texp_prim of primitive
-    (** Primitive operations [%prim p]. e.g. [%prim +], [%prim -], etc. *)
-  | Texp_const of constant
-    (** Constants [c]. e.g. [1, true, ()]. *)
+      (** Primitive operations [%prim p]. e.g. [%prim +], [%prim -], etc. *)
+  | Texp_const of constant (** Constants [c]. e.g. [1, true, ()]. *)
   | Texp_fun of pattern * expression
-    (** The function (or lambda) abstraction [fun P -> E].  
+      (** The function (or lambda) abstraction [fun P -> E].  
         Note that: 
           - [let x P1 ... Pn = E in ...] is encoding using 
             [Pexp_let ("x", fun P1 ... Pn -> E, ...)]. 
     *)
-  | Texp_app of expression * expression 
-    (** Function application [E1 E2]. *)
-  | Texp_let of rec_flag * value_binding * expression
-    (** Let expressions *)
+  | Texp_app of expression * expression (** Function application [E1 E2]. *)
+  | Texp_let of rec_flag * value_binding list * expression
+      (** Let expressions *)
   | Texp_construct of constructor_description * expression option
-    (** An applied algebraic data type constructor [C <E>]. *)
-  | Texp_record of (label_description * expression) list 
-    (** {l1 = E1; ...; ln = En} *)
-  | Texp_field of expression * label_description 
-    (** E.l *)
+      (** An applied algebraic data type constructor [C <E>]. *)
+  | Texp_record of (label_description * expression) list
+      (** {l1 = E1; ...; ln = En} *)
+  | Texp_field of expression * label_description (** E.l *)
   | Texp_tuple of expression list
-    (** Tuples [(E1, ..., En)]. Invariant: n >= 2. *)
+      (** Tuples [(E1, ..., En)]. Invariant: n >= 2. *)
   | Texp_match of expression * type_expr * case list
-    (** Match (or "case") expressions [match E with (P1 -> E1 | ... | Pn -> En)]. *)
+      (** Match (or "case") expressions [match E with (P1 -> E1 | ... | Pn -> En)]. *)
   | Texp_ifthenelse of expression * expression * expression
-    (** If (or ternary) expressions [if E then E1 else E2]. *)
+      (** If (or ternary) expressions [if E then E1 else E2]. *)
 
 (** [P = E]. *)
 and value_binding =
-  { tvb_pat : pattern
-  ; tvb_expr : expression abstraction
-  }
+  | Nonrecursive of
+      { tvb_abs : string list
+      ; tvb_pat : pattern
+      ; tvb_expr : expression
+      }
+  | Recursive of
+      { trvb_abs : string list
+      ; trvb_var : string
+      ; trvb_expr : expression
+      }
 
 (** [P -> E]. *)
 and case =
@@ -85,5 +81,3 @@ and case =
   }
 
 and 'a instance = 'a * type_expr list
-
-and 'a abstraction = string list * 'a

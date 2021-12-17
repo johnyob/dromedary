@@ -107,6 +107,69 @@ module Make (Former : Type_former) (Metadata : Metadata) :
        Based on it's integer field: id. *)
 
     let hash t = Hashtbl.hash (id t)
+
+    module To_dot = struct
+      type state =
+        { mutable id : int
+        ; buffer : Buffer.t
+        }
+
+      let basic_shape ~label ~metadata ~shape ~color () : string =
+        [%string
+          {|style=filled, tooltip = %{metadata}, shape = "%{shape}", label = "%{label}", fillcolor = "%{color}";|}]
+
+
+      let structure_to_string structure : string =
+        match structure with
+        | Var { flexibility = Flexible } -> [%string "⋆"]
+        | Var { flexibility = Rigid } -> [%string "⋄"]
+        | Former former ->
+          Former.sexp_of_t (fun _ -> Atom "") former |> Sexp.to_string_hum
+
+
+      let metadata_to_string metadata : string =
+        metadata |> Metadata.sexp_of_t |> Sexp.to_string_hum
+
+
+      let register state t : string =
+        let id = [%string "%{state.id#Int}"] in
+        Buffer.add_string state.buffer id;
+        Buffer.add_char state.buffer ' ';
+        Buffer.add_string
+          state.buffer
+          (basic_shape
+             ~label:(structure_to_string (get_structure t))
+             ~metadata:(metadata_to_string (get_metadata t))
+             ~shape:"oval"
+             ~color:"#FFDD94"
+             ());
+        Buffer.add_char state.buffer '\n';
+        state.id <- state.id + 1;
+        id
+
+
+      let arrow state ~from ~to_ =
+        Buffer.add_string state.buffer [%string "%{from} -> %{to_};\n"]
+
+
+      let rec follow_type state t =
+        let me = register state t in
+        (match get_structure t with
+        | Var _ -> ()
+        | Former former ->
+          Former.iter former ~f:(fun t ->
+              let from = follow_type state t in
+              arrow state ~from ~to_:me));
+        me
+    end
+
+    let to_dot t = 
+      let open To_dot in
+      let state = { id = 0; buffer = Buffer.create 2042 } in
+      let _root = follow_type state t in
+      let contents = Buffer.contents state.buffer in
+      [%string "digraph {\n %{contents}}"]
+
   end
 
   open Type
@@ -288,7 +351,6 @@ module Make (Former : Type_former) (Metadata : Metadata) :
     loop type_
 
 
-    
   let fold_cyclic
       (type a)
       type_

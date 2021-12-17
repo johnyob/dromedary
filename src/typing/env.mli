@@ -11,13 +11,22 @@
 (*                                                                           *)
 (*****************************************************************************)
 
+open! Import
 open Types
 
 (** [t] represents the typing environment Ω. *)
 type t
 
+val empty : t
+
 (** [find_constr t constr] returns the constructor declaration w/ constructor name [constr]. *)
-val find_constr : t -> string -> constructor_declaration option
+val find_constr
+  :  t
+  -> name:string
+  -> (constructor_declaration, [> `Unbound_constructor of string ]) Result.t
 
 (** [find_label t label] returns the label declaration w/ label name [label]. *)
-val find_label : t -> string -> label_declaration option
+val find_label
+  :  t
+  -> label:string
+  -> (label_declaration, [> `Unbound_label of string ]) Result.t

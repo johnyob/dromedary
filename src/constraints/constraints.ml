@@ -12,23 +12,17 @@
 (*****************************************************************************)
 
 open! Import
-
-module Module_types = Constraint.Module_types
+module Module_types = Private.Constraint.Module_types
 
 module Make (Algebra : Algebra) = struct
+  include Private.Constraint.Make (Algebra)
 
-  module Constraint = Constraint.Make (Algebra)
+  module Solver = Private.Solver.Make (Algebra)
+  let solve = Solver.solve
 
-  module Computation = struct
-    module type Basic = Computation.Basic
-    module type Basic2 = Computation.Basic2
+end
 
-    module type S = Computation.S
-    module type S2 = Computation.S2
-
-    module Make (Basic : Basic) = Computation.Make (Algebra) (Basic)
-
-    module Make2 (Basic : Basic2) = Computation.Make2 (Algebra) (Basic)
-  end
-
+module Private = struct
+  module Constraint = Private.Constraint
+  include Private.Solver.Private
 end

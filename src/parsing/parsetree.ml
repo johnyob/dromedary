@@ -42,7 +42,7 @@ type pattern =
   (** [x]. *)
   | Ppat_alias of pattern * string
   (** [P as x]. *)
-  | Ppat_constant of constant
+  | Ppat_const of constant
   (** [c]. e.g. [1, true, ()]. *)
   | Ppat_tuple of pattern list
   (** (P1, ..., Pn). Invariant n >= 2. *)
@@ -65,7 +65,7 @@ type expression =
           [Pexp_let ("x", fun P1 ... Pn -> E, ...)]. *)
   | Pexp_app of expression * expression
   (** Function application [E1 E2]. *)
-  | Pexp_let of rec_flag * value_binding * expression
+  | Pexp_let of rec_flag * value_binding list * expression
   (** Let expressions:
       [let P1 = E1 and ... and Pn = En in E]      ([rec_flag = Nonrecursive]).    
       [let rec P1 = E1 and ... Pn = En in E]      ([rec_flag = Recursive]). 

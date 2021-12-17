@@ -1,5 +1,5 @@
 (library
  (public_name dromedary.typing)
  (name typing)
- (preprocess (pps ppx_sexp_conv ppx_compare ppx_deriving.eq ppx_let))
- (libraries base dromedary.parsing dromedary.typing.constraints dromedary.misc))
+ (preprocess (pps ppx_jane ppx_deriving.eq ppx_let))
+ (libraries base dromedary.parsing dromedary.constraints))

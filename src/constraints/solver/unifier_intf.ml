@@ -71,6 +71,8 @@ module type S = sig
       | Var of { mutable flexibility : flexibility }
       | Former of t former
 
+    val to_dot : t -> string
+
     (** Each graphical type node consists of:
         - a unique identifier [id] (used to define a total ordering).
         - a mutable [structure], which contains the node structure.

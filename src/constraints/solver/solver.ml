@@ -242,7 +242,7 @@ module Make (Algebra : Algebra) = struct
         unify (find state a) (find state a');
         return ()
       | Exist (bindings, cst) ->
-        ignore (List.map ~f:(bind_flexible state) bindings);
+        ignore (List.map ~f:(bind_flexible state) bindings : U.Type.t list);
         solve ~state ~env cst
       | Forall (vars, cst) ->
         (* Enter a new region *)
@@ -252,7 +252,7 @@ module Make (Algebra : Algebra) = struct
         (* Solve the constraint *)
         let value = solve ~state ~env cst in
         (* Generalize and exit *)
-        ignore (exit state ~rigid_vars ~types:[]);
+        ignore (exit state ~rigid_vars ~types:[] : G.variables * G.scheme list);
         value
       | Def (bindings, in_) ->
         let env = Env.extend_bindings state env bindings in
@@ -439,4 +439,11 @@ module Make (Algebra : Algebra) = struct
     | Rigid_variable_escape a -> Error (`Rigid_variable_escape a)
     | Env.Unbound_term_variable x -> Error (`Unbound_term_variable x)
     | Unbound_constraint_variable a -> Error (`Unbound_constraint_variable a)
+
+end
+
+module Private = struct
+  module Generalization = Generalization.Make
+  module Unifier = Unifier.Make
+  module Union_find = Union_find
 end

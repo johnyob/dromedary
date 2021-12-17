@@ -12,9 +12,11 @@
 (*****************************************************************************)
 
 
-include Base
+module P = Parsing
 
-module Monad = struct
-  include Base.Monad
-  include Misc.Monad
-end
+include Base
+include P
+
+module Constraint = Constraints.Make (Algebra)
+
+

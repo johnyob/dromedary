@@ -11,20 +11,37 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-include Base
+open! Import
 
-module Private = struct
-  module Constraint = Dromedary_typing_constraints_constraint.Constraint
-  module Solver = Dromedary_typing_constraints_solver.Solver
+module Make (Algebra : Algebra) : sig
+  open Algebra
+  module Type_var := Types.Var
+  module Type := Types.Type
+  module Type_former := Types.Former
+  module Constraint := Constraint.Make(Algebra)
+
+  (** [solve t] solves [t] and computes it's value. *)
+
+  type error =
+    [ `Unify of Type.t * Type.t
+    | `Cycle of Type.t
+    | `Unbound_term_variable of Term_var.t
+    | `Unbound_constraint_variable of Constraint.variable
+    | `Rigid_variable_escape of Type_var.t
+    ]
+
+  val solve : 'a Constraint.t -> ('a, [> error ]) Result.t
 end
 
-include Private.Constraint.Module_types
+(** [Private] submodule for [expect] tests. *)
+module Private : sig
+  module Generalization (Type_former : Type_former) :
+    Generalization.S with type 'a former := 'a Type_former.t
 
+  module Unifier (Type_former : Type_former) (Metadata : Unifier.Metadata) :
+    Unifier.S
+      with type 'a former := 'a Type_former.t
+       and type metadata := Metadata.t
 
-module Monad = struct
-  include Base.Monad
-  include Misc.Monad
+  module Union_find : module type of Union_find
 end
-
-module Size = Misc.Size
-module Sized_list = Misc.Sized_list

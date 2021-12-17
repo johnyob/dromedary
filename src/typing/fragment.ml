@@ -12,22 +12,35 @@
 (*****************************************************************************)
 
 open! Import
+open Constraint
 
-module Make (Algebra : Algebra) : sig
-  open Algebra
-  module Type_var := Types.Var
-  module Type := Types.Type
-  module Constraint := Constraint.Make(Algebra)
+type t =
+  { existential_bindings : Shallow_type.binding list
+  ; gamma : (String.t, variable, String.comparator_witness) Map.t
+  }
 
-  (** [solve t] solves [t] and computes it's value. *)
+let empty = { existential_bindings = []; gamma = Map.empty (module String) }
 
-  type error =
-    [ `Unify of Type.t * Type.t
-    | `Cycle of Type.t
-    | `Unbound_term_variable of Term_var.t
-    | `Unbound_constraint_variable of Constraint.variable
-    | `Rigid_variable_escape of Type_var.t
-    ]
+let merge t1 t2 =
+  let exception Non_linear_pattern of string in
+  try
+    Ok
+      { existential_bindings = t1.existential_bindings @ t2.existential_bindings
+      ; gamma =
+          Map.merge_skewed t1.gamma t2.gamma ~combine:(fun ~key _ _ ->
+              raise (Non_linear_pattern key))
+      }
+  with
+  | Non_linear_pattern term_var -> Error (`Non_linear_pattern term_var)
 
-  val solve : 'a Constraint.t -> ('a, error) Result.t
-end
+
+let of_existential_bindings bindings =
+  { existential_bindings = bindings; gamma = Map.empty (module String) }
+
+
+let of_binding (x, a) =
+  { existential_bindings = []; gamma = Map.singleton (module String) x a }
+
+
+let to_bindings t = Map.to_alist t.gamma |> List.map ~f:(fun (x, a) -> x #= a)
+let to_existential_bindings t = t.existential_bindings

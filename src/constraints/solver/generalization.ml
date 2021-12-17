@@ -204,11 +204,12 @@ module Make (Former : Type_former) = struct
 
   (* [make_state ()] makes a new empty state. *)
 
-  let make_state () = { current_level = 0; regions = Vec.make () }
+  let make_state () = { current_level = outermost_level - 1; regions = Vec.make () }
 
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
 
   let set_region state type_ =
+    Stdio.print_string "set_region";
     Hash_set.add (Vec.get_exn state.regions (get_level type_)) type_
 
 
@@ -236,11 +237,10 @@ module Make (Former : Type_former) = struct
 
   let enter state =
     state.current_level <- state.current_level + 1;
-    Vec.set_exn
-      state.regions
-      state.current_level
+    Vec.push
       (Hash_set.create (module U.Type))
-
+      state.regions
+      
 
   (* A scheme in "graphic types" simply consists of a node w/ a pointer
      to a graphic type node. 
@@ -273,12 +273,15 @@ module Make (Former : Type_former) = struct
   (* [is_young state type_] determines whether [type_] is in the young region. *)
 
   let is_young state type_ =
+    Stdio.print_string "is_young";
     Hash_set.mem (Vec.get_exn state.regions state.current_level) type_
 
 
   (* [young_region state] returns the "young" region in [state] *)
 
-  let young_region state = Vec.get_exn state.regions state.current_level
+  let young_region state = 
+    Stdio.print_string "young_region";
+    Vec.get_exn state.regions state.current_level
 
   (* Generalization performs 4 functions:
       1) Propagate delayed level updated to nodes

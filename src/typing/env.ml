@@ -22,5 +22,15 @@ type t =
 
 and 'a map = (String.t, 'a, String.comparator_witness) Map.t
 
-let find_constr env constr = Map.find env.constrs constr
-let find_label env label = Map.find env.labels label
+let empty =
+  let empty_map () = Map.empty (module String) in
+  { types = empty_map (); constrs = empty_map (); labels = empty_map () }
+
+
+let find_constr env ~name:constr =
+  Map.find env.constrs constr
+  |> Result.of_option ~error:(`Unbound_constructor constr)
+
+
+let find_label env ~label =
+  Map.find env.labels label |> Result.of_option ~error:(`Unbound_label label)

@@ -40,8 +40,7 @@ module Type_former = struct
     | Constr (ts, constr) -> Constr (List.map ~f ts, constr)
 
 
-  let iter t ~f = ignore (map t ~f)
-
+  let iter t ~f = ignore (map t ~f : unit t)
 
   let fold t ~f ~init =
     match t with
@@ -84,17 +83,15 @@ module Type = struct
     | Type_former.Tuple ts -> Ttyp_tuple ts
     | Type_former.Constr (ts, constr) -> Ttyp_constr (ts, constr)
 
+
   let mu x t = Ttyp_alias (t, x)
 end
 
-module Algebra = struct
-  module Term_var = Term_var
 
-  module Types = struct
-    module Var = Type_var
-    module Former = Type_former
-    module Type = Type
+module Types = struct
+  module Var = Type_var
+  module Former = Type_former
+  module Type = Type
 
-    type scheme = Var.t list * Type.t
-  end
+  type scheme = Var.t list * Type.t
 end
