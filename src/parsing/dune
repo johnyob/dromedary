@@ -1,3 +1,5 @@
 (library
  (public_name dromedary.parsing)
- (name parsing))
+ (name parsing)
+ (preprocess (pps ppx_jane))
+ (libraries core))

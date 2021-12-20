@@ -11,19 +11,34 @@
 (*                                                                           *)
 (*****************************************************************************)
 
+open Core
+
 (* [Ast_types] defines auxiliary AST types used by both [Parsetree] 
     and [Typedtree]. *)
 
-type constant = 
+type constant =
   | Const_int of int
   | Const_bool of bool
-  | Const_unit 
+  | Const_unit
+[@@deriving sexp_of]
 
-type primitive = 
+let string_of_constant constant =
+  match constant with
+  | Const_int n -> Format.asprintf "Int: %d" n
+  | Const_bool b -> Format.asprintf "Bool: %b" b
+  | Const_unit -> "Unit"
+
+
+type primitive =
   | Prim_add
   | Prim_sub
   | Prim_div
   | Prim_mul
+[@@deriving sexp_of]
 
-type rec_flag = Nonrecursive | Recursive
-
+let string_of_primitive primitive =
+  match primitive with
+  | Prim_add -> "(+)"
+  | Prim_sub -> "(-)"
+  | Prim_div -> "(/)"
+  | Prim_mul -> "(*)"
