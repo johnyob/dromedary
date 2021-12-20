@@ -31,7 +31,8 @@ type core_type =
           consistency between OCaml and Dromedary code. *)
 [@@deriving sexp_of]
 
-(** [pp_core_type_mach ppf core_type] pretty prints [core_type] in a "machine format" (an explicit tree structure). *)
+(** [pp_core_type_mach ppf core_type] pretty prints [core_type] in a "machine format" 
+    (an explicit tree structure). *)
 val pp_core_type_mach : core_type pp
 
 (** [pp_core_type ppf core_type] pretty prints [core_type] as a syntactic representation. *)
@@ -83,10 +84,13 @@ type expression =
       *)
   | Pexp_app of expression * expression 
       (** Function application [E1 E2]. *)
-  | Pexp_let of value_bindings * expression
+  | Pexp_let of value_binding list * expression
       (** Let expressions:
-          [let P1 = E1 and ... and Pn = En in E]      ([value_bindings = Nonrecursive ...]).    
-          [let rec P1 = E1 and ... Pn = En in E]      ([value_bindings = Recursive ...]). 
+          [let P1 = E1 and ... and Pn = En in E]    
+      *)
+  | Pexp_let_rec of rec_value_binding list * expression
+      (** Recursive let expressions:
+          [let rec x1 = E1 and ... and xn = En in E]    
       *)
   | Pexp_forall of string list * expression
       (** Explicit "forall" quantifier [forall 'a1 ... 'an -> E]. 
@@ -110,15 +114,10 @@ type expression =
       (** If (or ternary) expressions [if E then E1 else E2]. *)
 [@@deriving sexp_of]
 
-and value_bindings =
-  | Recursive of rec_value_binding list
-  | Nonrecursive of nonrec_value_binding list
-[@@deriving sexp_of]
-
-(** [P = E]. *)
-and nonrec_value_binding =
-  { pnvb_pat : pattern
-  ; pnvb_expr : expression
+(** [P = E] *)
+and value_binding =
+  { pvb_pat : pattern
+  ; pvb_expr : expression
   }
 [@@deriving sexp_of]
 
@@ -142,28 +141,20 @@ val pp_expression_mach : expression pp
 (** [pp_expression ppf exp] pretty prints an expression [exp] as a syntax representation. *)
 val pp_expression : expression pp
 
-(** [pp_value_bindings_mach ppf value_bindings] pretty prints the value bindings [value_bindings] as 
-    an explicit tree of bindings. *)
-val pp_value_bindings_mach : value_bindings pp
+(** [pp_value_binding_mach ppf value_binding] pretty prints the value binding [value_binding]
+    as an explicit tree. *)
+val pp_value_binding_mach : value_binding pp
 
-(** [pp_value_bindings ppf value_bindings] pretty prints the value bindings [value_bindings] as a 
-    syntactic representation, using [and] as a separator. *)
-val pp_value_bindings : value_bindings pp
+(** [pp_value_binding ppf value_binding] pretty prints the value binding [value_bindings] as a 
+    syntactic representation. *)
+val pp_value_binding : value_binding pp
 
-(** [pp_nonrec_value_binding_mach ppf nonrec_value_binding] pretty prints the non recursive value binding
-    [nonrec_value_binding], using an explicit tree structure. *)
-val pp_nonrec_value_binding_mach : nonrec_value_binding pp
-
-(** [pp_nonrec_value_binding ppf nonrec_value_binding] pretty prints the non recursive value binding
-    [nonrec_value_binding] as a syntactic representation. *)
-val pp_nonrec_value_binding : nonrec_value_binding pp
-
-(** [pp_rec_value_binding_mach ppf rec_value_binding] pretty prints the recursive value binding
-    [rec_value_binding], using an explicit tree structure. *)
+(** [pp_rec_value_binding_mach ppf value_binding] pretty prints the recursive value binding [value_binding]
+    as an explicit tree. *)
 val pp_rec_value_binding_mach : rec_value_binding pp
 
-(** [pp_rec_value_binding ppf rec_value_binding] pretty prints the recursive value binding
-    [rec_value_binding] as a syntactic representation. *)
+(** [pp_rec_value_binding ppf value_binding] pretty prints the recursive value binding [value_bindings] as a 
+    syntactic representation. *)
 val pp_rec_value_binding : rec_value_binding pp
 
 (** [pp_case_mach ppf case] pretty prints the case [case] as an explicit tree structure. *)
