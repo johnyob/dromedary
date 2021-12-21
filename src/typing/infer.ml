@@ -184,15 +184,36 @@ module Pattern = struct
   let convert_core_type core_type : Type.t Computation.t =
     let open Computation.Let_syntax in
     let%bind substitution = substitution in
-    of_result (convert_core_type ~substitution core_type) ~message:(fun _ ->
-        assert false)
+    of_result
+      (convert_core_type ~substitution core_type)
+      ~message:(fun (`Unbound_type_variable var) ->
+        [%message
+          "Unbound type variable when converting core type in pattern"
+            (var : string)])
 
 
   let inst_constr_decl name : (Type.t option * Type.t) Binder.t =
     let open Binder.Let_syntax in
     let& vars, constr_arg, constr_type =
       let%bind.Computation env = env in
-      of_result (inst_constr_decl ~env name) ~message:(fun _ -> assert false)
+      of_result (inst_constr_decl ~env name) ~message:(function
+          | `Duplicate_type_parameter_for_constructor (constr, var) ->
+            [%message
+              "Duplicate type parameter in constructor in environment"
+                (var : string)
+                (constr : string)]
+          | `Type_expr_contains_alias type_expr ->
+            [%message
+              "Constructor type in environment contains alias"
+                (name : string)
+                (type_expr : type_expr)]
+          | `Unbound_constructor constr ->
+            [%message "Constructor is unbound in environment" (constr : string)]
+          | `Unbound_type_variable var ->
+            [%message
+              "Unbound type variable when instantiating constructor (Cannot \
+               occur! Good luck)"
+                (var : string)])
     in
     let%bind () = exists_vars vars in
     return (constr_arg, constr_type)
@@ -276,7 +297,11 @@ module Pattern = struct
             let%bind pat = infer_pat arg_pat arg_pat_type in
             return (pat >>| Option.some)
           | None, None -> const None
-          | _, _ -> fail [%message "pattern constructor argument mismatch"]
+          | _, _ ->
+            fail
+              [%message
+                "pattern constructor argument mismatch"
+                  (pat : Parsetree.pattern)]
         in
         return
           (let%map constr_desc = constr_desc
@@ -316,12 +341,12 @@ module Expression = struct
 
 
   (* TODO: Move to computation. *)
-  let extend_substitution vars ~f =
+  let extend_substitution vars ~f ~message =
     let open Computation.Let_syntax in
     let%bind substitution =
       of_result
         (Substitution.of_alist (List.map ~f:(fun x -> x, fresh ()) vars))
-        ~message:(fun _ -> assert false)
+        ~message:(fun (`Duplicate_type_variable var) -> message var)
     in
     let vars = Substitution.rng substitution in
     extend_substitution ~substitution (f vars)
@@ -330,15 +355,37 @@ module Expression = struct
   let convert_core_type core_type : Type.t Computation.t =
     let open Computation.Let_syntax in
     let%bind substitution = substitution in
-    of_result (convert_core_type ~substitution core_type) ~message:(fun _ ->
-        assert false)
+    of_result
+      (convert_core_type ~substitution core_type)
+      ~message:(fun (`Unbound_type_variable var) ->
+        [%message
+          "Unbound type variable when converting core type in expression"
+            (var : string)])
 
 
   let inst_constr_decl name : (Type.t option * Type.t) Binder.t =
     let open Binder.Let_syntax in
     let& vars, constr_arg, constr_type =
       let%bind.Computation env = env in
-      of_result (inst_constr_decl ~env name) ~message:(fun _ -> assert false)
+      (* TODO: Remove code duplication *)
+      of_result (inst_constr_decl ~env name) ~message:(function
+          | `Duplicate_type_parameter_for_constructor (constr, var) ->
+            [%message
+              "Duplicate type parameter in constructor in environment"
+                (var : string)
+                (constr : string)]
+          | `Type_expr_contains_alias type_expr ->
+            [%message
+              "Constructor type in environment contains alias"
+                (name : string)
+                (type_expr : type_expr)]
+          | `Unbound_constructor constr ->
+            [%message "Constructor is unbound in environment" (constr : string)]
+          | `Unbound_type_variable var ->
+            [%message
+              "Unbound type variable when instantiating constructor (Cannot \
+               occur! Good luck)"
+                (var : string)])
     in
     let%bind () = exists_vars vars in
     return (constr_arg, constr_type)
@@ -348,7 +395,24 @@ module Expression = struct
     let open Binder.Let_syntax in
     let& vars, label_arg, constr_type =
       let%bind.Computation env = env in
-      of_result (inst_label_decl ~env label) ~message:(fun _ -> assert false)
+      of_result (inst_label_decl ~env label) ~message:(function
+          | `Duplicate_type_parameter_for_label (label, var) ->
+            [%message
+              "Duplicate type parameter in label in environment"
+                (var : string)
+                (label : string)]
+          | `Type_expr_contains_alias type_expr ->
+            [%message
+              "Label type in environment contains alias"
+                (label : string)
+                (type_expr : type_expr)]
+          | `Unbound_label label ->
+            [%message "Label is unbound in environment" (label : string)]
+          | `Unbound_type_variable var ->
+            [%message
+              "Unbound type variable when instantiating label (Cannot occur! \
+               Good luck)"
+                (var : string)])
     in
     let%bind () = exists_vars vars in
     return (label_arg, constr_type)
@@ -500,14 +564,28 @@ module Expression = struct
            and else_exp = else_exp in
            Texp_ifthenelse (if_exp, then_exp, else_exp))
       | Pexp_exists (vars, exp) ->
-        extend_substitution vars ~f:(fun vars ->
+        extend_substitution
+          vars
+          ~f:(fun vars ->
             let@ () = exists_vars vars in
             infer_exp_desc exp exp_type)
+          ~message:(fun var ->
+            [%message
+              "Duplicate variable in existential quantifier (exists)"
+                (exp : Parsetree.expression)
+                (var : string)])
       | Pexp_forall (vars, exp) ->
-        extend_substitution vars ~f:(fun vars ->
+        extend_substitution
+          vars
+          ~f:(fun vars ->
             let var = fresh () in
             let%bind exp_desc = infer_exp_desc exp var in
             return (make_exp_desc_forall vars var exp_desc exp_type))
+          ~message:(fun var ->
+            [%message
+              "Duplicate variable in universal quantifier (forall)"
+                (exp : Parsetree.expression)
+                (var : string)])
       | Pexp_field (exp, label) ->
         let@ var = exists in
         let%bind exp = infer_exp exp var in
@@ -529,7 +607,11 @@ module Expression = struct
             let%bind exp = infer_exp arg_exp arg_exp_type in
             return (exp >>| Option.some)
           | None, None -> const None
-          | _, _ -> fail [%message "expression constructor argument mismatch"]
+          | _, _ ->
+            fail
+              [%message
+                "expression constructor argument mismatch"
+                  (exp : Parsetree.expression)]
         in
         return
           (let%map constr_desc = constr_desc
@@ -637,7 +719,6 @@ module Expression = struct
     infer_exp exp var
 end
 
-(* 
 let let_0 ~in_ =
   let_ ~bindings:[ (([], []) @. in_) @=> [] ] ~in_:(return ())
   >>| function
@@ -648,7 +729,25 @@ let let_0 ~in_ =
 let infer exp ~env:env' =
   let open Result.Let_syntax in
   let%bind exp =
-    Computation.(run ~env:env' (Expression.infer exp >>| fun in_ -> let_0 ~in_))
+    let exp = Expression.infer exp in
+    Computation.Expression.(run ~env:env' (exp >>| fun in_ -> let_0 ~in_))
   in
-  solve exp 
-*)
+  solve exp
+  |> Result.map_error ~f:(function
+         | `Unify (type_expr1, type_expr2) ->
+           [%message
+             "Cannot unify types"
+               (type_expr1 : type_expr)
+               (type_expr2 : type_expr)]
+         | `Cycle type_expr -> [%message "Cycle occurs" (type_expr : type_expr)]
+         | `Unbound_term_variable term_var ->
+           [%message
+             "Term variable is unbound when solving constraint"
+               (term_var : string)]
+         | `Unbound_constraint_variable var ->
+           [%message
+             "Constraint variable is unbound when solving constraint"
+               ((var :> int) : int)]
+         | `Rigid_variable_escape var ->
+           [%message
+             "Rigid type variable escaped when generalizing" (var : string)])
