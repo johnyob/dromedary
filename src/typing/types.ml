@@ -12,8 +12,7 @@
 (*****************************************************************************)
 
 open Core
-
-type 'a pp = Format.formatter -> 'a -> unit
+open Util.Pretty_printer
 
 type type_expr =
   | Ttyp_var of string
@@ -24,37 +23,6 @@ type type_expr =
 [@@deriving sexp_of]
 
 and type_constr = type_expr list * string [@@deriving sexp_of]
-
-let indent_space = "   "
-
-let rec pp_type_expr_mach ~indent ppf type_expr =
-  let print = Format.fprintf ppf "%sType expr: %s@." indent in
-  let indent = indent_space ^ indent in
-  match type_expr with
-  | Ttyp_var x -> print (Format.asprintf "Variable: %s" x)
-  | Ttyp_arrow (t1, t2) ->
-    print "Arrow";
-    pp_type_expr_mach ~indent ppf t1;
-    pp_type_expr_mach ~indent ppf t2
-  | Ttyp_tuple ts ->
-    print "Tuple";
-    List.iter ~f:(pp_type_expr_mach ~indent ppf) ts
-  | Ttyp_constr (ts, constr) ->
-    print (Format.asprintf "Constructor: %s" constr);
-    List.iter ~f:(pp_type_expr_mach ~indent ppf) ts
-  | Ttyp_alias (t, x) ->
-    print "As";
-    pp_type_expr_mach ~indent ppf t;
-    Format.fprintf ppf "%sVariable: %s@." indent x
-
-
-let pp_type_expr_mach ppf type_expr =
-  Format.fprintf ppf "Type expr:@.";
-  let indent = "└──" in
-  pp_type_expr_mach ~indent ppf type_expr
-
-
-let pp_type_expr _ppf = assert false
 
 module Algebra = struct
   open Constraints.Module_types
@@ -167,10 +135,12 @@ type type_declaration =
   ; type_params : string list
   ; type_kind : type_decl_kind
   }
+[@@deriving sexp_of]
 
 and type_decl_kind =
   | Type_record of label_declaration list
   | Type_variant of constructor_declaration list
+[@@deriving sexp_of]
 
 and label_declaration =
   { label_name : string
@@ -178,6 +148,7 @@ and label_declaration =
   ; label_arg : type_expr
   ; label_type : type_expr
   }
+[@@deriving sexp_of]
 
 and constructor_declaration =
   { constructor_name : string
@@ -185,6 +156,7 @@ and constructor_declaration =
   ; constructor_arg : type_expr option
   ; constructor_type : type_expr
   }
+[@@deriving sexp_of]
 
 (* Constructor and record label descriptions *)
 
@@ -193,15 +165,69 @@ type constructor_description =
   ; constructor_arg : type_expr option
   ; constructor_type : type_expr
   }
+[@@deriving sexp_of]
 
 type label_description =
   { label_name : string
   ; label_arg : type_expr
   ; label_type : type_expr
   }
+[@@deriving sexp_of]
 
-(* 
-let pp_constructor_description ~indent ppf constr_desc =
+let indent_space = "   "
+
+let rec pp_type_expr_mach ~indent ppf type_expr =
+  let print = Format.fprintf ppf "%sType expr: %s@." indent in
+  let indent = indent_space ^ indent in
+  match type_expr with
+  | Ttyp_var x -> print (Format.asprintf "Variable: %s" x)
+  | Ttyp_arrow (t1, t2) ->
+    print "Arrow";
+    pp_type_expr_mach ~indent ppf t1;
+    pp_type_expr_mach ~indent ppf t2
+  | Ttyp_tuple ts ->
+    print "Tuple";
+    List.iter ~f:(pp_type_expr_mach ~indent ppf) ts
+  | Ttyp_constr (ts, constr) ->
+    print (Format.asprintf "Constructor: %s" constr);
+    List.iter ~f:(pp_type_expr_mach ~indent ppf) ts
+  | Ttyp_alias (t, x) ->
+    print "As";
+    pp_type_expr_mach ~indent ppf t;
+    Format.fprintf ppf "%sVariable: %s@." indent x
+
+
+let pp_type_expr ppf core_type =
+  let rec loop ?(parens = false) ppf core_type =
+    match core_type with
+    | Ttyp_var x -> Format.fprintf ppf "%s" x
+    | Ttyp_arrow (t1, t2) ->
+      let pp ppf (t1, t2) =
+        Format.fprintf
+          ppf
+          "@[%a@;->@;%a@]"
+          (loop ~parens:true)
+          t1
+          (loop ~parens:false)
+          t2
+      in
+      paren ~parens pp ppf (t1, t2)
+    | Ttyp_tuple ts ->
+      paren ~parens (list ~sep:"@;*@;" (loop ~parens:true)) ppf ts
+    | Ttyp_constr (ts, constr) ->
+      Format.fprintf
+        ppf
+        "%a@;%s"
+        (list ~first:"(" ~last:")" ~sep:",@;" (loop ~parens:false))
+        ts
+        constr
+    | Ttyp_alias (t, x) ->
+      Format.fprintf ppf "@[%a@;as@;%s@]" (loop ~parens:false) t x
+  in
+  loop ppf core_type
+
+
+let pp_constructor_description_mach ~indent ppf constr_desc =
   Format.fprintf ppf "%sConstructor description:@." indent;
   let indent = indent_space ^ indent in
   Format.fprintf ppf "%sName: %s@." indent constr_desc.constructor_name;
@@ -210,17 +236,37 @@ let pp_constructor_description ~indent ppf constr_desc =
   | None -> ()
   | Some constr_arg ->
     Format.fprintf ppf "%sConstructor argument type:@." indent;
-    pp_type_expr ~indent:indent' ppf constr_arg);
+    pp_type_expr_mach ~indent:indent' ppf constr_arg);
   Format.fprintf ppf "%sConstructor type:@." indent;
-  pp_type_expr ~indent:indent' ppf constr_desc.constructor_type
+  pp_type_expr_mach ~indent:indent' ppf constr_desc.constructor_type
 
 
-let pp_label_description ~indent ppf label_desc =
+let pp_constructor_description _ppf = assert false
+
+let pp_label_description_mach ~indent ppf label_desc =
   Format.fprintf ppf "%sLabel description:@." indent;
   let indent = indent_space ^ indent in
   Format.fprintf ppf "%sLabel: %s@." indent label_desc.label_name;
   let indent' = indent_space ^ indent in
   Format.fprintf ppf "%sLabel argument type:@." indent;
-  pp_type_expr ~indent:indent' ppf label_desc.label_arg;
+  pp_type_expr_mach ~indent:indent' ppf label_desc.label_arg;
   Format.fprintf ppf "%sLabel type:@." indent;
-  pp_type_expr ~indent:indent' ppf label_desc.label_type *)
+  pp_type_expr_mach ~indent:indent' ppf label_desc.label_type
+
+
+let pp_label_description _ppf = assert false
+(* 
+let to_pp_mach ~pp ~name ppf t =
+  Format.fprintf ppf "%s:@." name;
+  let indent = "└──" in
+  pp ~indent ppf t
+
+
+let pp_type_expr_mach = to_pp_mach ~pp:pp_type_expr_mach ~name:"Type expr"
+
+let pp_constructor_description_mach =
+  to_pp_mach ~pp:pp_constructor_description_mach ~name:"Constructor description"
+
+
+let pp_label_description_mach =
+  to_pp_mach ~pp:pp_label_description_mach ~name:"Label description" *)

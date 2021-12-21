@@ -11,13 +11,11 @@
 (*                                                                           *)
 (*****************************************************************************)
 
+open Util
 open Ast_types
 
 (** [Parsetree] is the abstract syntax tree produced by parsing
     Dromedary's source code. *)
-
-(** ['a pp] is the type of a pretty printer for type ['a]. *)
-type 'a pp = Format.formatter -> 'a -> unit
 
 type core_type =
   | Ptyp_var of string 
@@ -33,10 +31,10 @@ type core_type =
 
 (** [pp_core_type_mach ppf core_type] pretty prints [core_type] in a "machine format" 
     (an explicit tree structure). *)
-val pp_core_type_mach : core_type pp
+val pp_core_type_mach : core_type Pretty_printer.t
 
 (** [pp_core_type ppf core_type] pretty prints [core_type] as a syntactic representation. *)
-val pp_core_type : core_type pp
+val pp_core_type : core_type Pretty_printer.t
 
 (** [core_schemes] are defined by the grammar: 
     core_schemes ::= 'a1 ... 'an. T 
@@ -46,8 +44,8 @@ val pp_core_type : core_type pp
 *)
 type core_scheme = string list * core_type [@@deriving sexp_of]
 
-val pp_core_scheme_mach : core_scheme pp
-val pp_core_scheme : core_scheme pp
+val pp_core_scheme_mach : core_scheme Pretty_printer.t
+val pp_core_scheme : core_scheme Pretty_printer.t
 
 type pattern =
   | Ppat_any 
@@ -66,8 +64,8 @@ type pattern =
       (** [(P : T)]. *)
 [@@deriving sexp_of]
 
-val pp_pattern_mach : pattern pp
-val pp_pattern : pattern pp
+val pp_pattern_mach : pattern Pretty_printer.t
+val pp_pattern : pattern Pretty_printer.t
 
 type expression =
   | Pexp_var of string 
@@ -136,29 +134,29 @@ and case =
 [@@deriving sexp_of]
 
 (** [pp_expression_mach ppf exp] pretty prints an expression [exp] as an explicit tree structure. *)
-val pp_expression_mach : expression pp
+val pp_expression_mach : expression Pretty_printer.t
 
 (** [pp_expression ppf exp] pretty prints an expression [exp] as a syntax representation. *)
-val pp_expression : expression pp
+val pp_expression : expression Pretty_printer.t
 
 (** [pp_value_binding_mach ppf value_binding] pretty prints the value binding [value_binding]
     as an explicit tree. *)
-val pp_value_binding_mach : value_binding pp
+val pp_value_binding_mach : value_binding Pretty_printer.t
 
 (** [pp_value_binding ppf value_binding] pretty prints the value binding [value_bindings] as a 
     syntactic representation. *)
-val pp_value_binding : value_binding pp
+val pp_value_binding : value_binding Pretty_printer.t
 
 (** [pp_rec_value_binding_mach ppf value_binding] pretty prints the recursive value binding [value_binding]
     as an explicit tree. *)
-val pp_rec_value_binding_mach : rec_value_binding pp
+val pp_rec_value_binding_mach : rec_value_binding Pretty_printer.t
 
 (** [pp_rec_value_binding ppf value_binding] pretty prints the recursive value binding [value_bindings] as a 
     syntactic representation. *)
-val pp_rec_value_binding : rec_value_binding pp
+val pp_rec_value_binding : rec_value_binding Pretty_printer.t
 
 (** [pp_case_mach ppf case] pretty prints the case [case] as an explicit tree structure. *)
-val pp_case_mach : case pp
+val pp_case_mach : case Pretty_printer.t
 
 (** [pp_case ppf case] prety prints the case [case] as a syntactic representation. *)
-val pp_case : case pp
+val pp_case : case Pretty_printer.t

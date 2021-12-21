@@ -11,7 +11,7 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-type 'a pp = Format.formatter -> 'a -> unit
+open Util
 
 (** Representation of types and declarations  *)
 
@@ -32,11 +32,11 @@ and type_constr = type_expr list * string [@@deriving sexp_of]
 
 (** [pp_type_expr_mach ppf type_expr] pretty prints an explicit tree of the 
     type expression [type_expr]. *)
-val pp_type_expr_mach : type_expr pp
+val pp_type_expr_mach : indent:string -> type_expr Pretty_printer.t
 
 (** [pp_type_expr ppf type_expr] pretty prints the syntactic representation of the
     type expression [type_expr]. *)
-val pp_type_expr : type_expr pp
+val pp_type_expr : type_expr Pretty_printer.t
 
 module Algebra : sig
   open Constraints.Module_types
@@ -61,6 +61,7 @@ module Algebra : sig
       | Arrow of 'a * 'a
       | Tuple of 'a list
       | Constr of 'a list * string
+    [@@deriving sexp_of]
 
     include Type_former.S with type 'a t := 'a t
   end
@@ -87,10 +88,12 @@ type type_declaration =
   ; type_params : string list
   ; type_kind : type_decl_kind
   }
+[@@deriving sexp_of]
 
 and type_decl_kind =
   | Type_record of label_declaration list
   | Type_variant of constructor_declaration list
+[@@deriving sexp_of]
 
 and label_declaration =
   { label_name : string
@@ -98,6 +101,7 @@ and label_declaration =
   ; label_arg : type_expr
   ; label_type : type_expr
   }
+[@@deriving sexp_of]
 
 and constructor_declaration =
   { constructor_name : string
@@ -105,6 +109,7 @@ and constructor_declaration =
   ; constructor_arg : type_expr option
   ; constructor_type : type_expr
   }
+[@@deriving sexp_of]
 
 (* Constructor and record label descriptions *)
 
@@ -113,9 +118,17 @@ type constructor_description =
   ; constructor_arg : type_expr option
   ; constructor_type : type_expr
   }
+[@@deriving sexp_of]
+
+val pp_constructor_description_mach : indent:string ->  constructor_description Pretty_printer.t
+val pp_constructor_description : constructor_description Pretty_printer.t
 
 type label_description =
   { label_name : string
   ; label_arg : type_expr
   ; label_type : type_expr
   }
+[@@deriving sexp_of]
+
+val pp_label_description_mach : indent:string ->  label_description Pretty_printer.t
+val pp_label_description : label_description Pretty_printer.t

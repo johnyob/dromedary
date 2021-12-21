@@ -99,8 +99,6 @@ and case =
    structure is clearer (for correctness).
 *)
 
-type 'a pp = Format.formatter -> 'a -> unit
-
 let indent_space = "   "
 
 let rec pp_core_type_mach ~indent ppf core_type =
@@ -145,7 +143,7 @@ let rec pp_pattern_mach ~indent ppf pat =
     print "Alias";
     pp_pattern_mach ~indent ppf pat;
     Format.fprintf ppf "%sAs: %s@." indent x
-  | Ppat_const const -> print ("Constant: %s" ^ string_of_constant const)
+  | Ppat_const const -> print ("Constant: " ^ (string_of_constant const))
   | Ppat_tuple pats ->
     print "Tuple";
     List.iter ~f:(pp_pattern_mach ~indent ppf) pats
