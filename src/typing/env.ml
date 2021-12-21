@@ -27,10 +27,10 @@ let empty =
   { types = empty_map (); constrs = empty_map (); labels = empty_map () }
 
 
-let find_constr env ~name:constr =
+let find_constr env constr =
   Map.find env.constrs constr
   |> Result.of_option ~error:(`Unbound_constructor constr)
 
 
-let find_label env ~label =
+let find_label env label =
   Map.find env.labels label |> Result.of_option ~error:(`Unbound_label label)
