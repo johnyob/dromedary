@@ -25,34 +25,51 @@ module Input = struct
   let substitution t = t.substitution
 
   let extend_substitution t ~substitution =
-    { t with substitution = Substitution.compose t.substitution substitution }
+    { t with substitution = Substitution.merge t.substitution substitution }
 end
 
 module Expression = struct
-  type ('a, 'err) t = Input.t -> ('a, 'err) Result.t
-
-  include Monad.Make2 (struct
-    type nonrec ('a, 'err) t = ('a, 'err) t
+  module T = struct
+    type 'a t = Input.t -> ('a, Sexp.t) Result.t
 
     let return x _input = Ok x
-    let bind t ~f input = Result.(t input >>= fun x -> f x input)
+
+    let bind t ~f input =
+      let%bind.Result x = t input in
+      f x input
+
+
     let map = `Define_using_bind
-  end)
+  end
 
-  let of_result result _input = result
+  module Computation = struct
+    include T
+    include Monad.Make (T)
+  end
+
+  include Computation
+
+  let of_result result ~message : 'a t =
+   fun _input -> Result.map_error result ~f:message
+
+
   let const x = return (Constraint.return x)
-  let fail err : ('a, 'err) t = fun _input -> Error err
-  let env : (Env.t, _) t = fun input -> Ok (Input.env input)
+  let fail err : 'a t = fun _input -> Error err
+  let env : Env.t t = fun input -> Ok (Input.env input)
 
-  let find_label ~label : (Types.label_declaration, _) t =
-   fun input -> Env.find_label (Input.env input) ~label
-
-
-  let find_constr ~name : (Types.constructor_declaration, _) t =
-   fun input -> Env.find_constr (Input.env input) ~name
+  let find_label label : Types.label_declaration t =
+   fun input ->
+    Env.find_label (Input.env input) label
+    |> Result.map_error ~f:(fun (`Unbound_label _label) -> assert false)
 
 
-  let substitution : (Substitution.t, _) t =
+  let find_constr name : Types.constructor_declaration t =
+   fun input ->
+    Env.find_constr (Input.env input) name
+    |> Result.map_error ~f:(fun (`Unbound_constructor _constr) -> assert false)
+
+
+  let substitution : Substitution.t t =
    fun input -> Ok (Input.substitution input)
 
 
@@ -60,9 +77,97 @@ module Expression = struct
     t (Input.extend_substitution input ~substitution)
 
 
-  let find_var ~var : (Constraint.variable, _) t =
-   fun input -> Substitution.find_var (Input.substitution input) ~var
+  let find_var var : Constraint.variable t =
+   fun input ->
+    Substitution.find_var (Input.substitution input) var
+    |> Result.map_error ~f:(fun (`Unbound_type_variable _var) -> assert false)
 
+
+  module Binder = struct
+    module T = struct
+      type 'a t =
+        { f :
+            'b.
+            ('a -> 'b Constraint.t Computation.t)
+            -> 'b Constraint.t Computation.t
+        }
+
+      let return x = { f = (fun k -> k x) }
+      let bind t ~f = { f = (fun k -> t.f (fun x -> (f x).f k)) }
+      let map = `Define_using_bind
+    end
+
+    include T
+    include Monad.Make (T)
+
+    let exists =
+      { f =
+          (fun k ->
+            let var = Constraint.fresh () in
+            let%map.Computation t = k var in
+            Constraint.exists [ var, None ] t)
+      }
+
+
+    let forall =
+      { f =
+          (fun k ->
+            let var = Constraint.fresh () in
+            let%map.Computation t = k var in
+            Constraint.forall [ var ] t)
+      }
+
+
+    let exists_bindings bindings =
+      { f =
+          (fun k ->
+            let%map.Computation t = k () in
+            Constraint.exists bindings t)
+      }
+
+
+    let exists_vars vars = exists_bindings (List.map ~f:(fun x -> x, None) vars)
+
+    let forall_vars vars =
+      { f =
+          (fun k ->
+            let%map.Computation t = k () in
+            Constraint.forall vars t)
+      }
+
+
+    let of_type type_ =
+      { f =
+          (fun k ->
+            let bindings, var = Constraint.Shallow_type.of_type type_ in
+            let%map.Computation t = k var in
+            Constraint.exists bindings t)
+      }
+
+
+    let run t ~cc = t.f cc
+
+    module Let_syntax = struct
+      let return = return
+      let ( >>| ) = Constraint.( >>| )
+      let ( <*> ) = Constraint.( <*> )
+
+      let ( let& ) computation f =
+        { f =
+            (fun k ->
+              let%bind.Computation x = computation in
+              (f x).f k)
+        }
+
+
+      module Let_syntax = struct
+        let return = return
+        let map = Constraint.map
+        let both = Constraint.both
+        let bind = bind
+      end
+    end
+  end
 
   let run t ~env = t (Input.make ~env ~substitution:Substitution.empty)
 
@@ -70,6 +175,7 @@ module Expression = struct
     let return = return
     let ( >>| ) = Constraint.( >>| )
     let ( <*> ) = Constraint.( <*> )
+    let ( let@ ) binder f = Binder.run binder ~cc:f
 
     module Let_syntax = struct
       let return = return
@@ -80,66 +186,154 @@ module Expression = struct
   end
 end
 
-include Expression
+module Fragment = struct
+  open Constraint
+
+  type t =
+    { existential_bindings : Shallow_type.binding list
+    ; term_bindings :
+        (String.t, Constraint.variable, String.comparator_witness) Map.t
+    }
+
+  let empty =
+    { existential_bindings = []; term_bindings = Map.empty (module String) }
+
+
+  let merge t1 t2 =
+    let exception Duplicate of string in
+    try
+      let term_bindings =
+        Map.merge_skewed
+          t1.term_bindings
+          t2.term_bindings
+          ~combine:(fun ~key _ _ -> raise (Duplicate key))
+      in
+      let existential_bindings =
+        t1.existential_bindings @ t2.existential_bindings
+      in
+      Ok { existential_bindings; term_bindings }
+    with
+    | Duplicate term_var -> Error (`Duplicate_term_var term_var)
+
+
+  let of_existential_bindings existential_bindings =
+    { existential_bindings; term_bindings = Map.empty (module String) }
+
+
+  let of_term_binding x a =
+    { existential_bindings = []
+    ; term_bindings = Map.singleton (module String) x a
+    }
+
+
+  let to_bindings t =
+    ( t.existential_bindings
+    , t.term_bindings |> Map.to_alist |> List.map ~f:(fun (x, a) -> x #= a) )
+end
 
 module Pattern = struct
-  type 'a error =
-    | Inj of 'a
-    | Non_linear_pattern of string
-
-  type ('a, 'err) t = (Fragment.t * 'a, 'err error) Expression.t
-
-  include Monad.Make2 (struct
-    type nonrec ('a, 'err) t = ('a, 'err) t
+  module T = struct
+    type 'a t = (Fragment.t * 'a) Expression.t
 
     let return x = Expression.return (Fragment.empty, x)
 
     let bind t ~f =
-      let open Expression.Let_syntax in
-      let%bind fragment1, x = t in
-      let%bind fragment2, y = f x in
+      let%bind.Expression fragment1, x = t in
+      let%bind.Expression fragment2, y = f x in
       Expression.of_result
-        Result.(
-          Fragment.merge fragment1 fragment2
-          |> map_error ~f:(fun (`Non_linear_pattern x) -> Non_linear_pattern x)
-          >>| fun fragment -> fragment, y)
+        ~message:(fun _ -> assert false)
+        (let%map.Result fragment = Fragment.merge fragment1 fragment2 in
+         fragment, y)
 
 
     let map = `Define_using_bind
-  end)
+  end
 
-  let lift m : ('a, 'err) t =
-   fun input ->
-    Result.(
-      m input |> map_error ~f:(fun x -> Inj x) >>| fun x -> Fragment.empty, x)
+  module Computation = struct
+    include T
+    include Monad.Make (T)
+  end
 
+  include Computation
 
-  let run t input =
-    t input
-    |> Result.map_error ~f:(function
-           | Inj x -> x
-           | Non_linear_pattern x -> `Non_linear_pattern x)
+  let lift m : 'a t =
+   fun input -> Result.(m input >>| fun x -> Fragment.empty, x)
 
 
-  let of_result result = lift (Expression.of_result result)
+  let run t input = t input
+  let of_result result ~message = lift (Expression.of_result result ~message)
   let const x = lift (Expression.const x)
   let fail err = lift (Expression.fail err)
   let env = lift Expression.env
-  let find_label ~label = lift (Expression.find_label ~label)
-  let find_constr ~name = lift (Expression.find_constr ~name)
+  let find_label label = lift (Expression.find_label label)
+  let find_constr name = lift (Expression.find_constr name)
   let substitution = lift Expression.substitution
-  let find_var ~var = lift (Expression.find_var ~var)
+  let find_var var = lift (Expression.find_var var)
 
   let extend_substitution t ~substitution input =
     t (Input.extend_substitution input ~substitution)
 
 
-  let write fragment _input = Ok (fragment, ())
+  let write fragment : unit t = fun _input -> Ok (fragment, ())
+  let extend x a = write (Fragment.of_term_binding x a)
+
+  module Binder = struct
+    include Computation
+
+    let exists =
+      let var = Constraint.fresh () in
+      let%bind.Computation () =
+        write (Fragment.of_existential_bindings [ var, None ])
+      in
+      return var
+
+
+    let forall =
+      fail
+        [%message
+          "Cannot bind a universal variable in a pattern binding context."]
+
+
+    let exists_bindings bindings =
+      write (Fragment.of_existential_bindings bindings)
+
+
+    let exists_vars vars = exists_bindings (List.map ~f:(fun x -> x, None) vars)
+
+    let forall_vars _vars =
+      fail
+        [%message
+          "Cannot bind a universal variable in a pattern binding context."]
+
+
+    let of_type type_ =
+      let bindings, var = Constraint.Shallow_type.of_type type_ in
+      let%bind.Computation () =
+        write (Fragment.of_existential_bindings bindings)
+      in
+      return var
+
+
+    module Let_syntax = struct
+      let return = return
+      let ( >>| ) = Constraint.( >>| )
+      let ( <*> ) = Constraint.( <*> )
+      let ( let& ) computation f = bind computation ~f
+
+      module Let_syntax = struct
+        let return = return
+        let map = Constraint.map
+        let both = Constraint.both
+        let bind = bind
+      end
+    end
+  end
 
   module Let_syntax = struct
     let return = return
     let ( >>| ) = Constraint.( >>| )
     let ( <*> ) = Constraint.( <*> )
+    let ( let@ ) binder f = bind binder ~f
 
     module Let_syntax = struct
       let return = return

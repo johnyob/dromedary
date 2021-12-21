@@ -17,6 +17,6 @@ module P = Parsing
 include Base
 include P
 
-module Constraint = Constraints.Make (Algebra)
+module Constraint = Constraints.Make (Types.Algebra)
 
 
