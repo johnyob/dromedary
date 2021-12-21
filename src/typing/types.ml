@@ -57,6 +57,8 @@ let pp_type_expr_mach ppf type_expr =
 let pp_type_expr _ppf = assert false
 
 module Algebra = struct
+  open Constraints.Module_types
+
   module Term_var = struct
     type t = string [@@deriving sexp_of, compare]
   end
@@ -68,54 +70,72 @@ module Algebra = struct
   end
 
   module Type_former = struct
-    type 'a t =
-      | Arrow of 'a * 'a
-      | Tuple of 'a list
-      | Constr of 'a list * string
-    [@@deriving sexp_of]
+    module T = struct
+      type 'a t =
+        | Arrow of 'a * 'a
+        | Tuple of 'a list
+        | Constr of 'a list * string
+      [@@deriving sexp_of]
 
-    let map t ~f =
-      match t with
-      | Arrow (t1, t2) ->
-        let t1' = f t1 in
-        let t2' = f t2 in
-        Arrow (t1', t2')
-      | Tuple ts -> Tuple (List.map ~f ts)
-      | Constr (ts, constr) -> Constr (List.map ~f ts, constr)
+      module Traverse (F : Applicative.S) = struct
+        module Intf = struct
+          module type S = sig end
+        end
+
+        module F = struct
+          include F
+          include Applicative.Make_let_syntax (F) (Intf) ()
+        end
+        open F
+
+        let traverse t ~f =
+          let open Let_syntax in
+          match t with
+          | Arrow (t1, t2) ->
+            let%map t1 = f t1
+            and t2 = f t2 in
+            Arrow (t1, t2)
+          | Tuple ts -> 
+            let%map ts = all (List.map ~f ts) in
+            Tuple ts
+          | Constr (ts, constr) ->
+            let%map ts = all (List.map ~f ts) in
+            Constr (ts, constr)
 
 
-    let iter t ~f = ignore (map t ~f : unit t)
+        let traverse2 t1 t2 ~f =
+          let open Let_syntax in
+          let open List.Or_unequal_lengths in
+          match t1, t2 with
+          | Arrow (t11, t12), Arrow (t21, t22) ->
+            `Ok
+              (let%map t1 = f t11 t21
+               and t2 = f t12 t22 in
+               Arrow (t1, t2))
+          | Tuple ts1, Tuple ts2 ->
+            (match List.map2 ~f ts1 ts2 with
+            | Ok ts ->
+              `Ok
+                (let%map ts = all ts in
+                 Tuple ts)
+            | Unequal_lengths -> `Unequal_structure)
+          | Constr (ts1, constr1), Constr (ts2, constr2)
+            when String.(constr1 = constr2) ->
+            (match List.map2 ~f ts1 ts2 with
+            | Ok ts ->
+              `Ok
+                (let%map ts = all ts in
+                 Constr (ts, constr1))
+            | Unequal_lengths -> `Unequal_structure)
+          | _, _ -> `Unequal_structure
+      end
+    end
 
-    let fold t ~f ~init =
-      match t with
-      | Arrow (t1, t2) ->
-        let init = f t1 init in
-        let init = f t2 init in
-        init
-      | Tuple ts -> List.fold_right ~f ~init ts
-      | Constr (ts, _) -> List.fold_right ~f ~init ts
-
-
-    exception Iter2
-
-    let iter2_exn t1 t2 ~f =
-      let list_iter2 xs ys ~f =
-        (* Catch the [Base] exception and re-raise our exception *)
-        try List.iter2_exn xs ys ~f with
-        | _ -> raise Iter2
-      in
-      match t1, t2 with
-      | Arrow (t11, t12), Arrow (t21, t22) ->
-        f t11 t21;
-        f t12 t22
-      | Tuple ts1, Tuple ts2 -> list_iter2 ts1 ts2 ~f
-      | Constr (ts1, constr1), Constr (ts2, constr2)
-        when String.equal constr1 constr2 -> list_iter2 ts1 ts2 ~f
-      | _, _ -> raise Iter2
+    include T
+    include Type_former.Make (T)
   end
 
   module Type = struct
-
     type t = type_expr [@@deriving sexp_of]
 
     let var x = Ttyp_var x

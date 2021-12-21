@@ -20,7 +20,7 @@ open! Import
 
 include Generalization_intf
 
-module Make (Former : Type_former) = struct
+module Make (Former : Type_former.S) = struct
   (* We implement efficient level-based generalization by Remy [??].
   
      In theory, each unification variable has a "level" (or "rank").

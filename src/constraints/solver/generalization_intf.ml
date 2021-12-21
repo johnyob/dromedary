@@ -111,5 +111,5 @@ module type Intf = sig
   module type S = S
 
   (** The functor [Make]. *)
-  module Make (Former : Type_former) : S with type 'a former := 'a Former.t
+  module Make (Former : Type_former.S) : S with type 'a former := 'a Former.t
 end

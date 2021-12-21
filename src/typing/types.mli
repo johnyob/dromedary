@@ -62,7 +62,7 @@ module Algebra : sig
       | Tuple of 'a list
       | Constr of 'a list * string
 
-    include Type_former with type 'a t := 'a t
+    include Type_former.S with type 'a t := 'a t
   end
 
   (** [Type] is the abstraction of Dromedary's types, [type_expr]. *)

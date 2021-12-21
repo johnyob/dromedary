@@ -35,10 +35,10 @@ end
 
 (** [Private] submodule for [expect] tests. *)
 module Private : sig
-  module Generalization (Type_former : Type_former) :
+  module Generalization (Type_former : Type_former.S) :
     Generalization.S with type 'a former := 'a Type_former.t
 
-  module Unifier (Type_former : Type_former) (Metadata : Unifier.Metadata) :
+  module Unifier (Type_former : Type_former.S) (Metadata : Unifier.Metadata) :
     Unifier.S
       with type 'a former := 'a Type_former.t
        and type metadata := Metadata.t

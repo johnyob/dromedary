@@ -173,6 +173,6 @@ module type Intf = sig
   module type S = S
 
   (** The functor [Make]. *)
-  module Make (Former : Type_former) (Metadata : Metadata) :
+  module Make (Former : Type_former.S) (Metadata : Metadata) :
     S with type 'a former := 'a Former.t and type metadata := Metadata.t
 end

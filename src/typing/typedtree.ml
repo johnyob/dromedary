@@ -17,6 +17,10 @@ open Types
 
 (** Abstract syntax tree after typing *)
 
+type 'a instance = 'a * type_expr list
+
+and 'a abstraction = string list * 'a
+
 type pattern =
   { pat_desc : pattern_desc
   ; pat_type : type_expr
@@ -42,13 +46,13 @@ and expression_desc =
   | Texp_const of constant (** Constants [c]. e.g. [1, true, ()]. *)
   | Texp_fun of pattern * expression
       (** The function (or lambda) abstraction [fun P -> E].  
-        Note that: 
-          - [let x P1 ... Pn = E in ...] is encoding using 
-            [Pexp_let ("x", fun P1 ... Pn -> E, ...)]. 
-    *)
+          Note that: 
+            - [let x P1 ... Pn = E in ...] is encoding using 
+              [Pexp_let ("x", fun P1 ... Pn -> E, ...)]. 
+      *)
   | Texp_app of expression * expression (** Function application [E1 E2]. *)
-  | Texp_let of rec_flag * value_binding list * expression
-      (** Let expressions *)
+  | Texp_let of value_binding list * expression (** Let expressions *)
+  | Texp_let_rec of rec_value_binding list * expression
   | Texp_construct of constructor_description * expression option
       (** An applied algebraic data type constructor [C <E>]. *)
   | Texp_record of (label_description * expression) list
@@ -61,23 +65,20 @@ and expression_desc =
   | Texp_ifthenelse of expression * expression * expression
       (** If (or ternary) expressions [if E then E1 else E2]. *)
 
-(** [P = E]. *)
+(** [P = a .. a. E]. *)
 and value_binding =
-  | Nonrecursive of
-      { tvb_abs : string list
-      ; tvb_pat : pattern
-      ; tvb_expr : expression
-      }
-  | Recursive of
-      { trvb_abs : string list
-      ; trvb_var : string
-      ; trvb_expr : expression
-      }
+  { tvb_pat : pattern
+  ; tvb_expr : expression abstraction
+  }
+
+(** [x = a .. a. E] *)
+and rec_value_binding =
+  { trvb_var : string
+  ; trvb_expr : expression abstraction
+  }
 
 (** [P -> E]. *)
 and case =
   { tc_lhs : pattern
   ; tc_rhs : expression
   }
-
-and 'a instance = 'a * type_expr list

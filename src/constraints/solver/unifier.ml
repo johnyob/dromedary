@@ -19,7 +19,7 @@ open! Import
 
 include Unifier_intf
 
-module Make (Former : Type_former) (Metadata : Metadata) :
+module Make (Former : Type_former.S) (Metadata : Metadata) :
   S with type 'a former := 'a Former.t and type metadata := Metadata.t = struct
   (* Unification involves unification types, using the union-find 
      data structure. 
