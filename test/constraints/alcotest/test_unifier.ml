@@ -14,43 +14,49 @@
 open! Import
 
 module Type_former = struct
-  type 'a t =
-    | Arrow of 'a * 'a
-    | Int
-  [@@deriving sexp_of]
+  module T = struct
+    type 'a t =
+      | Arrow of 'a * 'a
+      | Int
+    [@@deriving sexp_of]
 
-  let map t ~f =
-    match t with
-    | Arrow (t1, t2) -> Arrow (f t1, f t2)
-    | Int -> Int
+    module Traverse (F : Applicative.S) = struct
+      module Intf = struct
+        module type S = sig end
+      end
+
+      module F = struct
+        include F
+        include Applicative.Make_let_syntax (F) (Intf) ()
+      end
+
+      open F
+
+      let traverse t ~f =
+        let open Let_syntax in
+        match t with
+        | Arrow (t1, t2) ->
+          let%map t1 = f t1
+          and t2 = f t2 in
+          Arrow (t1, t2)
+        | Int -> return Int
 
 
-  let iter t ~f =
-    match t with
-    | Arrow (t1, t2) ->
-      f t1;
-      f t2
-    | Int -> ()
+      let traverse2 t1 t2 ~f =
+        let open Let_syntax in
+        match t1, t2 with
+        | Arrow (t11, t12), Arrow (t21, t22) ->
+          `Ok
+            (let%map t1 = f t11 t21
+             and t2 = f t12 t22 in
+             Arrow (t1, t2))
+        | Int, Int -> `Ok (return Int)
+        | _, _ -> `Unequal_structure
+    end
+  end
 
-
-  let fold t ~f ~init =
-    match t with
-    | Arrow (t1, t2) ->
-      let x1 = f t1 init in
-      let x2 = f t2 x1 in
-      x2
-    | Int -> init
-
-
-  exception Iter2
-
-  let iter2_exn t1 t2 ~f =
-    match t1, t2 with
-    | Arrow (t11, t12), Arrow (t21, t22) ->
-      f t11 t21;
-      f t12 t22
-    | Int, Int -> ()
-    | _, _ -> raise Iter2
+  include T
+  include Type_former.Make (T)
 end
 
 module Metadata = struct

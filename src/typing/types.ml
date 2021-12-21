@@ -86,6 +86,7 @@ module Algebra = struct
           include F
           include Applicative.Make_let_syntax (F) (Intf) ()
         end
+
         open F
 
         let traverse t ~f =
@@ -95,7 +96,7 @@ module Algebra = struct
             let%map t1 = f t1
             and t2 = f t2 in
             Arrow (t1, t2)
-          | Tuple ts -> 
+          | Tuple ts ->
             let%map ts = all (List.map ~f ts) in
             Tuple ts
           | Constr (ts, constr) ->

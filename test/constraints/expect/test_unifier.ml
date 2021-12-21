@@ -14,21 +14,29 @@
 open! Import
 
 module Type_former = struct
-  type 'a t = Constr of 'a list * string [@@deriving sexp_of]
+  module T = struct
+    type 'a t = Constr of 'a list * string [@@deriving sexp_of]
 
-  let map (Constr (ts, constr)) ~f = Constr (List.map ~f ts, constr)
-  let iter t ~f = ignore (map t ~f : unit t)
-  let fold (Constr (ts, _)) ~f ~init = List.fold_right ~init ~f ts
+    module Traverse (F : Applicative.S) = struct
+      open F
 
-  exception Iter2
+      let traverse (Constr (ts, constr)) ~f =
+        all (List.map ~f ts) >>| fun ts -> Constr (ts, constr)
 
-  let iter2_exn t1 t2 ~f =
-    match t1, t2 with
-    | Constr (ts1, constr1), Constr (ts2, constr2)
-      when String.equal constr1 constr2 ->
-      (try List.iter2_exn ts1 ts2 ~f with
-      | _ -> raise Iter2)
-    | _, _ -> raise Iter2
+
+      let traverse2 (Constr (ts1, constr1)) (Constr (ts2, constr2)) ~f =
+        let open List.Or_unequal_lengths in
+        if String.(constr1 = constr2)
+        then (
+          match List.map2 ts1 ts2 ~f with
+          | Ok ts -> `Ok (all ts >>| fun ts -> Constr (ts, constr1))
+          | Unequal_lengths -> `Unequal_structure)
+        else `Unequal_structure
+    end
+  end
+
+  include T
+  include Type_former.Make (T)
 end
 
 module Metadata = struct
@@ -125,4 +133,3 @@ let%expect_test "Test unify : correctness 3" =
     │  │  (Constr ("") f)   │    │
     └─ │                    │ ◀──┘
        └────────────────────┘ |}]
-
