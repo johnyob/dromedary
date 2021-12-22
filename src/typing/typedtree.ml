@@ -122,7 +122,7 @@ and pp_expression_desc_mach ~indent ppf exp_desc =
   match exp_desc with
   | Texp_var (x, instances) ->
     print "Variable";
-    Format.fprintf ppf "%sVariable: %s" indent x;
+    Format.fprintf ppf "%sVariable: %s@." indent x;
     List.iter ~f:(pp_type_expr_mach ~indent ppf) instances
   | Texp_prim prim -> print ("Primitive: " ^ string_of_primitive prim)
   | Texp_const const -> print ("Constant: " ^ string_of_constant const)
@@ -185,7 +185,7 @@ and pp_label_exp_mach ~indent ppf (label_desc, exp) =
 and pp_abstraction_mach ~indent ~pp ppf (variables, t) =
   Format.fprintf ppf "%sAbstraction:@." indent;
   let indent = indent_space ^ indent in
-  Format.fprintf ppf "%sVariables: %s" indent (String.concat ~sep:"," variables);
+  Format.fprintf ppf "%sVariables: %s@." indent (String.concat ~sep:"," variables);
   pp ~indent ppf t
 
 

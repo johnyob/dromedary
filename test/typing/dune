@@ -1,0 +1,6 @@
+(library
+ (name test_typing)
+ (libraries core parsing typing)
+ (inline_tests)
+ (preprocess
+  (pps ppx_jane)))

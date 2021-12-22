@@ -95,6 +95,7 @@ let infer_constant const : Type.t =
 let infer_primitive prim : Type.t =
   match prim with
   | Prim_add | Prim_sub | Prim_div | Prim_mul -> int_ @--> int_ @--> int_
+  | Prim_eq -> int_ @--> int_ @--> bool_
 
 
 let make_constr_desc constr_name constr_arg constr_type
@@ -316,9 +317,9 @@ module Pattern = struct
           pats
           ~init:(return ([], []))
           ~f:(fun pat accum ->
-            let%bind var = exists in
-            let& pat = infer_pat pat var in
             let%bind vars, pats = accum in
+            let%bind var = exists () in
+            let& pat = infer_pat pat var in
             return (var :: vars, pat :: pats))
       in
       return (vars, Constraint.all pats)
@@ -466,8 +467,18 @@ module Expression = struct
       : (binding list * Typedtree.pattern Constraint.t) Binder.t
     =
     let open Binder.Let_syntax in
+    (* print_endline
+      (Sexp.to_string_hum [%message "infer_pat" (pat : Parsetree.pattern)]); *)
     let& fragment, pat = Pattern.infer pat pat_type in
     let existential_bindings, term_bindings = Fragment.to_bindings fragment in
+    (* List.iter existential_bindings ~f:(fun (var, binding) ->
+        Format.printf "Variable: %d@." (var :> int);
+        Format.printf
+          "Binding: %s@."
+          ([%sexp (binding : Shallow_type.t option)] |> Sexp.to_string_hum));
+    List.iter term_bindings ~f:(fun (term_var, var) ->
+        Format.printf "Term Variable: %s@." term_var;
+        Format.printf "Bound Variable: %d@." (var :> int)); *)
     let%bind () = exists_bindings existential_bindings in
     return (term_bindings, pat)
 
@@ -514,8 +525,8 @@ module Expression = struct
           (let%map () = exp_type =~- infer_constant const in
            Texp_const const)
       | Pexp_fun (pat, exp) ->
-        let@ var1 = exists in
-        let@ var2 = exists in
+        let@ var1 = exists () in
+        let@ var2 = exists () in
         let@ bindings, pat = infer_pat pat var1 in
         let%bind exp = infer_exp exp var2 in
         return
@@ -524,7 +535,7 @@ module Expression = struct
            and exp = def ~bindings ~in_:exp in
            Texp_fun (pat, exp))
       | Pexp_app (exp1, exp2) ->
-        let@ var = exists in
+        let@ var = exists () in
         let%bind exp1 = lift (infer_exp exp1) (var @-> exp_type) in
         let%bind exp2 = infer_exp exp2 var in
         return
@@ -546,7 +557,7 @@ module Expression = struct
            and exps = exps in
            Texp_tuple exps)
       | Pexp_match (match_exp, cases) ->
-        let@ var = exists in
+        let@ var = exists () in
         let%bind match_exp = infer_exp match_exp var in
         let%bind cases = infer_cases cases var exp_type in
         return
@@ -587,7 +598,7 @@ module Expression = struct
                 (exp : Parsetree.expression)
                 (var : string)])
       | Pexp_field (exp, label) ->
-        let@ var = exists in
+        let@ var = exists () in
         let%bind exp = infer_exp exp var in
         let%bind label_desc = inst_label label exp_type var in
         return
@@ -630,7 +641,7 @@ module Expression = struct
       | Pexp_let_rec (rec_value_bindings, exp) ->
         let%bind let_bindings = infer_rec_value_bindings rec_value_bindings in
         let%bind exp = infer_exp exp exp_type in
-        let to_rec_value_binding ((var, _), (variables, exp)) =
+        let to_rec_value_binding ((var, (variables, _)), (_, exp)) =
           { trvb_var = var; trvb_expr = variables, exp }
         in
         return
@@ -647,7 +658,7 @@ module Expression = struct
           exps
           ~init:(return ([], []))
           ~f:(fun exp acc ->
-            let%bind var = exists in
+            let%bind var = exists () in
             let& exp = infer_exp exp var in
             let%bind vars, exps = acc in
             return (var :: vars, exp :: exps))
@@ -675,7 +686,7 @@ module Expression = struct
       let open Computation.Let_syntax in
       let%bind label_exps =
         List.map label_exps ~f:(fun (label, exp) ->
-            let@ var = exists in
+            let@ var = exists () in
             let%bind exp = infer_exp exp var in
             let%bind label_desc = inst_label label var exp_type in
             return (label_desc &~ exp))
@@ -715,7 +726,7 @@ module Expression = struct
 
   let infer exp : Typedtree.expression Constraint.t Computation.t =
     let open Computation.Let_syntax in
-    let@ var = exists in
+    let@ var = exists () in
     infer_exp exp var
 end
 

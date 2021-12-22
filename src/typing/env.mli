@@ -19,6 +19,8 @@ type t
 
 val empty : t
 
+val add_type_decl : t -> type_declaration -> t
+
 (** [find_constr t constr] returns the constructor declaration w/ constructor name [constr]. *)
 val find_constr
   :  t

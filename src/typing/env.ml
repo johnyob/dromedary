@@ -27,6 +27,38 @@ let empty =
   { types = empty_map (); constrs = empty_map (); labels = empty_map () }
 
 
+let add_label_decl t (label_decl : label_declaration) =
+  { t with
+    labels = Map.set t.labels ~key:label_decl.label_name ~data:label_decl
+  }
+
+
+let add_constr_decl t (constr_decl : constructor_declaration) =
+  { t with
+    constrs =
+      Map.set t.constrs ~key:constr_decl.constructor_name ~data:constr_decl
+  }
+
+
+let add_type_decl t type_decl =
+  let t =
+    match type_decl.type_kind with
+    | Type_record label_decls ->
+      List.fold_left label_decls ~init:t ~f:(fun t label_decl ->
+          [%test_eq: string list]
+            label_decl.label_type_params
+            type_decl.type_params;
+          add_label_decl t label_decl)
+    | Type_variant constr_decls ->
+      List.fold_left constr_decls ~init:t ~f:(fun t constr_decl ->
+          [%test_eq: string list]
+            constr_decl.constructor_type_params
+            type_decl.type_params;
+          add_constr_decl t constr_decl)
+  in
+  { t with types = Map.set t.types ~key:type_decl.type_name ~data:type_decl }
+
+
 let find_constr env constr =
   Map.find env.constrs constr
   |> Result.of_option ~error:(`Unbound_constructor constr)
