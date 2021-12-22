@@ -24,9 +24,9 @@ type constant =
 
 let string_of_constant constant =
   match constant with
-  | Const_int n -> Format.asprintf "Int: %d" n
-  | Const_bool b -> Format.asprintf "Bool: %b" b
-  | Const_unit -> "Unit"
+  | Const_int n -> Format.asprintf "%d" n
+  | Const_bool b -> Format.asprintf "%b" b
+  | Const_unit -> "()"
 
 
 type primitive =
@@ -34,6 +34,7 @@ type primitive =
   | Prim_sub
   | Prim_div
   | Prim_mul
+  | Prim_eq
 [@@deriving sexp_of]
 
 let string_of_primitive primitive =
@@ -42,6 +43,7 @@ let string_of_primitive primitive =
   | Prim_sub -> "(-)"
   | Prim_div -> "(/)"
   | Prim_mul -> "(*)"
+  | Prim_eq -> "(=)"
 
 
 type non_rec

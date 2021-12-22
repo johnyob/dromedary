@@ -100,7 +100,7 @@ module Expression = struct
     include T
     include Monad.Make (T)
 
-    let exists =
+    let exists () =
       { f =
           (fun k ->
             let var = Constraint.fresh () in
@@ -109,7 +109,7 @@ module Expression = struct
       }
 
 
-    let forall =
+    let forall () =
       { f =
           (fun k ->
             let var = Constraint.fresh () in
@@ -280,7 +280,7 @@ module Pattern = struct
   module Binder = struct
     include Computation
 
-    let exists =
+    let exists () =
       let var = Constraint.fresh () in
       let%bind.Computation () =
         write (Fragment.of_existential_bindings [ var, None ])
@@ -288,7 +288,7 @@ module Pattern = struct
       return var
 
 
-    let forall =
+    let forall () =
       fail
         [%message
           "Cannot bind a universal variable in a pattern binding context."]

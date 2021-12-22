@@ -209,7 +209,7 @@ module Make (Former : Type_former.S) = struct
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
 
   let set_region state type_ =
-    Stdio.print_string "set_region";
+    (* Stdio.print_string "set_region"; *)
     Hash_set.add (Vec.get_exn state.regions (get_level type_)) type_
 
 
@@ -273,14 +273,14 @@ module Make (Former : Type_former.S) = struct
   (* [is_young state type_] determines whether [type_] is in the young region. *)
 
   let is_young state type_ =
-    Stdio.print_string "is_young";
+    (* Stdio.print_string "is_young"; *)
     Hash_set.mem (Vec.get_exn state.regions state.current_level) type_
 
 
   (* [young_region state] returns the "young" region in [state] *)
 
   let young_region state = 
-    Stdio.print_string "young_region";
+    (* Stdio.print_string "young_region"; *)
     Vec.get_exn state.regions state.current_level
 
   (* Generalization performs 4 functions:

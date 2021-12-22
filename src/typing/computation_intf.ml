@@ -107,8 +107,8 @@ module type S = sig
     include Monad.S with type 'a t := 'a t
 
     (* TODO: Formalize this notion of binding context, defined by the methods below.  *)
-    val exists : Constraint.variable t
-    val forall : Constraint.variable t
+    val exists : unit -> Constraint.variable t
+    val forall : unit -> Constraint.variable t
     val exists_vars : Constraint.variable list -> unit t
     val forall_vars : Constraint.variable list -> unit t
     val exists_bindings : Constraint.Shallow_type.binding list -> unit t

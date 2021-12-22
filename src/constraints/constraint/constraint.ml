@@ -98,7 +98,7 @@ module Make (Algebra : Algebra) = struct
           var
       in
       let var = loop type_ in
-      !context, var
+      List.rev !context, var
   end
 
   type 'a bound = Type_var.t list * 'a

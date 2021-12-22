@@ -19,6 +19,16 @@ module Make (Algebra : Algebra) : sig
   module Type_var := Types.Var
   module Type_former := Types.Former
 
+  (** Constraints require an explicit term algebra for types. 
+      
+      Which we define by taking the fixpoint of [Type_former.t]
+      with constraint variables.      
+  *)
+
+  (** [variable] is the for the constraint variables *)
+  type variable = private int
+
+
   (** A constraint of type ['a Constraint.t] represents a constraint of
     type ['a]. 
     
@@ -28,7 +38,7 @@ module Make (Algebra : Algebra) : sig
 
   type 'a t
 
-  and binding
+  and binding = Term_var.t * variable
 
   and def_binding = binding
 
@@ -39,15 +49,6 @@ module Make (Algebra : Algebra) : sig
   and 'a case
 
   val sexp_of_t : 'a t -> Sexp.t
-
-  (** Constraints require an explicit term algebra for types. 
-      
-      Which we define by taking the fixpoint of [Type_former.t]
-      with constraint variables.      
-  *)
-
-  (** [variable] is the for the constraint variables *)
-  type variable = private int
 
   (** [fresh ()] creates a fresh constraint variable. *)
 
