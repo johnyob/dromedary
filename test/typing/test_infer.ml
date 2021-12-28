@@ -644,7 +644,8 @@ let%expect_test "annotation - succ" =
               , Pexp_const (Const_int 1) ) ) )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect {|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -678,7 +679,7 @@ let%expect_test "annotation - succ" =
                    └──Type expr: Constructor: int
                    └──Desc: Constant: 1 |}]
 
-let%expect_test "annotation - succ" = 
+let%expect_test "annotation - succ" =
   let exp =
     (* exists 'a -> fun (x : 'a) -> x + 1 *)
     Pexp_forall
@@ -690,7 +691,8 @@ let%expect_test "annotation - succ" =
               , Pexp_const (Const_int 1) ) ) )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types"
      (type_expr1
       (Ttyp_arrow (Ttyp_var "\206\177166")
@@ -1408,3 +1410,65 @@ let%expect_test "let rec - mutual recursion (polymorphic)" =
              └──Desc: Variable
                 └──Variable: foo
                 └──Type expr: Variable: α329 |}]
+
+let%expect_test "f-pottier elaboration 1" =
+  let exp =
+    (* let u = (fun f -> ()) (fun x -> x) in u *)
+    Pexp_let
+      ( [ { pvb_pat = Ppat_var "u"
+          ; pvb_expr =
+              Pexp_app
+                ( Pexp_fun (Ppat_var "f", Pexp_const Const_unit)
+                , Pexp_fun (Ppat_var "x", Pexp_var "x") )
+          }
+        ]
+      , Pexp_var "u" )
+  in
+  print_infer_result ~env:Env.empty exp;
+  [%expect {|
+    Variables:
+    Expression:
+    └──Expression:
+       └──Type expr: Constructor: unit
+       └──Desc: Let
+          └──Value bindings:
+             └──Value binding:
+                └──Pattern:
+                   └──Type expr: Constructor: unit
+                   └──Desc: Variable: u
+                └──Abstraction:
+                   └──Variables: α334
+                   └──Expression:
+                      └──Type expr: Constructor: unit
+                      └──Desc: Application
+                         └──Expression:
+                            └──Type expr: Arrow
+                               └──Type expr: Arrow
+                                  └──Type expr: Variable: α334
+                                  └──Type expr: Variable: α334
+                               └──Type expr: Constructor: unit
+                            └──Desc: Function
+                               └──Pattern:
+                                  └──Type expr: Arrow
+                                     └──Type expr: Variable: α334
+                                     └──Type expr: Variable: α334
+                                  └──Desc: Variable: f
+                               └──Expression:
+                                  └──Type expr: Constructor: unit
+                                  └──Desc: Constant: ()
+                         └──Expression:
+                            └──Type expr: Arrow
+                               └──Type expr: Variable: α334
+                               └──Type expr: Variable: α334
+                            └──Desc: Function
+                               └──Pattern:
+                                  └──Type expr: Variable: α334
+                                  └──Desc: Variable: x
+                               └──Expression:
+                                  └──Type expr: Variable: α334
+                                  └──Desc: Variable
+                                     └──Variable: x
+          └──Expression:
+             └──Type expr: Constructor: unit
+             └──Desc: Variable
+                └──Variable: u |}]
