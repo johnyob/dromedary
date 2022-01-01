@@ -39,3 +39,7 @@ val union : 'a t -> 'a t -> f:('a -> 'a -> 'a) -> unit
     disjoint set. *)
 val ( === ) : 'a t -> 'a t -> bool
 
+val is_child : 'a t -> bool
+
+val is_root : 'a t -> bool
+

@@ -128,6 +128,7 @@ module Make (Algebra : Algebra) = struct
     | Match : 'a t * 'b case list -> ('a * 'b list) t
         (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
+    | Implication : variable list * 'a t * 'b t -> 'b t (** [forall Λ. C₁ => C₂] *)
 
   and binding = Term_var.t * variable
 
@@ -173,6 +174,7 @@ module Make (Algebra : Algebra) = struct
     | Map (t, _f) -> [%sexp Map (t : t)]
     | Match (t, cases) -> [%sexp Match (t : t), (cases : case list)]
     | Decode a -> [%sexp Decode (a : variable)]
+    | Implication (vars, t1, t2) -> [%sexp Implication (vars : variable list), (t1 : t), (t2 : t)]
 
 
   and sexp_of_binding = [%sexp_of: Term_var.t * variable]
@@ -283,6 +285,10 @@ module Make (Algebra : Algebra) = struct
     | Forall (vars', t) -> Forall (vars @ vars', t)
     | t -> Forall (vars, t)
 
+
+  let ( #. ) vars t = (vars, t)
+
+  let ( #=> ) (vars, t1) t2 = Implication (vars, t1, t2)
 
   (* [x #= a] yields the binding that binds [x] to [a]. *)
   let ( #= ) x a : binding = x, a

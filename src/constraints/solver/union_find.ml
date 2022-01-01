@@ -139,7 +139,7 @@ let union node1 node2 ~f =
 let ( === ) node1 node2 =
   phys_equal node1 node2 || phys_equal (root node1) (root node2)
 
-(* 
+
 (* [is_root node] determines whether [node] is a root node. *)
 let is_root node =
   match !node with
@@ -151,4 +151,4 @@ let is_root node =
 let is_child node =
   match !node with
   | Root _ -> false
-  | Link _ -> true *)
+  | Link _ -> true

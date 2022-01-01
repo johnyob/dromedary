@@ -134,6 +134,8 @@ module Make (Algebra : Algebra) : sig
       (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t 
       (** [decode ɑ] *)
+    | Implication : variable list * 'a t * 'b t -> 'b t
+      (** [forall Λ. C₁ => C₂] *)
 
   and binding = Term_var.t * variable
 
@@ -205,6 +207,11 @@ module Make (Algebra : Algebra) : sig
 
   (** [forall vars t]  binds [vars] as universally quantifier variables in [t]. *)
   val forall : variable list -> 'a t -> 'a t
+
+  (** ([ #., #=> ]) are combinators for the infix construction of implication constraints *)
+  val ( #. ) : variable list -> 'a t -> variable list * 'a t
+  
+  val ( #=> ) : variable list * 'a t -> 'b t -> 'b t
 
   (** [x #= a] yields the binding that binds [x] to [a].  *)
   val ( #= ) : Term_var.t -> variable -> binding

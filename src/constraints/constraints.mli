@@ -180,6 +180,11 @@ module Make (Algebra : Algebra) : sig
   (** [forall vars t]  binds [vars] as universally quantifier variables in [t]. *)
   val forall : variable list -> 'a t -> 'a t
 
+  (** ([ #., #=> ]) are combinators for the infix construction of implication constraints *)
+  val ( #. ) : variable list -> 'a t -> variable list * 'a t
+  
+  val ( #=> ) : variable list * 'a t -> 'b t -> 'b t
+
   (** [x #= a] yields the binding that binds [x] to [a].  *)
   val ( #= ) : Term_var.t -> variable -> binding
 

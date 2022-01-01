@@ -285,6 +285,38 @@ module Make (Algebra : Algebra) = struct
         in
         both value (list case_values)
       | Decode a -> fun () -> Decoder.decode_type_acyclic (find state a)
+      | Implication (vars, cst1, cst2) ->
+        (* Enter a new region *)
+        G.enter state.generalization_state;
+        (* Initialize variables *)
+        let vars = List.map ~f:(fun x -> bind_flexible state (x, None)) vars in
+        if (* Determine whether the antecendent is true or not *)
+           try
+             ignore (solve ~state ~env cst1 : _ Elaborate.t);
+             true
+           with
+           | _ ->
+             (* If an exception is raised, then the constraint is false  *)
+             false
+        then (
+          (* Determine the rigid variables. *)
+          let rigid_vars =
+            List.filter vars ~f:(fun x ->
+                match U.Type.get_structure x with
+                | Var flex ->
+                  flex.flexibility <- Rigid;
+                  true
+                | _ -> false)
+          in
+          (* Solve the right constraint *)
+          let value = solve ~env ~state cst2 in
+          (* Generalize and exit *)
+          ignore
+            (exit state ~rigid_vars ~types:[] : G.variables * G.scheme list);
+          value)
+        else 
+          (* TODO: Determine what to do here *)
+          fun () -> assert false
 
 
   and solve_let_binding
@@ -398,7 +430,9 @@ module Make (Algebra : Algebra) = struct
       let make_term_let_rec_binding (var, scheme) value
           : _ term_let_rec_binding Elaborate.t
         =
-       fun () -> (var, Decoder.decode_scheme scheme), (List.map generalizable ~f:Decoder.decode_variable, value ())
+       fun () ->
+        ( (var, Decoder.decode_scheme scheme)
+        , (List.map generalizable ~f:Decoder.decode_variable, value ()) )
       in
       (* Return recursive bindings and extended environment *)
       ( List.map2_exn bindings values ~f:make_term_let_rec_binding
