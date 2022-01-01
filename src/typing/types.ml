@@ -24,6 +24,8 @@ type type_expr =
 
 and type_constr = type_expr list * string [@@deriving sexp_of]
 
+type type_scheme = string list * type_expr [@@deriving sexp_of]
+
 module Algebra = struct
   open Constraints.Module_types
 
@@ -124,7 +126,7 @@ module Algebra = struct
     module Former = Type_former
     module Type = Type
 
-    type scheme = Var.t list * Type.t
+    type scheme = type_scheme
   end
 end
 

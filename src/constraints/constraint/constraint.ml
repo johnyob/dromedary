@@ -109,6 +109,22 @@ module Make (Algebra : Algebra) = struct
 
   and 'a term_let_rec_binding = term_binding * 'a bound
 
+  module Rigid = struct
+    (* Impliciations require the notion of a "rigid" constraint. Unlike constraints,
+       a rigid constraint has no "value" (or it has a value of type unit).
+       
+       A rigid constraint R is defined by:
+        R ::= true | R && R | a = a | exists a. R
+    *)
+
+    type t =
+      | True
+      | Exist of Shallow_type.binding list * t
+      | Conj of t list
+      | Eq of variable * variable
+    [@@deriving sexp_of]
+  end
+
   (* ['a t] is a constraint with value type ['a]. *)
   type _ t =
     | True : unit t (** [true] *)
@@ -128,6 +144,8 @@ module Make (Algebra : Algebra) = struct
     | Match : 'a t * 'b case list -> ('a * 'b list) t
         (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
+    | Implication : variable list * Rigid.t * 'a t -> 'a t
+        (** [forall Λ. R => C] *)
 
   and binding = Term_var.t * variable
 
@@ -173,6 +191,8 @@ module Make (Algebra : Algebra) = struct
     | Map (t, _f) -> [%sexp Map (t : t)]
     | Match (t, cases) -> [%sexp Match (t : t), (cases : case list)]
     | Decode a -> [%sexp Decode (a : variable)]
+    | Implication (vars, rigid, t) ->
+      [%sexp Implication (vars : variable list), (rigid : Rigid.t), (t : t)]
 
 
   and sexp_of_binding = [%sexp_of: Term_var.t * variable]

@@ -107,6 +107,31 @@ module Make (Algebra : Algebra) : sig
       the constraint. 
   *)
 
+  module Rigid : sig
+    (** [t] is a "rigid" constraint. 
+
+        It is a subset of constraints, used for the antecedent of 
+        implication constraints. 
+    
+        A rigid constraint R is defined by:
+          R ::= true | R && R | a = a | exists a. R
+        
+        We assert (via an invariant) that the free variables of 
+        of a rigid constraint R must be rigid.  
+    *)
+
+    type t = 
+      | True
+        (** [true] *)
+      | Exist of Shallow_type.binding list * t
+        (** [exists Θ. C] *)
+      | Conj of t list
+        (** [C && .. && C] *)
+      | Eq of variable * variable
+        (** [ɑ₁ = ɑ₂] *)
+    [@@deriving sexp_of]
+  end
+
   type _ t =
     | True : unit t 
       (** [true] *)
@@ -134,6 +159,8 @@ module Make (Algebra : Algebra) : sig
       (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t 
       (** [decode ɑ] *)
+    | Implication : variable list * Rigid.t * 'a t -> 'a t
+      (** [forall Λ. R => C] *)
 
   and binding = Term_var.t * variable
 

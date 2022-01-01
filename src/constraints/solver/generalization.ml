@@ -160,12 +160,12 @@ module Make (Former : Type_former.S) = struct
   (* [make_var_] and [make_former_] are internal functions for making type 
      variables and type formers wrapping [Unifier]. *)
 
-  let make_var_ flexibility level =
-    U.make_var flexibility { level; is_generic = false }
+  let make_var_ flexibility ambivalence level =
+    U.make_var flexibility ambivalence { level; is_generic = false }
 
 
-  let make_former_ former level =
-    U.make_former former { level; is_generic = false }
+  let make_former_ former ambivalence level =
+    U.make_former former ambivalence { level; is_generic = false }
 
 
   (* Generalization regions
@@ -216,8 +216,8 @@ module Make (Former : Type_former.S) = struct
   (* [make_var] creates a fresh unification variable, setting it's level
      and region. *)
 
-  let make_var state flexibility =
-    let var = make_var_ flexibility state.current_level in
+  let make_var state flexibility ambivalence =
+    let var = make_var_ flexibility ambivalence state.current_level in
     set_region state var;
     var
 
@@ -227,8 +227,8 @@ module Make (Former : Type_former.S) = struct
       
      It initialize the level to the current level. 
   *)
-  let make_former state former =
-    let former = make_former_ former state.current_level in
+  let make_former state former ambivalence =
+    let former = make_former_ former ambivalence state.current_level in
     set_region state former;
     former
 

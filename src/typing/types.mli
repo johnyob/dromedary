@@ -30,6 +30,8 @@ type type_expr =
 
 and type_constr = type_expr list * string [@@deriving sexp_of]
 
+type type_scheme = string list * type_expr [@@deriving sexp_of]
+
 (** [pp_type_expr_mach ppf type_expr] pretty prints an explicit tree of the 
     type expression [type_expr]. *)
 val pp_type_expr_mach : indent:string -> type_expr Pretty_printer.t

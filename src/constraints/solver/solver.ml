@@ -202,10 +202,12 @@ module Make (Algebra : Algebra) = struct
     end
 
     type t =
-      (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
+      { term_var_env : (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
+      ; equation_env : (U.Type.t * U.Type.t) list
+      }
 
-    let empty = Map.empty (module Term_var_comparator)
-    let extend t var scheme = Map.set t ~key:var ~data:scheme
+    let empty = { term_var_env = Map.empty (module Term_var_comparator); equation_env = [] }
+    let extend t var scheme = { t with term_var_env = Map.set t.term_var_env ~key:var ~data:scheme }
 
     let extend_types t var_type_alist =
       List.fold_left var_type_alist ~init:t ~f:(fun t (var, type_) ->
@@ -220,7 +222,7 @@ module Make (Algebra : Algebra) = struct
     exception Unbound_term_variable of Term_var.t
 
     let find t var =
-      match Map.find t var with
+      match Map.find t.term_var_env var with
       | Some scheme -> scheme
       | None -> raise (Unbound_term_variable var)
   end
@@ -285,6 +287,7 @@ module Make (Algebra : Algebra) = struct
         in
         both value (list case_values)
       | Decode a -> fun () -> Decoder.decode_type_acyclic (find state a)
+      | _ -> assert false
 
 
   and solve_let_binding

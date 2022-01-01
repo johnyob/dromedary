@@ -30,58 +30,76 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
      the notion provides useful insight. 
   *)
 
-  module Type = struct
-    (* There are two kinds of variables [Flexible] and [Rigid]. 
-    
-       A [Flexible] variable can be unified with other variables and types. 
-       A [Rigid] (in general) cannot be unified. 
-    *)
-    type flexibility =
-      | Flexible
-      | Rigid
-    [@@deriving sexp_of, eq]
+  module Rigid_var = struct
+    type t = { id : int } [@@deriving sexp_of]
 
+    let make () = { id = 0 }
+    let compare t1 t2 = Int.compare t1.id t2.id
+    let hash t = t.id
+  end
+
+  module Rigid_path = struct
+    type t = Rigid_var.t [@@deriving sexp_of]
+
+    let make a = assert false
+    let dot t i = assert false
+    let rec compare t1 t2 = assert false
+    (* match t1, t2 with
+      | Rigid_var a1, Rigid_var a2 -> Int.compare (id a1) (id a2)
+      | Rigid_dot (t1, i1), Rigid_dot (t2, i2) ->
+        let result = compare t1 t2 in
+        if result <> 0 then result else Int.compare i1 i2
+      | Rigid_var _, Rigid_dot _ -> -1
+      | Rigid_dot _, Rigid_var _ -> 1 *)
+
+    let hash t = assert false
+  end
+
+  module Type = struct
     (* A graphical type consists of a [Union_find] node,
        allowing reasoning w/ multi-equations of nodes. *)
 
     type t = desc Union_find.t [@@deriving sexp_of]
 
     (* Graphical type node descriptors contain information related to the 
-       node that dominates the multi-equation.
+        node that dominates the multi-equation.
 
-       Each node contains a global unique identifier [id]. 
-       This is allocated on [fresh]. On [union], an arbitrary 
-       identifier is used from the 2 arguments. 
-       
-       We use this identifier [id] for a total ordering on nodes, often 
-       used for efficient datastructures such as [Hashtbl] or [Hash_set]. 
+        Each node contains a global unique identifier [id]. 
+        This is allocated on [fresh]. On [union], an arbitrary 
+        identifier is used from the 2 arguments. 
+        
+        We use this identifier [id] for a total ordering on nodes, often 
+        used for efficient datastructures such as [Hashtbl] or [Hash_set]. 
 
-       Each descriptor stores the node structure [structure].
-       It is either a variable or a type former (with graph type node 
-       children). 
-       
-       Each node also maintains some mutable metadata [metadata], whose
-       purpose is not related to unification. 
-       
-       Note: the only operation performed by the unifier wrt metadata is
-       the merging of metadata on unification. No further traversals / updates
-       are implemented here. 
-    *)
+        Each descriptor stores the node structure [structure].
+        It is either a variable or a type former (with graph type node 
+        children). 
+        
+        Each node also maintains some mutable metadata [metadata], whose
+        purpose is not related to unification. 
+        
+        Note: the only operation performed by the unifier wrt metadata is
+        the merging of metadata on unification. No further traversals / updates
+        are implemented here. 
+      *)
     and desc =
       { id : int
       ; mutable structure : structure
+      ; mutable ambivalence : ambivalence
       ; mutable metadata : Metadata.t
       }
 
     (* Graphical type node structures are either variables or type
-       formers. 
-       
-       A variable denotes it's flexibility, using {!flexibility}.
-       This is required for unification under a mixed prefix. 
-    *)
+        formers. 
+        
+        A variable denotes it's flexibility, using {!flexibility}.
+        This is required for unification under a mixed prefix. 
+      *)
     and structure =
-      | Var of { mutable flexibility : flexibility }
+      | Var
       | Former of t Former.t
+
+    and ambivalence = Rigid_path.t Hash_set.t
 
     (* [id t] returns the unique identifier of the type [t]. *)
     let id t = (Union_find.find t).id
@@ -91,6 +109,11 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
     (* [set_structure t structure] sets the structure of [t] to [structure]. *)
     let set_structure t structure = (Union_find.find t).structure <- structure
+    let get_ambivalence t = (Union_find.find t).ambivalence
+
+    let set_ambivalence t ambivalence =
+      (Union_find.find t).ambivalence <- ambivalence
+
 
     (* [get_metadata t] returns the metadata of [t]. *)
     let get_metadata t = (Union_find.find t).metadata
@@ -123,8 +146,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
       let structure_to_string structure : string =
         match structure with
-        | Var { flexibility = Flexible } -> [%string "*"]
-        | Var { flexibility = Rigid } -> [%string "!"]
+        | Var -> [%string "var"]
         | Former former ->
           Former.sexp_of_t (fun _ -> Atom "") former |> Sexp.to_string_hum
 
@@ -161,7 +183,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
             let me = register state t in
             Hashtbl.set table ~key:(id t) ~data:me;
             (match get_structure t with
-            | Var _ -> ()
+            | Var -> ()
             | Former former ->
               Former.iter former ~f:(fun t ->
                   let from = loop t in
@@ -192,26 +214,25 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
      metadata [metadata]. *)
   let make =
     let id = ref 0 in
-    fun structure metadata ->
-      Union_find.make { id = post_incr id; structure; metadata }
+    fun structure ambivalence metadata ->
+      Union_find.make { id = post_incr id; structure; ambivalence; metadata }
 
 
   (* [make_var flexibility metadata] returns a fresh variable 
      with flexibility [flexibility], and metadata [metadata]. *)
-  let make_var flexibility metadata = make (Var { flexibility }) metadata
+  let make_var ambivalence metadata = make Var ambivalence metadata
 
   (* [make_former former metadata] returns a fresh type former
      with metadata [metadata]. *)
-  let make_former former metadata = make (Former former) metadata
+  let make_former former ambivalence metadata =
+    make (Former former) ambivalence metadata
 
-  exception Cannot_unify_rigid_variable
 
   (* [unify_exn] unifies two graphical types. No exception handling is 
      performed here. This is an internal function.
      
      Possible exceptions include:
      - [Former.Iter2], raised when executing Former.iter2 in {unify_form}.
-     - [Unify_rigid], raised when incorrectly unifying a rigid variable.
 
      See {!unify}. 
   *)
@@ -225,6 +246,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
     { id = desc1.id
     ; structure = unify_structure desc1.structure desc2.structure
     ; metadata = Metadata.merge desc1.metadata desc2.metadata
+    ; ambivalence = Hash_set.union desc1.ambivalence desc2.ambivalence
     }
 
 
@@ -233,24 +255,6 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
   and unify_structure structure1 structure2 =
     match structure1, structure2 with
-    (* Unification of variables
-    
-       Unification is permitted between distinct variables only if 
-       both variables are *not* rigid.
-  
-       In the case of 2 rigid variable, we raise [Cannot_unify_rigid_variable].
-
-       We may unify a rigid variable with itself. However, this case does 
-       not arise here since [Union_find.union] checks physical equality 
-       before before [unify_structure] is executed. 
-    *)
-    | Var { flexibility = Rigid }, Var { flexibility = Rigid } ->
-      raise Cannot_unify_rigid_variable
-    | Var { flexibility = Rigid }, Var { flexibility = Flexible }
-    | Var { flexibility = Flexible }, Var { flexibility = Rigid } ->
-      Var { flexibility = Rigid }
-    | Var { flexibility = Flexible }, Var { flexibility = Flexible } ->
-      Var { flexibility = Flexible }
     (* Unification of variables (leaves) and type formers (internal nodes)
     
        We may unify a flexible variable with a type former, yielding
@@ -259,12 +263,8 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
        Note that no propagation of metadata is performed. This is required
        by external modules. See {!generalization.ml}. 
     *)
-    | Var { flexibility = Flexible }, Former former
-    (* Unification between a rigid variable and a type former is not 
-       permitted. We raise [Unify_rigid]. *)
-    | Former former, Var { flexibility = Flexible } -> Former former
-    | Var { flexibility = Rigid }, Former _
-    | Former _, Var { flexibility = Rigid } -> raise Cannot_unify_rigid_variable
+    | Var, structure
+    | structure, Var -> structure
     (* Unification between type formers 
     
        We may unify type formers recursively. See {!unify_former}. 
@@ -286,7 +286,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
   let unify t1 t2 =
     try unify_exn t1 t2 with
-    | Former.Iter2 | Cannot_unify_rigid_variable -> raise (Unify (t1, t2))
+    | Former.Iter2 -> raise (Unify (t1, t2))
 
 
   exception Cycle of Type.t
@@ -313,7 +313,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       with
       | Not_found_s _ ->
         (match get_structure t with
-        | Var _ ->
+        | Var ->
           (* A variable is a leaf. Hence no traversal is
              required, so simply mark as visited. *)
           Hashtbl.set table ~key:t ~data:true
@@ -347,7 +347,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       | Not_found_s _ ->
         let result =
           match get_structure type_ with
-          | Var _ -> var type_
+          | Var -> var type_
           | Former former' -> former (Former.map ~f:loop former')
         in
         (* We assume we can set [type_] in [visited] *after* traversing
@@ -372,7 +372,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
     (* Recursive loop that traverses the graph. *)
     let rec loop t =
       match get_structure t with
-      | Var _ ->
+      | Var ->
         Hashtbl.set table ~key:t ~data:true;
         var t
       | Former former' ->
