@@ -705,7 +705,9 @@ let%expect_test "let - identity" =
   let exp =
     (* let id x = x in id id () *)
     Pexp_let
-      ( [ { pvb_pat = Ppat_var "id"
+      ( Nonrecursive
+      , [ { pvb_vars = []
+          ; pvb_pat = Ppat_var "id"
           ; pvb_expr = Pexp_fun (Ppat_var "x", Pexp_var "x")
           }
         ]
@@ -777,9 +779,11 @@ let%expect_test "let - map" =
   let env = add_list Env.empty in
   let exp =
     (* let rec map f xs = match xs with (Nil -> Nil | Cons (x, xs) -> Cons (f x, map f xs)) in let f x = x + 1 in map f Nil *)
-    Pexp_let_rec
-      ( [ { prvb_var = "map"
-          ; prvb_expr =
+    Pexp_let
+      ( Recursive
+      , [ { pvb_vars = []
+          ; pvb_pat = Ppat_var "map"
+          ; pvb_expr =
               Pexp_fun
                 ( Ppat_var "f"
                 , Pexp_fun
@@ -811,7 +815,9 @@ let%expect_test "let - map" =
           }
         ]
       , Pexp_let
-          ( [ { pvb_pat = Ppat_var "f"
+          ( Nonrecursive
+          , [ { pvb_vars = []
+              ; pvb_pat = Ppat_var "f"
               ; pvb_expr =
                   Pexp_fun
                     ( Ppat_var "x"
@@ -1079,10 +1085,15 @@ let%expect_test "let rec - monomorphic recursion" =
   let env = add_list Env.empty in
   let exp =
     (* let rec id x = x and id_int x = id (x : int) in id_int *)
-    Pexp_let_rec
-      ( [ { prvb_var = "id"; prvb_expr = Pexp_fun (Ppat_var "x", Pexp_var "x") }
-        ; { prvb_var = "id_int"
-          ; prvb_expr =
+    Pexp_let
+      ( Recursive
+      , [ { pvb_vars = []
+          ; pvb_pat = Ppat_var "id"
+          ; pvb_expr = Pexp_fun (Ppat_var "x", Pexp_var "x")
+          }
+        ; { pvb_vars = []
+          ; pvb_pat = Ppat_var "id_int"
+          ; pvb_expr =
               Pexp_fun
                 ( Ppat_var "x"
                 , Pexp_app
@@ -1155,9 +1166,11 @@ let%expect_test "let rec - monomorphic recursion" =
 let%expect_test "let rec - mutual recursion (monomorphic)" =
   let exp =
     (* let rec is_even x = if x = 0 then true else is_odd (x - 1) and is_odd x = if x = 1 then true else is_even (x - 1) in is_even *)
-    Pexp_let_rec
-      ( [ { prvb_var = "is_even"
-          ; prvb_expr =
+    Pexp_let
+      ( Recursive
+      , [ { pvb_vars = []
+          ; pvb_pat = Ppat_var "is_even"
+          ; pvb_expr =
               Pexp_fun
                 ( Ppat_var "x"
                 , Pexp_ifthenelse
@@ -1171,8 +1184,9 @@ let%expect_test "let rec - mutual recursion (monomorphic)" =
                             ( Pexp_app (Pexp_prim Prim_sub, Pexp_var "x")
                             , Pexp_const (Const_int 1) ) ) ) )
           }
-        ; { prvb_var = "is_odd"
-          ; prvb_expr =
+        ; { pvb_vars = []
+          ; pvb_pat = Ppat_var "is_odd"
+          ; pvb_expr =
               Pexp_fun
                 ( Ppat_var "x"
                 , Pexp_ifthenelse
@@ -1352,12 +1366,15 @@ let%expect_test "let rec - mutual recursion (monomorphic)" =
 let%expect_test "let rec - mutual recursion (polymorphic)" =
   let exp =
     (* let rec foo x = 1 and bar y = true in foo *)
-    Pexp_let_rec
-      ( [ { prvb_var = "foo"
-          ; prvb_expr = Pexp_fun (Ppat_var "x", Pexp_const (Const_int 1))
+    Pexp_let
+      ( Nonrecursive
+      , [ { pvb_vars = []
+          ; pvb_pat = Ppat_var "foo"
+          ; pvb_expr = Pexp_fun (Ppat_var "x", Pexp_const (Const_int 1))
           }
-        ; { prvb_var = "bar"
-          ; prvb_expr = Pexp_fun (Ppat_var "y", Pexp_const (Const_bool true))
+        ; { pvb_vars = []
+          ; pvb_pat = Ppat_var "bar"
+          ; pvb_expr = Pexp_fun (Ppat_var "y", Pexp_const (Const_bool true))
           }
         ]
       , Pexp_var "foo" )
@@ -1371,34 +1388,42 @@ let%expect_test "let rec - mutual recursion (polymorphic)" =
        └──Type expr: Arrow
           └──Type expr: Variable: α329
           └──Type expr: Constructor: int
-       └──Desc: Let rec
+       └──Desc: Let
           └──Value bindings:
              └──Value binding:
-                └──Variable: bar
+                └──Pattern:
+                   └──Type expr: Arrow
+                      └──Type expr: Variable: α324
+                      └──Type expr: Constructor: int
+                   └──Desc: Variable: foo
                 └──Abstraction:
                    └──Variables: α324
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: α320
+                         └──Type expr: Variable: α324
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: α320
+                            └──Type expr: Variable: α324
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: int
                             └──Desc: Constant: 1
              └──Value binding:
-                └──Variable: foo
+                └──Pattern:
+                   └──Type expr: Arrow
+                      └──Type expr: Variable: α319
+                      └──Type expr: Constructor: bool
+                   └──Desc: Variable: bar
                 └──Abstraction:
-                   └──Variables: α320
+                   └──Variables: α319
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: α324
+                         └──Type expr: Variable: α319
                          └──Type expr: Constructor: bool
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: α324
+                            └──Type expr: Variable: α319
                             └──Desc: Variable: y
                          └──Expression:
                             └──Type expr: Constructor: bool
@@ -1415,7 +1440,9 @@ let%expect_test "f-pottier elaboration 1" =
   let exp =
     (* let u = (fun f -> ()) (fun x -> x) in u *)
     Pexp_let
-      ( [ { pvb_pat = Ppat_var "u"
+      ( Nonrecursive
+      , [ { pvb_vars = []
+          ; pvb_pat = Ppat_var "u"
           ; pvb_expr =
               Pexp_app
                 ( Pexp_fun (Ppat_var "f", Pexp_const Const_unit)
@@ -1425,7 +1452,8 @@ let%expect_test "f-pottier elaboration 1" =
       , Pexp_var "u" )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect {|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:

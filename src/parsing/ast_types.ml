@@ -46,15 +46,12 @@ let string_of_primitive primitive =
   | Prim_eq -> "(=)"
 
 
-type non_rec
-type rec_
-
-type 'a rec_flag =
-  | Nonrecursive : non_rec rec_flag
-  | Recursive : rec_ rec_flag
+type rec_flag =
+  | Nonrecursive 
+  | Recursive 
 [@@deriving sexp_of]
 
-let string_of_rec_flag : type a. a rec_flag -> string =
+let string_of_rec_flag : rec_flag -> string =
  fun rec_flag ->
   match rec_flag with
   | Nonrecursive -> "Nonrecursive"
