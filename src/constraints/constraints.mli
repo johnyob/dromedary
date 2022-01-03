@@ -28,7 +28,6 @@ module Make (Algebra : Algebra) : sig
   (** [variable] is the for the constraint variables *)
   type variable = private int
 
-
   (** A constraint of type ['a Constraint.t] represents a constraint of
     type ['a]. 
     
@@ -182,7 +181,7 @@ module Make (Algebra : Algebra) : sig
 
   (** ([ #., #=> ]) are combinators for the infix construction of implication constraints *)
   val ( #. ) : variable list -> 'a t -> variable list * 'a t
-  
+
   val ( #=> ) : variable list * 'a t -> 'b t -> 'b t
 
   (** [x #= a] yields the binding that binds [x] to [a].  *)
@@ -205,6 +204,11 @@ module Make (Algebra : Algebra) : sig
     -> 'a let_binding
 
   val ( @~> )
+    :  variable list * Shallow_type.binding list * 'a t
+    -> binding
+    -> 'a let_rec_binding
+
+  val ( #~> )
     :  variable list * Shallow_type.binding list * 'a t
     -> binding
     -> 'a let_rec_binding

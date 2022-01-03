@@ -128,7 +128,8 @@ module Make (Algebra : Algebra) = struct
     | Match : 'a t * 'b case list -> ('a * 'b list) t
         (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
-    | Implication : variable list * 'a t * 'b t -> 'b t (** [forall Λ. C₁ => C₂] *)
+    | Implication : variable list * 'a t * 'b t -> 'b t
+        (** [forall Λ. C₁ => C₂] *)
 
   and binding = Term_var.t * variable
 
@@ -143,9 +144,15 @@ module Make (Algebra : Algebra) = struct
         }
 
   and 'a let_rec_binding =
-    | Let_rec_binding of
+    | Let_rec_mono_binding of
         { rigid_vars : variable list
         ; flexible_vars : Shallow_type.binding list
+        ; binding : binding
+        ; in_ : 'a t
+        }
+    | Let_rec_poly_binding of
+        { rigid_vars : variable list
+        ; annotation_bindings : Shallow_type.binding list
         ; binding : binding
         ; in_ : 'a t
         }
@@ -174,7 +181,8 @@ module Make (Algebra : Algebra) = struct
     | Map (t, _f) -> [%sexp Map (t : t)]
     | Match (t, cases) -> [%sexp Match (t : t), (cases : case list)]
     | Decode a -> [%sexp Decode (a : variable)]
-    | Implication (vars, t1, t2) -> [%sexp Implication (vars : variable list), (t1 : t), (t2 : t)]
+    | Implication (vars, t1, t2) ->
+      [%sexp Implication (vars : variable list), (t1 : t), (t2 : t)]
 
 
   and sexp_of_binding = [%sexp_of: Term_var.t * variable]
@@ -189,12 +197,20 @@ module Make (Algebra : Algebra) = struct
 
 
   and sexp_of_let_rec_binding : type a. a let_rec_binding -> Sexp.t =
-   fun (Let_rec_binding { rigid_vars; flexible_vars; binding; in_ }) ->
-    [%sexp
-      Let_rec_binding (rigid_vars : variable list)
-      , (flexible_vars : Shallow_type.binding list)
-      , (binding : binding)
-      , (in_ : t)]
+   fun binding ->
+    match binding with
+    | Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ } ->
+      [%sexp
+        Let_rec_binding (rigid_vars : variable list)
+        , (flexible_vars : Shallow_type.binding list)
+        , (binding : binding)
+        , (in_ : t)]
+    | Let_rec_poly_binding { rigid_vars; annotation_bindings; binding; in_ } ->
+      [%sexp
+        Let_rec_poly_binding (rigid_vars : variable list)
+        , (annotation_bindings : Shallow_type.binding list)
+        , (binding : binding)
+        , (in_ : t)]
 
 
   and sexp_of_case : type a. a case -> Sexp.t =
@@ -286,8 +302,7 @@ module Make (Algebra : Algebra) = struct
     | t -> Forall (vars, t)
 
 
-  let ( #. ) vars t = (vars, t)
-
+  let ( #. ) vars t = vars, t
   let ( #=> ) (vars, t1) t2 = Implication (vars, t1, t2)
 
   (* [x #= a] yields the binding that binds [x] to [a]. *)
@@ -317,8 +332,10 @@ module Make (Algebra : Algebra) = struct
      and binding [binding]. 
   *)
   let ( @~> ) (rigid_vars, flexible_vars, in_) binding =
-    Let_rec_binding { rigid_vars; flexible_vars; binding; in_ }
+    Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ }
 
+  let ( #~> ) (rigid_vars, annotation_bindings, in_) binding =
+    Let_rec_poly_binding { rigid_vars; annotation_bindings; binding; in_ }
 
   (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
      constraint [in_]. *)

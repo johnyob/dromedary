@@ -150,12 +150,19 @@ module Make (Algebra : Algebra) : sig
         }
 
   and 'a let_rec_binding =
-    | Let_rec_binding of
+    | Let_rec_mono_binding of
         { rigid_vars : variable list
         ; flexible_vars : Shallow_type.binding list
         ; binding : binding
         ; in_ : 'a t
         }
+    | Let_rec_poly_binding of
+        { rigid_vars : variable list
+        ; annotation_bindings : Shallow_type.binding list
+        ; binding : binding
+        ; in_ : 'a t
+        }
+
 
   and 'a case =
     | Case of
@@ -234,6 +241,11 @@ module Make (Algebra : Algebra) : sig
 
   val ( @~> )
     :  variable list * Shallow_type.binding list * 'a t
+    -> binding
+    -> 'a let_rec_binding
+
+  val ( #~> )
+    : variable list * Shallow_type.binding list * 'a t
     -> binding
     -> 'a let_rec_binding
 
