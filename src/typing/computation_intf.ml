@@ -111,8 +111,6 @@ module type S = sig
     val forall : unit -> Constraint.variable t
     val exists_vars : Constraint.variable list -> unit t
     val forall_vars : Constraint.variable list -> unit t
-    val exists_bindings : Constraint.Shallow_type.binding list -> unit t
-    val of_type : Constraint.Type.t -> Constraint.variable t
 
     module Let_syntax : sig
       val return : 'a -> 'a t
@@ -174,18 +172,67 @@ module type Intf = sig
   end
 
   module Fragment : sig
-    open Constraint
+    module Non_generalized : sig
+      open Constraint
 
-    type t
+      type t
 
-    val to_bindings : t -> Shallow_type.binding list * binding list
+      val to_bindings : t -> variable list * binding list
+    end
+
+    module Generalized : sig
+      open Constraint
+
+      type t
+
+      val to_bindings : t -> variable list * unit Constraint.t * binding list
+    end
   end
 
   module Pattern : sig
-    include S
+    module Non_generalized : sig
+      module Fragment := Fragment.Non_generalized
+      include S
 
-    val write : Fragment.t -> unit t
-    val extend : string -> Constraint.variable -> unit t
-    val run : 'a t -> (Fragment.t * 'a) Expression.t
+      val write : Fragment.t -> unit t
+      val extend : string -> Constraint.Type.t -> unit t
+      val run : 'a t -> (Fragment.t * 'a) Expression.t
+    end
+
+    module Generalized : sig
+      include S
+      val run : 'a t -> 'a Expression.t
+
+      (* Adhoc Monad for computing generalized fragments. TODO: Figure out something nicer :) *)
+      module Fragment : sig
+        module Fragment := Fragment.Generalized
+
+        type 'a t
+  
+        include Monad.S with type 'a t := 'a t
+  
+        val run : 'a t -> (Fragment.t * 'a) Expression.t
+  
+        (** [fail err] raises the error [err]. *)
+        val fail : Sexp.t -> 'a t
+  
+        (** [env] returns the environment *)
+        val env : Env.t t
+  
+        (** [substitution] returns the local substitution. *)
+        val substitution : Substitution.t t
+  
+        val of_result : ('a, 'err) Result.t -> on_error:('err -> Sexp.t) -> 'a t
+        val write : Fragment.t -> unit t
+        val extend : string -> Constraint.Type.t -> unit t
+        val assert_ : unit Constraint.t -> unit t
+        val exists : unit -> Constraint.variable t
+        val forall : unit -> Constraint.variable t
+        val exists_vars : Constraint.variable list -> unit t
+        val forall_vars : Constraint.variable list -> unit t
+      end
+    end
   end
+
+
 end

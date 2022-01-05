@@ -105,7 +105,7 @@ module Expression = struct
           (fun k ->
             let var = Constraint.fresh () in
             let%map.Computation t = k var in
-            Constraint.exists [ var, None ] t)
+            Constraint.exists [ var ] t)
       }
 
 
@@ -118,30 +118,19 @@ module Expression = struct
       }
 
 
-    let exists_bindings bindings =
+    let exists_vars vars =
       { f =
           (fun k ->
             let%map.Computation t = k () in
-            Constraint.exists bindings t)
+            Constraint.exists vars t)
       }
 
-
-    let exists_vars vars = exists_bindings (List.map ~f:(fun x -> x, None) vars)
 
     let forall_vars vars =
       { f =
           (fun k ->
             let%map.Computation t = k () in
             Constraint.forall vars t)
-      }
-
-
-    let of_type type_ =
-      { f =
-          (fun k ->
-            let bindings, var = Constraint.Shallow_type.of_type type_ in
-            let%map.Computation t = k var in
-            Constraint.exists bindings t)
       }
 
 
@@ -187,138 +176,194 @@ module Expression = struct
 end
 
 module Fragment = struct
-  open Constraint
+  module Non_generalized = struct
+    open Constraint
 
-  type t =
-    { existential_bindings : Shallow_type.binding list
-    ; term_bindings :
-        (String.t, Constraint.variable, String.comparator_witness) Map.t
-    }
+    type t =
+      { existential_bindings : variable list
+      ; term_bindings : (String.t, Type.t, String.comparator_witness) Map.t
+      }
 
-  let empty =
-    { existential_bindings = []; term_bindings = Map.empty (module String) }
-
-
-  let merge t1 t2 =
-    let exception Duplicate of string in
-    try
-      let term_bindings =
-        Map.merge_skewed
-          t1.term_bindings
-          t2.term_bindings
-          ~combine:(fun ~key _ _ -> raise (Duplicate key))
-      in
-      let existential_bindings =
-        t1.existential_bindings @ t2.existential_bindings
-      in
-      Ok { existential_bindings; term_bindings }
-    with
-    | Duplicate term_var -> Error (`Duplicate_term_var term_var)
+    let empty =
+      { existential_bindings = []; term_bindings = Map.empty (module String) }
 
 
-  let of_existential_bindings existential_bindings =
-    { existential_bindings; term_bindings = Map.empty (module String) }
+    let merge t1 t2 =
+      let exception Duplicate of string in
+      try
+        let term_bindings =
+          Map.merge_skewed
+            t1.term_bindings
+            t2.term_bindings
+            ~combine:(fun ~key _ _ -> raise (Duplicate key))
+        in
+        let existential_bindings =
+          t1.existential_bindings @ t2.existential_bindings
+        in
+        Ok { existential_bindings; term_bindings }
+      with
+      | Duplicate term_var -> Error (`Duplicate_term_var term_var)
 
 
-  let of_term_binding x a =
-    { existential_bindings = []
-    ; term_bindings = Map.singleton (module String) x a
-    }
+    let of_existential_bindings existential_bindings =
+      { existential_bindings; term_bindings = Map.empty (module String) }
 
 
-  let to_bindings t =
-    ( t.existential_bindings
-    , t.term_bindings |> Map.to_alist |> List.map ~f:(fun (x, a) -> x #= a) )
+    let of_term_binding x a =
+      { existential_bindings = []
+      ; term_bindings = Map.singleton (module String) x a
+      }
+
+
+    let to_bindings t =
+      ( t.existential_bindings
+      , t.term_bindings |> Map.to_alist |> List.map ~f:(fun (x, a) -> x #= a) )
+  end
+
+  module Generalized = struct
+    open Constraint
+
+    type t =
+      { universal_variables : Constraint.variable list
+      ; constraint_ : unit Constraint.t
+      ; term_bindings :
+          (String.t, Constraint.Type.t, String.comparator_witness) Map.t
+      }
+
+    let empty =
+      { universal_variables = []
+      ; constraint_ = Constraint.return ()
+      ; term_bindings = Map.empty (module String)
+      }
+
+
+    let merge t1 t2 =
+      let exception Duplicate of string in
+      try
+        let term_bindings =
+          Map.merge_skewed
+            t1.term_bindings
+            t2.term_bindings
+            ~combine:(fun ~key _ _ -> raise (Duplicate key))
+        in
+        let universal_variables =
+          t1.universal_variables @ t2.universal_variables
+        and constraint_ = t1.constraint_ >> t2.constraint_ in
+        Ok { universal_variables; constraint_; term_bindings }
+      with
+      | Duplicate term_var -> Error (`Duplicate_term_var term_var)
+
+
+    (* let of_existential_bindings existential_bindings =
+    { existential_bindings; term_bindings = Map.empty (module String) } *)
+
+    let of_term_binding x a =
+      { empty with term_bindings = Map.singleton (module String) x a }
+
+
+    let to_bindings t =
+      ( t.universal_variables
+      , t.constraint_
+      , t.term_bindings |> Map.to_alist |> List.map ~f:(fun (x, a) -> x #= a) )
+  end
 end
 
 module Pattern = struct
-  module T = struct
-    type 'a t = (Fragment.t * 'a) Expression.t
+  module Non_generalized = struct
+    module Fragment = Fragment.Non_generalized
 
-    let return x = Expression.return (Fragment.empty, x)
+    module T = struct
+      type 'a t = (Fragment.t * 'a) Expression.t
 
-    let bind t ~f =
-      let%bind.Expression fragment1, x = t in
-      let%bind.Expression fragment2, y = f x in
-      Expression.of_result
-        ~message:(fun _ -> assert false)
-        (let%map.Result fragment = Fragment.merge fragment1 fragment2 in
-         fragment, y)
+      let return x = Expression.return (Fragment.empty, x)
 
-
-    let map = `Define_using_bind
-  end
-
-  module Computation = struct
-    include T
-    include Monad.Make (T)
-  end
-
-  include Computation
-
-  let lift m : 'a t =
-   fun input -> Result.(m input >>| fun x -> Fragment.empty, x)
+      let bind t ~f =
+        let%bind.Expression fragment1, x = t in
+        let%bind.Expression fragment2, y = f x in
+        Expression.of_result
+          ~message:(fun _ -> assert false)
+          (let%map.Result fragment = Fragment.merge fragment1 fragment2 in
+           fragment, y)
 
 
-  let run t input = t input
-  let of_result result ~message = lift (Expression.of_result result ~message)
-  let const x = lift (Expression.const x)
-  let fail err = lift (Expression.fail err)
-  let env = lift Expression.env
-  let find_label label = lift (Expression.find_label label)
-  let find_constr name = lift (Expression.find_constr name)
-  let substitution = lift Expression.substitution
-  let find_var var = lift (Expression.find_var var)
+      let map = `Define_using_bind
+    end
 
-  let extend_substitution t ~substitution input =
-    t (Input.extend_substitution input ~substitution)
+    module Computation = struct
+      include T
+      include Monad.Make (T)
+    end
 
-
-  let write fragment : unit t = fun _input -> Ok (fragment, ())
-  let extend x a = write (Fragment.of_term_binding x a)
-
-  module Binder = struct
     include Computation
 
-    let exists () =
-      let var = Constraint.fresh () in
-      let%bind.Computation () =
-        write (Fragment.of_existential_bindings [ var, None ])
-      in
-      return var
+    let lift m : 'a t =
+     fun input -> Result.(m input >>| fun x -> Fragment.empty, x)
 
 
-    let forall () =
-      fail
-        [%message
-          "Cannot bind a universal variable in a pattern binding context."]
+    let run t input = t input
+    let of_result result ~message = lift (Expression.of_result result ~message)
+    let const x = lift (Expression.const x)
+    let fail err = lift (Expression.fail err)
+    let env = lift Expression.env
+    let find_label label = lift (Expression.find_label label)
+    let find_constr name = lift (Expression.find_constr name)
+    let substitution = lift Expression.substitution
+    let find_var var = lift (Expression.find_var var)
+
+    let extend_substitution t ~substitution input =
+      t (Input.extend_substitution input ~substitution)
 
 
-    let exists_bindings bindings =
-      write (Fragment.of_existential_bindings bindings)
+    let write fragment : unit t = fun _input -> Ok (fragment, ())
+    let extend x a = write (Fragment.of_term_binding x a)
+
+    module Binder = struct
+      include Computation
+
+      let exists () =
+        let var = Constraint.fresh () in
+        let%bind.Computation () =
+          write (Fragment.of_existential_bindings [ var ])
+        in
+        return var
 
 
-    let exists_vars vars = exists_bindings (List.map ~f:(fun x -> x, None) vars)
-
-    let forall_vars _vars =
-      fail
-        [%message
-          "Cannot bind a universal variable in a pattern binding context."]
+      let forall () =
+        fail
+          [%message
+            "Cannot bind a universal variable in a pattern binding context."]
 
 
-    let of_type type_ =
-      let bindings, var = Constraint.Shallow_type.of_type type_ in
-      let%bind.Computation () =
+      let exists_vars bindings =
         write (Fragment.of_existential_bindings bindings)
-      in
-      return var
 
+
+      let forall_vars _vars =
+        fail
+          [%message
+            "Cannot bind a universal variable in a pattern binding context."]
+
+
+      module Let_syntax = struct
+        let return = return
+        let ( >>| ) = Constraint.( >>| )
+        let ( <*> ) = Constraint.( <*> )
+        let ( let& ) computation f = bind computation ~f
+
+        module Let_syntax = struct
+          let return = return
+          let map = Constraint.map
+          let both = Constraint.both
+          let bind = bind
+        end
+      end
+    end
 
     module Let_syntax = struct
       let return = return
       let ( >>| ) = Constraint.( >>| )
       let ( <*> ) = Constraint.( <*> )
-      let ( let& ) computation f = bind computation ~f
+      let ( let@ ) binder f = bind binder ~f
 
       module Let_syntax = struct
         let return = return
@@ -329,17 +374,80 @@ module Pattern = struct
     end
   end
 
-  module Let_syntax = struct
-    let return = return
-    let ( >>| ) = Constraint.( >>| )
-    let ( <*> ) = Constraint.( <*> )
-    let ( let@ ) binder f = bind binder ~f
+  module Generalized = struct
+    include Expression
 
-    module Let_syntax = struct
-      let return = return
-      let map = Constraint.map
-      let both = Constraint.both
-      let bind = bind
+    let run t = t
+
+    module Fragment = struct
+      module Fragment = Fragment.Generalized
+
+      module T = struct
+        type 'a t = (Fragment.t * 'a) Expression.t
+
+        let return x = Expression.return (Fragment.empty, x)
+
+        let bind t ~f =
+          let%bind.Expression fragment1, x = t in
+          let%bind.Expression fragment2, y = f x in
+          Expression.of_result
+            ~message:(fun _ -> assert false)
+            (let%map.Result fragment = Fragment.merge fragment1 fragment2 in
+             fragment, y)
+
+
+        let map = `Define_using_bind
+      end
+
+      module Computation = struct
+        include T
+        include Monad.Make (T)
+      end
+
+      include Computation
+
+      let lift m : 'a t =
+       fun input -> Result.(m input >>| fun x -> Fragment.empty, x)
+
+
+      let run t : (Fragment.t * 'a) Expression.t = t
+
+      let of_result result ~on_error:message =
+        lift (Expression.of_result result ~message)
+
+
+      (* let const x = lift (Expression.const x) *)
+      let fail err = lift (Expression.fail err)
+      let env = lift Expression.env
+      let substitution = lift Expression.substitution
+      let write fragment : unit t = fun _input -> Ok (fragment, ())
+      let extend x a = write (Fragment.of_term_binding x a)
+      let assert_ constraint_ = write Fragment.{ empty with constraint_ }
+
+      let exists () =
+        fail
+          [%message
+            "Cannot bind a existential variable in a generalized pattern \
+             binding context."]
+
+
+      let forall () =
+        let var = Constraint.fresh () in
+        let%bind.Computation () =
+          write Fragment.{ empty with universal_variables = [ var ] }
+        in
+        return var
+
+
+      let exists_vars _vars =
+        fail
+          [%message
+            "Cannot bind a existential variable in a generalized pattern \
+             binding context."]
+
+
+      let forall_vars vars =
+        write Fragment.{ empty with universal_variables = vars }
     end
   end
 end

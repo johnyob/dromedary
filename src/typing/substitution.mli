@@ -26,19 +26,29 @@ type t
 (** [empty] is the empty substitution, mapping no variables. *)
 val empty : t
 
+(** type [flexibility] encodes the binding context of the variables within the substitution. *)
+type flexibility =
+  | Rigid
+  | Flexible
+
 (** [find_var t var] returns the mapped constraint variable of type variable [var]. *)
 val find_var
   :  t
   -> string
   -> (Constraint.variable, [> `Unbound_type_variable of string ]) Result.t
 
+val flexibility_of
+  :  t
+  -> string
+  -> (flexibility, [> `Unbound_type_variable of string ]) Result.t
+
 (** [of_alist alist] returns the substitution defined by the associative list [alist]. *)
 val of_alist
-  :  (string * Constraint.variable) list
+  :  (string * (Constraint.variable * flexibility)) list
   -> (t, [> `Duplicate_type_variable of string ]) Result.t
 
 (** [to_alist t] returns the alist defined by the substitution [t]. *)
-val to_alist : t -> (string * Constraint.variable) list
+val to_alist : t -> (string * (Constraint.variable * flexibility)) list
 
 (** [dom t] returns the domain of [t]. *)
 val dom : t -> string list

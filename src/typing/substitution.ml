@@ -13,12 +13,17 @@
 
 open! Import
 
-type t = (String.t, Constraint.variable, String.comparator_witness) Map.t
+type flexibility = Rigid | Flexible
+
+type t = (String.t, Constraint.variable * flexibility, String.comparator_witness) Map.t
 
 let empty = Map.empty (module String)
 
 let find_var t var =
-  Result.of_option (Map.find t var) ~error:(`Unbound_type_variable var)
+  Result.(of_option (Map.find t var) ~error:(`Unbound_type_variable var) >>| fst)
+
+let flexibility_of t var = 
+  Result.(of_option (Map.find t var) ~error:(`Unbound_type_variable var) >>| snd)
 
 
 let of_alist alist =
@@ -34,5 +39,5 @@ let of_type_vars vars =
 
 
 let dom t = Map.keys t
-let rng t = to_alist t |> List.map ~f:snd
+let rng t = to_alist t |> List.map ~f:(fun (_, (x, _)) -> x)
 let merge t1 t2 = Map.merge_skewed t1 t2 ~combine:(fun ~key:_ _ a -> a)
