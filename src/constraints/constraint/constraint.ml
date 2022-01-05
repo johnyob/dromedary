@@ -63,44 +63,6 @@ module Make (Algebra : Algebra) = struct
     let former f = Former f
   end
 
-  (* The module [Shallow_type] provides the shallow type definition
-     used within constraints. 
-     
-     This encoding is required for "(Explicit) sharing" of types
-     within constraints.
-
-     Types from [Type] are often referred to as "deep" types. 
-  *)
-
-  module Shallow_type = struct
-    (* [t] represents a shallow type [ρ] is defined by the grammar:
-       ρ ::= (ɑ₁, .., ɑ₂) F *)
-    type t = variable Type_former.t [@@deriving sexp_of]
-
-    (* [binding] represents a shallow type binding defined by the grammar:
-       b ::= ɑ | ɑ :: ρ *)
-    type binding = variable * t option [@@deriving sexp_of]
-
-    (* [context] represents a shallow type context Θ. *)
-    type context = binding list
-
-    (* [of_type type_] returns the shallow encoding [Θ |> ɑ] of the 
-       deep type [type_]. *)
-    let of_type type_ =
-      let context = ref [] in
-      let rec loop t =
-        match t with
-        | Type.Var var -> var
-        | Type.Former former ->
-          let var = fresh () in
-          let former = Type_former.map former ~f:loop in
-          context := (var, Some former) :: !context;
-          var
-      in
-      let var = loop type_ in
-      List.rev !context, var
-  end
-
   type 'a bound = Type_var.t list * 'a
 
   type term_binding = Term_var.t * Types.scheme
@@ -113,10 +75,10 @@ module Make (Algebra : Algebra) = struct
   type _ t =
     | True : unit t (** [true] *)
     | Conj : 'a t * 'b t -> ('a * 'b) t (** [C₁ && C₂] *)
-    | Eq : variable * variable -> unit t (** [ɑ₁ = ɑ₂] *)
-    | Exist : Shallow_type.binding list * 'a t -> 'a t (** [exists Θ. C] *)
+    | Eq : Type.t * Type.t -> unit t (** [ɑ₁ = ɑ₂] *)
+    | Exist : variable list * 'a t -> 'a t (** [exists Θ. C] *)
     | Forall : variable list * 'a t -> 'a t (** [forall Λ. C] *)
-    | Instance : Term_var.t * variable -> Types.Type.t list t (** [x <= ɑ] *)
+    | Instance : Term_var.t * Type.t -> Types.Type.t list t (** [x <= ɑ] *)
     | Def : binding list * 'a t -> 'a t
         (** [def x1 : t1 and ... and xn : tn in C] *)
     | Let : 'a let_binding list * 'b t -> ('a term_let_binding list * 'b) t
@@ -127,18 +89,18 @@ module Make (Algebra : Algebra) = struct
     | Map : 'a t * ('a -> 'b) -> 'b t (** [map C f]. *)
     | Match : 'a t * 'b case list -> ('a * 'b list) t
         (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
-    | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
-    | Implication : variable list * 'a t * 'b t -> 'b t
+    | Decode : Type.t -> Types.Type.t t (** [decode ɑ] *)
+    | Implication : variable list * 'a t * 'b t -> (Type_var.t list * 'a * 'b) t
         (** [forall Λ. C₁ => C₂] *)
 
-  and binding = Term_var.t * variable
+  and binding = Term_var.t * Type.t
 
   and def_binding = binding
 
   and 'a let_binding =
     | Let_binding of
         { rigid_vars : variable list
-        ; flexible_vars : Shallow_type.binding list
+        ; flexible_vars : variable list
         ; bindings : binding list
         ; in_ : 'a t
         }
@@ -146,13 +108,12 @@ module Make (Algebra : Algebra) = struct
   and 'a let_rec_binding =
     | Let_rec_mono_binding of
         { rigid_vars : variable list
-        ; flexible_vars : Shallow_type.binding list
+        ; flexible_vars : variable list
         ; binding : binding
         ; in_ : 'a t
         }
     | Let_rec_poly_binding of
         { rigid_vars : variable list
-        ; annotation_bindings : Shallow_type.binding list
         ; binding : binding
         ; in_ : 'a t
         }
@@ -168,11 +129,11 @@ module Make (Algebra : Algebra) = struct
     match t with
     | True -> [%sexp True]
     | Conj (t1, t2) -> [%sexp Conj (t1 : t), (t2 : t)]
-    | Eq (a1, a2) -> [%sexp Eq (a1 : variable), (a2 : variable)]
+    | Eq (t1, t2) -> [%sexp Eq (t1 : Type.t), (t2 : Type.t)]
     | Exist (vars, t) ->
-      [%sexp Exist (vars : Shallow_type.binding list), (t : t)]
+      [%sexp Exist (vars : variable list), (t : t)]
     | Forall (vars, t) -> [%sexp Forall (vars : variable list), (t : t)]
-    | Instance (x, a) -> [%sexp Instance (x : Term_var.t), (a : variable)]
+    | Instance (x, t) -> [%sexp Instance (x : Term_var.t), (t : Type.t)]
     | Def (bindings, t) -> [%sexp Def (bindings : binding list), (t : t)]
     | Let (let_bindings, t) ->
       [%sexp Let (let_bindings : let_binding list), (t : t)]
@@ -180,18 +141,18 @@ module Make (Algebra : Algebra) = struct
       [%sexp Let_rec (let_rec_bindings : let_rec_binding list), (t : t)]
     | Map (t, _f) -> [%sexp Map (t : t)]
     | Match (t, cases) -> [%sexp Match (t : t), (cases : case list)]
-    | Decode a -> [%sexp Decode (a : variable)]
+    | Decode t -> [%sexp Decode (t : Type.t)]
     | Implication (vars, t1, t2) ->
       [%sexp Implication (vars : variable list), (t1 : t), (t2 : t)]
 
 
-  and sexp_of_binding = [%sexp_of: Term_var.t * variable]
+  and sexp_of_binding = [%sexp_of: Term_var.t * Type.t]
 
   and sexp_of_let_binding : type a. a let_binding -> Sexp.t =
    fun (Let_binding { rigid_vars; flexible_vars; bindings; in_ }) ->
     [%sexp
       Let_binding (rigid_vars : variable list)
-      , (flexible_vars : Shallow_type.binding list)
+      , (flexible_vars : variable list)
       , (bindings : binding list)
       , (in_ : t)]
 
@@ -202,13 +163,12 @@ module Make (Algebra : Algebra) = struct
     | Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ } ->
       [%sexp
         Let_rec_binding (rigid_vars : variable list)
-        , (flexible_vars : Shallow_type.binding list)
+        , (flexible_vars : variable list)
         , (binding : binding)
         , (in_ : t)]
-    | Let_rec_poly_binding { rigid_vars; annotation_bindings; binding; in_ } ->
+    | Let_rec_poly_binding { rigid_vars; binding; in_ } ->
       [%sexp
         Let_rec_poly_binding (rigid_vars : variable list)
-        , (annotation_bindings : Shallow_type.binding list)
         , (binding : binding)
         , (in_ : t)]
 
@@ -270,16 +230,6 @@ module Make (Algebra : Algebra) = struct
      constraint on type variables. *)
   let ( =~ ) a1 a2 = Eq (a1, a2)
 
-  let ( =~= ) a1 shallow_type =
-    let a2 = fresh () in
-    Exist ([ a2, Some shallow_type ], a1 =~ a2)
-
-
-  let ( =~- ) a1 type_ =
-    let bindings, a2 = Shallow_type.of_type type_ in
-    Exist (bindings, a1 =~ a2)
-
-
   (* [inst x a] is the constraint that instantiates [x] to [a].
      It returns the type variable substitution. *)
   let inst x a = Instance (x, a)
@@ -334,8 +284,8 @@ module Make (Algebra : Algebra) = struct
   let ( @~> ) (rigid_vars, flexible_vars, in_) binding =
     Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ }
 
-  let ( #~> ) (rigid_vars, annotation_bindings, in_) binding =
-    Let_rec_poly_binding { rigid_vars; annotation_bindings; binding; in_ }
+  let ( #~> ) (rigid_vars, in_) binding =
+    Let_rec_poly_binding { rigid_vars; binding; in_ }
 
   (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
      constraint [in_]. *)
