@@ -110,6 +110,7 @@ type expression =
       (** Match (or "case") expressions [match E with (P1 -> E1 | ... | Pn -> En)]. *)
   | Pexp_ifthenelse of expression * expression * expression
       (** If (or ternary) expressions [if E then E1 else E2]. *)
+  | Pexp_coerce of expression * core_type * core_type
 [@@deriving sexp_of]
 
 (** [P = E] *)

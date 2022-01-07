@@ -53,6 +53,7 @@ type expression =
   | Pexp_tuple of expression list
   | Pexp_match of expression * case list
   | Pexp_ifthenelse of expression * expression * expression
+  | Pexp_coerce of expression * core_type * core_type
 [@@deriving sexp_of]
 
 (** [P = E] *)
@@ -143,7 +144,7 @@ let rec pp_pattern_mach ~indent ppf pat =
     print "Alias";
     pp_pattern_mach ~indent ppf pat;
     Format.fprintf ppf "%sAs: %s@." indent x
-  | Ppat_const const -> print ("Constant: " ^ (string_of_constant const))
+  | Ppat_const const -> print ("Constant: " ^ string_of_constant const)
   | Ppat_tuple pats ->
     print "Tuple";
     List.iter ~f:(pp_pattern_mach ~indent ppf) pats
@@ -152,7 +153,9 @@ let rec pp_pattern_mach ~indent ppf pat =
     Format.fprintf ppf "%sConstructor: %s@." indent constr;
     (match pat with
     | None -> ()
-    | Some pat -> pp_pattern_mach ~indent ppf pat)
+    | Some pat ->
+      (* Format.fprintf ppf "%sVariables: %s@." indent (String.concat ~sep:"," vars); *)
+      pp_pattern_mach ~indent ppf pat)
   | Ppat_constraint (pat, core_type) ->
     print "Constraint";
     pp_pattern_mach ~indent ppf pat;
@@ -222,6 +225,10 @@ let rec pp_expression_mach ~indent ppf exp =
     pp_expression_mach ~indent ppf exp1;
     pp_expression_mach ~indent ppf exp2;
     pp_expression_mach ~indent ppf exp3
+  | Pexp_coerce (exp, t1, t2) ->
+    print "Coerce";
+    pp_expression_mach ~indent ppf exp;
+    pp_core_type_mach ~indent ppf (Ptyp_arrow (t1, t2))
 
 
 and pp_value_bindings_mach ~indent ppf value_bindings =
@@ -404,6 +411,13 @@ let rec pp_pattern ppf pattern =
     Format.fprintf ppf "@[(%a@;:@;%a)@]" pp_pattern pat pp_core_type core_type
 
 
+(* and pp_quantified_pattern ppf (vars, pat) =
+  Format.fprintf
+    ppf
+    "@[%s@;%a@]"
+    (String.concat ~sep:"," vars)
+    pp_pattern
+    pat *)
 
 let pp_let_bindings ?(flag = "") ~pp ppf bindings =
   match bindings with
@@ -418,7 +432,7 @@ let pp_let_bindings ?(flag = "") ~pp ppf bindings =
       b
       (fun ppf -> list ~sep:"@,and" ~pp ppf)
       bs
-    
+
 
 let rec pp_expression ppf exp =
   match exp with
@@ -511,6 +525,15 @@ let rec pp_expression ppf exp =
       exp2
       pp_expression
       exp3
+  | Pexp_coerce (exp, t1, t2) ->
+    Format.fprintf
+      ppf
+      "@[(%a@;:@;%a)@]"
+      pp_expression
+      exp
+      pp_core_type
+      (Ptyp_arrow (t1, t2))
+
 
 and pp_expression_function ppf exp =
   match exp with

@@ -114,6 +114,8 @@ module type S = sig
     val exists_bindings : Constraint.Shallow_type.binding list -> unit t
     val of_type : Constraint.Type.t -> Constraint.variable t
 
+    (* val implies : Constraint.Rigid.t -> unit t *)
+
     module Let_syntax : sig
       val return : 'a -> 'a t
       val ( let& ) : 'a computation -> ('a -> 'b t) -> 'b t
@@ -178,7 +180,12 @@ module type Intf = sig
 
     type t
 
-    val to_bindings : t -> Shallow_type.binding list * binding list
+    val to_bindings
+      :  t
+      -> variable list
+         * Shallow_type.binding list
+         * Constraint.Rigid.t
+         * binding list
   end
 
   module Pattern : sig
@@ -186,6 +193,7 @@ module type Intf = sig
 
     val write : Fragment.t -> unit t
     val extend : string -> Constraint.variable -> unit t
+    val assert_ : Constraint.Rigid.t -> unit t
     val run : 'a t -> (Fragment.t * 'a) Expression.t
   end
 end

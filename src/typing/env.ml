@@ -45,15 +45,9 @@ let add_type_decl t type_decl =
     match type_decl.type_kind with
     | Type_record label_decls ->
       List.fold_left label_decls ~init:t ~f:(fun t label_decl ->
-          [%test_eq: string list]
-            label_decl.label_type_params
-            type_decl.type_params;
           add_label_decl t label_decl)
     | Type_variant constr_decls ->
       List.fold_left constr_decls ~init:t ~f:(fun t constr_decl ->
-          [%test_eq: string list]
-            constr_decl.constructor_type_params
-            type_decl.type_params;
           add_constr_decl t constr_decl)
   in
   { t with types = Map.set t.types ~key:type_decl.type_name ~data:type_decl }

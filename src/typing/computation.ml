@@ -190,13 +190,19 @@ module Fragment = struct
   open Constraint
 
   type t =
-    { existential_bindings : Shallow_type.binding list
+    { universal_variables : variable list
+    ; existential_bindings : Shallow_type.binding list
     ; term_bindings :
         (String.t, Constraint.variable, String.comparator_witness) Map.t
+    ; local_constraint : Constraint.Rigid.t
     }
 
   let empty =
-    { existential_bindings = []; term_bindings = Map.empty (module String) }
+    { universal_variables = []
+    ; existential_bindings = []
+    ; term_bindings = Map.empty (module String)
+    ; local_constraint = Rigid.true_
+    }
 
 
   let merge t1 t2 =
@@ -208,26 +214,37 @@ module Fragment = struct
           t2.term_bindings
           ~combine:(fun ~key _ _ -> raise (Duplicate key))
       in
+      let universal_variables =
+        t1.universal_variables @ t2.universal_variables
+      in
       let existential_bindings =
         t1.existential_bindings @ t2.existential_bindings
       in
-      Ok { existential_bindings; term_bindings }
+      let local_constraint =
+        Rigid.conj t1.local_constraint t2.local_constraint
+      in
+      Ok
+        { universal_variables
+        ; existential_bindings
+        ; term_bindings
+        ; local_constraint
+        }
     with
     | Duplicate term_var -> Error (`Duplicate_term_var term_var)
 
 
   let of_existential_bindings existential_bindings =
-    { existential_bindings; term_bindings = Map.empty (module String) }
+    { empty with existential_bindings }
 
 
   let of_term_binding x a =
-    { existential_bindings = []
-    ; term_bindings = Map.singleton (module String) x a
-    }
+    { empty with term_bindings = Map.singleton (module String) x a }
 
 
   let to_bindings t =
-    ( t.existential_bindings
+    ( t.universal_variables
+    , t.existential_bindings
+    , t.local_constraint
     , t.term_bindings |> Map.to_alist |> List.map ~f:(fun (x, a) -> x #= a) )
 end
 
@@ -277,6 +294,9 @@ module Pattern = struct
   let write fragment : unit t = fun _input -> Ok (fragment, ())
   let extend x a = write (Fragment.of_term_binding x a)
 
+  let assert_ local_constraint = 
+    write Fragment.{ empty with local_constraint }
+
   module Binder = struct
     include Computation
 
@@ -289,10 +309,11 @@ module Pattern = struct
 
 
     let forall () =
-      fail
-        [%message
-          "Cannot bind a universal variable in a pattern binding context."]
-
+      let var = Constraint.fresh () in
+      let%bind.Computation () = 
+        write Fragment.{ empty with universal_variables = [ var ] }
+      in
+      return var
 
     let exists_bindings bindings =
       write (Fragment.of_existential_bindings bindings)
@@ -300,11 +321,9 @@ module Pattern = struct
 
     let exists_vars vars = exists_bindings (List.map ~f:(fun x -> x, None) vars)
 
-    let forall_vars _vars =
-      fail
-        [%message
-          "Cannot bind a universal variable in a pattern binding context."]
-
+    let forall_vars vars =
+      write Fragment.{ empty with universal_variables = vars }
+      
 
     let of_type type_ =
       let bindings, var = Constraint.Shallow_type.of_type type_ in
