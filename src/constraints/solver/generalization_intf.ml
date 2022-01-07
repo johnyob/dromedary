@@ -32,6 +32,9 @@ module type S = sig
   module Unifier :
     Unifier.S with type 'a former := 'a former and type metadata := Tag.t
 
+  module Equations :
+    Equations.S with type 'a former := 'a former and type metadata := Tag.t and module Unifier := Unifier
+
   (** The type [scheme] defines the abstract notion of a scheme in 
       "graphic" types.
       

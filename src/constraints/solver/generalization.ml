@@ -129,6 +129,7 @@ module Make (Former : Type_former.S) = struct
   end
 
   module Unifier = Unifier.Make (Former) (Tag)
+  module Equations = Equations.Make (Former) (Tag) (Unifier)
 
   (* [U] is an alias, used for a short prefix below. *)
   module U = Unifier
@@ -201,10 +202,55 @@ module Make (Former : Type_former.S) = struct
     { mutable current_level : level
     ; regions : (region, [ `R | `W ]) Vec.t
     }
+(* 
+  let pp_type_explicit type_ =
+    let rec pp_type_explicit type_ =
+      match U.Type.get_structure type_ with
+      | U.Type.Var { flexibility = _ } ->
+        Sexp.Atom (Int.to_string (U.Type.id type_))
+      | U.Type.Former former -> Former.sexp_of_t pp_type_explicit former
+    in
+    Caml.Format.printf "%s\n" (Sexp.to_string_mach (pp_type_explicit type_))
+
+
+  let pp_type type_ =
+    Caml.Format.printf
+      "id = %d, level = %d, is_generic = %b"
+      (U.Type.id type_)
+      (get_level type_)
+      (is_generic type_);
+    (match U.Type.get_structure type_ with
+    | Var { flexibility } ->
+      Caml.Format.printf
+        ", flexibility = %s"
+        (Sexp.to_string_hum (U.Type.sexp_of_flexibility flexibility))
+    | _ -> ());
+    Caml.Format.printf "\n"
+
+
+
+  let pp_region i region =
+    Caml.Format.printf "Region %d\n" i;
+    Hash_set.iter ~f:(fun type_ -> pp_type type_; pp_type_explicit type_) region
+
+
+  let pp_regions state = Vec.iteri pp_region state.regions
+
+  let pp_current_level state =
+    Caml.Format.printf "Current level: %d\n" state.current_level
+
+
+  let pp_state state debug_label =
+    Caml.Format.printf "%s:\n" debug_label;
+    pp_current_level state;
+    pp_regions state *)
+
 
   (* [make_state ()] makes a new empty state. *)
 
-  let make_state () = { current_level = outermost_level - 1; regions = Vec.make () }
+  let make_state () =
+    { current_level = outermost_level - 1; regions = Vec.make () }
+
 
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
 
@@ -219,6 +265,8 @@ module Make (Former : Type_former.S) = struct
   let make_var state flexibility =
     let var = make_var_ flexibility state.current_level in
     set_region state var;
+    (* Caml.Format.printf "New variable:\n"; *)
+    (* pp_type var; *)
     var
 
 
@@ -230,6 +278,9 @@ module Make (Former : Type_former.S) = struct
   let make_former state former =
     let former = make_former_ former state.current_level in
     set_region state former;
+    (* Caml.Format.printf "New former:\n"; *)
+    (* pp_type former; *)
+    (* pp_type_explicit former; *)
     former
 
 
@@ -237,10 +288,8 @@ module Make (Former : Type_former.S) = struct
 
   let enter state =
     state.current_level <- state.current_level + 1;
-    Vec.push
-      (Hash_set.create (module U.Type))
-      state.regions
-      
+    Vec.push (Hash_set.create (module U.Type)) state.regions
+
 
   (* A scheme in "graphic types" simply consists of a node w/ a pointer
      to a graphic type node. 
@@ -272,16 +321,22 @@ module Make (Former : Type_former.S) = struct
 
   (* [is_young state type_] determines whether [type_] is in the young region. *)
 
-  let is_young state type_ =
-    (* Stdio.print_string "is_young"; *)
-    Hash_set.mem (Vec.get_exn state.regions state.current_level) type_
+  (* let is_young state type_ =
+    Caml.Format.printf "is_young:";
+    pp_type type_;
+    let result = Hash_set.mem (Vec.get_exn state.regions state.current_level) type_ in
+    (* && not (is_generic type_) *)
+    Caml.Format.printf "is_young = %b\n" result;
+    if (U.Type.id type_) = 66 then (pp_region (-1) (Vec.get_exn state.regions state.current_level));
+    result *)
 
 
   (* [young_region state] returns the "young" region in [state] *)
 
-  let young_region state = 
+  let young_region state =
     (* Stdio.print_string "young_region"; *)
     Vec.get_exn state.regions state.current_level
+
 
   (* Generalization performs 4 functions:
       1) Propagate delayed level updated to nodes
@@ -325,9 +380,16 @@ module Make (Former : Type_former.S) = struct
        
        To implement this, we convert the young region into a sorted array
        which we iterate over to begin the traversal. *)
+    let is_young = 
+      (* Bit of a hack, but gets the hash set to rehash all nodes
+         thus ensuring good equality :) *)
+      let young_region = Hash_set.of_list (module Int) (young_region state |> Hash_set.to_list |> List.map ~f:U.Type.id) in
+      fun type_ -> Hash_set.mem young_region (U.Type.id type_)
+    in
     let young_region = young_region state |> Hash_set.to_array in
-    Array.sort young_region ~compare:(fun t1 t2 ->
-        Int.compare (get_level t1) (get_level t2));
+    Array.sort young_region ~compare:(fun t1 t2 -> Int.compare (get_level t1) (get_level t2));
+    (* Caml.Format.printf "Array order:\n"; *)
+    (* Caml.Format.printf "%s\n" (Array.to_list young_region |> List.map ~f:(fun t -> Int.to_string (U.Type.id t)) |> String.concat ~sep:","); *)
     (* Hash set records whether we've visited a given 
        graphic type node. Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
@@ -341,7 +403,7 @@ module Make (Former : Type_former.S) = struct
           we update it's level. *)
         update_level type_ level;
         (* If a node is old, then we stop traversing (hence the [is_young] check). *)
-        if is_young state type_
+        if is_young type_
         then (
           match U.Type.get_structure type_ with
           | U.Type.Var _ ->
@@ -397,10 +459,13 @@ module Make (Former : Type_former.S) = struct
         else generalize_type type_);
     (* Iterate through the young region, computing the list
        of generalizable variables. *)
+    (* Bug here: Region contains old variables (set_region doesn't remove from previous region) *)
     let generalizable =
       region
       (* Invariant, all nodes in [region] are now generic *)
       |> Hash_set.filter ~f:(fun type_ ->
+             is_generic_at type_ state.current_level
+             &&
              match U.Type.get_structure type_ with
              | U.Type.Var flex ->
                flex.flexibility <- Rigid;
@@ -421,6 +486,7 @@ module Make (Former : Type_former.S) = struct
      Ensures [rigid_vars] do not escape. 
   *)
   let exit state ~rigid_vars ~types =
+    (* pp_state state "Before exit"; *)
     (* Detect cycles in roots. *)
     List.iter ~f:U.occurs_check types;
     (* Now update the lazily updated levels of every node in the young
@@ -441,6 +507,7 @@ module Make (Former : Type_former.S) = struct
     in
     (* Exit the current region *)
     state.current_level <- state.current_level - 1;
+    (* pp_state state "After exit"; *)
     generalizable, List.map ~f:make_scheme types
 
 

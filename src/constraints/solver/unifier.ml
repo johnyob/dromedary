@@ -222,6 +222,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
      (of multi-equations). *)
 
   and unify_desc desc1 desc2 =
+    (* Caml.Format.printf "Unify: %d %d\n" (desc1.id) (desc2.id);     *)
     { id = desc1.id
     ; structure = unify_structure desc1.structure desc2.structure
     ; metadata = Metadata.merge desc1.metadata desc2.metadata
