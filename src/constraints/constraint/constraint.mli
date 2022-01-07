@@ -115,7 +115,7 @@ module Make (Algebra : Algebra) : sig
          R ::= true | R && R | t = t
     *)
 
-    type t = 
+    type t =
       | True
       | Conj of t list
       | Eq of Type.t * Type.t
@@ -123,7 +123,6 @@ module Make (Algebra : Algebra) : sig
 
     val true_ : t
     val conj : t -> t -> t
-
     val of_equations : (Type.t * Type.t) list -> t
   end
 
@@ -154,7 +153,7 @@ module Make (Algebra : Algebra) : sig
       (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t 
       (** [decode ɑ] *)
-    | Implication : Rigid.t * 'a t -> 'a t
+    | Implication : Rigid.t * 'a t -> 'a t 
       (** [R => C] *)
     | Eq_modulo : variable * variable -> unit t
       (** [t1 =% t2] (used to determine equality based on implication) *)
@@ -172,9 +171,15 @@ module Make (Algebra : Algebra) : sig
         }
 
   and 'a let_rec_binding =
-    | Let_rec_binding of
+    | Let_rec_mono_binding of
         { rigid_vars : variable list
         ; flexible_vars : Shallow_type.binding list
+        ; binding : binding
+        ; in_ : 'a t
+        }
+    | Let_rec_poly_binding of
+        { rigid_vars : variable list
+        ; annotation_bindings : Shallow_type.binding list
         ; binding : binding
         ; in_ : 'a t
         }
@@ -254,9 +259,13 @@ module Make (Algebra : Algebra) : sig
     -> binding
     -> 'a let_rec_binding
 
-  val (#=>) : Rigid.t -> 'a t -> 'a t
+  val ( #~> )
+    :  variable list * Shallow_type.binding list * 'a t
+    -> binding
+    -> 'a let_rec_binding
 
-  val (=%) : variable -> variable -> unit t
+  val ( #=> ) : Rigid.t -> 'a t -> 'a t
+  val ( =% ) : variable -> variable -> unit t
 
   (** [let_ ~bindings ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
   val let_

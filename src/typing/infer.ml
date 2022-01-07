@@ -262,6 +262,59 @@ let is_cases_generalized ~env cases : (bool, _) Result.t =
   List.exists ~f:Fn.id is_cases_generalized
 
 
+(* {3 : Polymorphic recursion functions} *)
+
+let rec find_annotation exp =
+  let open Option.Let_syntax in
+  match exp with
+  | Pexp_constraint (exp, type_) -> return (exp, type_)
+  | Pexp_fun (Ppat_constraint (pat, type1), exp) ->
+    let%bind exp, type2 = find_annotation exp in
+    return (Pexp_fun (pat, exp), Ptyp_arrow (type1, type2))
+  | _ -> None
+
+
+let rec annotation_of_value_binding
+    ({ pvb_pat = pat; pvb_expr = exp; _ } as value_binding)
+  =
+  let open Option.Let_syntax in
+  match pat with
+  | Ppat_constraint (pat, type_) ->
+    annotation_of_value_binding
+      { value_binding with
+        pvb_pat = pat
+      ; pvb_expr = Pexp_constraint (value_binding.pvb_expr, type_)
+      }
+  | _ ->
+    let%map exp, core_type = find_annotation exp in
+    { value_binding with pvb_expr = exp }, core_type
+
+
+let annotation_of_rec_value_binding value_binding
+    : ( [ `Annotated of string list * string * Parsetree.expression * core_type
+        | `Unannotated of string list * string * Parsetree.expression
+        ]
+    , _ ) Result.t
+  =
+  let open Result in
+  let open Let_syntax in
+  match annotation_of_value_binding value_binding with
+  | Some
+      ({ pvb_forall_vars = forall_vars; pvb_pat = pat; pvb_expr = exp }, type_)
+    ->
+    (match pat with
+    | Ppat_var term_var ->
+      return (`Annotated (forall_vars, term_var, exp, type_))
+    | _ -> fail `Invalid_recursive_binding)
+  | None ->
+    (match value_binding.pvb_pat with
+    | Ppat_var term_var ->
+      return
+        (`Unannotated
+          (value_binding.pvb_forall_vars, term_var, value_binding.pvb_expr))
+    | _ -> fail `Invalid_recursive_binding)
+
+
 module Pattern = struct
   module Computation = Computation.Pattern
   open Computation.Binder
@@ -572,13 +625,20 @@ module Expression = struct
 
 
   let infer_pat pat pat_type
-      : (binding list * Typedtree.pattern Constraint.t * Constraint.Rigid.t) Binder.t
+      : (binding list * Typedtree.pattern Constraint.t * Constraint.Rigid.t)
+      Binder.t
     =
     let open Binder.Let_syntax in
     (* print_endline
       (Sexp.to_string_hum [%message "infer_pat" (pat : Parsetree.pattern)]); *)
     let& fragment, pat = Pattern.infer pat pat_type in
-    let universal_bindings, existential_bindings, local_constraint, term_bindings = Fragment.to_bindings fragment in
+    let ( universal_bindings
+        , existential_bindings
+        , local_constraint
+        , term_bindings )
+      =
+      Fragment.to_bindings fragment
+    in
     (* List.iter existential_bindings ~f:(fun (var, binding) ->
         Format.printf "Variable: %d@." (var :> int);
         Format.printf
@@ -747,7 +807,7 @@ module Expression = struct
           (let%map constr_desc = constr_desc
            and arg_exp = arg_exp in
            Texp_construct (constr_desc, arg_exp))
-      | Pexp_let (value_bindings, exp) ->
+      | Pexp_let (Nonrecursive, value_bindings, exp) ->
         (* TODO: Coercion! *)
         let%bind let_bindings = infer_value_bindings value_bindings in
         let%bind exp = infer_exp exp exp_type in
@@ -757,7 +817,7 @@ module Expression = struct
         return
           (let%map let_bindings, exp = let_ ~bindings:let_bindings ~in_:exp in
            Texp_let (List.map ~f:to_value_binding let_bindings, exp))
-      | Pexp_let_rec (rec_value_bindings, exp) ->
+      | Pexp_let (Recursive, rec_value_bindings, exp) ->
         let%bind let_bindings = infer_rec_value_bindings rec_value_bindings in
         let%bind exp = infer_exp exp exp_type in
         let to_rec_value_binding ((var, (variables, _)), (_, exp)) =
@@ -821,24 +881,70 @@ module Expression = struct
         : Typedtree.expression let_rec_binding list Computation.t
       =
       rec_value_bindings |> List.map ~f:infer_rec_value_binding |> all
-    and infer_value_binding { pvb_pat = pat; pvb_expr = exp }
+    and infer_value_binding
+        { pvb_forall_vars = forall_vars; pvb_pat = pat; pvb_expr = exp }
         : (Typedtree.pattern * Typedtree.expression) let_binding Computation.t
       =
       let open Computation.Let_syntax in
-      let var = fresh () in
-      let%bind fragment, pat = Pattern.infer pat var in
-      let universal_bindings, existential_bindings, local_constraint, term_bindings = Fragment.to_bindings fragment in
-      let%bind exp = infer_exp exp var in
-      return
-        (((universal_bindings, (var, None) :: existential_bindings) @. (pat &~ (local_constraint #=> exp)))
-        @=> term_bindings)
-    and infer_rec_value_binding { prvb_var = term_var; prvb_expr = exp }
+      extend_substitution
+        forall_vars
+        ~f:(fun forall_vars ->
+          let var = fresh () in
+          let%bind fragment, pat = Pattern.infer pat var in
+          let ( universal_bindings
+              , existential_bindings
+              , local_constraint
+              , term_bindings )
+            =
+            Fragment.to_bindings fragment
+          in
+          let%bind exp = infer_exp exp var in
+          (* This is wrong, will be addressed in ADT explicit existentials patch *)
+          return
+            ((( forall_vars @ universal_bindings
+              , (var, None) :: existential_bindings )
+             @. (pat &~ local_constraint #=> exp))
+            @=> term_bindings))
+        ~message:(fun var ->
+          [%message
+            "Duplicate variable in universal quantifier (let)"
+              (exp : Parsetree.expression)
+              (var : string)])
+    and infer_rec_value_binding value_binding
         : Typedtree.expression let_rec_binding Computation.t
       =
       let open Computation.Let_syntax in
-      let var = fresh () in
-      let%bind exp = infer_exp exp var in
-      return ((([], [ var, None ]) @. exp) @~> (term_var #= var))
+      let%bind annotation =
+        of_result
+          (annotation_of_rec_value_binding value_binding)
+          ~message:(function `Invalid_recursive_binding ->
+            [%message "Invalid recursive value binding form."])
+      in
+      match annotation with
+      | `Annotated (forall_vars, f, exp, annotation) ->
+        extend_substitution
+          forall_vars
+          ~f:(fun forall_vars ->
+            let%bind annotation = convert_core_type annotation in
+            let annotation_bindings, annotation =
+              Shallow_type.of_type annotation
+            in
+            let%bind exp = infer_exp exp annotation in
+            return
+              ((forall_vars, annotation_bindings) @. exp) #~> (f #= annotation))
+          ~message:(fun var ->
+            [%message
+              "Duplicate variable in forall quantifier (let)" (var : string)])
+      | `Unannotated (forall_vars, f, exp) ->
+        extend_substitution
+          forall_vars
+          ~f:(fun forall_vars ->
+            let var = fresh () in
+            let%bind exp = infer_exp exp var in
+            return (((forall_vars, [ var, None ]) @. exp) @~> (f #= var)))
+          ~message:(fun var ->
+            [%message
+              "Duplicate variable in forall quantifier (let)" (var : string)])
     in
     infer_exp exp exp_type
 

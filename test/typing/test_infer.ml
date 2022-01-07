@@ -687,7 +687,9 @@ let%expect_test "let - identity" =
   let exp =
     (* let id x = x in id id () *)
     Pexp_let
-      ( [ { pvb_pat = Ppat_var "id"
+      ( Nonrecursive
+      , [ { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "id"
           ; pvb_expr = Pexp_fun (Ppat_var "x", Pexp_var "x")
           }
         ]
@@ -759,9 +761,11 @@ let%expect_test "let - map" =
   let env = add_list Env.empty in
   let exp =
     (* let rec map f xs = match xs with (Nil -> Nil | Cons (x, xs) -> Cons (f x, map f xs)) in let f x = x + 1 in map f Nil *)
-    Pexp_let_rec
-      ( [ { prvb_var = "map"
-          ; prvb_expr =
+    Pexp_let
+      ( Recursive
+      , [ { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "map"
+          ; pvb_expr =
               Pexp_fun
                 ( Ppat_var "f"
                 , Pexp_fun
@@ -793,7 +797,9 @@ let%expect_test "let - map" =
           }
         ]
       , Pexp_let
-          ( [ { pvb_pat = Ppat_var "f"
+          ( Nonrecursive
+          , [ { pvb_forall_vars = []
+              ; pvb_pat = Ppat_var "f"
               ; pvb_expr =
                   Pexp_fun
                     ( Ppat_var "x"
@@ -1061,10 +1067,15 @@ let%expect_test "let rec - monomorphic recursion" =
   let env = add_list Env.empty in
   let exp =
     (* let rec id x = x and id_int x = id (x : int) in id_int *)
-    Pexp_let_rec
-      ( [ { prvb_var = "id"; prvb_expr = Pexp_fun (Ppat_var "x", Pexp_var "x") }
-        ; { prvb_var = "id_int"
-          ; prvb_expr =
+    Pexp_let
+      ( Recursive
+      , [ { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "id"
+          ; pvb_expr = Pexp_fun (Ppat_var "x", Pexp_var "x")
+          }
+        ; { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "id_int"
+          ; pvb_expr =
               Pexp_fun
                 ( Ppat_var "x"
                 , Pexp_app
@@ -1137,9 +1148,11 @@ let%expect_test "let rec - monomorphic recursion" =
 let%expect_test "let rec - mutual recursion (monomorphic)" =
   let exp =
     (* let rec is_even x = if x = 0 then true else is_odd (x - 1) and is_odd x = if x = 1 then true else is_even (x - 1) in is_even *)
-    Pexp_let_rec
-      ( [ { prvb_var = "is_even"
-          ; prvb_expr =
+    Pexp_let
+      ( Recursive
+      , [ { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "is_even"
+          ; pvb_expr =
               Pexp_fun
                 ( Ppat_var "x"
                 , Pexp_ifthenelse
@@ -1153,8 +1166,9 @@ let%expect_test "let rec - mutual recursion (monomorphic)" =
                             ( Pexp_app (Pexp_prim Prim_sub, Pexp_var "x")
                             , Pexp_const (Const_int 1) ) ) ) )
           }
-        ; { prvb_var = "is_odd"
-          ; prvb_expr =
+        ; { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "is_odd"
+          ; pvb_expr =
               Pexp_fun
                 ( Ppat_var "x"
                 , Pexp_ifthenelse
@@ -1334,12 +1348,15 @@ let%expect_test "let rec - mutual recursion (monomorphic)" =
 let%expect_test "let rec - mutual recursion (polymorphic)" =
   let exp =
     (* let rec foo x = 1 and bar y = true in foo *)
-    Pexp_let_rec
-      ( [ { prvb_var = "foo"
-          ; prvb_expr = Pexp_fun (Ppat_var "x", Pexp_const (Const_int 1))
+    Pexp_let
+      ( Recursive
+      , [ { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "foo"
+          ; pvb_expr = Pexp_fun (Ppat_var "x", Pexp_const (Const_int 1))
           }
-        ; { prvb_var = "bar"
-          ; prvb_expr = Pexp_fun (Ppat_var "y", Pexp_const (Const_bool true))
+        ; { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "bar"
+          ; pvb_expr = Pexp_fun (Ppat_var "y", Pexp_const (Const_bool true))
           }
         ]
       , Pexp_var "foo" )
@@ -1397,7 +1414,9 @@ let%expect_test "f-pottier elaboration 1" =
   let exp =
     (* let u = (fun f -> ()) (fun x -> x) in u *)
     Pexp_let
-      ( [ { pvb_pat = Ppat_var "u"
+      ( Nonrecursive
+      , [ { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "u"
           ; pvb_expr =
               Pexp_app
                 ( Pexp_fun (Ppat_var "f", Pexp_const Const_unit)
@@ -1480,7 +1499,9 @@ let%expect_test "coerce" =
   let env = add_eq Env.empty in
   let exp =
     Pexp_let
-      ( [ { pvb_pat = Ppat_var "coerce"
+      ( Nonrecursive
+      , [ { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "coerce"
           ; pvb_expr =
               Pexp_forall
                 ( [ "a"; "b" ]
@@ -1493,8 +1514,7 @@ let%expect_test "coerce" =
                                 ( Pexp_var "eq"
                                 , Ptyp_constr
                                     ([ Ptyp_var "a"; Ptyp_var "b" ], "eq") )
-                            , [ { pc_lhs =
-                                    Ppat_construct ("Refl", None)
+                            , [ { pc_lhs = Ppat_construct ("Refl", None)
                                 ; pc_rhs =
                                     Pexp_coerce
                                       (Pexp_var "x", Ptyp_var "a", Ptyp_var "b")
@@ -1506,7 +1526,8 @@ let%expect_test "coerce" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -1579,3 +1600,86 @@ let%expect_test "coerce" =
           └──Expression:
              └──Type expr: Constructor: unit
              └──Desc: Constant: () |}]
+
+let%expect_test "let rec - polymorphic recursion" =
+  let env = add_list Env.empty in
+  let exp =
+    (* let rec (type a) id : a -> a = fun x -> x and id_int x = id (x : int) in id *)
+    Pexp_let
+      ( Recursive
+      , [ { pvb_forall_vars = [ "a" ]
+          ; pvb_pat = Ppat_constraint (Ppat_var "id", Ptyp_arrow (Ptyp_var "a", Ptyp_var "a"))
+          ; pvb_expr = Pexp_fun (Ppat_var "x", Pexp_var "x")
+          }
+        ; { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "id_int"
+          ; pvb_expr =
+              Pexp_fun
+                ( Ppat_var "x"
+                , Pexp_app
+                    ( Pexp_var "id"
+                    , Pexp_constraint (Pexp_var "x", Ptyp_constr ([], "int")) )
+                )
+          }
+        ]
+      , Pexp_var "id" )
+  in
+  print_infer_result ~env exp;
+  [%expect {|
+    Variables: α377
+    Expression:
+    └──Expression:
+       └──Type expr: Arrow
+          └──Type expr: Variable: α377
+          └──Type expr: Variable: α377
+       └──Desc: Let rec
+          └──Value bindings:
+             └──Value binding:
+                └──Variable: id
+                └──Abstraction:
+                   └──Variables: α360
+                   └──Expression:
+                      └──Type expr: Arrow
+                         └──Type expr: Variable: α371
+                         └──Type expr: Variable: α371
+                      └──Desc: Function
+                         └──Pattern:
+                            └──Type expr: Variable: α371
+                            └──Desc: Variable: x
+                         └──Expression:
+                            └──Type expr: Variable: α371
+                            └──Desc: Variable
+                               └──Variable: x
+             └──Value binding:
+                └──Variable: id_int
+                └──Abstraction:
+                   └──Variables:
+                   └──Expression:
+                      └──Type expr: Arrow
+                         └──Type expr: Constructor: int
+                         └──Type expr: Constructor: int
+                      └──Desc: Function
+                         └──Pattern:
+                            └──Type expr: Constructor: int
+                            └──Desc: Variable: x
+                         └──Expression:
+                            └──Type expr: Constructor: int
+                            └──Desc: Application
+                               └──Expression:
+                                  └──Type expr: Arrow
+                                     └──Type expr: Constructor: int
+                                     └──Type expr: Constructor: int
+                                  └──Desc: Variable
+                                     └──Variable: id
+                                     └──Type expr: Constructor: int
+                               └──Expression:
+                                  └──Type expr: Constructor: int
+                                  └──Desc: Variable
+                                     └──Variable: x
+          └──Expression:
+             └──Type expr: Arrow
+                └──Type expr: Variable: α377
+                └──Type expr: Variable: α377
+             └──Desc: Variable
+                └──Variable: id
+                └──Type expr: Variable: α377 |}]

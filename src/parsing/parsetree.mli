@@ -82,13 +82,9 @@ type expression =
       *)
   | Pexp_app of expression * expression 
       (** Function application [E1 E2]. *)
-  | Pexp_let of value_binding list * expression
+  | Pexp_let of rec_flag * value_binding list * expression
       (** Let expressions:
           [let P1 = E1 and ... and Pn = En in E]    
-      *)
-  | Pexp_let_rec of rec_value_binding list * expression
-      (** Recursive let expressions:
-          [let rec x1 = E1 and ... and xn = En in E]    
       *)
   | Pexp_forall of string list * expression
       (** Explicit "forall" quantifier [forall 'a1 ... 'an -> E]. 
@@ -115,17 +111,12 @@ type expression =
 
 (** [P = E] *)
 and value_binding =
-  { pvb_pat : pattern
+  { pvb_forall_vars : string list 
+  ; pvb_pat : pattern
   ; pvb_expr : expression
   }
 [@@deriving sexp_of]
 
-(** [x = E] *)
-and rec_value_binding =
-  { prvb_var : string
-  ; prvb_expr : expression
-  }
-[@@deriving sexp_of]
 
 (** [P -> E]. *)
 and case =
@@ -147,14 +138,6 @@ val pp_value_binding_mach : value_binding Pretty_printer.t
 (** [pp_value_binding ppf value_binding] pretty prints the value binding [value_bindings] as a 
     syntactic representation. *)
 val pp_value_binding : value_binding Pretty_printer.t
-
-(** [pp_rec_value_binding_mach ppf value_binding] pretty prints the recursive value binding [value_binding]
-    as an explicit tree. *)
-val pp_rec_value_binding_mach : rec_value_binding Pretty_printer.t
-
-(** [pp_rec_value_binding ppf value_binding] pretty prints the recursive value binding [value_bindings] as a 
-    syntactic representation. *)
-val pp_rec_value_binding : rec_value_binding Pretty_printer.t
 
 (** [pp_case_mach ppf case] pretty prints the case [case] as an explicit tree structure. *)
 val pp_case_mach : case Pretty_printer.t
