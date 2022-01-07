@@ -216,6 +216,22 @@ module Make (Algebra : Algebra) : sig
     :  bindings:'a let_rec_binding list
     -> in_:'b t
     -> ('a term_let_rec_binding list * 'b) t
+
+  module Rigid : sig
+    type 'a constraint_ := 'a t
+
+    type t [@@deriving sexp_of]
+    
+    val true_ : t
+    val conj : t -> t -> t
+
+    val of_equations : (Type.t * Type.t) list -> t
+    val to_constraint : t -> unit constraint_
+  end
+
+  val ( #=> ) : Rigid.t -> 'a t -> 'a t
+
+  val ( =% ) : variable -> variable -> unit t
 end
 
 module Private : sig

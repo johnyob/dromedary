@@ -107,6 +107,26 @@ module Make (Algebra : Algebra) : sig
       the constraint. 
   *)
 
+  module Rigid : sig
+    (* Implications require the notion of a "rigid" constraint. 
+       Rigid constraints have no value (it has a value of type unit). 
+
+       A rigid constraint R is defined by:
+         R ::= true | R && R | t = t
+    *)
+
+    type t = 
+      | True
+      | Conj of t list
+      | Eq of Type.t * Type.t
+    [@@deriving sexp_of]
+
+    val true_ : t
+    val conj : t -> t -> t
+
+    val of_equations : (Type.t * Type.t) list -> t
+  end
+
   type _ t =
     | True : unit t 
       (** [true] *)
@@ -134,6 +154,10 @@ module Make (Algebra : Algebra) : sig
       (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t 
       (** [decode ɑ] *)
+    | Implication : Rigid.t * 'a t -> 'a t
+      (** [R => C] *)
+    | Eq_modulo : variable * variable -> unit t
+      (** [t1 =% t2] (used to determine equality based on implication) *)
 
   and binding = Term_var.t * variable
 
@@ -229,6 +253,10 @@ module Make (Algebra : Algebra) : sig
     :  variable list * Shallow_type.binding list * 'a t
     -> binding
     -> 'a let_rec_binding
+
+  val (#=>) : Rigid.t -> 'a t -> 'a t
+
+  val (=%) : variable -> variable -> unit t
 
   (** [let_ ~bindings ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
   val let_

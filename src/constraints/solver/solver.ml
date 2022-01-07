@@ -27,6 +27,8 @@ module Make (Algebra : Algebra) = struct
   module C = Constraint
   module G = Generalization.Make (Type_former)
   module U = G.Unifier
+  module Equations = G.Equations
+  module E = Equations
 
   (* Applicative structure used for elaboration. *)
 
@@ -202,10 +204,20 @@ module Make (Algebra : Algebra) = struct
     end
 
     type t =
-      (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
+      { term_var_env :
+          (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
+      ; equations : Equations.t
+      }
 
-    let empty = Map.empty (module Term_var_comparator)
-    let extend t var scheme = Map.set t ~key:var ~data:scheme
+    let empty =
+      { term_var_env = Map.empty (module Term_var_comparator)
+      ; equations = Equations.empty
+      }
+
+
+    let extend t var scheme =
+      { t with term_var_env = Map.set t.term_var_env ~key:var ~data:scheme }
+
 
     let extend_types t var_type_alist =
       List.fold_left var_type_alist ~init:t ~f:(fun t (var, type_) ->
@@ -220,10 +232,70 @@ module Make (Algebra : Algebra) = struct
     exception Unbound_term_variable of Term_var.t
 
     let find t var =
-      match Map.find t var with
+      match Map.find t.term_var_env var with
       | Some scheme -> scheme
       | None -> raise (Unbound_term_variable var)
+
+
+    let add_equation t equation =
+      { t with equations = Equations.add_equation t.equations equation }
+
+
+    let add_equations t equations =
+      List.fold_left ~init:t ~f:add_equation equations
+
+
+    let eq_modulo t t1 t2 = Equations.eq_modulo t.equations t1 t2
+
+    (* let pp_equations t =  *)
+      (* Equations.pp t.equations *)
   end
+
+  let rec of_type state type_ =
+    match type_ with
+    | C.Type.Var x -> find state x
+    | C.Type.Former former ->
+      G.make_former
+        state.generalization_state
+        (Type_former.map former ~f:(of_type state))
+
+
+  let rec solve_rigid : state:state -> Constraint.Rigid.t -> E.Equation.t list =
+    let open Constraint.Rigid in
+    let open E.Equation in
+    fun ~state rigid ->
+      match rigid with
+      | True -> []
+      | Conj rigids -> List.concat (List.map ~f:(solve_rigid ~state) rigids)
+      | Eq (t1, t2) ->
+        let t1 = of_type state t1 in
+        let t2 = of_type state t2 in
+        [ t1 =%= t2 ]
+
+(* 
+  let pp_type_explicit type_ =
+    let rec pp_type_explicit type_ =
+      match U.Type.get_structure type_ with
+      | U.Type.Var { flexibility = _ } ->
+        Sexp.Atom (Int.to_string (U.Type.id type_))
+      | U.Type.Former former -> Type_former.sexp_of_t pp_type_explicit former
+    in
+    Caml.Format.printf "%s\n" (Sexp.to_string_mach (pp_type_explicit type_))
+
+
+  let pp_type type_ =
+    Caml.Format.printf
+      "id = %d"
+      (U.Type.id type_);
+    (match U.Type.get_structure type_ with
+    | Var { flexibility } ->
+      Caml.Format.printf
+        ", flexibility = %s"
+        (Sexp.to_string_hum (U.Type.sexp_of_flexibility flexibility))
+    | _ -> ());
+    Caml.Format.printf "\n";
+    pp_type_explicit type_ *)
+
 
   let rec solve
       : type a. state:state -> env:Env.t -> a Constraint.t -> a Elaborate.t
@@ -237,9 +309,13 @@ module Make (Algebra : Algebra) = struct
         let value = solve ~state ~env cst in
         map value ~f
       | Conj (cst1, cst2) ->
-        both (solve ~state ~env cst1) (solve ~state ~env cst2)
+        let value1 = solve ~state ~env cst1 in
+        let value2 = solve ~state ~env cst2 in
+        both value1 value2
       | Eq (a, a') ->
-        unify (find state a) (find state a');
+        let a = find state a in
+        let a' = find state a' in
+        unify a a';
         return ()
       | Exist (bindings, cst) ->
         ignore (List.map ~f:(bind_flexible state) bindings : U.Type.t list);
@@ -285,6 +361,16 @@ module Make (Algebra : Algebra) = struct
         in
         both value (list case_values)
       | Decode a -> fun () -> Decoder.decode_type_acyclic (find state a)
+      | Implication (rigid, t) ->
+        let equations = solve_rigid ~state rigid in
+        let env = Env.add_equations env equations in
+        solve ~state ~env t
+      | Eq_modulo (t1, t2) ->
+        (* let a1 = find state t1 in
+        let a2 = find state t2 in *)
+        if Env.eq_modulo env (find state t1) (find state t2)
+        then return ()
+        else raise_s [%message "Eq_modulo constraint is false!"]
 
 
   and solve_let_binding
@@ -398,7 +484,9 @@ module Make (Algebra : Algebra) = struct
       let make_term_let_rec_binding (var, scheme) value
           : _ term_let_rec_binding Elaborate.t
         =
-       fun () -> (var, Decoder.decode_scheme scheme), (List.map generalizable ~f:Decoder.decode_variable, value ())
+       fun () ->
+        ( (var, Decoder.decode_scheme scheme)
+        , (List.map generalizable ~f:Decoder.decode_variable, value ()) )
       in
       (* Return recursive bindings and extended environment *)
       ( List.map2_exn bindings values ~f:make_term_let_rec_binding

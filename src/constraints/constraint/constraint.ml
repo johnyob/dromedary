@@ -109,6 +109,20 @@ module Make (Algebra : Algebra) = struct
 
   and 'a term_let_rec_binding = term_binding * 'a bound
 
+  module Rigid = struct
+    type t =
+      | True
+      | Conj of t list
+      | Eq of Type.t * Type.t
+    [@@deriving sexp_of]
+
+    let true_ = True
+    let conj t1 t2 = Conj [ t1; t2 ]
+
+    let of_equations equations =
+      Conj (List.map equations ~f:(fun (t1, t2) -> Eq (t1, t2)))
+  end
+
   (* ['a t] is a constraint with value type ['a]. *)
   type _ t =
     | True : unit t (** [true] *)
@@ -128,6 +142,8 @@ module Make (Algebra : Algebra) = struct
     | Match : 'a t * 'b case list -> ('a * 'b list) t
         (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
+    | Implication : Rigid.t * 'a t -> 'a t
+    | Eq_modulo : variable * variable -> unit t
 
   and binding = Term_var.t * variable
 
@@ -173,6 +189,8 @@ module Make (Algebra : Algebra) = struct
     | Map (t, _f) -> [%sexp Map (t : t)]
     | Match (t, cases) -> [%sexp Match (t : t), (cases : case list)]
     | Decode a -> [%sexp Decode (a : variable)]
+    | Implication (rigid, t) -> [%sexp Implication (rigid : Rigid.t), (t : t)]
+    | Eq_modulo (t1, t2) -> [%sexp Equivalent (t1 : variable), (t2 : variable)]
 
 
   and sexp_of_binding = [%sexp_of: Term_var.t * variable]
@@ -279,11 +297,10 @@ module Make (Algebra : Algebra) = struct
 
   (* [forall vars t]  binds [vars] as universally quantifier variables in [t]. *)
   let forall vars t =
-    match t with
-    | Forall (vars', t) -> Forall (vars @ vars', t)
-    | t -> Forall (vars, t)
-
-
+      (match t with
+      | Forall (vars', t) -> Forall (vars @ vars', t)
+      | t -> Forall (vars, t))
+  
   (* [x #= a] yields the binding that binds [x] to [a]. *)
   let ( #= ) x a : binding = x, a
 
@@ -317,4 +334,13 @@ module Make (Algebra : Algebra) = struct
   (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
      constraint [in_]. *)
   let let_rec ~bindings ~in_ = Let_rec (bindings, in_)
+  let ( #=> ) r t = Implication (r, t)
+  let ( =% ) a1 a2 = Eq_modulo (a1, a2)
+
+  (* let forall vars t = 
+    let_ ~bindings:[ ((vars, []) @. t) @=> [] ] ~in_:(return ())
+    >>| function
+    | [ ([], (_, t)) ], _ -> t
+    | _ -> assert false *)
+
 end
