@@ -236,7 +236,7 @@ let rec is_pat_generalized ~env pat : (bool, _) Result.t =
     then return true
     else (
       match pat with
-      | Some pat -> is_pat_generalized ~env pat
+      | Some (_, pat) -> is_pat_generalized ~env pat
       | None -> return false)
   | Ppat_tuple pats ->
     let%map is_pats_generalized =
@@ -245,7 +245,7 @@ let rec is_pat_generalized ~env pat : (bool, _) Result.t =
     List.exists ~f:Fn.id is_pats_generalized
   | Ppat_constraint (pat, _) | Ppat_alias (pat, _) ->
     is_pat_generalized ~env pat
-  | Ppat_const _ | Ppat_any | Ppat_var _ -> return false
+  | Ppat_coerce _ | Ppat_const _ | Ppat_any | Ppat_var _ -> return false
 
 
 (* [is_case_generalized ~env case] returns whether the case pattern contains a generalized pattern. *)
@@ -362,7 +362,7 @@ module Pattern = struct
 
   let infer_constr constr_name constr_type
       : (constructor_description Constraint.t
-        * variable option
+        * (variable list * variable) option
         * Constraint.Rigid.t)
       Binder.t
     =
@@ -377,7 +377,7 @@ module Pattern = struct
       | Some (constr_betas, constr_arg) ->
         let%bind () = forall_vars constr_betas in
         let%bind constr_arg = of_type constr_arg in
-        return (Some constr_arg)
+        return (Some (constr_betas, constr_arg))
       | None -> return None
     in
     let%bind constr_type' = of_type constr_type' in
@@ -385,7 +385,7 @@ module Pattern = struct
     let constr_desc =
       constr_type
       =~ constr_type'
-      >> make_constr_desc constr_name constr_arg constr_type
+      >> make_constr_desc constr_name Option.(constr_arg >>| snd) constr_type
     in
     return (constr_desc, constr_arg, constr_constraint)
 
@@ -432,9 +432,32 @@ module Pattern = struct
         let%bind () = assert_ constr_constraint in
         let%bind arg_pat =
           match arg_pat, arg_pat_type with
-          | Some arg_pat, Some arg_pat_type ->
-            let%bind pat = infer_pat arg_pat arg_pat_type in
-            return (pat >>| Option.some)
+          | Some (betas, arg_pat), Some (constr_betas, arg_pat_type) ->
+            if List.is_empty betas
+            then (
+              let%bind pat = infer_pat arg_pat arg_pat_type in
+              return (constr_constraint #=> pat >>| Option.some))
+            else (
+              match List.zip betas constr_betas with
+              | Ok alist ->
+                let%bind substitution =
+                  of_result
+                    (Substitution.of_alist alist)
+                    ~message:(fun (`Duplicate_type_variable var) ->
+                      [%message
+                        "Duplicate type variable in constructor existentials"
+                          (var : string)])
+                in
+                let%bind () = extend_fragment_substitution substitution in
+                extend_substitution
+                  ~substitution
+                  (let%bind pat = infer_pat arg_pat arg_pat_type in
+                   return (constr_constraint #=> pat >>| Option.some))
+              | Unequal_lengths ->
+                fail
+                  [%message
+                    "Constructor existential variable mistmatch with \
+                     definition."])
           | None, None -> const None
           | _, _ ->
             fail
@@ -455,6 +478,16 @@ module Pattern = struct
         let%bind pat_desc = infer_pat_desc pat pat_type' in
         return
           (let%map () = pat_type =~ pat_type'
+           and pat_desc = pat_desc in
+           pat_desc)
+      | Ppat_coerce (pat, type1, type2) ->
+        let%bind type1 = convert_core_type type1 in
+        let@ type1 = of_type type1 in
+        let%bind type2 = convert_core_type type2 in
+        let@ type2 = of_type type2 in
+        let%bind pat_desc = infer_pat_desc pat type1 in
+        return
+          (let%map () = type1 =% type2 >> (pat_type =~ type2)
            and pat_desc = pat_desc in
            pat_desc)
     and infer_pats pats
@@ -491,7 +524,7 @@ module Expression = struct
 
 
   (* TODO: Move to computation. *)
-  let extend_substitution vars ~f ~message =
+  let extend_substitution_vars vars ~f ~message =
     let open Computation.Let_syntax in
     let%bind substitution =
       of_result
@@ -625,7 +658,10 @@ module Expression = struct
 
 
   let infer_pat pat pat_type
-      : (binding list * Typedtree.pattern Constraint.t * Constraint.Rigid.t)
+      : (binding list
+        * Typedtree.pattern Constraint.t
+        * Constraint.Rigid.t
+        * Substitution.t)
       Binder.t
     =
     let open Binder.Let_syntax in
@@ -635,7 +671,8 @@ module Expression = struct
     let ( universal_bindings
         , existential_bindings
         , local_constraint
-        , term_bindings )
+        , term_bindings
+        , substitution )
       =
       Fragment.to_bindings fragment
     in
@@ -649,7 +686,7 @@ module Expression = struct
         Format.printf "Bound Variable: %d@." (var :> int)); *)
     let%bind () = forall_vars universal_bindings in
     let%bind () = exists_bindings existential_bindings in
-    return (term_bindings, pat, local_constraint)
+    return (term_bindings, pat, local_constraint, substitution)
 
 
   let make_exp_desc_forall vars var exp_desc exp_type =
@@ -696,8 +733,10 @@ module Expression = struct
       | Pexp_fun (pat, exp) ->
         let@ var1 = exists () in
         let@ var2 = exists () in
-        let@ bindings, pat, local_constraint = infer_pat pat var1 in
-        let%bind exp = infer_exp exp var2 in
+        let@ bindings, pat, local_constraint, substitution =
+          infer_pat pat var1
+        in
+        let%bind exp = extend_substitution ~substitution (infer_exp exp var2) in
         return
           (let%map () = exp_type =~= var1 @-> var2
            and pat = pat
@@ -744,7 +783,7 @@ module Expression = struct
            and else_exp = else_exp in
            Texp_ifthenelse (if_exp, then_exp, else_exp))
       | Pexp_exists (vars, exp) ->
-        extend_substitution
+        extend_substitution_vars
           vars
           ~f:(fun vars ->
             let@ () = exists_vars vars in
@@ -755,7 +794,7 @@ module Expression = struct
                 (exp : Parsetree.expression)
                 (var : string)])
       | Pexp_forall (vars, exp) ->
-        extend_substitution
+        extend_substitution_vars
           vars
           ~f:(fun vars ->
             let var = fresh () in
@@ -849,8 +888,12 @@ module Expression = struct
       let open Computation.Let_syntax in
       let%bind cases =
         List.map cases ~f:(fun { pc_lhs; pc_rhs } ->
-            let@ bindings, pat, local_constraint = infer_pat pc_lhs lhs_type in
-            let%bind exp = infer_exp pc_rhs rhs_type in
+            let@ bindings, pat, local_constraint, substitution =
+              infer_pat pc_lhs lhs_type
+            in
+            let%bind exp =
+              extend_substitution ~substitution (infer_exp pc_rhs rhs_type)
+            in
             return
               (let%map tc_lhs = pat
                and tc_rhs = local_constraint #=> (def ~bindings ~in_:exp) in
@@ -886,7 +929,7 @@ module Expression = struct
         : (Typedtree.pattern * Typedtree.expression) let_binding Computation.t
       =
       let open Computation.Let_syntax in
-      extend_substitution
+      extend_substitution_vars
         forall_vars
         ~f:(fun forall_vars ->
           let var = fresh () in
@@ -894,17 +937,25 @@ module Expression = struct
           let ( universal_bindings
               , existential_bindings
               , local_constraint
-              , term_bindings )
+              , term_bindings
+              , _substitution )
             =
             Fragment.to_bindings fragment
           in
           let%bind exp = infer_exp exp var in
-          (* This is wrong, will be addressed in ADT explicit existentials patch *)
-          return
-            ((( forall_vars @ universal_bindings
-              , (var, None) :: existential_bindings )
-             @. (pat &~ local_constraint #=> exp))
-            @=> term_bindings))
+          if not
+               (List.is_empty universal_bindings
+               && Rigid.is_empty local_constraint)
+          then
+            fail
+              [%message
+                "Let binding contains local constraints or existential \
+                 variables."]
+          else
+            return
+              (((forall_vars, (var, None) :: existential_bindings)
+               @. (pat &~ exp))
+              @=> term_bindings))
         ~message:(fun var ->
           [%message
             "Duplicate variable in universal quantifier (let)"
@@ -922,7 +973,7 @@ module Expression = struct
       in
       match annotation with
       | `Annotated (forall_vars, f, exp, annotation) ->
-        extend_substitution
+        extend_substitution_vars
           forall_vars
           ~f:(fun forall_vars ->
             let%bind annotation = convert_core_type annotation in
@@ -936,7 +987,7 @@ module Expression = struct
             [%message
               "Duplicate variable in forall quantifier (let)" (var : string)])
       | `Unannotated (forall_vars, f, exp) ->
-        extend_substitution
+        extend_substitution_vars
           forall_vars
           ~f:(fun forall_vars ->
             let var = fresh () in

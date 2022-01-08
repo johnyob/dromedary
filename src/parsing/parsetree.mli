@@ -58,10 +58,12 @@ type pattern =
       (** [c]. e.g. [1, true, ()]. *)
   | Ppat_tuple of pattern list 
       (** (P1, ..., Pn). Invariant n >= 2. *)
-  | Ppat_construct of string * pattern option 
+  | Ppat_construct of string * (string list * pattern) option 
       (** [C <P>]. *)
   | Ppat_constraint of pattern * core_type 
       (** [(P : T)]. *)
+  | Ppat_coerce of pattern * core_type * core_type
+      (** [(P : T :> T)] *)
 [@@deriving sexp_of]
 
 val pp_pattern_mach : pattern Pretty_printer.t
@@ -107,6 +109,7 @@ type expression =
   | Pexp_ifthenelse of expression * expression * expression
       (** If (or ternary) expressions [if E then E1 else E2]. *)
   | Pexp_coerce of expression * core_type * core_type
+      (** [(E : T :> T)] *)
 [@@deriving sexp_of]
 
 (** [P = E] *)

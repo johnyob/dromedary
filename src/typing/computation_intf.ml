@@ -186,6 +186,7 @@ module type Intf = sig
          * Shallow_type.binding list
          * Constraint.Rigid.t
          * binding list
+         * Substitution.t
   end
 
   module Pattern : sig
@@ -194,6 +195,8 @@ module type Intf = sig
     val write : Fragment.t -> unit t
     val extend : string -> Constraint.variable -> unit t
     val assert_ : Constraint.Rigid.t -> unit t
+    val extend_fragment_substitution : Substitution.t -> unit t
+
     val run : 'a t -> (Fragment.t * 'a) Expression.t
   end
 end

@@ -32,8 +32,9 @@ type pattern =
   | Ppat_alias of pattern * string
   | Ppat_const of constant
   | Ppat_tuple of pattern list
-  | Ppat_construct of string * pattern option
+  | Ppat_construct of string * (string list * pattern) option
   | Ppat_constraint of pattern * core_type
+  | Ppat_coerce of pattern * core_type * core_type
 [@@deriving sexp_of]
 
 type expression =
@@ -147,14 +148,18 @@ let rec pp_pattern_mach ~indent ppf pat =
     Format.fprintf ppf "%sConstructor: %s@." indent constr;
     (match pat with
     | None -> ()
-    | Some pat ->
-      (* Format.fprintf ppf "%sVariables: %s@." indent (String.concat ~sep:"," vars); *)
+    | Some (vars, pat) ->
+      Format.fprintf ppf "%sVariables: %s@." indent (String.concat ~sep:"," vars);
       pp_pattern_mach ~indent ppf pat)
   | Ppat_constraint (pat, core_type) ->
     print "Constraint";
     pp_pattern_mach ~indent ppf pat;
     pp_core_type_mach ~indent ppf core_type
-
+  | Ppat_coerce (pat, core_type1, core_type2) ->
+    print "Coerce";
+    pp_pattern_mach ~indent ppf pat;
+    pp_core_type_mach ~indent ppf core_type1;
+    pp_core_type_mach ~indent ppf core_type2
 
 let rec pp_expression_mach ~indent ppf exp =
   let print = Format.fprintf ppf "%sExpression: %s@." indent in
@@ -379,9 +384,19 @@ let rec pp_pattern ppf pattern =
       "@[%s%a@]"
       constr
       (fun ppf -> option ~first:"@;" ~pp:pp_pattern ppf)
-      pat
+      Option.(pat >>| snd)
   | Ppat_constraint (pat, core_type) ->
     Format.fprintf ppf "@[(%a@;:@;%a)@]" pp_pattern pat pp_core_type core_type
+  | Ppat_coerce (pat, core_type1, core_type2) ->
+    Format.fprintf
+      ppf
+      "@[(%a@;:@;%a@;:>@;%a)@]"
+      pp_pattern
+      pat
+      pp_core_type
+      core_type1
+      pp_core_type
+      core_type2
 
 
 (* and pp_quantified_pattern ppf (vars, pat) =
