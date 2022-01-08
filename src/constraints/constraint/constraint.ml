@@ -110,17 +110,13 @@ module Make (Algebra : Algebra) = struct
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   module Rigid = struct
-    type t =
-      | True
-      | Conj of t list
-      | Eq of Type.t * Type.t
-    [@@deriving sexp_of]
+    type t = (Type.t * Type.t) list [@@deriving sexp_of]
 
-    let true_ = True
-    let conj t1 t2 = Conj [ t1; t2 ]
+    let is_empty t = List.is_empty t
 
-    let of_equations equations =
-      Conj (List.map equations ~f:(fun (t1, t2) -> Eq (t1, t2)))
+    let true_ = []
+    let and_ t1 t2 = t1 @ t2
+    let of_equations equations = equations
   end
 
   (* ['a t] is a constraint with value type ['a]. *)

@@ -225,8 +225,10 @@ module Make (Algebra : Algebra) : sig
     type 'a constraint_ := 'a t
     type t [@@deriving sexp_of]
 
+    val is_empty : t -> bool
+
     val true_ : t
-    val conj : t -> t -> t
+    val and_ : t -> t -> t
     val of_equations : (Type.t * Type.t) list -> t
     val to_constraint : t -> unit constraint_
   end

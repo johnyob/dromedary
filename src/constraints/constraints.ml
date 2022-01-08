@@ -18,14 +18,12 @@ module Make (Algebra : Algebra) = struct
   include Private.Constraint.Make (Algebra)
 
   module Rigid = struct
-    let rec to_constraint t =
-      match t with
-      | Rigid.True -> True
-      | Rigid.Conj ts -> List.map ~f:to_constraint ts |> all_unit
-      | Rigid.Eq (t1, t2) ->
+    let to_constraint t =
+      List.map t ~f:(fun (t1, t2) ->
         let bindings1, t1 = Shallow_type.of_type t1 in
         let bindings2, t2 = Shallow_type.of_type t2 in
-        exists (bindings1 @ bindings2) (t1 =~ t2)
+        exists (bindings1 @ bindings2) (t1 =~ t2))
+      |> all_unit
 
 
     include Rigid

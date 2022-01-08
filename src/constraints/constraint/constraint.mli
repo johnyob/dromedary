@@ -113,16 +113,17 @@ module Make (Algebra : Algebra) : sig
 
        A rigid constraint R is defined by:
          R ::= true | R && R | t = t
+
+       Due to the simplicitly of this structure, we optimize it to a list
+       of equality constraints.
     *)
 
-    type t =
-      | True
-      | Conj of t list
-      | Eq of Type.t * Type.t
-    [@@deriving sexp_of]
+    type t = (Type.t * Type.t) list [@@deriving sexp_of]
+
+    val is_empty : t -> bool
 
     val true_ : t
-    val conj : t -> t -> t
+    val and_ : t -> t -> t
     val of_equations : (Type.t * Type.t) list -> t
   end
 

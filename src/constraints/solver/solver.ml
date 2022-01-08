@@ -263,17 +263,14 @@ module Make (Algebra : Algebra) = struct
         (Type_former.map former ~f:(of_type state))
 
 
-  let rec solve_rigid : state:state -> Constraint.Rigid.t -> E.Equation.t list =
-    let open Constraint.Rigid in
+  let solve_rigid : state:state -> Constraint.Rigid.t -> E.Equation.t list =
     let open E.Equation in
     fun ~state rigid ->
-      match rigid with
-      | True -> []
-      | Conj rigids -> List.concat (List.map ~f:(solve_rigid ~state) rigids)
-      | Eq (t1, t2) ->
+      List.map rigid ~f:(fun (t1, t2) ->
         let t1 = of_type state t1 in
         let t2 = of_type state t2 in
-        [ t1 =%= t2 ]
+        t1 =%= t2)
+      
 
 
   (* 
