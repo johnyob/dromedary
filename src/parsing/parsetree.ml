@@ -22,7 +22,7 @@ type core_type =
   | Ptyp_arrow of core_type * core_type
   | Ptyp_tuple of core_type list
   | Ptyp_constr of core_type list * string
-[@@deriving sexp_of]
+[@@deriving sexp_of, eq]
 
 type core_scheme = string list * core_type [@@deriving sexp_of]
 
@@ -35,7 +35,7 @@ type pattern =
   | Ppat_construct of string * (string list * pattern) option
   | Ppat_constraint of pattern * core_type
   | Ppat_coerce of pattern * core_type * core_type
-[@@deriving sexp_of]
+[@@deriving sexp_of, eq]
 
 type expression =
   | Pexp_var of string
@@ -54,7 +54,7 @@ type expression =
   | Pexp_match of expression * case list
   | Pexp_ifthenelse of expression * expression * expression
   | Pexp_coerce of expression * core_type * core_type
-[@@deriving sexp_of]
+[@@deriving sexp_of, eq]
 
 (** [P = E] *)
 and value_binding =

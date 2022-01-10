@@ -20,7 +20,7 @@ type constant =
   | Const_int of int
   | Const_bool of bool
   | Const_unit
-[@@deriving sexp_of]
+[@@deriving sexp_of, eq]
 
 let string_of_constant constant =
   match constant with
@@ -35,7 +35,7 @@ type primitive =
   | Prim_div
   | Prim_mul
   | Prim_eq
-[@@deriving sexp_of]
+[@@deriving sexp_of, eq]
 
 let string_of_primitive primitive =
   match primitive with
@@ -49,7 +49,7 @@ let string_of_primitive primitive =
 type rec_flag =
   | Nonrecursive
   | Recursive
-[@@deriving sexp_of]
+[@@deriving sexp_of, eq]
 
 let string_of_rec_flag rec_flag =
   match rec_flag with

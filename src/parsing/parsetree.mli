@@ -27,7 +27,7 @@ type core_type =
   | Ptyp_constr of core_type list * string
       (** A type constructor (or "type former"), name "constr" is used for 
           consistency between OCaml and Dromedary code. *)
-[@@deriving sexp_of]
+[@@deriving sexp_of, eq]
 
 (** [pp_core_type_mach ppf core_type] pretty prints [core_type] in a "machine format" 
     (an explicit tree structure). *)
@@ -64,7 +64,7 @@ type pattern =
       (** [(P : T)]. *)
   | Ppat_coerce of pattern * core_type * core_type
       (** [(P : T :> T)] *)
-[@@deriving sexp_of]
+[@@deriving sexp_of, eq]
 
 val pp_pattern_mach : pattern Pretty_printer.t
 val pp_pattern : pattern Pretty_printer.t
@@ -110,7 +110,7 @@ type expression =
       (** If (or ternary) expressions [if E then E1 else E2]. *)
   | Pexp_coerce of expression * core_type * core_type
       (** [(E : T :> T)] *)
-[@@deriving sexp_of]
+[@@deriving sexp_of, eq]
 
 (** [P = E] *)
 and value_binding =
@@ -118,7 +118,7 @@ and value_binding =
   ; pvb_pat : pattern
   ; pvb_expr : expression
   }
-[@@deriving sexp_of]
+[@@deriving sexp_of, eq]
 
 
 (** [P -> E]. *)
@@ -126,7 +126,7 @@ and case =
   { pc_lhs : pattern
   ; pc_rhs : expression
   }
-[@@deriving sexp_of]
+[@@deriving sexp_of, eq]
 
 (** [pp_expression_mach ppf exp] pretty prints an expression [exp] as an explicit tree structure. *)
 val pp_expression_mach : expression Pretty_printer.t

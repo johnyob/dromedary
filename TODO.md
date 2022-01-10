@@ -1,0 +1,2 @@
+- Coercion insertion (stratified inference)
+- Invariants (already done for coercion inference)
