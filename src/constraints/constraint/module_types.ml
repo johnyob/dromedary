@@ -73,5 +73,17 @@ module Type_former = struct
       match map2 t1 t2 ~f with
       | `Ok _ -> ()
       | `Unequal_structure -> raise Iter2
+
+    exception Fold2
+
+    let fold2_exn (type a b c) (t1 : a t) (t2 : b t) ~(f : a -> b -> c -> c) ~(init : c) : c =
+      let module Traverse =
+        T.Traverse (Endo_const (struct
+          type t = c
+        end))
+      in
+      match (Traverse.traverse2 t1 t2 ~f) with
+      | `Ok acc -> acc init
+      | `Unequal_structure -> raise Fold2
   end
 end

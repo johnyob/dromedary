@@ -29,8 +29,19 @@ module type S = sig
     type t [@@deriving sexp_of]
   end
 
-  module Unifier :
-    Unifier.S with type 'a former := 'a former and type metadata := Tag.t
+  module Rigid_tag : sig
+    type t [@@deriving sexp_of]
+  end
+
+  module Equations :
+    Equations.S
+      with type 'a former := 'a former
+       and type metadata := Tag.t
+       and type rigid_metadata := Rigid_tag.t
+
+  module Unifier = Equations.Unifier
+  module Ambivalence = Equations.Ambivalence
+  module Rigid_type = Equations.Rigid_type
 
   (** The type [scheme] defines the abstract notion of a scheme in 
       "graphic" types.
@@ -80,12 +91,19 @@ module type S = sig
 
   (** [make_var] creates a fresh unification variable. *)
 
-  val make_var : state -> Unifier.Type.flexibility -> Unifier.Type.t
+  val make_var : state -> Equations.Ambivalence.t -> Unifier.Type.t
+  val make_rigid_var : state -> Rigid_type.t
 
   (** [make_former] creates a fresh unification type node 
       w/ the structure provided by the former. *)
 
-  val make_former : state -> Unifier.Type.t former -> Unifier.Type.t
+  val make_former
+    :  state
+    -> Unifier.Type.t former
+    -> Equations.Ambivalence.t
+    -> Unifier.Type.t
+
+  val make_rigid_former : state -> Rigid_type.t former -> Rigid_type.t
 
   (** [instantiate scheme] instantates the scheme [scheme]. It does so, by
       taking fresh copies of the generic variables, without necessarily
@@ -96,11 +114,12 @@ module type S = sig
   *)
   val instantiate : state -> scheme -> variables * Unifier.Type.t
 
-  exception Rigid_variable_escape of Unifier.Type.t
+  exception Rigid_variable_escape
+  exception Inconsistent_types
 
   val exit
     :  state
-    -> rigid_vars:Unifier.Type.t list
+    -> rigid_vars:Rigid_type.t list
     -> types:Unifier.Type.t list
     -> variables * scheme list
 end

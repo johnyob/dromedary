@@ -30,30 +30,12 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
      the notion provides useful insight. 
   *)
 
-  module Rigid_var = struct
-    type t = { id : int } [@@deriving sexp_of]
-
-    let make () = { id = 0 }
-    let compare t1 t2 = Int.compare t1.id t2.id
-    let hash t = t.id
-  end
-
-  module Rigid_path = struct
-    type t = Rigid_var.t [@@deriving sexp_of]
-
-    let make a = assert false
-    let dot t i = assert false
-    let rec compare t1 t2 = assert false
-    (* match t1, t2 with
-      | Rigid_var a1, Rigid_var a2 -> Int.compare (id a1) (id a2)
-      | Rigid_dot (t1, i1), Rigid_dot (t2, i2) ->
-        let result = compare t1 t2 in
-        if result <> 0 then result else Int.compare i1 i2
-      | Rigid_var _, Rigid_dot _ -> -1
-      | Rigid_dot _, Rigid_var _ -> 1 *)
-
-    let hash t = assert false
-  end
+  
+  (* See: https://github.com/janestreet/base/issues/121 *)
+  let post_incr r =
+    let result = !r in
+    Int.incr r;
+    result
 
   module Type = struct
     (* A graphical type consists of a [Union_find] node,
@@ -85,7 +67,6 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
     and desc =
       { id : int
       ; mutable structure : structure
-      ; mutable ambivalence : ambivalence
       ; mutable metadata : Metadata.t
       }
 
@@ -99,7 +80,6 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       | Var
       | Former of t Former.t
 
-    and ambivalence = Rigid_path.t Hash_set.t
 
     (* [id t] returns the unique identifier of the type [t]. *)
     let id t = (Union_find.find t).id
@@ -109,11 +89,6 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
     (* [set_structure t structure] sets the structure of [t] to [structure]. *)
     let set_structure t structure = (Union_find.find t).structure <- structure
-    let get_ambivalence t = (Union_find.find t).ambivalence
-
-    let set_ambivalence t ambivalence =
-      (Union_find.find t).ambivalence <- ambivalence
-
 
     (* [get_metadata t] returns the metadata of [t]. *)
     let get_metadata t = (Union_find.find t).metadata
@@ -203,29 +178,23 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
   open Type
 
-  (* See: https://github.com/janestreet/base/issues/121 *)
-  let post_incr r =
-    let result = !r in
-    Int.incr r;
-    result
-
 
   (* [make structure metadata] returns a fresh type w/ structure [structure] and
      metadata [metadata]. *)
   let make =
     let id = ref 0 in
-    fun structure ambivalence metadata ->
-      Union_find.make { id = post_incr id; structure; ambivalence; metadata }
+    fun structure metadata ->
+      Union_find.make { id = post_incr id; structure; metadata }
 
 
   (* [make_var flexibility metadata] returns a fresh variable 
      with flexibility [flexibility], and metadata [metadata]. *)
-  let make_var ambivalence metadata = make Var ambivalence metadata
+  let make_var metadata = make Var metadata
 
   (* [make_former former metadata] returns a fresh type former
      with metadata [metadata]. *)
-  let make_former former ambivalence metadata =
-    make (Former former) ambivalence metadata
+  let make_former former metadata =
+    make (Former former) metadata
 
 
   (* [unify_exn] unifies two graphical types. No exception handling is 
@@ -246,7 +215,6 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
     { id = desc1.id
     ; structure = unify_structure desc1.structure desc2.structure
     ; metadata = Metadata.merge desc1.metadata desc2.metadata
-    ; ambivalence = Hash_set.union desc1.ambivalence desc2.ambivalence
     }
 
 

@@ -27,7 +27,7 @@ module Make (Algebra : Algebra) : sig
     | `Cycle of Type.t
     | `Unbound_term_variable of Term_var.t
     | `Unbound_constraint_variable of Constraint.variable
-    | `Rigid_variable_escape of Type_var.t
+    | `Rigid_variable_escape
     ]
 
   val solve : 'a Constraint.t -> ('a, [> error ]) Result.t

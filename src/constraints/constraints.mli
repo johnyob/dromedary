@@ -28,6 +28,8 @@ module Make (Algebra : Algebra) : sig
   (** [variable] is the for the constraint variables *)
   type variable = private int
 
+  (** [rigid_variable] is the type for rigid constraint type variables. *)
+  type rigid_variable = private int
 
   (** A constraint of type ['a Constraint.t] represents a constraint of
     type ['a]. 
@@ -37,15 +39,10 @@ module Make (Algebra : Algebra) : sig
   *)
 
   type 'a t
-
   and binding = Term_var.t * variable
-
   and def_binding = binding
-
   and 'a let_binding
-
   and 'a let_rec_binding
-
   and 'a case
 
   val sexp_of_t : 'a t -> Sexp.t
@@ -53,6 +50,7 @@ module Make (Algebra : Algebra) : sig
   (** [fresh ()] creates a fresh constraint variable. *)
 
   val fresh : unit -> variable
+  val fresh_rigid : unit -> rigid_variable
 
   (** The module [Type] provides the concrete representation of types
       (using constraint type variables) in constraints. 
@@ -69,12 +67,15 @@ module Make (Algebra : Algebra) : sig
         t ::= ɑ | (t, .., t) F *)
     type t =
       | Var of variable
+      | Rigid_var of rigid_variable
       | Former of t Type_former.t
     [@@deriving sexp_of]
 
     (** [var 'a] is the representation of the type variable ['a] as the 
         type [t].  *)
     val var : variable -> t
+
+    val rigid_var : rigid_variable -> t
 
     (** [former f] is the representation of the concrete type former [f] in
         type [t]. *)
@@ -91,19 +92,21 @@ module Make (Algebra : Algebra) : sig
   *)
 
   module Shallow_type : sig
-    (** [t] represents a shallow type [ρ] is defined by the grammar:
-        ρ ::= (ɑ₁, .., ɑ₂) F *)
-    type t = variable Type_former.t [@@deriving sexp_of]
+    type t =
+      | Var
+      | Former of variable Type_former.t
+    [@@deriving sexp_of]
+  end
 
-    (** [binding] represents a shallow type binding defined by the grammar:
-        b ::= ɑ | ɑ :: ρ *)
-    type binding = variable * t option [@@deriving sexp_of]
+  module Ambivalent_type : sig
+    type t = Shallow_type.t * rigid_variable list [@@deriving sexp_of]
 
-    (** [context] represents a shallow type context Θ. *)
-    type context = binding list
+    (** [alias] represents a shallow type binding defined by the grammar:
+        alias ::= ɑ :: φ *)
+    type alias = variable * t [@@deriving sexp_of]
 
-    (** [of_type type_] returns the shallow encoding [Θ |> ɑ] of the deep 
-        type [type_]. *)
+    type context = alias list
+
     val of_type : Type.t -> context * variable
   end
 
@@ -134,7 +137,7 @@ module Make (Algebra : Algebra) : sig
       | `Cycle of Type.t
       | `Unbound_term_variable of Term_var.t
       | `Unbound_constraint_variable of variable
-      | `Rigid_variable_escape of Type_var.t
+      | `Rigid_variable_escape
       ]
 
     val solve : 'a t -> ('a, [> error ]) Result.t
@@ -155,15 +158,23 @@ module Make (Algebra : Algebra) : sig
       constraint on type variables. *)
   val ( =~ ) : variable -> variable -> unit t
 
-  val ( =~= ) : variable -> Shallow_type.t -> unit t
   val ( =~- ) : variable -> Type.t -> unit t
 
+  (** [as_] is the alias constraint, used for explicit sharing and 
+      ambivalence. *)
+  val as_ : variable -> Ambivalent_type.t -> unit t
+
+  val ( &= ) : rigid_variable list -> Ambivalent_type.t
+  val ( =& ) : variable Type_former.t -> Ambivalent_type.t
+
+  val ( =&= )
+    :  variable Type_former.t
+    -> rigid_variable list
+    -> Ambivalent_type.t
+
   type 'a bound = Type_var.t list * 'a
-
   and term_binding = Term_var.t * Types.scheme
-
   and 'a term_let_binding = term_binding list * 'a bound
-
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   (** [inst x a] is the constraint that instantiates [x] to [a].
@@ -175,10 +186,10 @@ module Make (Algebra : Algebra) : sig
   val decode : variable -> Types.Type.t t
 
   (** [exists bindings t] binds [bindings] existentially in [t]. *)
-  val exists : Shallow_type.binding list -> 'a t -> 'a t
+  val exists : variable list -> 'a t -> 'a t
 
   (** [forall vars t]  binds [vars] as universally quantifier variables in [t]. *)
-  val forall : variable list -> 'a t -> 'a t
+  val forall : rigid_variable list -> 'a t -> 'a t
 
   (** [x #= a] yields the binding that binds [x] to [a].  *)
   val ( #= ) : Term_var.t -> variable -> binding
@@ -190,17 +201,22 @@ module Make (Algebra : Algebra) : sig
       of let and let rec bindings. *)
 
   val ( @. )
-    :  variable list * Shallow_type.binding list
+    :  rigid_variable list * Ambivalent_type.context
     -> 'a t
-    -> variable list * Shallow_type.binding list * 'a t
+    -> rigid_variable list * Ambivalent_type.context * 'a t
 
   val ( @=> )
-    :  variable list * Shallow_type.binding list * 'a t
+    :  rigid_variable list * Ambivalent_type.context * 'a t
     -> binding list
     -> 'a let_binding
 
   val ( @~> )
-    :  variable list * Shallow_type.binding list * 'a t
+    :  rigid_variable list * Ambivalent_type.context * 'a t
+    -> binding
+    -> 'a let_rec_binding
+
+  val ( #~> )
+    :  rigid_variable list * Ambivalent_type.context * 'a t
     -> binding
     -> 'a let_rec_binding
 
@@ -216,6 +232,19 @@ module Make (Algebra : Algebra) : sig
     :  bindings:'a let_rec_binding list
     -> in_:'b t
     -> ('a term_let_rec_binding list * 'b) t
+
+  module Rigid : sig
+    module Type : sig
+      type t =
+        | Var of rigid_variable
+        | Former of t Type_former.t
+      [@@deriving sexp_of]
+    end
+
+    type t = (Type.t * Type.t) list [@@deriving sexp_of]
+  end
+
+  val ( #=> ) : Rigid.t -> 'a t -> 'a t
 end
 
 module Private : sig

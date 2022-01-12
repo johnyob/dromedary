@@ -27,13 +27,20 @@ module Make (Algebra : Algebra) = struct
   module Type_former = Types.Former
 
   type variable = int [@@deriving sexp_of]
+  type rigid_variable = int [@@deriving sexp_of]
+
+  let post_incr r =
+    let result = !r in
+    Int.incr r;
+    result
+
 
   let fresh =
-    let post_incr r =
-      let result = !r in
-      Int.incr r;
-      result
-    in
+    let next = ref 0 in
+    fun () -> post_incr next
+
+
+  let fresh_rigid =
     let next = ref 0 in
     fun () -> post_incr next
 
@@ -53,11 +60,13 @@ module Make (Algebra : Algebra) = struct
        t ::= ɑ | (t, .., t) F *)
     type t =
       | Var of variable
+      | Rigid_var of rigid_variable
       | Former of t Type_former.t
     [@@deriving sexp_of]
 
     (* [var a] returns the representation of the type variable [a]. *)
     let var a = Var a
+    let rigid_var a = Rigid_var a
 
     (* [former f] returns the representation of the applied type former [f]. *)
     let former f = Former f
@@ -73,28 +82,32 @@ module Make (Algebra : Algebra) = struct
   *)
 
   module Shallow_type = struct
-    (* [t] represents a shallow type [ρ] is defined by the grammar:
-       ρ ::= (ɑ₁, .., ɑ₂) F *)
-    type t = variable Type_former.t [@@deriving sexp_of]
+    (** [t] represents a shallow type [ρ] is defined by the grammar:
+        ρ ::= (ɑ₁, .., ɑ₂) F = a = ... = a *)
+    type t =
+      | Var
+      | Former of variable Type_former.t
+    [@@deriving sexp_of]
+  end
 
-    (* [binding] represents a shallow type binding defined by the grammar:
-       b ::= ɑ | ɑ :: ρ *)
-    type binding = variable * t option [@@deriving sexp_of]
+  module Ambivalent_type = struct
+    type t = Shallow_type.t * rigid_variable list [@@deriving sexp_of]
+    type alias = variable * t [@@deriving sexp_of]
+    type context = alias list [@@deriving sexp_of]
 
-    (* [context] represents a shallow type context Θ. *)
-    type context = binding list
-
-    (* [of_type type_] returns the shallow encoding [Θ |> ɑ] of the 
-       deep type [type_]. *)
     let of_type type_ =
       let context = ref [] in
       let rec loop t =
         match t with
         | Type.Var var -> var
+        | Type.Rigid_var rigid_var ->
+          let var = fresh () in
+          context := (var, (Shallow_type.Var, [ rigid_var ])) :: !context;
+          var
         | Type.Former former ->
           let var = fresh () in
           let former = Type_former.map former ~f:loop in
-          context := (var, Some former) :: !context;
+          context := (var, (Shallow_type.Former former, [])) :: !context;
           var
       in
       let var = loop type_ in
@@ -104,9 +117,7 @@ module Make (Algebra : Algebra) = struct
   type 'a bound = Type_var.t list * 'a
 
   type term_binding = Term_var.t * Types.scheme
-
   and 'a term_let_binding = term_binding list * 'a bound
-
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   module Rigid = struct
@@ -117,21 +128,23 @@ module Make (Algebra : Algebra) = struct
         R ::= true | R && R | a = a | exists a. R
     *)
 
-    type t =
-      | True
-      | Exist of Shallow_type.binding list * t
-      | Conj of t list
-      | Eq of variable * variable
-    [@@deriving sexp_of]
+    module Type = struct
+      type t =
+        | Var of rigid_variable
+        | Former of t Type_former.t
+      [@@deriving sexp_of]
+    end
+
+    type t = (Type.t * Type.t) list [@@deriving sexp_of]
   end
 
-  (* ['a t] is a constraint with value type ['a]. *)
   type _ t =
     | True : unit t (** [true] *)
     | Conj : 'a t * 'b t -> ('a * 'b) t (** [C₁ && C₂] *)
     | Eq : variable * variable -> unit t (** [ɑ₁ = ɑ₂] *)
-    | Exist : Shallow_type.binding list * 'a t -> 'a t (** [exists Θ. C] *)
-    | Forall : variable list * 'a t -> 'a t (** [forall Λ. C] *)
+    | Exist : variable list * 'a t -> 'a t (** [exists Θ. C] *)
+    | Forall : rigid_variable list * 'a t -> 'a t (** [forall Λ. C] *)
+    | Alias : variable * Ambivalent_type.t -> unit t (** [a :: φ] *)
     | Instance : Term_var.t * variable -> Types.Type.t list t (** [x <= ɑ] *)
     | Def : binding list * 'a t -> 'a t
         (** [def x1 : t1 and ... and xn : tn in C] *)
@@ -144,25 +157,29 @@ module Make (Algebra : Algebra) = struct
     | Match : 'a t * 'b case list -> ('a * 'b list) t
         (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
-    | Implication : variable list * Rigid.t * 'a t -> 'a t
-        (** [forall Λ. R => C] *)
+    | Implication : Rigid.t * 'a t -> 'a t (** [R => C] *)
 
   and binding = Term_var.t * variable
-
   and def_binding = binding
 
   and 'a let_binding =
     | Let_binding of
         { rigid_vars : variable list
-        ; flexible_vars : Shallow_type.binding list
+        ; flexible_vars : Ambivalent_type.context
         ; bindings : binding list
         ; in_ : 'a t
         }
 
   and 'a let_rec_binding =
-    | Let_rec_binding of
+    | Let_rec_mono_binding of
         { rigid_vars : variable list
-        ; flexible_vars : Shallow_type.binding list
+        ; flexible_vars : Ambivalent_type.context
+        ; binding : binding
+        ; in_ : 'a t
+        }
+    | Let_rec_poly_binding of
+        { rigid_vars : variable list
+        ; annotation_bindings : Ambivalent_type.context
         ; binding : binding
         ; in_ : 'a t
         }
@@ -179,8 +196,9 @@ module Make (Algebra : Algebra) = struct
     | True -> [%sexp True]
     | Conj (t1, t2) -> [%sexp Conj (t1 : t), (t2 : t)]
     | Eq (a1, a2) -> [%sexp Eq (a1 : variable), (a2 : variable)]
-    | Exist (vars, t) ->
-      [%sexp Exist (vars : Shallow_type.binding list), (t : t)]
+    | Alias (a, ambivalent_type) ->
+      [%sexp Alias (a : variable), (ambivalent_type : Ambivalent_type.t)]
+    | Exist (vars, t) -> [%sexp Exist (vars : variable list), (t : t)]
     | Forall (vars, t) -> [%sexp Forall (vars : variable list), (t : t)]
     | Instance (x, a) -> [%sexp Instance (x : Term_var.t), (a : variable)]
     | Def (bindings, t) -> [%sexp Def (bindings : binding list), (t : t)]
@@ -191,8 +209,7 @@ module Make (Algebra : Algebra) = struct
     | Map (t, _f) -> [%sexp Map (t : t)]
     | Match (t, cases) -> [%sexp Match (t : t), (cases : case list)]
     | Decode a -> [%sexp Decode (a : variable)]
-    | Implication (vars, rigid, t) ->
-      [%sexp Implication (vars : variable list), (rigid : Rigid.t), (t : t)]
+    | Implication (rigid, t) -> [%sexp Implication (rigid : Rigid.t), (t : t)]
 
 
   and sexp_of_binding = [%sexp_of: Term_var.t * variable]
@@ -201,18 +218,26 @@ module Make (Algebra : Algebra) = struct
    fun (Let_binding { rigid_vars; flexible_vars; bindings; in_ }) ->
     [%sexp
       Let_binding (rigid_vars : variable list)
-      , (flexible_vars : Shallow_type.binding list)
+      , (flexible_vars : Ambivalent_type.context)
       , (bindings : binding list)
       , (in_ : t)]
 
 
   and sexp_of_let_rec_binding : type a. a let_rec_binding -> Sexp.t =
-   fun (Let_rec_binding { rigid_vars; flexible_vars; binding; in_ }) ->
-    [%sexp
-      Let_rec_binding (rigid_vars : variable list)
-      , (flexible_vars : Shallow_type.binding list)
-      , (binding : binding)
-      , (in_ : t)]
+   fun binding ->
+    match binding with
+    | Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ } ->
+      [%sexp
+        Let_rec_binding (rigid_vars : variable list)
+        , (flexible_vars : Ambivalent_type.context)
+        , (binding : binding)
+        , (in_ : t)]
+    | Let_rec_poly_binding { rigid_vars; annotation_bindings; binding; in_ } ->
+      [%sexp
+        Let_rec_poly_binding (rigid_vars : variable list)
+        , (annotation_bindings : Ambivalent_type.context)
+        , (binding : binding)
+        , (in_ : t)]
 
 
   and sexp_of_case : type a. a case -> Sexp.t =
@@ -271,15 +296,23 @@ module Make (Algebra : Algebra) = struct
   (* [a =~ a'] is an infix alias for [Eq], denoting the equality
      constraint on type variables. *)
   let ( =~ ) a1 a2 = Eq (a1, a2)
-
-  let ( =~= ) a1 shallow_type =
-    let a2 = fresh () in
-    Exist ([ a2, Some shallow_type ], a1 =~ a2)
-
+  let as_ a ambivalent_type = Alias (a, ambivalent_type)
 
   let ( =~- ) a1 type_ =
-    let bindings, a2 = Shallow_type.of_type type_ in
-    Exist (bindings, a1 =~ a2)
+    let context, a2 = Ambivalent_type.of_type type_ in
+    Exist
+      ( List.map ~f:fst context
+      , all_unit
+          (List.map context ~f:(fun (a, ambivalent_type) ->
+               as_ a ambivalent_type))
+        >> (a1 =~ a2) )
+
+
+  let ( &= ) rigid_variables = Shallow_type.Var, rigid_variables
+  let ( =& ) former = Shallow_type.Former former, []
+
+  let ( =&= ) former rigid_variables =
+    Shallow_type.Former former, rigid_variables
 
 
   (* [inst x a] is the constraint that instantiates [x] to [a].
@@ -331,10 +364,16 @@ module Make (Algebra : Algebra) = struct
      and binding [binding]. 
   *)
   let ( @~> ) (rigid_vars, flexible_vars, in_) binding =
-    Let_rec_binding { rigid_vars; flexible_vars; binding; in_ }
+    Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ }
+
+
+  let ( #~> ) (rigid_vars, annotation_bindings, in_) binding =
+    Let_rec_poly_binding { rigid_vars; annotation_bindings; binding; in_ }
 
 
   (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
      constraint [in_]. *)
   let let_rec ~bindings ~in_ = Let_rec (bindings, in_)
+
+  let ( #=> ) r t = Implication (r, t)
 end

@@ -38,6 +38,9 @@ module Make (Algebra : Algebra) = struct
     let map t ~f () = f (t ())
     let both t1 t2 () = t1 (), t2 ()
     let list : type a. a t list -> a list t = fun ts () -> List.map ts ~f:run
+
+    let list_append : type a. a list t -> a list t -> a list t =
+      fun ts1 ts2 () -> ts1 () @ ts2 ()
   end
 
   (* Type reconstruction requires the notion of "decoding" the efficient graphical types
@@ -53,7 +56,7 @@ module Make (Algebra : Algebra) = struct
     let decode_variable var =
       assert (
         match U.Type.get_structure var with
-        | U.Type.Var _ -> true
+        | U.Type.Var -> true
         | _ -> false);
       Type_var.of_int (U.Type.id var)
 
@@ -104,12 +107,14 @@ module Make (Algebra : Algebra) = struct
   type state =
     { generalization_state : G.state
     ; constraint_var_env : (int, U.Type.t) Hashtbl.t
+    ; constraint_rigid_var_env : (int, G.Rigid_type.t) Hashtbl.t
     }
 
   (* [make_state ()] returns a fresh solver state. *)
   let make_state () =
     { generalization_state = G.make_state ()
     ; constraint_var_env = Hashtbl.create (module Int)
+    ; constraint_rigid_var_env = Hashtbl.create (module Int)
     }
 
 
@@ -122,13 +127,12 @@ module Make (Algebra : Algebra) = struct
      [Rigid_variable_escape] if a rigid variable from [rigid_vars] escapes. 
   *)
   exception Cycle of Type.t
-  exception Rigid_variable_escape of Type_var.t
+  exception Rigid_variable_escape
 
   let exit state ~rigid_vars ~types =
     try G.exit state.generalization_state ~rigid_vars ~types with
     | U.Cycle type_ -> raise (Cycle (Decoder.decode_type_cyclic type_))
-    | G.Rigid_variable_escape type_ ->
-      raise (Rigid_variable_escape (Decoder.decode_variable type_))
+    | G.Rigid_variable_escape -> raise Rigid_variable_escape
 
 
   (* [find state var] returns the corresponding graphical type of [var],
@@ -138,6 +142,7 @@ module Make (Algebra : Algebra) = struct
      [state.constraint_var_env]. 
   *)
   exception Unbound_constraint_variable of C.variable
+  exception Unbound_constraint_rigid_variable of C.rigid_variable
 
   let find state (var : C.variable) =
     match Hashtbl.find state.constraint_var_env (var :> int) with
@@ -145,10 +150,16 @@ module Make (Algebra : Algebra) = struct
     | Some type_ -> type_
 
 
+  let find_rigid state (var : C.rigid_variable) =
+    match Hashtbl.find state.constraint_rigid_var_env (var :> int) with
+    | None -> raise (Unbound_constraint_rigid_variable var)
+    | Some type_ -> type_
+
+
   (* [bind state var type_] binds [type_] to the constraint variable [var] in 
      the environment. *)
-  let bind state (var : C.variable) type_ =
-    Hashtbl.set state.constraint_var_env ~key:(var :> int) ~data:type_
+  (* let bind state (var : C.variable) type_ =
+    Hashtbl.set state.constraint_var_env ~key:(var :> int) ~data:type_ *)
 
 
   (* [bind_flexible state (var, former_opt)] binds the flexible binding 
@@ -156,24 +167,36 @@ module Make (Algebra : Algebra) = struct
      
      Returning the graphical type mapped in the environment. 
   *)
-  let bind_flexible state (var, former_opt) =
+  let bind_flexible state (var : C.variable) =
+    let type_ = G.make_var state.generalization_state [] in
+    Hashtbl.set state.constraint_var_env ~key:(var :> int) ~data:type_;
+    type_
+
+
+  let bind_flexible_with_ambivalence
+      state
+      ((var : C.variable), (shallow_type, rigid_variables))
+    =
+    let rigid_variables = List.map ~f:(find_rigid state) rigid_variables in
     let type_ =
-      match former_opt with
-      | None -> G.make_var state.generalization_state Flexible
-      | Some former ->
+      match shallow_type with
+      | C.Shallow_type.Var ->
+        G.make_var state.generalization_state rigid_variables
+      | C.Shallow_type.Former former ->
         G.make_former
           state.generalization_state
           (Type_former.map former ~f:(find state))
+          rigid_variables
     in
-    bind state var type_;
+    Hashtbl.set state.constraint_var_env ~key:(var :> int) ~data:type_;
     type_
 
 
   (* [bind_rigid state var] binds the rigid variable [var] in the environment. 
      Returning the graphical type mapped in the environment. *)
-  let bind_rigid state var =
-    let type_ = G.make_var state.generalization_state Rigid in
-    bind state var type_;
+  let bind_rigid state (var : C.rigid_variable) =
+    let type_ = G.make_rigid_var state.generalization_state in
+    Hashtbl.set state.constraint_rigid_var_env ~key:(var :> int) ~data:type_;
     type_
 
 
@@ -202,12 +225,15 @@ module Make (Algebra : Algebra) = struct
     end
 
     type t =
-      { term_var_env : (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
-      ; equation_env : (U.Type.t * U.Type.t) list
+      { term_var_env :
+          (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
       }
 
-    let empty = { term_var_env = Map.empty (module Term_var_comparator); equation_env = [] }
-    let extend t var scheme = { t with term_var_env = Map.set t.term_var_env ~key:var ~data:scheme }
+    let empty = { term_var_env = Map.empty (module Term_var_comparator) }
+
+    let extend t var scheme =
+      { term_var_env = Map.set t.term_var_env ~key:var ~data:scheme }
+
 
     let extend_types t var_type_alist =
       List.fold_left var_type_alist ~init:t ~f:(fun t (var, type_) ->
@@ -227,6 +253,22 @@ module Make (Algebra : Algebra) = struct
       | None -> raise (Unbound_term_variable var)
   end
 
+  type 'a let_rec_poly_binding =
+    | Polymorphic of
+        { rigid_vars : Constraint.rigid_variable list
+        ; annotation_bindings : Constraint.Ambivalent_type.context
+        ; binding : Constraint.binding
+        ; in_ : 'a Constraint.t
+        }
+
+  type 'a let_rec_mono_binding =
+    | Monomorphic of
+        { rigid_vars : Constraint.rigid_variable list
+        ; flexible_vars : Constraint.Ambivalent_type.context
+        ; binding : Constraint.binding
+        ; in_ : 'a Constraint.t
+        }
+
   let rec solve
       : type a. state:state -> env:Env.t -> a Constraint.t -> a Elaborate.t
     =
@@ -243,14 +285,14 @@ module Make (Algebra : Algebra) = struct
       | Eq (a, a') ->
         unify (find state a) (find state a');
         return ()
-      | Exist (bindings, cst) ->
-        ignore (List.map ~f:(bind_flexible state) bindings : U.Type.t list);
+      | Exist (vars, cst) ->
+        ignore (List.map ~f:(bind_flexible state) vars : U.Type.t list);
         solve ~state ~env cst
       | Forall (vars, cst) ->
         (* Enter a new region *)
         enter state;
         (* Introduce the rigid variables *)
-        let rigid_vars = List.map ~f:(fun var -> bind_rigid state var) vars in
+        let rigid_vars = List.map ~f:(bind_rigid state) vars in
         (* Solve the constraint *)
         let value = solve ~state ~env cst in
         (* Generalize and exit *)
@@ -301,7 +343,8 @@ module Make (Algebra : Algebra) = struct
     (* Enter a new region *)
     G.enter state.generalization_state;
     (* Initialize fresh flexible and rigid variables *)
-    let _flexible_vars = List.map ~f:(bind_flexible state) flexible_vars
+    let _flexible_vars =
+      List.map ~f:(bind_flexible_with_ambivalence state) flexible_vars
     and rigid_vars = List.map ~f:(bind_rigid state) rigid_vars in
     (* Convert the constraint types into graphic types *)
     let types = List.map bindings ~f:(fun (_, a) -> find state a) in
@@ -345,6 +388,155 @@ module Make (Algebra : Algebra) = struct
     Elaborate.list term_let_bindings, env
 
 
+  and solve_let_rec_poly_bindings
+      : type a.
+        state:state
+        -> env:Env.t
+        -> a let_rec_poly_binding list
+        -> k:
+             (state:state
+              -> env:Env.t
+              -> a Constraint.term_let_rec_binding list Elaborate.t * Env.t)
+        -> a Constraint.term_let_rec_binding list Elaborate.t * Env.t
+    =
+    let open Constraint in
+    (* Usage of continuation k is for an arbitrary context, used for the monomorphic bindings *)
+    fun ~state ~env let_rec_poly_bindings ~k ->
+      (* Compute the type schemes for the polymorphic bindings *)
+      let schemes =
+        List.map
+          let_rec_poly_bindings
+          ~f:(fun
+               (Polymorphic
+                 { rigid_vars; annotation_bindings; binding = _, a; _ })
+             ->
+            (* Enter a new region to generalize annotation *)
+            enter state;
+            (* Initialize rigid variables and the annotation *)
+            let rigid_vars = List.map ~f:(bind_rigid state) rigid_vars
+            and _annotation =
+              List.map
+                ~f:(bind_flexible_with_ambivalence state)
+                annotation_bindings
+            in
+            (* Lookup the bound type *)
+            let type_ = find state a in
+            (* Generalize and exit *)
+            let _generalizable, schemes =
+              exit state ~rigid_vars ~types:[ type_ ]
+            in
+            (* TODO: Add assertion here: ensure generalizable = rigid_vars *)
+            let scheme = List.hd_exn schemes in
+            scheme)
+      in
+      (* Extend environment that binds the recursive polymorphic bindings *)
+      let env, bindings =
+        List.fold2_exn
+          let_rec_poly_bindings
+          schemes
+          ~init:(env, [])
+          ~f:(fun (env, bindings) (Polymorphic { binding = x, _; _ }) scheme ->
+            Env.extend env x scheme, (x, scheme) :: bindings)
+      in
+      let term_let_mono_bindings, env = k ~state ~env in
+      (* We now assert the constraints in the polymorphic bindings *)
+      let values =
+        List.map
+          let_rec_poly_bindings
+          ~f:(fun (Polymorphic { in_; rigid_vars; annotation_bindings; _ }) ->
+            enter state;
+            let rigid_vars = List.map ~f:(bind_rigid state) rigid_vars
+            and _annotation_binding =
+              List.map
+                ~f:(bind_flexible_with_ambivalence state)
+                annotation_bindings
+            in
+            let value = solve ~state ~env in_ in
+            let generalizable, _ = exit state ~rigid_vars ~types:[] in
+            generalizable, value)
+      in
+      let make_term_let_rec_binding (var, scheme) (generalizable, value)
+          : _ term_let_rec_binding Elaborate.t
+        =
+       fun () ->
+        ( (var, Decoder.decode_scheme scheme)
+        , (List.map generalizable ~f:Decoder.decode_variable, value ()) )
+      in
+      ( Elaborate.list_append
+          (List.map2_exn bindings values ~f:make_term_let_rec_binding
+          |> Elaborate.list)
+          term_let_mono_bindings
+      , env )
+
+
+  and solve_let_rec_mono_bindings
+      : type a.
+        state:state
+        -> env:Env.t
+        -> a let_rec_mono_binding list
+        -> a Constraint.term_let_rec_binding list Elaborate.t * Env.t
+    =
+    let open Constraint in
+    fun ~state ~env let_rec_mono_bindings ->
+      (* Enter a new region. *)
+      enter state;
+      (* Initialize the fresh flexible and rigid variables for each of the bindings. *)
+      let _flexible_vars =
+        List.map
+          let_rec_mono_bindings
+          ~f:(fun (Monomorphic { flexible_vars; _ }) -> flexible_vars)
+        |> List.concat
+        |> List.map ~f:(bind_flexible_with_ambivalence state)
+      and rigid_vars =
+        List.map
+          let_rec_mono_bindings
+          ~f:(fun (Monomorphic { rigid_vars; _ }) -> rigid_vars)
+        |> List.concat
+        |> List.map ~f:(bind_rigid state)
+      in
+      (* Convert the constraint types into graphical types. *)
+      let types =
+        List.map
+          let_rec_mono_bindings
+          ~f:(fun (Monomorphic { binding = _, a; _ }) -> find state a)
+      in
+      (* The recursive environment binds the bindings from the [let_rec_bindings]. *)
+      let rec_env =
+        Env.extend_bindings
+          state
+          env
+          (List.map
+             ~f:(fun (Monomorphic { binding; _ }) -> binding)
+             let_rec_mono_bindings)
+      in
+      (* Solve the values *)
+      let values =
+        List.map let_rec_mono_bindings ~f:(fun (Monomorphic { in_; _ }) ->
+            solve ~state ~env:rec_env in_)
+      in
+      (* Generalize and exit *)
+      let generalizable, schemes = exit state ~rigid_vars ~types in
+      (* Compute extended environment and bindings. *)
+      let env, bindings =
+        List.zip_exn let_rec_mono_bindings schemes
+        |> List.fold_left
+             ~init:(env, [])
+             ~f:(fun (env, bindings) (Monomorphic { binding = x, _; _ }, s) ->
+               Env.extend env x s, (x, s) :: bindings)
+      in
+      let make_term_let_rec_binding (var, scheme) value
+          : _ term_let_rec_binding Elaborate.t
+        =
+       fun () ->
+        ( (var, Decoder.decode_scheme scheme)
+        , (List.map generalizable ~f:Decoder.decode_variable, value ()) )
+      in
+      (* Return recursive bindings and extended environment *)
+      ( List.map2_exn bindings values ~f:make_term_let_rec_binding
+        |> Elaborate.list
+      , env )
+
+
   and solve_let_rec_bindings
       : type a.
         state:state
@@ -354,59 +546,21 @@ module Make (Algebra : Algebra) = struct
     =
     let open Constraint in
     fun ~state ~env bindings ->
-      (* Enter a new region. *)
-      enter state;
-      (* Initialize the fresh flexible and rigid variables for each of the bindings. *)
-      let _flexible_vars =
-        List.map bindings ~f:(fun (Let_rec_binding { flexible_vars; _ }) ->
-            flexible_vars)
-        |> List.concat
-        |> List.map ~f:(bind_flexible state)
-      and rigid_vars =
-        List.map bindings ~f:(fun (Let_rec_binding { rigid_vars; _ }) ->
-            rigid_vars)
-        |> List.concat
-        |> List.map ~f:(bind_rigid state)
+      (* Partition bindings into polymorphic and monomorphic bindings *)
+      let mono, poly =
+        List.partition_map bindings ~f:(fun binding ->
+            match binding with
+            | Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ }
+              ->
+              Either.First
+                (Monomorphic { rigid_vars; flexible_vars; binding; in_ })
+            | Let_rec_poly_binding
+                { rigid_vars; annotation_bindings; binding; in_ } ->
+              Either.Second
+                (Polymorphic { rigid_vars; annotation_bindings; binding; in_ }))
       in
-      (* Convert the constraint types into graphical types. *)
-      let types =
-        List.map bindings ~f:(fun (Let_rec_binding { binding = _, a; _ }) ->
-            find state a)
-      in
-      (* The recursive environment binds the bindings from the [let_rec_bindings]. *)
-      let rec_env =
-        Env.extend_bindings
-          state
-          env
-          (List.map
-             ~f:(fun (Let_rec_binding { binding; _ }) -> binding)
-             bindings)
-      in
-      (* Solve the values *)
-      let values =
-        List.map bindings ~f:(fun (Let_rec_binding { in_; _ }) ->
-            solve ~state ~env:rec_env in_)
-      in
-      (* Generalize and exit *)
-      let generalizable, schemes = exit state ~rigid_vars ~types in
-      (* Compute extended environment and bindings. *)
-      let env, bindings =
-        List.zip_exn bindings schemes
-        |> List.fold_left
-             ~init:(env, [])
-             ~f:(fun (env, bindings) (Let_rec_binding { binding = x, _; _ }, s)
-                -> Env.extend env x s, (x, s) :: bindings)
-      in
-      (* Helper function for constructing term let rec bindings. *)
-      let make_term_let_rec_binding (var, scheme) value
-          : _ term_let_rec_binding Elaborate.t
-        =
-       fun () -> (var, Decoder.decode_scheme scheme), (List.map generalizable ~f:Decoder.decode_variable, value ())
-      in
-      (* Return recursive bindings and extended environment *)
-      ( List.map2_exn bindings values ~f:make_term_let_rec_binding
-        |> Elaborate.list
-      , env )
+      solve_let_rec_poly_bindings ~state ~env poly ~k:(fun ~state ~env ->
+          solve_let_rec_mono_bindings ~state ~env mono)
 
 
   type error =
@@ -414,7 +568,7 @@ module Make (Algebra : Algebra) = struct
     | `Cycle of Type.t
     | `Unbound_term_variable of Term_var.t
     | `Unbound_constraint_variable of C.variable
-    | `Rigid_variable_escape of Type_var.t
+    | `Rigid_variable_escape
     ]
 
   let solve cst =
@@ -424,7 +578,7 @@ module Make (Algebra : Algebra) = struct
     with
     | Unify (t1, t2) -> Error (`Unify (t1, t2))
     | Cycle t -> Error (`Cycle t)
-    | Rigid_variable_escape a -> Error (`Rigid_variable_escape a)
+    | Rigid_variable_escape -> Error `Rigid_variable_escape
     | Env.Unbound_term_variable x -> Error (`Unbound_term_variable x)
     | Unbound_constraint_variable a -> Error (`Unbound_constraint_variable a)
 end

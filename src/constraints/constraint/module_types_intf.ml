@@ -60,6 +60,10 @@ module Type_former = struct
     exception Iter2
 
     val iter2_exn : 'a t -> 'b t -> f:('a -> 'b -> unit) -> unit
+
+    exception Fold2
+
+    val fold2_exn : 'a t -> 'b t -> f:('a -> 'b -> 'c -> 'c) -> init:'c -> 'c
   end
 end
 

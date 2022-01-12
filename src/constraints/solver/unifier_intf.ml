@@ -53,32 +53,6 @@ module type S = sig
       [Metadata]. *)
   type metadata
 
-  (** A rigid variable, or skolem constant, is a type former of arity 0. 
-      They play a special role in Ambivalent types. 
-  *)
-  module Rigid_var : sig
-    type t [@@deriving sexp_of, compare]
-
-    val make : unit -> t
-
-    val hash : t -> int
-  end
-
-  module Rigid_path : sig
-    (** [Rigid_path] defines the notion of a rigid path introduced 
-        by Ambivalent types. 
-        
-        A rigid path [t] is either 
-        - a rigid variable [a]
-        - a path of the form [t.i]. 
-    *)
-    type t [@@deriving sexp_of, compare]
-
-    val make : Rigid_var.t -> t
-    val dot : t -> int -> t
-    val hash : t -> int
-  end
-
   module Type : sig
     (** [t] represents a type. See "graphical types". *)
     type t [@@deriving sexp_of, compare]
@@ -86,9 +60,6 @@ module type S = sig
     type structure =
       | Var
       | Former of t former
-
-    (** [ambivalence] models the set of equivalent rigid types (defined by a path). *)
-    type ambivalence = Rigid_path.t Hash_set.t
 
     val to_dot : t -> string
 
@@ -107,12 +78,6 @@ module type S = sig
     (** [set_structure t structure] sets the structure of [t] to [structure]. *)
     val set_structure : t -> structure -> unit
 
-    (** [get_ambivalence t] returns the ambivalent part of the type [t]. *)
-    val get_ambivalence : t -> ambivalence
-
-    (** [set_ambivalence t ambivalence] sets the ambivalence of [t] to [ambivalence]. *)
-    val set_ambivalence : t -> ambivalence -> unit
-
     (** [get_metadata t] returns the metadata of [t]. *)
     val get_metadata : t -> metadata
 
@@ -127,16 +92,16 @@ module type S = sig
 
   (** [make structure metadata] returns a fresh type w/ structure [structure] and
       metadata [metadata]. *)
-  val make : Type.structure -> Type.ambivalence -> metadata -> Type.t
+  val make : Type.structure -> metadata -> Type.t
 
   (** [make_var flexibility metadata] returns a fresh variable 
      with flexibility [flexibility], and metadata [metadata]. *)
-  val make_var : Type.ambivalence -> metadata -> Type.t
+  val make_var : metadata -> Type.t
 
   (** [make_former former metadata] returns a fresh type former
       with metadata [metadata]. *)
 
-  val make_former : Type.t former -> Type.ambivalence -> metadata -> Type.t
+  val make_former : Type.t former -> metadata -> Type.t
 
   (** [unify t1 t2] equates the graphical type nodes [t1] and [t2], 
       and forms a multi-equation node.

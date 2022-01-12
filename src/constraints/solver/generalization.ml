@@ -128,16 +128,50 @@ module Make (Former : Type_former.S) = struct
     let generalize t = t.is_generic <- true
   end
 
-  module Unifier = Unifier.Make (Former) (Tag)
+  module rec Rigid_tag : sig
+    include Unifier.Metadata
+
+    val empty : unit -> t 
+    val types : t -> E.Unifier.Type.t list
+  end = struct
+    module Type_comparator = struct
+      type t = E.Unifier.Type.t
+      include Comparator.Make (E.Unifier.Type)
+    end
+
+    type t =
+      { types : (E.Unifier.Type.t, Type_comparator.comparator_witness) Set.t }
+
+    let empty () = { types = Set.empty (module Type_comparator) }
+
+    let sexp_of_t _t = Sexp.Atom "Rigid_tag"
+    let merge t1 t2 = { types = Set.union t1.types t2.types }
+    let types t = t.types |> Set.to_list
+  end
+
+  and E :
+    (Equations.S
+      with type 'a former := 'a Former.t
+       and type metadata := Tag.t
+       and type rigid_metadata := Rigid_tag.t) =
+    Equations.Make (Former) (Tag) (Rigid_tag)
+
+  module Equations = E
+  module Unifier = Equations.Unifier
 
   (* [U] is an alias, used for a short prefix below. *)
   module U = Unifier
+  module Rigid_type = Equations.Rigid_type
+  module Ambivalence = Equations.Ambivalence
+
+  let get_ambivalence type_ = fst (U.Type.get_metadata type_)
+  let get_tag type_ = snd (U.Type.get_metadata type_)
 
   (* [set_level type_ level] sets the level of the type [type_] to [level]. *)
-  let set_level type_ level = Tag.set_level (U.Type.get_metadata type_) level
+  let set_level type_ level = Tag.set_level (get_tag type_) level
 
   (* [get_level type_] returns the level of type [type_]. *)
-  let get_level type_ = Tag.get_level (U.Type.get_metadata type_)
+  let get_level type_ = Tag.get_level (get_tag type_)
 
   (* [update_level type_ level] is equivalent to [set_level type_ (min (get_level type_) level)]. *)
   let update_level type_ level =
@@ -145,27 +179,27 @@ module Make (Former : Type_former.S) = struct
 
 
   (* [is_generic type_] returns whether the current type [type_] is "generic". *)
-  let is_generic type_ = Tag.is_generic (U.Type.get_metadata type_)
+  let is_generic type_ = Tag.is_generic (get_tag type_)
 
   (* [is_generic_at type_ level] returns whether the current type [type] is 
      generic and is generalized at level [level]. *)
   let is_generic_at type_ level =
-    let tag = U.Type.get_metadata type_ in
+    let tag = get_tag type_ in
     Tag.is_generic tag && Tag.get_level tag = level
 
 
   (* [generalize_type type_] generalizes the type [type_]. *)
-  let generalize_type type_ = Tag.generalize (U.Type.get_metadata type_)
+  let generalize_type type_ = Tag.generalize (get_tag type_)
 
   (* [make_var_] and [make_former_] are internal functions for making type 
      variables and type formers wrapping [Unifier]. *)
 
-  let make_var_ flexibility ambivalence level =
-    U.make_var flexibility ambivalence { level; is_generic = false }
+  let make_var_ ambivalence level =
+    U.make_var (ambivalence, { level; is_generic = false })
 
 
   let make_former_ former ambivalence level =
-    U.make_former former ambivalence { level; is_generic = false }
+    U.make_former former (ambivalence, { level; is_generic = false })
 
 
   (* Generalization regions
@@ -184,7 +218,10 @@ module Make (Former : Type_former.S) = struct
      the nodes w/ a given level. 
   *)
 
-  type region = U.Type.t Hash_set.t
+  type region =
+    { flexibles : U.Type.t Hash_set.t
+    ; mutable equations : Equations.state
+    }
 
   (* State
   
@@ -204,22 +241,25 @@ module Make (Former : Type_former.S) = struct
 
   (* [make_state ()] makes a new empty state. *)
 
-  let make_state () = { current_level = outermost_level - 1; regions = Vec.make () }
+  let make_state () =
+    { current_level = outermost_level - 1; regions = Vec.make () }
+
 
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
 
   let set_region state type_ =
     (* Stdio.print_string "set_region"; *)
-    Hash_set.add (Vec.get_exn state.regions (get_level type_)) type_
+    Hash_set.add (Vec.get_exn state.regions (get_level type_)).flexibles type_
 
 
   (* [make_var] creates a fresh unification variable, setting it's level
      and region. *)
 
-  let make_var state flexibility ambivalence =
-    let var = make_var_ flexibility ambivalence state.current_level in
+  let make_var state ambivalence =
+    let var = make_var_ ambivalence state.current_level in
     set_region state var;
     var
+
 
 
   (* [make_former] creates a fresh unification type node 
@@ -233,14 +273,42 @@ module Make (Former : Type_former.S) = struct
     former
 
 
+  let get_equations state =
+    (Vec.get_exn state.regions state.current_level).equations
+
+
+  let set_equations state equations =
+    (Vec.get_exn state.regions state.current_level).equations <- equations
+
+
+
+  let make_rigid_var state = 
+    let equations, var = Equations.make_rigid_var (get_equations state) (Rigid_tag.empty ()) in
+    set_equations state equations;
+    var
+
+  let make_rigid_former state former = 
+    let equations, var = Equations.make_rigid_former (get_equations state) former (Rigid_tag.empty ()) in
+    set_equations state equations;
+    var
+
+
   (* [enter ()] creates a new stack frame and enter it. *)
 
   let enter state =
+    (* When entering a new level, we take a copy of the persistent equational state *)
+    let previous_equations =
+      if state.current_level = outermost_level - 1
+      then Equations.make_state ()
+      else get_equations state
+    in
     state.current_level <- state.current_level + 1;
     Vec.push
-      (Hash_set.create (module U.Type))
+      { flexibles = Hash_set.create (module U.Type)
+      ; equations = previous_equations
+      }
       state.regions
-      
+
 
   (* A scheme in "graphic types" simply consists of a node w/ a pointer
      to a graphic type node. 
@@ -270,18 +338,25 @@ module Make (Former : Type_former.S) = struct
      entire queue when updating).
   *)
 
-  (* [is_young state type_] determines whether [type_] is in the young region. *)
-
-  let is_young state type_ =
-    (* Stdio.print_string "is_young"; *)
-    Hash_set.mem (Vec.get_exn state.regions state.current_level) type_
-
-
   (* [young_region state] returns the "young" region in [state] *)
 
-  let young_region state = 
+  let young_region state =
     (* Stdio.print_string "young_region"; *)
-    Vec.get_exn state.regions state.current_level
+    (Vec.get_exn state.regions state.current_level).flexibles
+
+
+  let get_rigid_tag state rigid_type =
+    let equations, rigid_tag =
+      Rigid_type.get_metadata (get_equations state) rigid_type
+    in
+    set_equations state equations;
+    rigid_tag
+
+
+  (* let set_rigid_tag state rigid_type rigid_tag =
+    set_equations
+      state
+      (Rigid_type.set_metadata (get_equations state) rigid_type rigid_tag) *)
 
   (* Generalization performs 4 functions:
       1) Propagate delayed level updated to nodes
@@ -325,6 +400,15 @@ module Make (Former : Type_former.S) = struct
        
        To implement this, we convert the young region into a sorted array
        which we iterate over to begin the traversal. *)
+    (* [is_young state type_] determines whether [type_] is in the young region. *)
+    let is_young =
+      let young_region =
+        Hash_set.of_list
+          (module Int)
+          (young_region state |> Hash_set.to_list |> List.map ~f:U.Type.id)
+      in
+      fun type_ -> Hash_set.mem young_region (U.Type.id type_)
+    in
     let young_region = young_region state |> Hash_set.to_array in
     Array.sort young_region ~compare:(fun t1 t2 ->
         Int.compare (get_level t1) (get_level t2));
@@ -341,10 +425,10 @@ module Make (Former : Type_former.S) = struct
           we update it's level. *)
         update_level type_ level;
         (* If a node is old, then we stop traversing (hence the [is_young] check). *)
-        if is_young state type_
+        if is_young type_
         then (
           match U.Type.get_structure type_ with
-          | U.Type.Var _ ->
+          | U.Type.Var ->
             (* In the variable case, we cannot traverse any further
               and no updates need be performed (since the level update)
               is performed above. 
@@ -373,6 +457,37 @@ module Make (Former : Type_former.S) = struct
     Array.iter ~f:(fun type_ -> loop type_ (get_level type_)) young_region
 
 
+  let get_rigid_structure state rigid_type =
+    let equations, structure =
+      Rigid_type.get_structure (get_equations state) rigid_type
+    in
+    set_equations state equations;
+    structure
+
+
+  let get_rigid_level state rigid_type =
+    let types = get_rigid_tag state rigid_type |> Rigid_tag.types in
+    List.fold_left types ~init:state.current_level ~f:(fun level type_ ->
+        min level (get_level type_))
+
+
+  let set_ambivalence type_ ambivalence =
+    U.Type.set_metadata type_ (ambivalence, get_tag type_)
+
+
+  let check_consistency state =
+    let region = young_region state in
+    let equations, is_consistent =
+      Equations.consistency_check
+        (get_equations state)
+        (Hash_set.filter region ~f:(fun type_ ->
+             get_level type_ = state.current_level)
+        |> Hash_set.to_list)
+    in
+    set_equations state equations;
+    is_consistent
+
+
   (* [generalize state] generalizes variables in the current
      region according to the new levels propagated by [update_levels].
      
@@ -385,35 +500,50 @@ module Make (Former : Type_former.S) = struct
      Once generalized, we compute the list of generalizable
      variables. 
   *)
-  let generalize state =
-    (* Get the young region, since we will be performing several traversals
-       of it. *)
-    let region = young_region state in
+  let generalize state rigid_vars =
     (* Iterate through the young region, generalizing variables 
        (or updating their region).  *)
-    Hash_set.iter region ~f:(fun type_ ->
+    Hash_set.iter (young_region state) ~f:(fun type_ ->
         if get_level type_ < state.current_level
         then set_region state type_
         else generalize_type type_);
+    (* Flexize the rigid variables, we know that [rigid_vars] only consist of rigid 
+       variables, and due to consistency, we know that all types w/ such an ambivalence
+       may only be consistent if they are variables.  *)
+    let new_rigid_vars =
+      List.map rigid_vars ~f:(fun rigid_var -> rigid_var, make_var state [])
+    in
+    List.iter new_rigid_vars ~f:(fun (rigid_var, var) ->
+        (* Determine the variables w/ rigid ambivalence. *)
+        let types = Rigid_tag.types (get_rigid_tag state rigid_var) in
+        (* Unify them with the new flexible variable. *)
+        List.iter types ~f:(fun type_ ->
+            assert (get_level type_ = state.current_level);
+            U.unify var type_);
+        (* Assert the ambivalence of the variable [var] is empty. 
+           We set the ambivalence since due to the unification, it will now contain
+           a list of the rigid variables. *)
+        set_ambivalence var []);
     (* Iterate through the young region, computing the list
        of generalizable variables. *)
     let generalizable =
-      region
+      young_region state
       (* Invariant, all nodes in [region] are now generic *)
       |> Hash_set.filter ~f:(fun type_ ->
              match U.Type.get_structure type_ with
-             | U.Type.Var flex ->
-               flex.flexibility <- Rigid;
-               true
+             | U.Type.Var -> true
              | U.Type.Former _ -> false)
       |> Hash_set.to_list
     in
     (* Clear the young region now *)
-    Hash_set.clear region;
+    Hash_set.clear (young_region state);
+    (* Clear the equational state *)
+    set_equations state (Equations.make_state ());
     generalizable
 
 
-  exception Rigid_variable_escape of U.Type.t
+  exception Rigid_variable_escape
+  exception Inconsistent_types
 
   (* [exit state ~rigid_vars ~types] performs generalization
      of [types], returns the list of generalized variables and schemes.
@@ -428,12 +558,17 @@ module Make (Former : Type_former.S) = struct
     update_levels state;
     (* Check that rigid variables have no escaped. *)
     (match
-       List.find rigid_vars ~f:(fun var -> get_level var < state.current_level)
+       List.find rigid_vars ~f:(fun var ->
+           match get_rigid_structure state var with
+           | Rigid_type.Var -> get_rigid_level state var < state.current_level
+           | Rigid_type.Former _ -> false)
      with
     | None -> ()
-    | Some var -> raise (Rigid_variable_escape var));
+    | Some _ -> raise Rigid_variable_escape);
+    (* Now check consistency of the young region. *)
+    if not (check_consistency state) then raise Inconsistent_types;
     (* Generalize variables. *)
-    let generalizable = generalize state in
+    let generalizable = generalize state rigid_vars in
     (* Helper function for constructing a new type scheme *)
     let make_scheme =
       let level = state.current_level in
@@ -468,7 +603,7 @@ module Make (Former : Type_former.S) = struct
            otherwise recurse.  
         *)
         match U.Type.get_structure type_ with
-        | U.Type.Var _ -> variables := type_ :: !variables
+        | U.Type.Var -> variables := type_ :: !variables
         | U.Type.Former former -> Former.iter ~f:loop former)
     in
     loop root;
@@ -511,7 +646,7 @@ module Make (Former : Type_former.S) = struct
         | Not_found_s _ ->
           (* Create arbitrary node. We use a variable initially,
              but will set the structure later on. See below. *)
-          let new_type = make_var state Flexible in
+          let new_type = make_var state (get_ambivalence type_) in
           (* Set the mapping from the original node to the copied 
              node. *)
           Hashtbl.set copied ~key:type_ ~data:new_type;
@@ -519,14 +654,14 @@ module Make (Former : Type_former.S) = struct
              structure of [typ].  *)
           let structure' =
             match U.Type.get_structure type_ with
-            | U.Type.Var _ ->
+            | U.Type.Var ->
               (* The condition [get_level typ = level] now asserts
                  [is_generic_at typ level], hence we need to instantiate
                  the variable, adding it to the instance variables. 
               *)
               if get_level type_ = level
               then instance_variables := new_type :: !instance_variables;
-              U.Type.Var { flexibility = Flexible }
+              U.Type.Var
             | U.Type.Former former -> U.Type.Former (Former.map ~f:copy former)
           in
           U.Type.set_structure new_type structure';
