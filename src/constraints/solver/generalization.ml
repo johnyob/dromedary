@@ -204,7 +204,9 @@ module Make (Former : Type_former.S) = struct
 
   (* [make_state ()] makes a new empty state. *)
 
-  let make_state () = { current_level = outermost_level - 1; regions = Vec.make () }
+  let make_state () =
+    { current_level = outermost_level - 1; regions = Vec.make () }
+
 
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
 
@@ -237,10 +239,8 @@ module Make (Former : Type_former.S) = struct
 
   let enter state =
     state.current_level <- state.current_level + 1;
-    Vec.push
-      (Hash_set.create (module U.Type))
-      state.regions
-      
+    Vec.push (Hash_set.create (module U.Type)) state.regions
+
 
   (* A scheme in "graphic types" simply consists of a node w/ a pointer
      to a graphic type node. 
@@ -270,18 +270,12 @@ module Make (Former : Type_former.S) = struct
      entire queue when updating).
   *)
 
-  (* [is_young state type_] determines whether [type_] is in the young region. *)
-
-  let is_young state type_ =
-    (* Stdio.print_string "is_young"; *)
-    Hash_set.mem (Vec.get_exn state.regions state.current_level) type_
-
-
   (* [young_region state] returns the "young" region in [state] *)
 
-  let young_region state = 
+  let young_region state =
     (* Stdio.print_string "young_region"; *)
     Vec.get_exn state.regions state.current_level
+
 
   (* Generalization performs 4 functions:
       1) Propagate delayed level updated to nodes
@@ -325,6 +319,15 @@ module Make (Former : Type_former.S) = struct
        
        To implement this, we convert the young region into a sorted array
        which we iterate over to begin the traversal. *)
+    (* [is_young state type_] determines whether [type_] is in the young region. *)
+    let is_young =
+      let young_region =
+        Hash_set.of_list
+          (module Int)
+          (young_region state |> Hash_set.to_list |> List.map ~f:U.Type.id)
+      in
+      fun type_ -> Hash_set.mem young_region (U.Type.id type_)
+    in
     let young_region = young_region state |> Hash_set.to_array in
     Array.sort young_region ~compare:(fun t1 t2 ->
         Int.compare (get_level t1) (get_level t2));
@@ -341,7 +344,7 @@ module Make (Former : Type_former.S) = struct
           we update it's level. *)
         update_level type_ level;
         (* If a node is old, then we stop traversing (hence the [is_young] check). *)
-        if is_young state type_
+        if is_young type_
         then (
           match U.Type.get_structure type_ with
           | U.Type.Var _ ->
