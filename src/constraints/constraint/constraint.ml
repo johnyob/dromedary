@@ -104,9 +104,7 @@ module Make (Algebra : Algebra) = struct
   type 'a bound = Type_var.t list * 'a
 
   type term_binding = Term_var.t * Types.scheme
-
   and 'a term_let_binding = term_binding list * 'a bound
-
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   (* ['a t] is a constraint with value type ['a]. *)
@@ -130,7 +128,6 @@ module Make (Algebra : Algebra) = struct
     | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
 
   and binding = Term_var.t * variable
-
   and def_binding = binding
 
   and 'a let_binding =
@@ -142,9 +139,15 @@ module Make (Algebra : Algebra) = struct
         }
 
   and 'a let_rec_binding =
-    | Let_rec_binding of
+    | Let_rec_mono_binding of
         { rigid_vars : variable list
         ; flexible_vars : Shallow_type.binding list
+        ; binding : binding
+        ; in_ : 'a t
+        }
+    | Let_rec_poly_binding of
+        { rigid_vars : variable list
+        ; annotation_bindings : Shallow_type.binding list
         ; binding : binding
         ; in_ : 'a t
         }
@@ -187,12 +190,20 @@ module Make (Algebra : Algebra) = struct
 
 
   and sexp_of_let_rec_binding : type a. a let_rec_binding -> Sexp.t =
-   fun (Let_rec_binding { rigid_vars; flexible_vars; binding; in_ }) ->
-    [%sexp
-      Let_rec_binding (rigid_vars : variable list)
-      , (flexible_vars : Shallow_type.binding list)
-      , (binding : binding)
-      , (in_ : t)]
+   fun binding ->
+    match binding with
+    | Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ } ->
+      [%sexp
+        Let_rec_binding (rigid_vars : variable list)
+        , (flexible_vars : Shallow_type.binding list)
+        , (binding : binding)
+        , (in_ : t)]
+    | Let_rec_poly_binding { rigid_vars; annotation_bindings; binding; in_ } ->
+      [%sexp
+        Let_rec_poly_binding (rigid_vars : variable list)
+        , (annotation_bindings : Shallow_type.binding list)
+        , (binding : binding)
+        , (in_ : t)]
 
 
   and sexp_of_case : type a. a case -> Sexp.t =
@@ -311,7 +322,11 @@ module Make (Algebra : Algebra) = struct
      and binding [binding]. 
   *)
   let ( @~> ) (rigid_vars, flexible_vars, in_) binding =
-    Let_rec_binding { rigid_vars; flexible_vars; binding; in_ }
+    Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ }
+
+
+  let ( #~> ) (rigid_vars, annotation_bindings, in_) binding =
+    Let_rec_poly_binding { rigid_vars; annotation_bindings; binding; in_ }
 
 
   (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 

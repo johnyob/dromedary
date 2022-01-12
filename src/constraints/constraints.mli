@@ -203,6 +203,11 @@ module Make (Algebra : Algebra) : sig
     :  variable list * Shallow_type.binding list * 'a t
     -> binding
     -> 'a let_rec_binding
+  
+  val ( #~> )
+    :  variable list * Shallow_type.binding list * 'a t
+    -> binding
+    -> 'a let_rec_binding
 
   (** [let_ ~bindings ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
   val let_

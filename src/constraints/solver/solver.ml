@@ -38,6 +38,9 @@ module Make (Algebra : Algebra) = struct
     let map t ~f () = f (t ())
     let both t1 t2 () = t1 (), t2 ()
     let list : type a. a t list -> a list t = fun ts () -> List.map ts ~f:run
+
+    let list_append : type a. a list t -> a list t -> a list t =
+      fun ts1 ts2 () -> ts1 () @ ts2 ()
   end
 
   (* Type reconstruction requires the notion of "decoding" the efficient graphical types
@@ -225,6 +228,22 @@ module Make (Algebra : Algebra) = struct
       | None -> raise (Unbound_term_variable var)
   end
 
+  type 'a let_rec_poly_binding =
+    | Polymorphic of
+        { rigid_vars : Constraint.variable list
+        ; annotation_bindings : Constraint.Shallow_type.binding list
+        ; binding : Constraint.binding
+        ; in_ : 'a Constraint.t
+        }
+
+  type 'a let_rec_mono_binding =
+    | Monomorphic of
+        { rigid_vars : Constraint.variable list
+        ; flexible_vars : Constraint.Shallow_type.binding list
+        ; binding : Constraint.binding
+        ; in_ : 'a Constraint.t
+        }
+
   let rec solve
       : type a. state:state -> env:Env.t -> a Constraint.t -> a Elaborate.t
     =
@@ -342,6 +361,151 @@ module Make (Algebra : Algebra) = struct
     Elaborate.list term_let_bindings, env
 
 
+  and solve_let_rec_poly_bindings
+      : type a.
+        state:state
+        -> env:Env.t
+        -> a let_rec_poly_binding list
+        -> k:
+             (state:state
+              -> env:Env.t
+              -> a Constraint.term_let_rec_binding list Elaborate.t * Env.t)
+        -> a Constraint.term_let_rec_binding list Elaborate.t * Env.t
+    =
+    let open Constraint in
+    (* Usage of continuation k is for an arbitrary context, used for the monomorphic bindings *)
+    fun ~state ~env let_rec_poly_bindings ~k ->
+      (* Compute the type schemes for the polymorphic bindings *)
+      let schemes =
+        List.map
+          let_rec_poly_bindings
+          ~f:(fun
+               (Polymorphic
+                 { rigid_vars; annotation_bindings; binding = _, a; _ })
+             ->
+            (* Enter a new region to generalize annotation *)
+            enter state;
+            (* Initialize rigid variables and the annotation *)
+            let rigid_vars = List.map ~f:(bind_rigid state) rigid_vars
+            and _annotation =
+              List.map ~f:(bind_flexible state) annotation_bindings
+            in
+            (* Lookup the bound type *)
+            let type_ = find state a in
+            (* Generalize and exit *)
+            let _generalizable, schemes =
+              exit state ~rigid_vars ~types:[ type_ ]
+            in
+            (* TODO: Add assertion here: ensure generalizable = rigid_vars *)
+            let scheme = List.hd_exn schemes in
+            scheme)
+      in
+      (* Extend environment that binds the recursive polymorphic bindings *)
+      let env, bindings =
+        List.fold2_exn
+          let_rec_poly_bindings
+          schemes
+          ~init:(env, [])
+          ~f:(fun (env, bindings) (Polymorphic { binding = x, _; _ }) scheme ->
+            Env.extend env x scheme, (x, scheme) :: bindings)
+      in
+      let term_let_mono_bindings, env = k ~state ~env in
+      (* We now assert the constraints in the polymorphic bindings *)
+      let values =
+        List.map
+          let_rec_poly_bindings
+          ~f:(fun (Polymorphic { in_; rigid_vars; annotation_bindings; _ }) ->
+            enter state;
+            let rigid_vars = List.map ~f:(bind_rigid state) rigid_vars
+            and _annotation_binding =
+              List.map ~f:(bind_flexible state) annotation_bindings
+            in
+            let value = solve ~state ~env in_ in
+            let generalizable, _ = exit state ~rigid_vars ~types:[] in
+            generalizable, value)
+      in
+      let make_term_let_rec_binding (var, scheme) (generalizable, value)
+          : _ term_let_rec_binding Elaborate.t
+        =
+       fun () ->
+        ( (var, Decoder.decode_scheme scheme)
+        , (List.map generalizable ~f:Decoder.decode_variable, value ()) )
+      in
+      ( Elaborate.list_append
+          (List.map2_exn bindings values ~f:make_term_let_rec_binding
+          |> Elaborate.list)
+          term_let_mono_bindings
+      , env )
+
+
+  and solve_let_rec_mono_bindings
+      : type a.
+        state:state
+        -> env:Env.t
+        -> a let_rec_mono_binding list
+        -> a Constraint.term_let_rec_binding list Elaborate.t * Env.t
+    =
+    let open Constraint in
+    fun ~state ~env let_rec_mono_bindings ->
+      (* Enter a new region. *)
+      enter state;
+      (* Initialize the fresh flexible and rigid variables for each of the bindings. *)
+      let _flexible_vars =
+        List.map
+          let_rec_mono_bindings
+          ~f:(fun (Monomorphic { flexible_vars; _ }) -> flexible_vars)
+        |> List.concat
+        |> List.map ~f:(bind_flexible state)
+      and rigid_vars =
+        List.map
+          let_rec_mono_bindings
+          ~f:(fun (Monomorphic { rigid_vars; _ }) -> rigid_vars)
+        |> List.concat
+        |> List.map ~f:(bind_rigid state)
+      in
+      (* Convert the constraint types into graphical types. *)
+      let types =
+        List.map
+          let_rec_mono_bindings
+          ~f:(fun (Monomorphic { binding = _, a; _ }) -> find state a)
+      in
+      (* The recursive environment binds the bindings from the [let_rec_bindings]. *)
+      let rec_env =
+        Env.extend_bindings
+          state
+          env
+          (List.map
+             ~f:(fun (Monomorphic { binding; _ }) -> binding)
+             let_rec_mono_bindings)
+      in
+      (* Solve the values *)
+      let values =
+        List.map let_rec_mono_bindings ~f:(fun (Monomorphic { in_; _ }) ->
+            solve ~state ~env:rec_env in_)
+      in
+      (* Generalize and exit *)
+      let generalizable, schemes = exit state ~rigid_vars ~types in
+      (* Compute extended environment and bindings. *)
+      let env, bindings =
+        List.zip_exn let_rec_mono_bindings schemes
+        |> List.fold_left
+             ~init:(env, [])
+             ~f:(fun (env, bindings) (Monomorphic { binding = x, _; _ }, s) ->
+               Env.extend env x s, (x, s) :: bindings)
+      in
+      let make_term_let_rec_binding (var, scheme) value
+          : _ term_let_rec_binding Elaborate.t
+        =
+       fun () ->
+        ( (var, Decoder.decode_scheme scheme)
+        , (List.map generalizable ~f:Decoder.decode_variable, value ()) )
+      in
+      (* Return recursive bindings and extended environment *)
+      ( List.map2_exn bindings values ~f:make_term_let_rec_binding
+        |> Elaborate.list
+      , env )
+
+
   and solve_let_rec_bindings
       : type a.
         state:state
@@ -351,59 +515,21 @@ module Make (Algebra : Algebra) = struct
     =
     let open Constraint in
     fun ~state ~env bindings ->
-      (* Enter a new region. *)
-      enter state;
-      (* Initialize the fresh flexible and rigid variables for each of the bindings. *)
-      let _flexible_vars =
-        List.map bindings ~f:(fun (Let_rec_binding { flexible_vars; _ }) ->
-            flexible_vars)
-        |> List.concat
-        |> List.map ~f:(bind_flexible state)
-      and rigid_vars =
-        List.map bindings ~f:(fun (Let_rec_binding { rigid_vars; _ }) ->
-            rigid_vars)
-        |> List.concat
-        |> List.map ~f:(bind_rigid state)
+      (* Partition bindings into polymorphic and monomorphic bindings *)
+      let mono, poly =
+        List.partition_map bindings ~f:(fun binding ->
+            match binding with
+            | Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ }
+              ->
+              Either.First
+                (Monomorphic { rigid_vars; flexible_vars; binding; in_ })
+            | Let_rec_poly_binding
+                { rigid_vars; annotation_bindings; binding; in_ } ->
+              Either.Second
+                (Polymorphic { rigid_vars; annotation_bindings; binding; in_ }))
       in
-      (* Convert the constraint types into graphical types. *)
-      let types =
-        List.map bindings ~f:(fun (Let_rec_binding { binding = _, a; _ }) ->
-            find state a)
-      in
-      (* The recursive environment binds the bindings from the [let_rec_bindings]. *)
-      let rec_env =
-        Env.extend_bindings
-          state
-          env
-          (List.map
-             ~f:(fun (Let_rec_binding { binding; _ }) -> binding)
-             bindings)
-      in
-      (* Solve the values *)
-      let values =
-        List.map bindings ~f:(fun (Let_rec_binding { in_; _ }) ->
-            solve ~state ~env:rec_env in_)
-      in
-      (* Generalize and exit *)
-      let generalizable, schemes = exit state ~rigid_vars ~types in
-      (* Compute extended environment and bindings. *)
-      let env, bindings =
-        List.zip_exn bindings schemes
-        |> List.fold_left
-             ~init:(env, [])
-             ~f:(fun (env, bindings) (Let_rec_binding { binding = x, _; _ }, s)
-                -> Env.extend env x s, (x, s) :: bindings)
-      in
-      (* Helper function for constructing term let rec bindings. *)
-      let make_term_let_rec_binding (var, scheme) value
-          : _ term_let_rec_binding Elaborate.t
-        =
-       fun () -> (var, Decoder.decode_scheme scheme), (List.map generalizable ~f:Decoder.decode_variable, value ())
-      in
-      (* Return recursive bindings and extended environment *)
-      ( List.map2_exn bindings values ~f:make_term_let_rec_binding
-        |> Elaborate.list
-      , env )
+      solve_let_rec_poly_bindings ~state ~env poly ~k:(fun ~state ~env ->
+          solve_let_rec_mono_bindings ~state ~env mono)
 
 
   type error =

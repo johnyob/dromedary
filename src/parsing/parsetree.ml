@@ -42,8 +42,7 @@ type expression =
   | Pexp_const of constant
   | Pexp_fun of pattern * expression
   | Pexp_app of expression * expression
-  | Pexp_let of value_binding list * expression
-  | Pexp_let_rec of rec_value_binding list * expression
+  | Pexp_let of rec_flag * value_binding list * expression
   | Pexp_forall of string list * expression
   | Pexp_exists of string list * expression
   | Pexp_constraint of expression * core_type
@@ -57,14 +56,9 @@ type expression =
 
 (** [P = E] *)
 and value_binding =
-  { pvb_pat : pattern
+  { pvb_forall_vars : string list
+  ; pvb_pat : pattern
   ; pvb_expr : expression
-  }
-
-(** [x = E] *)
-and rec_value_binding =
-  { prvb_var : string
-  ; prvb_expr : expression
   }
 
 (** [P -> E]. *)
@@ -143,7 +137,7 @@ let rec pp_pattern_mach ~indent ppf pat =
     print "Alias";
     pp_pattern_mach ~indent ppf pat;
     Format.fprintf ppf "%sAs: %s@." indent x
-  | Ppat_const const -> print ("Constant: " ^ (string_of_constant const))
+  | Ppat_const const -> print ("Constant: " ^ string_of_constant const)
   | Ppat_tuple pats ->
     print "Tuple";
     List.iter ~f:(pp_pattern_mach ~indent ppf) pats
@@ -174,13 +168,9 @@ let rec pp_expression_mach ~indent ppf exp =
     print "Application";
     pp_expression_mach ~indent ppf exp1;
     pp_expression_mach ~indent ppf exp2
-  | Pexp_let (value_bindings, exp) ->
-    print "Let";
+  | Pexp_let (rec_flag, value_bindings, exp) ->
+    print ("Let" ^ string_of_rec_flag rec_flag);
     pp_value_bindings_mach ~indent ppf value_bindings;
-    pp_expression_mach ~indent ppf exp
-  | Pexp_let_rec (rec_value_bindings, exp) ->
-    print "Let rec";
-    pp_rec_value_bindings_mach ~indent ppf rec_value_bindings;
     pp_expression_mach ~indent ppf exp
   | Pexp_forall (variables, exp) ->
     print "Forall";
@@ -243,19 +233,6 @@ and pp_value_binding_mach ~indent ppf value_binding =
   pp_expression_mach ~indent ppf value_binding.pvb_expr
 
 
-and pp_rec_value_bindings_mach ~indent ppf rec_value_bindings =
-  Format.fprintf ppf "%sValue bindings:@." indent;
-  let indent = indent_space ^ indent in
-  List.iter ~f:(pp_rec_value_binding_mach ~indent ppf) rec_value_bindings
-
-
-and pp_rec_value_binding_mach ~indent ppf value_binding =
-  Format.fprintf ppf "%sValue binding:@." indent;
-  let indent = indent_space ^ indent in
-  Format.fprintf ppf "%sVariable: %s@." indent value_binding.prvb_var;
-  pp_expression_mach ~indent ppf value_binding.prvb_expr
-
-
 and pp_case_mach ~indent ppf case =
   Format.fprintf ppf "%sCase:@." indent;
   let indent = indent_space ^ indent in
@@ -276,10 +253,6 @@ let pp_expression_mach = to_pp_mach ~name:"Expression" ~pp:pp_expression_mach
 
 let pp_value_binding_mach =
   to_pp_mach ~name:"Balue binding" ~pp:pp_value_binding_mach
-
-
-let pp_rec_value_binding_mach =
-  to_pp_mach ~name:"Recursive value binding" ~pp:pp_rec_value_binding_mach
 
 
 let pp_case_mach = to_pp_mach ~name:"Case" ~pp:pp_case_mach
@@ -404,6 +377,13 @@ let rec pp_pattern ppf pattern =
     Format.fprintf ppf "@[(%a@;:@;%a)@]" pp_pattern pat pp_core_type core_type
 
 
+(* and pp_quantified_pattern ppf (vars, pat) =
+  Format.fprintf
+    ppf
+    "@[%s@;%a@]"
+    (String.concat ~sep:"," vars)
+    pp_pattern
+    pat *)
 
 let pp_let_bindings ?(flag = "") ~pp ppf bindings =
   match bindings with
@@ -418,7 +398,7 @@ let pp_let_bindings ?(flag = "") ~pp ppf bindings =
       b
       (fun ppf -> list ~sep:"@,and" ~pp ppf)
       bs
-    
+
 
 let rec pp_expression ppf exp =
   match exp with
@@ -429,20 +409,17 @@ let rec pp_expression ppf exp =
     Format.fprintf ppf "@[fun@;%a->@;%a@]" pp_pattern pat pp_expression exp
   | Pexp_app (exp1, exp2) ->
     Format.fprintf ppf "@[%a@ %a@]" pp_expression exp1 pp_expression exp2
-  | Pexp_let (value_bindings, exp) ->
+  | Pexp_let (rec_flag, value_bindings, exp) ->
+    let flag =
+      match rec_flag with
+      | Nonrecursive -> ""
+      | Recursive -> "rec "
+    in
     Format.fprintf
       ppf
       "@[%a in@;%a@]"
-      (fun ppf -> pp_let_bindings ~pp:pp_value_binding ppf)
+      (fun ppf -> pp_let_bindings ~flag ~pp:pp_value_binding ppf)
       value_bindings
-      pp_expression
-      exp
-  | Pexp_let_rec (rec_value_bindings, exp) ->
-    Format.fprintf
-      ppf
-      "@[%a in@;%a@]"
-      (pp_let_bindings ~flag:"rec " ~pp:pp_rec_value_binding)
-      rec_value_bindings
       pp_expression
       exp
   | Pexp_forall (variables, exp) ->
@@ -512,6 +489,7 @@ let rec pp_expression ppf exp =
       pp_expression
       exp3
 
+
 and pp_expression_function ppf exp =
   match exp with
   | Pexp_fun (pat, exp) ->
@@ -525,15 +503,6 @@ and pp_value_binding ppf nonrec_value_binding =
   match pat with
   | Ppat_var x -> Format.fprintf ppf "@[%s@ %a@]" x pp_expression_function exp
   | _ -> Format.fprintf ppf "@[%a@;=@;%a@]" pp_pattern pat pp_expression exp
-
-
-and pp_rec_value_binding ppf rec_value_binding =
-  Format.fprintf
-    ppf
-    "@[%s@ %a@]"
-    rec_value_binding.prvb_var
-    pp_expression_function
-    rec_value_binding.prvb_expr
 
 
 and pp_case ppf case =
