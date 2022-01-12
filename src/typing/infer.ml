@@ -51,7 +51,7 @@ let rec convert_core_type ~substitution core_type : (Type.t, _) Result.t =
   let open Result in
   let open Let_syntax in
   match core_type with
-  | Ptyp_var x -> Substitution.find_var substitution x >>| Type.var
+  | Ptyp_var x -> Substitution.find_flexible_var substitution x >>| Type.var
   | Ptyp_arrow (t1, t2) ->
     let%bind t1 = convert_core_type ~substitution t1 in
     let%bind t2 = convert_core_type ~substitution t2 in
@@ -69,7 +69,7 @@ let rec convert_type_expr ~substitution type_expr : (Type.t, _) Result.t =
   let open Result in
   let open Let_syntax in
   match type_expr with
-  | Ttyp_var x -> Substitution.find_var substitution x >>| Type.var
+  | Ttyp_var x -> Substitution.find_flexible_var substitution x >>| Type.var
   | Ttyp_arrow (t1, t2) ->
     let%bind t1 = convert_type_expr ~substitution t1 in
     let%bind t2 = convert_type_expr ~substitution t2 in
@@ -134,7 +134,7 @@ let inst_constr_decl ~env name
   (* Compute a fresh set of existential variables *)
   let%bind substitution =
     Substitution.of_alist
-      (List.map ~f:(fun x -> x, fresh ()) constr_type_params)
+      (List.map ~f:(fun x -> x, fresh ()) constr_type_params) []
     |> Result.map_error ~f:(fun (`Duplicate_type_variable var) ->
            `Duplicate_type_parameter_for_constructor (name, var))
   in
@@ -146,7 +146,7 @@ let inst_constr_decl ~env name
     | None -> return None
   in
   let%bind constr_type = convert_type_expr ~substitution constr_type in
-  return (Substitution.rng substitution, constr_arg, constr_type)
+  return (Substitution.flexible_rng substitution, constr_arg, constr_type)
 
 
 let inst_label_decl ~env label
@@ -158,14 +158,14 @@ let inst_label_decl ~env label
   in
   (* Compute a fresh set of existential variables *)
   let%bind substitution =
-    Substitution.of_alist (List.map ~f:(fun x -> x, fresh ()) label_type_params)
+    Substitution.of_alist (List.map ~f:(fun x -> x, fresh ()) label_type_params) []
     |> Result.map_error ~f:(fun (`Duplicate_type_variable var) ->
            `Duplicate_type_parameter_for_label (label, var))
   in
   (* Compute the inferred type using the existential variables. *)
   let%bind label_arg = convert_type_expr ~substitution label_arg in
   let%bind label_type = convert_type_expr ~substitution label_type in
-  return (Substitution.rng substitution, label_arg, label_type)
+  return (Substitution.flexible_rng substitution, label_arg, label_type)
 
 
 let make_label_desc label_name label_arg label_type
@@ -276,7 +276,7 @@ module Pattern = struct
       | Ppat_tuple pats ->
         let@ vars, pats = infer_pats pats in
         return
-          (let%map () = pat_type =~= tuple vars
+          (let%map () = as_ pat_type (Shallow_type.Former (tuple vars), [])
            and pats = pats in
            Tpat_tuple pats)
       | Ppat_constraint (pat, pat_type') ->
@@ -338,19 +338,30 @@ module Expression = struct
     let open Computation.Let_syntax in
     let var = fresh () in
     let%bind t = f var in
-    return (Constraint.exists [ var, Some shallow_type ] t)
+    return (Constraint.exists [ var ] (as_ var (Shallow_type.Former shallow_type, []) >> t))
 
 
   (* TODO: Move to computation. *)
-  let extend_substitution vars ~f ~message =
+  let extend_flexible_substitution vars ~f ~message =
     let open Computation.Let_syntax in
     let%bind substitution =
       of_result
-        (Substitution.of_alist (List.map ~f:(fun x -> x, fresh ()) vars))
+        (Substitution.of_alist (List.map ~f:(fun x -> x, fresh ()) vars) [])
         ~message:(fun (`Duplicate_type_variable var) -> message var)
     in
-    let vars = Substitution.rng substitution in
+    let vars = Substitution.flexible_rng substitution in
     extend_substitution ~substitution (f vars)
+
+  let extend_rigid_substitution vars ~f ~message =
+    let open Computation.Let_syntax in
+    let%bind substitution =
+      of_result
+        (Substitution.of_alist [] (List.map ~f:(fun x -> x, fresh_rigid ()) vars))
+        ~message:(fun (`Duplicate_type_variable var) -> message var)
+    in
+    let vars = Substitution.rigid_rng substitution in
+    extend_substitution ~substitution (f vars)
+    
 
 
   let convert_core_type core_type : Type.t Computation.t =
@@ -470,7 +481,7 @@ module Expression = struct
     (* print_endline
       (Sexp.to_string_hum [%message "infer_pat" (pat : Parsetree.pattern)]); *)
     let& fragment, pat = Pattern.infer pat pat_type in
-    let existential_bindings, term_bindings = Fragment.to_bindings fragment in
+    let _, existential_bindings, _, term_bindings = Fragment.to_bindings fragment in
     (* List.iter existential_bindings ~f:(fun (var, binding) ->
         Format.printf "Variable: %d@." (var :> int);
         Format.printf
@@ -479,7 +490,7 @@ module Expression = struct
     List.iter term_bindings ~f:(fun (term_var, var) ->
         Format.printf "Term Variable: %s@." term_var;
         Format.printf "Bound Variable: %d@." (var :> int)); *)
-    let%bind () = exists_bindings existential_bindings in
+    let%bind () = exists_context existential_bindings in
     return (term_bindings, pat)
 
 
@@ -489,7 +500,7 @@ module Expression = struct
     let%map term_let_bindings, _ =
       let_
         ~bindings:
-          [ ((vars, [ var, None ]) @. exp_desc) @=> [ internal_name #= var ] ]
+          [ ((vars, [ var, (Shallow_type.Var, []) ]) @. exp_desc) @=> [ internal_name #= var ] ]
         ~in_:(inst internal_name exp_type)
     in
     match term_let_bindings with
@@ -530,7 +541,7 @@ module Expression = struct
         let@ bindings, pat = infer_pat pat var1 in
         let%bind exp = infer_exp exp var2 in
         return
-          (let%map () = exp_type =~= var1 @-> var2
+          (let%map () = as_ exp_type (Shallow_type.Former (var1 @-> var2), [])
            and pat = pat
            and exp = def ~bindings ~in_:exp in
            Texp_fun (pat, exp))
@@ -553,7 +564,7 @@ module Expression = struct
       | Pexp_tuple exps ->
         let@ vars, exps = infer_exps exps in
         return
-          (let%map () = exp_type =~= tuple vars
+          (let%map () = as_ exp_type (Shallow_type.Former (tuple vars), [])
            and exps = exps in
            Texp_tuple exps)
       | Pexp_match (match_exp, cases) ->
@@ -575,7 +586,7 @@ module Expression = struct
            and else_exp = else_exp in
            Texp_ifthenelse (if_exp, then_exp, else_exp))
       | Pexp_exists (vars, exp) ->
-        extend_substitution
+        extend_flexible_substitution
           vars
           ~f:(fun vars ->
             let@ () = exists_vars vars in
@@ -586,7 +597,7 @@ module Expression = struct
                 (exp : Parsetree.expression)
                 (var : string)])
       | Pexp_forall (vars, exp) ->
-        extend_substitution
+        extend_rigid_substitution
           vars
           ~f:(fun vars ->
             let var = fresh () in
@@ -708,10 +719,10 @@ module Expression = struct
       let open Computation.Let_syntax in
       let var = fresh () in
       let%bind fragment, pat = Pattern.infer pat var in
-      let existential_bindings, term_bindings = Fragment.to_bindings fragment in
+      let _, existential_bindings, _, term_bindings = Fragment.to_bindings fragment in
       let%bind exp = infer_exp exp var in
       return
-        ((([], (var, None) :: existential_bindings) @. (pat &~ exp))
+        ((([], (var, (Shallow_type.Var, [])) :: existential_bindings) @. (pat &~ exp))
         @=> term_bindings)
     and infer_rec_value_binding { prvb_var = term_var; prvb_expr = exp }
         : Typedtree.expression let_rec_binding Computation.t
@@ -719,7 +730,7 @@ module Expression = struct
       let open Computation.Let_syntax in
       let var = fresh () in
       let%bind exp = infer_exp exp var in
-      return ((([], [ var, None ]) @. exp) @~> (term_var #= var))
+      return ((([], [ var,  (Shallow_type.Var, []) ]) @. exp) @~> (term_var #= var))
     in
     infer_exp exp exp_type
 
@@ -759,6 +770,6 @@ let infer exp ~env:env' =
            [%message
              "Constraint variable is unbound when solving constraint"
                ((var :> int) : int)]
-         | `Rigid_variable_escape var ->
+         | `Rigid_variable_escape ->
            [%message
-             "Rigid type variable escaped when generalizing" (var : string)])
+             "Rigid type variable escaped when generalizing"])

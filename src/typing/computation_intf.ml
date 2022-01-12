@@ -86,7 +86,9 @@ module type S = sig
 
   (** [find_var var] returns the corresponding constraint variable for the
       bound type variable [var] in the local substitution. *)
-  val find_var : string -> Constraint.variable t
+  val find_flexible_var : string -> Constraint.variable t
+
+  val find_rigid_var : string -> Constraint.rigid_variable t
 
   (** [of_result result ~message] lifts the result [result] into a computation,
       using [message] to compute the error message for the computation. *)
@@ -108,10 +110,10 @@ module type S = sig
 
     (* TODO: Formalize this notion of binding context, defined by the methods below.  *)
     val exists : unit -> Constraint.variable t
-    val forall : unit -> Constraint.variable t
+    val forall : unit -> Constraint.rigid_variable t
     val exists_vars : Constraint.variable list -> unit t
-    val forall_vars : Constraint.variable list -> unit t
-    val exists_bindings : Constraint.Shallow_type.binding list -> unit t
+    val forall_vars : Constraint.rigid_variable list -> unit t
+    val exists_context : Constraint.Ambivalent_type.context -> unit t
     val of_type : Constraint.Type.t -> Constraint.variable t
 
     module Let_syntax : sig
@@ -178,7 +180,12 @@ module type Intf = sig
 
     type t
 
-    val to_bindings : t -> Shallow_type.binding list * binding list
+    val to_bindings
+      :  t
+      -> rigid_variable list
+         * Ambivalent_type.context
+         * Constraint.Rigid.t
+         * binding list
   end
 
   module Pattern : sig

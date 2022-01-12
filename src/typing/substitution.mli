@@ -27,24 +27,39 @@ type t
 val empty : t
 
 (** [find_var t var] returns the mapped constraint variable of type variable [var]. *)
-val find_var
+val find_flexible_var
   :  t
   -> string
   -> (Constraint.variable, [> `Unbound_type_variable of string ]) Result.t
 
+val find_rigid_var
+  :  t
+  -> string
+  -> (Constraint.rigid_variable, [> `Unbound_type_variable of string ]) Result.t
+
+
 (** [of_alist alist] returns the substitution defined by the associative list [alist]. *)
 val of_alist
   :  (string * Constraint.variable) list
+  -> (string * Constraint.rigid_variable) list
   -> (t, [> `Duplicate_type_variable of string ]) Result.t
 
 (** [to_alist t] returns the alist defined by the substitution [t]. *)
-val to_alist : t -> (string * Constraint.variable) list
+val to_alist : t -> (string * Constraint.variable) list * (string * Constraint.rigid_variable) list
 
 (** [dom t] returns the domain of [t]. *)
-val dom : t -> string list
+val flexible_dom : t -> string list
+
+(** [dom t] returns the domain of [t]. *)
+val rigid_dom : t -> string list
+
 
 (** [rng t] returns the range (or image) of [t]. *)
-val rng : t -> Constraint.variable list
+val flexible_rng : t -> Constraint.variable list
+
+(** [rng t] returns the range (or image) of [t]. *)
+val rigid_rng : t -> Constraint.rigid_variable list
+
 
 (** [merge t1 t2] returns the merged substitution of [t1] and [t2]. *)
 val merge : t -> t -> t
