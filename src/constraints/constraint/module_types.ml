@@ -46,6 +46,8 @@ module Type_former = struct
       include Applicative.Make (T)
     end
 
+    let get t i = assert false
+
     let map t ~f =
       let module Traverse = T.Traverse (Ident) in
       Traverse.traverse t ~f

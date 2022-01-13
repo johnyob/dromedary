@@ -53,6 +53,8 @@ module type S = sig
       [Metadata]. *)
   type metadata
 
+  module Abbreviations : Abbreviations.S with type 'a former := 'a former
+
   module Type : sig
     (** There are two kinds of variables [Flexible] and [Rigid]. 
     
@@ -67,20 +69,41 @@ module type S = sig
     (** [t] represents a type. See "graphical types". *)
     type t [@@deriving sexp_of, compare]
 
+    (** We partition types into "view". See Morel's thesis. *)
+    module type View = sig
+      (** aliases for types. *)
+      type type_ := t
+
+      (** [t] encodes the type of the view. It's structure is abstract, providing potentially 
+          more efficient implementations in the future. *)
+      type t [@@deriving sexp_of]
+
+      val iter : t -> f:(type_ former -> unit) -> unit
+
+      val fold : t -> init:'a -> f:('a -> type_ former -> 'a) -> 'a
+    end
+
+    module Non_productive_view : View
+
+    module Productive_view : View
+
     type structure =
       | Var of { mutable flexibility : flexibility }
-      | Former of t former
+      | Former of Productive_view.t
 
     val to_dot : t -> string
 
     (** Each graphical type node consists of:
         - a unique identifier [id] (used to define a total ordering).
+        - a non-productive view
         - a mutable [structure], which contains the node structure.
         - a mutable piece of [metadata]. 
     *)
 
     (** [id t] returns the unique identifier of the type [t]. *)
     val id : t -> int
+
+    val get_non_productive_view : t -> Non_productive_view.t
 
     (** [get_structure t] returns the structure of [t]. *)
     val get_structure : t -> structure
@@ -100,10 +123,6 @@ module type S = sig
     val hash : t -> int
   end
 
-  (** [make structure metadata] returns a fresh type w/ structure [structure] and
-      metadata [metadata]. *)
-  val make : Type.structure -> metadata -> Type.t
-
   (** [make_var flexibility metadata] returns a fresh variable 
      with flexibility [flexibility], and metadata [metadata]. *)
   val make_var : Type.flexibility -> metadata -> Type.t
@@ -111,7 +130,7 @@ module type S = sig
   (** [make_former former metadata] returns a fresh type former
       with metadata [metadata]. *)
 
-  val make_former : Type.t former -> metadata -> Type.t
+  val make_former : Abbreviations.t -> Type.t former -> metadata -> Type.t
 
   (** [unify t1 t2] equates the graphical type nodes [t1] and [t2], 
       and forms a multi-equation node.
@@ -132,7 +151,7 @@ module type S = sig
 
   exception Unify of Type.t * Type.t
 
-  val unify : Type.t -> Type.t -> unit
+  val unify : Abbreviations.t -> (unit -> metadata) -> Type.t -> Type.t -> unit
 
   (** [occurs_check t] detects whether there is a cycle in 
       the graphical type [t]. 
@@ -163,7 +182,7 @@ module type S = sig
     -> var:(Type.t -> 'a)
     -> former:('a former -> 'a)
     -> mu:(Type.t -> 'a -> 'a)
-    -> 'a  
+    -> 'a
 end
 
 (** The interface of {unifier.ml}. *)

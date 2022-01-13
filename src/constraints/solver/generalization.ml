@@ -164,8 +164,8 @@ module Make (Former : Type_former.S) = struct
     U.make_var flexibility { level; is_generic = false }
 
 
-  let make_former_ former level =
-    U.make_former former { level; is_generic = false }
+  let make_former_ abbrev_env former level =
+    U.make_former abbrev_env former { level; is_generic = false }
 
 
   (* Generalization regions
@@ -200,12 +200,16 @@ module Make (Former : Type_former.S) = struct
   type state =
     { mutable current_level : level
     ; regions : (region, [ `R | `W ]) Vec.t
+    ; abbrev_env : U.Abbreviations.t
     }
 
   (* [make_state ()] makes a new empty state. *)
 
   let make_state () =
-    { current_level = outermost_level - 1; regions = Vec.make () }
+    { current_level = outermost_level - 1
+    ; regions = Vec.make ()
+    ; abbrev_env = U.Abbreviations.empty
+    }
 
 
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
@@ -230,7 +234,7 @@ module Make (Former : Type_former.S) = struct
      It initialize the level to the current level. 
   *)
   let make_former state former =
-    let former = make_former_ former state.current_level in
+    let former = make_former_ state.abbrev_env former state.current_level in
     set_region state former;
     former
 
@@ -353,7 +357,7 @@ module Make (Former : Type_former.S) = struct
               is performed above. 
             *)
             ()
-          | U.Type.Former former ->
+          | U.Type.Former productive_view ->
             (* If the node is a type former, then we need to traverse it's 
               children and determine it's correct level.
               
@@ -366,12 +370,13 @@ module Make (Former : Type_former.S) = struct
             *)
             update_level
               type_
-              (Former.fold
-                 former
-                 ~f:(fun type_ acc ->
-                   loop type_ level;
-                   max (get_level type_) acc)
-                 ~init:outermost_level)))
+              (U.Type.Productive_view.fold
+                 productive_view
+                 ~init:outermost_level
+                 ~f:(fun acc former ->
+                   Former.fold former ~init:acc ~f:(fun type_ acc ->
+                       loop type_ level;
+                       max (get_level type_) acc)))))
     in
     Array.iter ~f:(fun type_ -> loop type_ (get_level type_)) young_region
 
@@ -472,7 +477,8 @@ module Make (Former : Type_former.S) = struct
         *)
         match U.Type.get_structure type_ with
         | U.Type.Var _ -> variables := type_ :: !variables
-        | U.Type.Former former -> Former.iter ~f:loop former)
+        | U.Type.Former productive_view ->
+          Former.iter ~f:loop (U.Type.Productive_view.repr productive_view))
     in
     loop root;
     !variables
@@ -530,7 +536,8 @@ module Make (Former : Type_former.S) = struct
               if get_level type_ = level
               then instance_variables := new_type :: !instance_variables;
               U.Type.Var { flexibility = Flexible }
-            | U.Type.Former former -> U.Type.Former (Former.map ~f:copy former)
+            | U.Type.Former productive_view ->
+              U.Type.Former (U.Type.Productive_view.map ~f:copy productive_view)
           in
           U.Type.set_structure new_type structure';
           new_type)

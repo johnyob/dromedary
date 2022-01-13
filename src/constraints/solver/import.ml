@@ -14,5 +14,7 @@
 
 include Base
 
+module Doubly_linked = Core.Doubly_linked
+
 module Constraint = Dromedary_constraints_constraint.Constraint
 include Constraint.Module_types 
