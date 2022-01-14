@@ -16,6 +16,7 @@
 
 open! Import
 
+
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
@@ -44,37 +45,42 @@ module type S = sig
     val make_former : t former -> t
   end
 
-  (** type [t] encodes the abbreviation context, mapping [_ former]s to 
-      abbreviations. *)
-  type t
+  module Ctx : sig
+    (** type [t] encodes the abbreviation context, mapping [_ former]s to 
+        abbreviations. *)
+    type t
 
-  val empty : t
+    (** [empty] is the empty type abbreviation context.  *)
+    val empty : t
 
-  type productivity =
-    | Non_productive of int
-        (** [Non_productive i] encodes that the abbreviation expands to [aᵢ] *)
-    | Productive
-        (** [Productive] encodes that the former has a productive abbreviation *)
-    | Primitive 
-        (** [Primitive] encodes that the former has no abbreviation. *)
+    val has_abbrev : t -> _ former -> bool
 
-  (** [get_productivity t former] returns whether the productivity of the 
-      former [former] in the context [t]. *)
-  val get_productivity : t -> _ former -> productivity
+    exception Not_found
 
-  (** [get_expansion t former] returns the expansion of [former] in
-      context. *)
-  val get_expansion : t -> _ former -> (Type.t list * Type.t former) option
+    type productivity =
+      | Non_productive of int
+          (** [Non_productive i] encodes that the abbreviation expands to [aᵢ] *)
+      | Productive
+          (** [Productive] encodes that the former has a productive abbreviation *)
 
-  (** [clash t former1 former2] returns [true] if [former1] and [former2] are not
+    (** [get_productivity t former] returns whether the productivity of the 
+        former [former] in the context [t]. *)
+    val get_productivity : t -> _ former -> productivity
+
+    (** [get_expansion t former] returns the expansion of [former] in context. *)
+    val get_expansion : t -> _ former -> Type.t list * Type.t former
+
+    (** [decomposable_positions t former] returns the decomposable positions
+        of [former]. *)
+    val get_decomposable_positions : t -> _ former -> int list
+
+    (** [get_rank t former] returns the rank of the former in [t]. *)
+    val get_rank : t -> _ former -> int
+
+    (** [clash t former1 former2] returns [true] if [former1] and [former2] are not
       equivalent under context [t]. *)
-  val clash : t -> _ former -> _ former -> bool
-
-  (** [decomposable_positions t former] returns the decomposable positions
-      of [former]. *)
-  val get_decomposable_positions : t -> _ former -> int list option
-
-  val get_rank : t -> _ former -> int
+    val clash : t -> _ former -> _ former -> bool
+  end
 end
 
 module type Intf = sig

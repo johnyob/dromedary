@@ -60,52 +60,64 @@ module Make (Former : Type_former.S) = struct
       | Non_productive of int
       | Productive of Type.t Former.t
     [@@warning "-37"]
+
+    let type_ t = t.type_
+    let productivity t = t.productivity
+    let decomposable_positions t = t.decomposable_positions
+    let rank t = t.rank
   end
 
-  type t =
-    { abbreviations : (int, Abbreviation.t, Int.comparator_witness) Map.t }
+  module Ctx = struct
+    type t =
+      { abbreviations : (int, Abbreviation.t, Int.comparator_witness) Map.t }
 
-  let empty = { abbreviations = Map.empty (module Int) }
+    let empty = { abbreviations = Map.empty (module Int) }
+    let has_abbrev t former = Map.mem t.abbreviations (Former.hash former)
 
-  type productivity =
-    | Non_productive of int
-    | Productive
-    | Primitive
+    exception Not_found
 
-  let get_productivity t former =
-    match Map.find t.abbreviations (Former.hash former) with
-    | Some abbrev ->
-      (match Abbreviation.(abbrev.productivity) with
+    let find_abbrev t former =
+      match Map.find t.abbreviations (Former.hash former) with
+      | Some abbrev -> abbrev
+      | None -> raise Not_found
+
+
+    type productivity =
+      | Non_productive of int
+      | Productive
+
+    let get_productivity t former =
+      let abbrev = find_abbrev t former in
+      match Abbreviation.productivity abbrev with
       | Abbreviation.Non_productive i -> Non_productive i
-      | Abbreviation.Productive _ -> Productive)
-    | None -> Primitive
+      | Abbreviation.Productive _ -> Productive
 
 
-  let get_expansion t former =
-    let open Option in
-    Map.find t.abbreviations (Former.hash former)
-    >>| fun abbrev -> Abbreviation.(abbrev.type_)
+    let get_expansion t former = find_abbrev t former |> Abbreviation.type_
+
+    let get_decomposable_positions t former =
+      find_abbrev t former |> Abbreviation.decomposable_positions
 
 
-  let clash t former1 former2 =
-    let abbrev1 = Map.find_exn t.abbreviations (Former.hash former1)
-    and abbrev2 = Map.find_exn t.abbreviations (Former.hash former2) in
-    Abbreviation.(
-      match abbrev1.productivity, abbrev2.productivity with
-      | Productive former1', Productive former2' ->
-        Former.hash former1' <> Former.hash former2'
-      | _ -> assert false)
+    let get_rank t former =
+      match Map.find t.abbreviations (Former.hash former) with
+      | Some abbrev -> Abbreviation.rank abbrev
+      | None -> 0
 
 
-  let get_decomposable_positions t former =
-    let open Option in
-    Map.find t.abbreviations (Former.hash former)
-    >>| fun abbrev -> Abbreviation.(abbrev.decomposable_positions)
-
-
-  let get_rank t former =
-    let open Option in
-    Map.find t.abbreviations (Former.hash former)
-    >>| (fun abbrev -> Abbreviation.(abbrev.rank))
-    |> value ~default:0
+    let clash t former1 former2 =
+      let open Abbreviation in
+      let former former =
+        let abbrev = Map.find t.abbreviations (Former.hash former) in
+        match abbrev with
+        | Some abbrev ->
+          (match productivity abbrev with
+          | Productive former -> Former.hash former
+          | _ -> assert false)
+        | None -> Former.hash former
+      in
+      let former1 = former former1
+      and former2 = former former2 in
+      former1 <> former2
+  end
 end

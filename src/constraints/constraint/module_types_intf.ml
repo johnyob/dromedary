@@ -58,7 +58,7 @@ module Type_former = struct
     val hash : 'a t -> int
 
     exception Not_found
-    val get : 'a t -> int -> 'a
+    val nth : 'a t -> int -> 'a
 
     val map : 'a t -> f:('a -> 'b) -> 'b t
     val fold : 'a t -> f:('a -> 'b -> 'b) -> init:'b -> 'b

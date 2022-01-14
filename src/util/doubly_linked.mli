@@ -11,10 +11,31 @@
 (*                                                                           *)
 (*****************************************************************************)
 
+module Elt : sig
+  type 'a t [@@deriving sexp_of]
 
-include Base
+  val get_value : 'a t -> 'a
+  val set_value : 'a t -> 'a -> unit
 
-module Doubly_linked = Util.Doubly_linked
+  val make : 'a -> 'a t
+end
 
-module Constraint = Dromedary_constraints_constraint.Constraint
-include Constraint.Module_types 
+type 'a t [@@deriving sexp_of]
+
+val first : 'a t -> 'a Elt.t option
+
+val empty : unit -> 'a t
+
+val remove : 'a t -> 'a Elt.t -> unit
+
+val remove_first : 'a t -> 'a option
+
+val insert_first : 'a t -> 'a Elt.t -> unit
+
+val insert_first_elt : 'a t -> 'a -> 'a Elt.t
+
+val merge : 'a t -> 'a t -> compare:('a -> 'a -> int) -> 'a t
+
+
+
+

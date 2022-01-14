@@ -42,6 +42,18 @@ module type Metadata = sig
   val merge : t -> t -> t
 end
 
+module type View = sig
+  (** ['a t] encodes a view with representive of type ['a] *)
+  type 'a t [@@deriving sexp_of]
+  type 'a repr 
+
+  val map : 'a t -> f:('a -> 'b) -> 'b t
+  val iter : 'a t -> f:('a -> unit) -> unit
+  val fold : 'a t -> init:'b -> f:('b -> 'a -> 'b) -> 'b
+
+  val repr : 'a t -> 'a repr
+end
+
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
@@ -54,6 +66,10 @@ module type S = sig
   type metadata
 
   module Abbreviations : Abbreviations.S with type 'a former := 'a former
+
+  module Non_productive_view : View with type 'a repr := 'a option
+
+  module Productive_view : View with type 'a repr := 'a
 
   module Type : sig
     (** There are two kinds of variables [Flexible] and [Rigid]. 
@@ -69,27 +85,12 @@ module type S = sig
     (** [t] represents a type. See "graphical types". *)
     type t [@@deriving sexp_of, compare]
 
-    (** We partition types into "view". See Morel's thesis. *)
-    module type View = sig
-      (** aliases for types. *)
-      type type_ := t
-
-      (** [t] encodes the type of the view. It's structure is abstract, providing potentially 
-          more efficient implementations in the future. *)
-      type t [@@deriving sexp_of]
-
-      val iter : t -> f:(type_ former -> unit) -> unit
-
-      val fold : t -> init:'a -> f:('a -> type_ former -> 'a) -> 'a
-    end
-
-    module Non_productive_view : View
-
-    module Productive_view : View
+    type non_productive_view = t former Non_productive_view.t
+    type productive_view = t former Productive_view.t
 
     type structure =
       | Var of { mutable flexibility : flexibility }
-      | Former of Productive_view.t
+      | Former of productive_view
 
     val to_dot : t -> string
 
@@ -103,7 +104,8 @@ module type S = sig
     (** [id t] returns the unique identifier of the type [t]. *)
     val id : t -> int
 
-    val get_non_productive_view : t -> Non_productive_view.t
+    val get_non_productive_view : t -> non_productive_view
+    val set_non_productive_view : t -> non_productive_view -> unit
 
     (** [get_structure t] returns the structure of [t]. *)
     val get_structure : t -> structure
@@ -118,19 +120,17 @@ module type S = sig
     val set_metadata : t -> metadata -> unit
 
     (** [hash t] computes the hash of the graphical type [t]. 
-        Based on it's integer field: id. 
-    *)
+        Based on it's integer field: id. *)
     val hash : t -> int
+
+    (** [make_var flexibility metadata] returns a fresh variable 
+        with flexibility [flexibility], and metadata [metadata]. *)
+    val make_var : flexibility -> metadata -> t
+
+    (** [make_former ctx former metadata] returns a fresh type former
+        with metadata [metadata]. *)
+    val make_former : ctx:Abbreviations.Ctx.t -> t former -> metadata -> t
   end
-
-  (** [make_var flexibility metadata] returns a fresh variable 
-     with flexibility [flexibility], and metadata [metadata]. *)
-  val make_var : Type.flexibility -> metadata -> Type.t
-
-  (** [make_former former metadata] returns a fresh type former
-      with metadata [metadata]. *)
-
-  val make_former : Abbreviations.t -> Type.t former -> metadata -> Type.t
 
   (** [unify t1 t2] equates the graphical type nodes [t1] and [t2], 
       and forms a multi-equation node.
@@ -151,7 +151,12 @@ module type S = sig
 
   exception Unify of Type.t * Type.t
 
-  val unify : Abbreviations.t -> (unit -> metadata) -> Type.t -> Type.t -> unit
+  val unify
+    :  ctx:Abbreviations.Ctx.t
+    -> metadata:(unit -> metadata)
+    -> Type.t
+    -> Type.t
+    -> unit
 
   (** [occurs_check t] detects whether there is a cycle in 
       the graphical type [t]. 
@@ -188,6 +193,7 @@ end
 (** The interface of {unifier.ml}. *)
 
 module type Intf = sig
+  module type View = View
   module type Metadata = Metadata
   module type S = S
 

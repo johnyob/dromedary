@@ -129,9 +129,11 @@ module Make (Former : Type_former.S) = struct
   end
 
   module Unifier = Unifier.Make (Former) (Tag)
+  module Abbreviations = Unifier.Abbreviations
 
-  (* [U] is an alias, used for a short prefix below. *)
+  (* [U] and [A] are aliases, used for a short prefix below. *)
   module U = Unifier
+  module A = Abbreviations
 
   (* [set_level type_ level] sets the level of the type [type_] to [level]. *)
   let set_level type_ level = Tag.set_level (U.Type.get_metadata type_) level
@@ -161,11 +163,11 @@ module Make (Former : Type_former.S) = struct
      variables and type formers wrapping [Unifier]. *)
 
   let make_var_ flexibility level =
-    U.make_var flexibility { level; is_generic = false }
+    U.Type.make_var flexibility { level; is_generic = false }
 
 
-  let make_former_ abbrev_env former level =
-    U.make_former abbrev_env former { level; is_generic = false }
+  let make_former_ ~ctx former level =
+    U.Type.make_former ~ctx former { level; is_generic = false }
 
 
   (* Generalization regions
@@ -200,7 +202,7 @@ module Make (Former : Type_former.S) = struct
   type state =
     { mutable current_level : level
     ; regions : (region, [ `R | `W ]) Vec.t
-    ; abbrev_env : U.Abbreviations.t
+    ; abbrev_ctx : A.Ctx.t
     }
 
   (* [make_state ()] makes a new empty state. *)
@@ -208,7 +210,7 @@ module Make (Former : Type_former.S) = struct
   let make_state () =
     { current_level = outermost_level - 1
     ; regions = Vec.make ()
-    ; abbrev_env = U.Abbreviations.empty
+    ; abbrev_ctx = A.Ctx.empty
     }
 
 
@@ -234,9 +236,19 @@ module Make (Former : Type_former.S) = struct
      It initialize the level to the current level. 
   *)
   let make_former state former =
-    let former = make_former_ state.abbrev_env former state.current_level in
+    let former =
+      make_former_ ~ctx:state.abbrev_ctx former state.current_level
+    in
     set_region state former;
     former
+
+
+  let unify state t1 t2 =
+    U.unify
+      ~ctx:state.abbrev_ctx
+      ~metadata:(fun () -> { level = state.current_level; is_generic = false })
+      t1
+      t2
 
 
   (* [enter ()] creates a new stack frame and enter it. *)
@@ -370,7 +382,7 @@ module Make (Former : Type_former.S) = struct
             *)
             update_level
               type_
-              (U.Type.Productive_view.fold
+              (U.Productive_view.fold
                  productive_view
                  ~init:outermost_level
                  ~f:(fun acc former ->
@@ -478,7 +490,7 @@ module Make (Former : Type_former.S) = struct
         match U.Type.get_structure type_ with
         | U.Type.Var _ -> variables := type_ :: !variables
         | U.Type.Former productive_view ->
-          Former.iter ~f:loop (U.Type.Productive_view.repr productive_view))
+          Former.iter ~f:loop (U.Productive_view.repr productive_view))
     in
     loop root;
     !variables
@@ -537,7 +549,8 @@ module Make (Former : Type_former.S) = struct
               then instance_variables := new_type :: !instance_variables;
               U.Type.Var { flexibility = Flexible }
             | U.Type.Former productive_view ->
-              U.Type.Former (U.Type.Productive_view.map ~f:copy productive_view)
+              U.Type.Former
+                (U.Productive_view.map ~f:(Former.map ~f:copy) productive_view)
           in
           U.Type.set_structure new_type structure';
           new_type)

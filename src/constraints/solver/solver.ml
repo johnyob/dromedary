@@ -82,20 +82,6 @@ module Make (Algebra : Algebra) = struct
       , decode_type_acyclic (G.root scheme) )
   end
 
-  (* [unify type1 type2] unifies [type1] and [type2], raising [Unify] is the 
-     types cannot be unified. 
-     
-     The decoded types are now supplied in the exception [Unify]. 
-  *)
-
-  exception Unify of Type.t * Type.t
-
-  let unify type1 type2 =
-    try U.unify type1 type2 with
-    | U.Unify (type1, type2) ->
-      raise
-        (Unify
-           (Decoder.decode_type_cyclic type1, Decoder.decode_type_cyclic type2))
 
 
   (* State.
@@ -117,6 +103,22 @@ module Make (Algebra : Algebra) = struct
 
 
   let enter state = G.enter state.generalization_state
+
+  (* [unify type1 type2] unifies [type1] and [type2], raising [Unify] is the 
+     types cannot be unified. 
+     
+     The decoded types are now supplied in the exception [Unify]. 
+  *)
+
+  exception Unify of Type.t * Type.t
+
+  let unify state type1 type2 =
+    try G.unify state.generalization_state type1 type2 with
+    | U.Unify (type1, type2) ->
+      raise
+        (Unify
+           (Decoder.decode_type_cyclic type1, Decoder.decode_type_cyclic type2))
+
 
   (* [exit state ~rigid_vars ~types] generalizes the types [types], returning
      the generalized variables and schemes. 
@@ -258,7 +260,7 @@ module Make (Algebra : Algebra) = struct
       | Conj (cst1, cst2) ->
         both (solve ~state ~env cst1) (solve ~state ~env cst2)
       | Eq (a, a') ->
-        unify (find state a) (find state a');
+        unify state (find state a) (find state a');
         return ()
       | Exist (bindings, cst) ->
         ignore (List.map ~f:(bind_flexible state) bindings : U.Type.t list);
@@ -281,7 +283,7 @@ module Make (Algebra : Algebra) = struct
         let instance_variables, type_ =
           G.instantiate state.generalization_state scheme
         in
-        unify (find state a) type_;
+        unify state (find state a) type_;
         fun () -> List.map ~f:Decoder.decode_type_acyclic instance_variables
       | Let (let_bindings, cst) ->
         let term_let_bindings, env =

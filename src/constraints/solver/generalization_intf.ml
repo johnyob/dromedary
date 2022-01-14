@@ -87,6 +87,8 @@ module type S = sig
 
   val make_former : state -> Unifier.Type.t former -> Unifier.Type.t
 
+  val unify : state -> Unifier.Type.t -> Unifier.Type.t -> unit
+
   (** [instantiate scheme] instantates the scheme [scheme]. It does so, by
       taking fresh copies of the generic variables, without necessarily
       copying other bits of the type. 
