@@ -214,7 +214,7 @@ module Make (Former : Type_former.S) = struct
     }
 
 
-  let pp_type_explicit type_ =
+  (* let pp_type_explicit type_ =
     let rec pp_type_explicit type_ =
       match U.Type.get_structure type_ with
       | U.Type.Var { flexibility = _ } ->
@@ -260,7 +260,7 @@ module Make (Former : Type_former.S) = struct
   let pp_state state debug_label =
     Caml.Format.printf "%s:\n" debug_label;
     pp_current_level state;
-    pp_regions state
+    pp_regions state *)
 
 
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
@@ -276,8 +276,8 @@ module Make (Former : Type_former.S) = struct
   let make_var state flexibility =
     let var = make_var_ flexibility state.current_level in
     set_region state var;
-    Caml.Format.printf "New variable:\n";
-    pp_type var;
+    (* Caml.Format.printf "New variable:\n";
+    pp_type var; *)
     var
 
 
@@ -291,14 +291,14 @@ module Make (Former : Type_former.S) = struct
       make_former_ ~ctx:state.abbrev_ctx former state.current_level
     in
     set_region state former;
-    Caml.Format.printf "New former:\n";
+    (* Caml.Format.printf "New former:\n";
     pp_type former;
-    pp_type_explicit former;
+    pp_type_explicit former; *)
     former
 
 
   let unify state t1 t2 =
-    Caml.Format.printf "Unify: %d %d\n" (U.Type.id t1) (U.Type.id t2);
+    (* Caml.Format.printf "Unify: %d %d\n" (U.Type.id t1) (U.Type.id t2); *)
     U.unify
       ~ctx:state.abbrev_ctx
       ~metadata:(fun () -> { level = state.current_level; is_generic = false })
@@ -399,18 +399,18 @@ module Make (Former : Type_former.S) = struct
       in
       fun type_ ->
         let result = Hash_set.mem young_region (U.Type.id type_) in
-        Caml.Format.printf "is young? %d = %b\n" (U.Type.id type_) result;
+        (* Caml.Format.printf "is young? %d = %b\n" (U.Type.id type_) result; *)
         result
     in
     let young_region = young_region state |> Hash_set.to_array in
     Array.sort young_region ~compare:(fun t1 t2 ->
         Int.compare (get_level t1) (get_level t2));
-    Caml.Format.printf "Array order:\n";
-    Caml.Format.printf
+    (* Caml.Format.printf "Array order:\n"; *)
+    (* Caml.Format.printf
       "%s\n"
       (Array.to_list young_region
       |> List.map ~f:(fun t -> Int.to_string (U.Type.id t))
-      |> String.concat ~sep:",");
+      |> String.concat ~sep:","); *)
     (* Hash set records whether we've visited a given 
        graphic type node. Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
@@ -486,7 +486,8 @@ module Make (Former : Type_former.S) = struct
     Hash_set.iter region ~f:(fun type_ ->
         if get_level type_ < state.current_level
         then set_region state type_
-        else Caml.Format.printf "Generalizing %d\n" (U.Type.id type_);
+        else 
+          (* Caml.Format.printf "Generalizing %d\n" (U.Type.id type_); *)
         generalize_type type_);
     (* Iterate through the young region, computing the list
        of generalizable variables. *)
@@ -516,7 +517,7 @@ module Make (Former : Type_former.S) = struct
      Ensures [rigid_vars] do not escape. 
   *)
   let exit state ~rigid_vars ~types =
-    pp_state state "Before exit";
+    (* pp_state state "Before exit"; *)
     (* Detect cycles in roots. *)
     List.iter ~f:U.occurs_check types;
     (* Now update the lazily updated levels of every node in the young
@@ -537,7 +538,7 @@ module Make (Former : Type_former.S) = struct
     in
     (* Exit the current region *)
     state.current_level <- state.current_level - 1;
-    pp_state state "After exit";
+    (* pp_state state "After exit"; *)
     generalizable, List.map ~f:make_scheme types
 
 
@@ -587,7 +588,7 @@ module Make (Former : Type_former.S) = struct
   *)
 
   let instantiate state { root; level } =
-    Caml.Format.printf "Instantiating: %d\n" (U.Type.id root);
+    (* Caml.Format.printf "Instantiating: %d\n" (U.Type.id root); *)
     (* The [copied] hash table stores a mapping from graphic type nodes 
        to their related copied forms. This ensures only 1 copy per 
        variable. 
@@ -603,7 +604,7 @@ module Make (Former : Type_former.S) = struct
        as is. 
     *)
     let rec copy type_ =
-      Caml.Format.printf "Copying %d\n" (U.Type.id type_);
+      (* Caml.Format.printf "Copying %d\n" (U.Type.id type_); *)
       (* We use [is_generic] instead of [is_generic_at],
          since we may have to copy generic variables that
          have been generalized by a different scheme. 
@@ -611,7 +612,7 @@ module Make (Former : Type_former.S) = struct
       if not (is_generic type_)
       then type_
       else (
-        Caml.Format.printf "%d is generic\n" (U.Type.id type_);
+        (* Caml.Format.printf "%d is generic\n" (U.Type.id type_); *)
         try Hashtbl.find_exn copied type_ with
         | Not_found_s _ ->
           (* Create arbitrary node. We use a variable initially,
@@ -639,7 +640,7 @@ module Make (Former : Type_former.S) = struct
               U.Type.Former
                 (U.Type.productive_view_map
                    ~f:(fun type_ ->
-                     Caml.Format.printf "Productive_view_map copy\n";
+                     (* Caml.Format.printf "Productive_view_map copy\n"; *)
                      Former.map ~f:copy type_)
                    productive_view)
           in
@@ -648,7 +649,7 @@ module Make (Former : Type_former.S) = struct
     in
     (* Copy the root, yielding the instance variables (as a side-effect). *)
     let root = copy root in
-    Caml.Format.printf "Instantiated result:\n";
-    pp_type_explicit root;
+    (* Caml.Format.printf "Instantiated result:\n"; *)
+    (* pp_type_explicit root; *)
     !instance_variables, root
 end

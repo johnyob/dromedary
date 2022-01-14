@@ -662,17 +662,17 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
         else (
           (* We now expand, and then recurse  *)
           (try
-             Caml.Format.printf "Expanding\n";
+             (* Caml.Format.printf "Expanding\n"; *)
              Productive_view_.expand
                ~ctx
                ~metadata
                productive_view1
                productive_view2
                ~f:(unify_exn ~ctx ~metadata);
-             Caml.Format.printf "Expanded!\n"
+             (* Caml.Format.printf "Expanded!\n" *)
            with
           | Productive_view_.Cannot_expand ->
-            Caml.Format.printf "Cannot expand!\n";
+            (* Caml.Format.printf "Cannot expand!\n"; *)
             raise Clash);
           loop ())
     in
