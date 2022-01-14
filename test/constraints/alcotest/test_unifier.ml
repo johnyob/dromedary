@@ -20,6 +20,24 @@ module Type_former = struct
       | Int
     [@@deriving sexp_of]
 
+    let hash t = 
+      match t with
+      | Arrow _ -> 0
+      | Int -> 1
+
+    exception Not_found
+
+    let nth t i = 
+      match t, i with
+      | Arrow (t1, _), 0 -> t1
+      | Arrow (_, t2), 1 -> t2
+      | _ -> raise Not_found
+
+    let length t = 
+      match t with
+      | Arrow _ -> 2
+      | Int -> 0
+
     module Traverse (F : Applicative.S) = struct
       module Intf = struct
         module type S = sig end
@@ -78,6 +96,10 @@ module Unifier = struct
   end
 end
 
+let ctx = Unifier.Abbreviations.Ctx.empty
+
+let unify = Unifier.unify ~ctx ~metadata:(fun () -> ())
+
 module Type = struct
   type t =
     | Ttyp_var of int
@@ -94,12 +116,12 @@ module Type = struct
     let rec loop t =
       match t with
       | Ttyp_var x ->
-        Hashtbl.find_or_add table x ~default:(Unifier.make_var Flexible)
-      | Ttyp_int -> Unifier.make_former Int ()
+        Hashtbl.find_or_add table x ~default:(Unifier.Type.make_var Flexible)
+      | Ttyp_int -> Unifier.Type.make_former ~ctx Int ()
       | Ttyp_arrow (t1, t2) ->
         let t1 = loop t1 in
         let t2 = loop t2 in
-        Unifier.make_former (Arrow (t1, t2)) ()
+        Unifier.Type.make_former ~ctx (Arrow (t1, t2)) ()
     in
     loop t
 end
@@ -111,7 +133,7 @@ let ( =~ ) t1 t2 =
   let t2 = Type.to_utype t2 in
   try
     Ok
-      (Unifier.unify t1 t2;
+      (unify t1 t2;
        t1)
   with
   | Unifier.Unify (t1, t2) -> Error (t1, t2)

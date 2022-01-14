@@ -32,6 +32,9 @@ module type S = sig
   module Unifier :
     Unifier.S with type 'a former := 'a former and type metadata := Tag.t
 
+  module Abbreviations :
+    Abbreviations.S with type 'a former := 'a former
+
   (** The type [scheme] defines the abstract notion of a scheme in 
       "graphic" types.
       
@@ -71,7 +74,7 @@ module type S = sig
   type state
 
   (** [make_state ()] creates a new empty state. *)
-  val make_state : unit -> state
+  val make_state : Abbreviations.Ctx.t -> state
 
   (** [enter state] creates a new "stack frame" in the constraint solver
      and enters it.  *)
@@ -86,6 +89,8 @@ module type S = sig
       w/ the structure provided by the former. *)
 
   val make_former : state -> Unifier.Type.t former -> Unifier.Type.t
+
+  val unify : state -> Unifier.Type.t -> Unifier.Type.t -> unit
 
   (** [instantiate scheme] instantates the scheme [scheme]. It does so, by
       taking fresh copies of the generic variables, without necessarily

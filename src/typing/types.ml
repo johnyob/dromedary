@@ -45,6 +45,28 @@ module Algebra = struct
         | Constr of 'a list * string
       [@@deriving sexp_of]
 
+      let hash t = 
+        match t with
+        | Arrow _ -> 0
+        | Tuple _ -> 1
+        | Constr (_, constr) -> 2 + String.hash constr
+
+      exception Not_found
+
+      let nth t i = 
+        match t, i with
+        | Arrow (t1, _t2), 0 -> t1
+        | Arrow (_t1, t2), 1 -> t2
+        | Tuple ts, i | Constr (ts, _), i ->
+          (try List.nth_exn ts i with _ -> raise Not_found)
+        | _ -> raise Not_found
+
+      let length t = 
+        match t with
+        | Arrow _ -> 2
+        | Tuple ts | Constr (ts, _) -> List.length ts
+
+
       module Traverse (F : Applicative.S) = struct
         module Intf = struct
           module type S = sig end

@@ -11,7 +11,7 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open! Import
+open Base
 
 (* This module implements an efficient union-find algorithm
    on disjoint sets, based on Tarjan and Huet. See IA notes. *)

@@ -126,6 +126,10 @@ module Make (Algebra : Algebra) : sig
    
   *)
 
+  (* TODO: Create a public interface *)
+
+  module Abbreviations : Private.Abbreviations.S with type 'a former := 'a Type_former.t
+
   module Solver : sig
     module Type := Types.Type
 
@@ -137,12 +141,12 @@ module Make (Algebra : Algebra) : sig
       | `Rigid_variable_escape of Type_var.t
       ]
 
-    val solve : 'a t -> ('a, [> error ]) Result.t
+    val solve : ctx:Abbreviations.Ctx.t -> 'a t -> ('a, [> error ]) Result.t
   end
 
   (** [solve t] solves the constraint [t], returning it's value 
       or an error. *)
-  val solve : 'a t -> ('a, [> Solver.error ]) Result.t
+  val solve : ctx:Abbreviations.Ctx.t -> 'a t -> ('a, [> Solver.error ]) Result.t
 
   (** [&~] is an infix alias for [both]. *)
   val ( &~ ) : 'a t -> 'b t -> ('a * 'b) t

@@ -3,6 +3,7 @@ open Parsetree
 open Ast_types
 open Types
 module Constraint = Typing.Import.Constraint
+module Abbreviations = Constraint.Abbreviations
 
 let print_constraint_result ~env exp =
   let t = Infer.Expression.infer exp |> Computation.Expression.run ~env in
@@ -14,8 +15,8 @@ let print_constraint_result ~env exp =
   output |> Sexp.to_string_hum |> print_endline
 
 
-let print_infer_result ~env exp =
-  let texp = Infer.infer ~env exp in
+let print_infer_result ~abbrev_ctx ~env exp =
+  let texp = Infer.infer ~ctx:abbrev_ctx ~env exp in
   match texp with
   | Ok (variables, texp) ->
     let ppf = Format.std_formatter in
@@ -53,7 +54,7 @@ let add_list env =
 
 let%expect_test "constant: int" =
   let exp = Pexp_const (Const_int 1) in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables:
@@ -64,7 +65,7 @@ let%expect_test "constant: int" =
 
 let%expect_test "constant: bool" =
   let exp = Pexp_const (Const_bool true) in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables:
@@ -75,7 +76,7 @@ let%expect_test "constant: bool" =
 
 let%expect_test "constant: unit" =
   let exp = Pexp_const Const_unit in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables:
@@ -105,7 +106,7 @@ let%expect_test "primitives" =
     in
     Pexp_app (Pexp_app (Pexp_prim Prim_eq, lhs), Pexp_const (Const_int 12))
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables:
@@ -209,7 +210,7 @@ let%expect_test "function - identity" =
     (* fun x -> x *)
     Pexp_fun (Ppat_var "x", Pexp_var "x")
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables: α60
@@ -240,7 +241,7 @@ let%expect_test "function - curry" =
                   (Pexp_var "f", Pexp_tuple [ Pexp_var "x"; Pexp_var "y" ]) ) )
       )
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables: α68,α70,α71
@@ -317,7 +318,7 @@ let%expect_test "function - uncurry" =
           ( Ppat_tuple [ Ppat_var "x"; Ppat_var "y" ]
           , Pexp_app (Pexp_app (Pexp_var "f", Pexp_var "x"), Pexp_var "y") ) )
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables: α81,α84,α86
@@ -397,7 +398,7 @@ let%expect_test "function - compose" =
               , Pexp_app (Pexp_var "f", Pexp_app (Pexp_var "g", Pexp_var "x"))
               ) ) )
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables: α98,α97,α99
@@ -470,7 +471,7 @@ let%expect_test "function - fst" =
     (* fun (x, y) -> x *)
     Pexp_fun (Ppat_tuple [ Ppat_var "x"; Ppat_var "y" ], Pexp_var "x")
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables: α108,α107
@@ -503,7 +504,7 @@ let%expect_test "function - snd" =
     (* fun (x, y) -> y *)
     Pexp_fun (Ppat_tuple [ Ppat_var "x"; Ppat_var "y" ], Pexp_var "y")
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables: α116,α114
@@ -539,7 +540,7 @@ let%expect_test "function - hd" =
       ( Ppat_construct ("Cons", Some (Ppat_tuple [ Ppat_var "x"; Ppat_any ]))
       , Pexp_var "x" )
   in
-  print_infer_result ~env exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env exp;
   [%expect
     {|
     Variables: α122
@@ -589,7 +590,7 @@ let%expect_test "annotation - identity" =
       ( [ "a" ]
       , Pexp_fun (Ppat_constraint (Ppat_var "x", Ptyp_var "a"), Pexp_var "x") )
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables: α132
@@ -614,7 +615,7 @@ let%expect_test "annotation - identity" =
       ( [ "a" ]
       , Pexp_fun (Ppat_constraint (Ppat_var "x", Ptyp_var "a"), Pexp_var "x") )
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables: α142
@@ -643,7 +644,7 @@ let%expect_test "annotation - succ" =
               ( Pexp_app (Pexp_prim Prim_add, Pexp_var "x")
               , Pexp_const (Const_int 1) ) ) )
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables:
@@ -690,7 +691,7 @@ let%expect_test "annotation - succ" =
               ( Pexp_app (Pexp_prim Prim_add, Pexp_var "x")
               , Pexp_const (Const_int 1) ) ) )
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     ("Cannot unify types"
@@ -714,7 +715,7 @@ let%expect_test "let - identity" =
       , Pexp_app (Pexp_app (Pexp_var "id", Pexp_var "id"), Pexp_const Const_unit)
       )
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables:
@@ -775,6 +776,9 @@ let%expect_test "let - identity" =
                    └──Type expr: Constructor: unit
                    └──Desc: Constant: () |}]
 
+(* ('a -> 'a) -> (unit -> 'b) *)
+(* 'a -> 'a *)
+
 let%expect_test "let - map" =
   let env = add_list Env.empty in
   let exp =
@@ -830,7 +834,7 @@ let%expect_test "let - map" =
               ( Pexp_app (Pexp_var "map", Pexp_var "f")
               , Pexp_construct ("Nil", None) ) ) )
   in
-  print_infer_result ~env exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env exp;
   [%expect
     {|
     Variables:
@@ -1104,7 +1108,7 @@ let%expect_test "let rec - monomorphic recursion" =
         ]
       , Pexp_var "id" )
   in
-  print_infer_result ~env exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env exp;
   [%expect
     {|
     Variables:
@@ -1203,7 +1207,7 @@ let%expect_test "let rec - mutual recursion (monomorphic)" =
         ]
       , Pexp_var "is_even" )
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables:
@@ -1379,7 +1383,7 @@ let%expect_test "let rec - mutual recursion (polymorphic)" =
         ]
       , Pexp_var "foo" )
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables: α328
@@ -1443,7 +1447,7 @@ let%expect_test "f-pottier elaboration 1" =
         ]
       , Pexp_var "u" )
   in
-  print_infer_result ~env:Env.empty exp;
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
   [%expect
     {|
     Variables:
@@ -1492,3 +1496,130 @@ let%expect_test "f-pottier elaboration 1" =
              └──Type expr: Constructor: unit
              └──Desc: Variable
                 └──Variable: u |}]
+
+let%expect_test "abbrev - morel" =
+  let abbrev_ctx =
+    let open Types.Algebra.Type_former in
+    let abbrev_k =
+      let a = Abbreviations.Type.make_var () in
+      let pair = Tuple [ a; a ] in
+      Abbreviations.Abbreviation.(
+        make
+          ~former:(Constr ([], "K"))
+          ~rank:1
+          ~decomposable_positions:[ 0 ]
+          ~productivity:(Productive pair)
+          ~type_:([ a ], pair))
+    in
+    let abbrev_f =
+      let a = Abbreviations.Type.make_var () in
+      let arr = Arrow (a, a) in
+      Abbreviations.Abbreviation.(
+        make
+          ~former:(Constr ([], "F"))
+          ~rank:1
+          ~productivity:(Productive arr)
+          ~decomposable_positions:[ 0 ]
+          ~type_:([ a ], arr))
+    in
+    let abbrev_g =
+      let a = Abbreviations.Type.make_var () in
+      let k = Abbreviations.Type.make_former (Constr ([ a ], "K")) in
+      let f = Constr ([ k ], "F") in
+      Abbreviations.Abbreviation.(
+        make
+          ~former:(Constr ([], "G"))
+          ~rank:2
+          ~decomposable_positions:[ 0 ]
+          ~productivity:(Productive (Arrow (k, k)))
+          ~type_:([ a ], f))
+    in
+    Abbreviations.Ctx.empty
+    |> Abbreviations.Ctx.add ~abbrev:abbrev_k
+    |> Abbreviations.Ctx.add ~abbrev:abbrev_f
+    |> Abbreviations.Ctx.add ~abbrev:abbrev_g
+  in
+  let exp =
+    Pexp_let
+      ( Nonrecursive
+      , [ { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "f"
+          ; pvb_expr =
+              Pexp_constraint
+                ( Pexp_fun (Ppat_var "x", Pexp_var "x")
+                , Ptyp_constr ([ Ptyp_constr ([], "int") ], "G") )
+          }
+        ]
+      , Pexp_exists
+          ( [ "a" ]
+          , Pexp_fun
+              ( Ppat_constraint
+                  (Ppat_var "x", Ptyp_constr ([ Ptyp_var "a" ], "K"))
+              , Pexp_app (Pexp_var "f", Pexp_var "x") ) ) )
+  in
+  print_infer_result ~abbrev_ctx ~env:Env.empty exp;
+  [%expect{|
+    Variables:
+    Expression:
+    └──Expression:
+       └──Type expr: Arrow
+          └──Type expr: Constructor: K
+             └──Type expr: Constructor: int
+          └──Type expr: Constructor: K
+             └──Type expr: Constructor: int
+       └──Desc: Let
+          └──Value bindings:
+             └──Value binding:
+                └──Pattern:
+                   └──Type expr: Arrow
+                      └──Type expr: Constructor: K
+                         └──Type expr: Constructor: int
+                      └──Type expr: Constructor: K
+                         └──Type expr: Constructor: int
+                   └──Desc: Variable: f
+                └──Abstraction:
+                   └──Variables:
+                   └──Expression:
+                      └──Type expr: Arrow
+                         └──Type expr: Constructor: K
+                            └──Type expr: Constructor: int
+                         └──Type expr: Constructor: K
+                            └──Type expr: Constructor: int
+                      └──Desc: Function
+                         └──Pattern:
+                            └──Type expr: Constructor: K
+                               └──Type expr: Constructor: int
+                            └──Desc: Variable: x
+                         └──Expression:
+                            └──Type expr: Constructor: K
+                               └──Type expr: Constructor: int
+                            └──Desc: Variable
+                               └──Variable: x
+          └──Expression:
+             └──Type expr: Arrow
+                └──Type expr: Constructor: K
+                   └──Type expr: Constructor: int
+                └──Type expr: Constructor: K
+                   └──Type expr: Constructor: int
+             └──Desc: Function
+                └──Pattern:
+                   └──Type expr: Constructor: K
+                      └──Type expr: Constructor: int
+                   └──Desc: Variable: x
+                └──Expression:
+                   └──Type expr: Constructor: K
+                      └──Type expr: Constructor: int
+                   └──Desc: Application
+                      └──Expression:
+                         └──Type expr: Arrow
+                            └──Type expr: Constructor: K
+                               └──Type expr: Constructor: int
+                            └──Type expr: Constructor: K
+                               └──Type expr: Constructor: int
+                         └──Desc: Variable
+                            └──Variable: f
+                      └──Expression:
+                         └──Type expr: Constructor: K
+                            └──Type expr: Constructor: int
+                         └──Desc: Variable
+                            └──Variable: x |}]

@@ -17,6 +17,16 @@ module Type_former = struct
   module T = struct
     type 'a t = Constr of 'a list * string [@@deriving sexp_of]
 
+    let hash (Constr (_, constr)) = String.hash constr
+
+    exception Not_found
+
+    let nth (Constr (ts, _)) i = 
+      try List.nth_exn ts i with _ -> raise Not_found
+
+    let length (Constr (ts, _)) = List.length ts
+
+
     module Traverse (F : Applicative.S) = struct
       open F
 
@@ -48,9 +58,11 @@ end
 module Unifier = Unifier (Type_former) (Metadata)
 module Type = Unifier.Type
 
-let unify = Unifier.unify
-let make_var ?(flexibility = Type.Flexible) () = Unifier.make_var flexibility ()
-let ( @ ) f ts = Unifier.make_former (Constr (ts, f)) ()
+let ctx = Unifier.Abbreviations.Ctx.empty
+
+let unify = Unifier.unify ~ctx ~metadata:(fun () -> ())
+let make_var ?(flexibility = Type.Flexible) () = Unifier.Type.make_var flexibility ()
+let ( @ ) f ts = Unifier.Type.make_former ~ctx (Constr (ts, f)) ()
 
 let print_type t =
   let content = Type.to_dot t in

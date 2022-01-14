@@ -817,13 +817,13 @@ let let_0 ~in_ =
   | _ -> assert false
 
 
-let infer exp ~env:env' =
+let infer exp ~ctx ~env:env' =
   let open Result.Let_syntax in
   let%bind exp =
     let exp = Expression.infer exp in
     Computation.Expression.(run ~env:env' (exp >>| fun in_ -> let_0 ~in_))
   in
-  solve exp
+  solve ~ctx exp
   |> Result.map_error ~f:(function
          | `Unify (type_expr1, type_expr2) ->
            [%message

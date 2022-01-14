@@ -11,31 +11,38 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Base
+module Elt : sig
+  type 'a t [@@deriving sexp_of]
 
-(** This module implements an efficient union-find algorithm
-    on disjoint sets, based on Tarjan and Huet. See IA Algorithms notes. *)
+  val get_value : 'a t -> 'a
+  val set_value : 'a t -> 'a -> unit
 
-(** The type ['a t] denotes a node within a given disjoint set. 
-    ['a] is the type of the value (descriptor) of the node. *)
+  val make : 'a -> 'a t
+end
 
 type 'a t [@@deriving sexp_of]
 
-(** [make desc] creates a make node. It forms it's disjoint set, with 
-    descriptor [desc]. *)
-val make : 'a -> 'a t
+val first : 'a t -> 'a Elt.t option
 
-(** [find node] returns the descriptor associated w/ [node]'s set. *)
-val find : 'a t -> 'a
+val empty : unit -> 'a t
 
-(** [set node desc] updates the descriptor of [node] to [desc]. *)
-val set : 'a t -> 'a -> unit
+val remove : 'a t -> 'a Elt.t -> unit
 
-(** [union node1 node2 ~f] merges the disjoint sets associated with [node1]
-    and [node2]. The descriptors are merged using the function [~f]. *)
-val union : 'a t -> 'a t -> f:('a -> 'a -> 'a) -> unit
+val remove_first : 'a t -> 'a option
 
-(** [node1 === node2] returns true if [node1] and [node2] belong to the same
-    disjoint set. *)
-val ( === ) : 'a t -> 'a t -> bool
+val insert_first : 'a t -> 'a Elt.t -> unit
+
+val insert_first_elt : 'a t -> 'a -> 'a Elt.t
+
+val merge : 'a t -> 'a t -> compare:('a -> 'a -> int) -> 'a t
+
+val map : 'a t -> f:('a -> 'b) -> 'b t
+
+(** Must not modify the structure while iterating *)
+val unsafe_iter : 'a t -> f:('a Elt.t -> unit) -> unit
+
+val iter : 'a t -> f:('a -> unit) -> unit
+
+val fold : 'a t -> init:'b -> f:('a -> 'b -> 'b) -> 'b
+
 
