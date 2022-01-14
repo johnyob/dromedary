@@ -16,6 +16,7 @@ include Base
 module Private = struct
   module Constraint = Dromedary_constraints_constraint.Constraint
   module Solver = Dromedary_constraints_solver.Solver
+  module Abbreviations = Dromedary_constraints_solver.Abbreviations
 end
 
 include Private.Constraint.Module_types

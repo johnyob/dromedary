@@ -38,11 +38,12 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
     let map _t ~f:_ = raise_s [%message "Non_productive_view cannot be mapped"]
     let iter = Hash_set.iter
-    let fold = Hash_set.fold
+    let fold t ~init ~f = Hash_set.fold t ~init ~f:(fun acc x -> f x acc)
     let repr t = Hash_set.find t ~f:(Fn.const true)
     let empty ~hash_key = Hash_set.create hash_key
     let add t x = Hash_set.add t x
     let merge t1 t2 = Hash_set.union t1 t2
+    let invariant t : unit = assert (Hash_set.length t = 0)
   end
 
   module Productive_view = struct
@@ -55,11 +56,11 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
       let value t = t.value
       let rank t = t.rank
-      (* let map t ~f = { t with value = f t.value } *)
+      let map t ~f = { t with value = f t.value }
     end
 
     type 'a t =
-      { repr : 'a desc
+      { mutable repr : 'a desc
       ; expansive : 'a Elt.t Doubly_linked.t
       ; elts : (int, 'a desc) Hashtbl.t
       }
@@ -87,17 +88,52 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       { repr = desc; expansive; elts }
 
 
-    let map _t ~f:_ =
-      raise_s [%message "Productive_view cannot be mapped : TODO fix"]
+    let map _t ~f:_ = raise_s [%message "Productive_view cannot be mapped"]
+
+    let map_ ~hash t ~f =
+      let expansive = Doubly_linked.map t.expansive ~f:(Elt.map ~f) in
+      let elts = Hashtbl.create (module Int) in
+      (* Add expansive elements to [elts] *)
+      Doubly_linked.unsafe_iter expansive ~f:(fun elt ->
+          let key = Doubly_linked.Elt.get_value elt |> Elt.value |> hash in
+          Hashtbl.set elts ~key ~data:(Expansive elt));
+      (* Add non-expansive elements to [elts] *)
+      Hashtbl.iter t.elts ~f:(fun desc ->
+          match desc with
+          | Expansive _ -> ()
+          | Non_expansive elt ->
+            let elt = Elt.map elt ~f in
+            Hashtbl.set
+              elts
+              ~key:(elt |> Elt.value |> hash)
+              ~data:(Non_expansive elt));
+      (* Determine new repr from [elts] *)
+      let repr =
+        Hashtbl.find_exn elts (elt_of_desc t.repr |> Elt.value |> hash)
+      in
+      (* Construct new view *)
+      { repr; expansive; elts }
 
 
     let iter t ~f =
-      Hashtbl.iter t.elts ~f:(fun desc -> elt_of_desc desc |> Elt.value |> f)
+      (* First iter over expansives *)
+      Doubly_linked.iter t.expansive ~f:(fun elt -> f (Elt.value elt));
+      (* Then iter over non-expansives *)
+      Hashtbl.iter t.elts ~f:(fun desc ->
+          match desc with
+          | Expansive _ -> ()
+          | Non_expansive elt -> f (Elt.value elt))
 
 
-    let fold t ~init ~f =
+    let fold (type a b) (t : a t) ~(init : b) ~(f : a -> b -> b) : b =
+      let init =
+        Doubly_linked.fold t.expansive ~init ~f:(fun elt acc ->
+            f (Elt.value elt) acc)
+      in
       Hashtbl.fold t.elts ~init ~f:(fun ~key:_ ~data:desc acc ->
-          f acc (elt_of_desc desc |> Elt.value))
+          match desc with
+          | Expansive _ -> acc
+          | Non_expansive elt -> f (Elt.value elt) acc)
 
 
     let repr t = t.repr |> elt_of_desc |> Elt.value
@@ -262,6 +298,10 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
         make (Former productive_view) metadata)
 
 
+    let productive_view_map productive_view ~f =
+      Productive_view.map_ ~hash:Former.hash productive_view ~f
+
+
     module To_dot = struct
       type state =
         { mutable id : int
@@ -348,6 +388,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
     open Productive_view
 
     let find t key = Hashtbl.find_exn t.elts key |> elt_of_desc |> Elt.value
+
     (* let former_of_desc desc = elt_of_desc desc |> Elt.value *)
     let rank_of_desc desc = elt_of_desc desc |> Elt.rank
 
@@ -356,7 +397,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
     let iter_decomposable_positions ~ctx former1 former2 ~f =
       assert (Former.hash former1 = Former.hash former2);
       let decomposable_positions =
-        Abbreviations.Ctx.get_decomposable_positions ctx former1
+        A.Ctx.get_decomposable_positions ctx former1
       in
       List.iter decomposable_positions ~f:(fun i ->
           let type1 = Former.nth former1 i
@@ -433,7 +474,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       let formers2 = formers t2 in
       List.cartesian_product formers1 formers2
       |> List.exists ~f:(fun (former1, former2) ->
-             Abbreviations.Ctx.clash ctx former1 former2)
+             A.Ctx.clash ctx former1 former2)
 
 
     exception Cannot_expand
@@ -467,7 +508,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       (* Determine the expansion of the former *)
       let avars, aformer = A.Ctx.get_expansion ctx former in
       (* Convert the expansion type to a unifier type *)
-      let _uvars, uformer =
+      let uvars, uformer =
         let copied : (A.Type.t, Type.t) Hashtbl.t =
           Hashtbl.create (module A.Type)
         in
@@ -496,8 +537,25 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       (* Remove [dl_elt] from expansive, add to non-expansive. *)
       Doubly_linked.remove t.expansive dl_elt;
       Hashtbl.set t.elts ~key:(Former.hash former) ~data:(Non_expansive elt);
+      (* Add new former to either expansive or primitives (non-expansive) *)
+      let elt' = Elt.{ value = uformer; rank = A.Ctx.get_rank ctx uformer } in
+      let desc' =
+        if A.Ctx.has_abbrev ctx uformer
+        then Expansive (Doubly_linked.insert_first_elt t.expansive elt')
+        else Non_expansive elt'
+      in
+      Hashtbl.set t.elts ~key:(Former.hash uformer) ~data:desc';
       (* Update representive, expanded former may be new minima. *)
-      iter_decomposable_positions ~ctx former uformer ~f
+      if elt'.rank < rank_of_desc t.repr then t.repr <- desc';
+      (* Iterate on decomposable positions of [former], unifying 
+         vars of [former] and [uvars] *)
+      let decomposable_positions =
+        A.Ctx.get_decomposable_positions ctx former
+      in
+      List.iter decomposable_positions ~f:(fun i ->
+          let type1 = Former.nth former i
+          and type2 = List.nth_exn uvars i in
+          f type1 type2)
   end
 
   exception Cannot_unify_rigid_variable
@@ -604,14 +662,18 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
         else (
           (* We now expand, and then recurse  *)
           (try
+             Caml.Format.printf "Expanding\n";
              Productive_view_.expand
                ~ctx
                ~metadata
                productive_view1
                productive_view2
-               ~f:(unify_exn ~ctx ~metadata)
+               ~f:(unify_exn ~ctx ~metadata);
+             Caml.Format.printf "Expanded!\n"
            with
-          | Productive_view_.Cannot_expand -> raise Clash);
+          | Productive_view_.Cannot_expand ->
+            Caml.Format.printf "Cannot expand!\n";
+            raise Clash);
           loop ())
     in
     loop ()

@@ -16,7 +16,6 @@
 
 open! Import
 
-
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
@@ -45,6 +44,22 @@ module type S = sig
     val make_former : t former -> t
   end
 
+  module Abbreviation : sig
+    type t
+
+    type productivity =
+      | Non_productive of int
+      | Productive of Type.t former
+
+    val make
+      :  former:_ former
+      -> rank:int
+      -> decomposable_positions:int list
+      -> productivity:productivity
+      -> type_:Type.t list * Type.t former
+      -> t
+  end
+
   module Ctx : sig
     (** type [t] encodes the abbreviation context, mapping [_ former]s to 
         abbreviations. *)
@@ -53,6 +68,7 @@ module type S = sig
     (** [empty] is the empty type abbreviation context.  *)
     val empty : t
 
+    val add : t -> abbrev:Abbreviation.t -> t
     val has_abbrev : t -> _ former -> bool
 
     exception Not_found
@@ -64,10 +80,11 @@ module type S = sig
           (** [Productive] encodes that the former has a productive abbreviation *)
 
     (** [get_productivity t former] returns whether the productivity of the 
-        former [former] in the context [t]. *)
+        former [former] in the context [t]. Raises [Not_found] if former is primitive. *)
     val get_productivity : t -> _ former -> productivity
 
-    (** [get_expansion t former] returns the expansion of [former] in context. *)
+    (** [get_expansion t former] returns the expansion of [former] in context. 
+        Raises [Not_found] is [former] has no expansion *)
     val get_expansion : t -> _ former -> Type.t list * Type.t former
 
     (** [decomposable_positions t former] returns the decomposable positions

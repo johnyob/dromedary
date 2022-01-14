@@ -28,6 +28,8 @@ module Make (Algebra : Algebra) = struct
   module G = Generalization.Make (Type_former)
   module U = G.Unifier
 
+  module Abbreviations = G.Abbreviations
+
   (* Applicative structure used for elaboration. *)
 
   module Elaborate = struct
@@ -96,8 +98,8 @@ module Make (Algebra : Algebra) = struct
     }
 
   (* [make_state ()] returns a fresh solver state. *)
-  let make_state () =
-    { generalization_state = G.make_state ()
+  let make_state abbrev_ctx =
+    { generalization_state = G.make_state abbrev_ctx
     ; constraint_var_env = Hashtbl.create (module Int)
     }
 
@@ -542,10 +544,10 @@ module Make (Algebra : Algebra) = struct
     | `Rigid_variable_escape of Type_var.t
     ]
 
-  let solve cst =
+  let solve ~ctx cst =
     (* Wrap exceptions raised by solving in a [Result] type. *)
     try
-      Ok (Elaborate.run (solve ~state:(make_state ()) ~env:Env.empty cst))
+      Ok (Elaborate.run (solve ~state:(make_state ctx) ~env:Env.empty cst))
     with
     | Unify (t1, t2) -> Error (`Unify (t1, t2))
     | Cycle t -> Error (`Cycle t)

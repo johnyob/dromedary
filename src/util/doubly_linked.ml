@@ -93,3 +93,42 @@ let merge t1 t2 ~compare =
         result)
   in
   loop t1 t2
+
+
+let map t ~f =
+  let rec loop t =
+    match t.first with
+    | None -> empty ()
+    | Some elt ->
+      ignore (remove_first t : _ option);
+      let x = f (Elt.get_value elt) in
+      let result = loop t in
+      insert_first t elt;
+      ignore (insert_first_elt result x : _ Elt.t);
+      result
+  in
+  loop t
+
+
+let unsafe_iter t ~f =
+  let rec loop elt =
+    match elt with
+    | None -> ()
+    | Some elt ->
+      f elt;
+      loop Elt.(elt.next)
+  in
+  loop t.first
+
+let iter t ~f = 
+  unsafe_iter t ~f:(fun elt -> f (Elt.get_value elt))
+
+let fold t ~init ~f = 
+  let rec loop elt acc = 
+    match elt with
+    | None -> acc
+    | Some elt ->
+      loop Elt.(elt.next) (f (Elt.get_value elt) acc)
+  in
+  loop t.first init
+

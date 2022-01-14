@@ -45,12 +45,12 @@ end
 module type View = sig
   (** ['a t] encodes a view with representive of type ['a] *)
   type 'a t [@@deriving sexp_of]
-  type 'a repr 
+
+  type 'a repr
 
   val map : 'a t -> f:('a -> 'b) -> 'b t
   val iter : 'a t -> f:('a -> unit) -> unit
-  val fold : 'a t -> init:'b -> f:('b -> 'a -> 'b) -> 'b
-
+  val fold : 'a t -> init:'b -> f:('a -> 'b -> 'b) -> 'b
   val repr : 'a t -> 'a repr
 end
 
@@ -67,7 +67,11 @@ module type S = sig
 
   module Abbreviations : Abbreviations.S with type 'a former := 'a former
 
-  module Non_productive_view : View with type 'a repr := 'a option
+  module Non_productive_view : sig
+    include View with type 'a repr := 'a option
+
+    val invariant : 'a t -> unit
+  end
 
   module Productive_view : View with type 'a repr := 'a
 
@@ -87,6 +91,11 @@ module type S = sig
 
     type non_productive_view = t former Non_productive_view.t
     type productive_view = t former Productive_view.t
+
+    val productive_view_map
+      :  productive_view
+      -> f:(t former -> t former)
+      -> productive_view
 
     type structure =
       | Var of { mutable flexibility : flexibility }

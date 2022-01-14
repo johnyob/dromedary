@@ -49,18 +49,27 @@ module Make (Former : Type_former.S) = struct
 
   module Abbreviation = struct
     type t =
-      { type_ : Type.t list * Type.t Former.t
+      { hash : int
+      ; type_ : Type.t list * Type.t Former.t
       ; productivity : productivity
       ; decomposable_positions : int list
       ; rank : int
       }
 
-    (** surpress unused warning. *)
     and productivity =
       | Non_productive of int
       | Productive of Type.t Former.t
-    [@@warning "-37"]
 
+    let make ~former ~rank ~decomposable_positions ~productivity ~type_ =
+      { hash = Former.hash former
+      ; rank
+      ; productivity
+      ; decomposable_positions
+      ; type_
+      }
+
+
+    let hash t = t.hash
     let type_ t = t.type_
     let productivity t = t.productivity
     let decomposable_positions t = t.decomposable_positions
@@ -72,6 +81,13 @@ module Make (Former : Type_former.S) = struct
       { abbreviations : (int, Abbreviation.t, Int.comparator_witness) Map.t }
 
     let empty = { abbreviations = Map.empty (module Int) }
+
+    let add t ~abbrev =
+      { abbreviations =
+          Map.set t.abbreviations ~key:(Abbreviation.hash abbrev) ~data:abbrev
+      }
+
+
     let has_abbrev t former = Map.mem t.abbreviations (Former.hash former)
 
     exception Not_found
@@ -96,7 +112,10 @@ module Make (Former : Type_former.S) = struct
     let get_expansion t former = find_abbrev t former |> Abbreviation.type_
 
     let get_decomposable_positions t former =
-      find_abbrev t former |> Abbreviation.decomposable_positions
+      match Map.find t.abbreviations (Former.hash former) with
+      | Some abbrev -> Abbreviation.decomposable_positions abbrev
+      | None ->
+        List.range ~start:`inclusive ~stop:`exclusive 0 (Former.length former)
 
 
     let get_rank t former =

@@ -36,6 +36,13 @@ val insert_first_elt : 'a t -> 'a -> 'a Elt.t
 
 val merge : 'a t -> 'a t -> compare:('a -> 'a -> int) -> 'a t
 
+val map : 'a t -> f:('a -> 'b) -> 'b t
 
+(** Must not modify the structure while iterating *)
+val unsafe_iter : 'a t -> f:('a Elt.t -> unit) -> unit
+
+val iter : 'a t -> f:('a -> unit) -> unit
+
+val fold : 'a t -> init:'b -> f:('a -> 'b -> 'b) -> 'b
 
 
