@@ -692,7 +692,8 @@ let%expect_test "annotation - succ" =
               , Pexp_const (Const_int 1) ) ) )
   in
   print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     ("Cannot unify types"
      (type_expr1
       (Ttyp_arrow (Ttyp_var "\206\1771")
@@ -1496,6 +1497,91 @@ let%expect_test "f-pottier elaboration 1" =
              └──Desc: Variable
                 └──Variable: u |}]
 
+let%expect_test "let rec - polymorphic recursion" =
+  let env = add_list Env.empty in
+  let exp =
+    (* let rec (type a) id : a -> a = fun x -> x and id_int x = id (x : int) in id *)
+    Pexp_let
+      ( Recursive
+      , [ { pvb_forall_vars = [ "a" ]
+          ; pvb_pat =
+              Ppat_constraint
+                (Ppat_var "id", Ptyp_arrow (Ptyp_var "a", Ptyp_var "a"))
+          ; pvb_expr = Pexp_fun (Ppat_var "x", Pexp_var "x")
+          }
+        ; { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "id_int"
+          ; pvb_expr =
+              Pexp_fun
+                ( Ppat_var "x"
+                , Pexp_app
+                    ( Pexp_var "id"
+                    , Pexp_constraint (Pexp_var "x", Ptyp_constr ([], "int")) )
+                )
+          }
+        ]
+      , Pexp_var "id" )
+  in
+  print_infer_result ~abbrev_ctx:Abbreviations.Ctx.empty ~env exp;
+  [%expect {|
+    Variables: α363
+    Expression:
+    └──Expression:
+       └──Type expr: Arrow
+          └──Type expr: Variable: α363
+          └──Type expr: Variable: α363
+       └──Desc: Let rec
+          └──Value bindings:
+             └──Value binding:
+                └──Variable: id
+                └──Abstraction:
+                   └──Variables: α346
+                   └──Expression:
+                      └──Type expr: Arrow
+                         └──Type expr: Variable: α362
+                         └──Type expr: Variable: α362
+                      └──Desc: Function
+                         └──Pattern:
+                            └──Type expr: Variable: α362
+                            └──Desc: Variable: x
+                         └──Expression:
+                            └──Type expr: Variable: α362
+                            └──Desc: Variable
+                               └──Variable: x
+             └──Value binding:
+                └──Variable: id_int
+                └──Abstraction:
+                   └──Variables:
+                   └──Expression:
+                      └──Type expr: Arrow
+                         └──Type expr: Constructor: int
+                         └──Type expr: Constructor: int
+                      └──Desc: Function
+                         └──Pattern:
+                            └──Type expr: Constructor: int
+                            └──Desc: Variable: x
+                         └──Expression:
+                            └──Type expr: Constructor: int
+                            └──Desc: Application
+                               └──Expression:
+                                  └──Type expr: Arrow
+                                     └──Type expr: Constructor: int
+                                     └──Type expr: Constructor: int
+                                  └──Desc: Variable
+                                     └──Variable: id
+                                     └──Type expr: Constructor: int
+                               └──Expression:
+                                  └──Type expr: Constructor: int
+                                  └──Desc: Variable
+                                     └──Variable: x
+          └──Expression:
+             └──Type expr: Arrow
+                └──Type expr: Variable: α363
+                └──Type expr: Variable: α363
+             └──Desc: Variable
+                └──Variable: id
+                └──Type expr: Variable: α363 |}]
+
 let%expect_test "abbrev - morel" =
   let abbrev_ctx =
     let open Types.Algebra.Type_former in
@@ -1557,7 +1643,8 @@ let%expect_test "abbrev - morel" =
               , Pexp_app (Pexp_var "f", Pexp_var "x") ) ) )
   in
   print_infer_result ~abbrev_ctx ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
