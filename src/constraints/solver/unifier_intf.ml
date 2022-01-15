@@ -43,12 +43,12 @@ module type Metadata = sig
 end
 
 module type View = sig
-  (** ['a t] encodes a view with representive of type ['a] *)
+  (** ['a t] encodes a view with representive of type ['a]. *)
   type 'a t [@@deriving sexp_of]
 
+  (** ['a repr] encodes the representative of the view. *)
   type 'a repr
 
-  val map : 'a t -> f:('a -> 'b) -> 'b t
   val iter : 'a t -> f:('a -> unit) -> unit
   val fold : 'a t -> init:'b -> f:('a -> 'b -> 'b) -> 'b
   val repr : 'a t -> 'a repr
@@ -66,46 +66,35 @@ module type S = sig
   type metadata
 
   module Abbreviations : Abbreviations.S with type 'a former := 'a former
-
-  module Non_productive_view : sig
-    include View with type 'a repr := 'a option
-
-    val invariant : 'a t -> unit
-  end
-
+  module Non_productive_view : View with type 'a repr := 'a option
   module Productive_view : View with type 'a repr := 'a
 
-  module Type : sig
-    (** There are two kinds of variables [Flexible] and [Rigid]. 
-    
-        A [Flexible] variable can be unified with other variables and types. 
-        A [Rigid] (in general) cannot be unified. 
-    *)
-    type flexibility =
-      | Flexible
-      | Rigid
-    [@@deriving sexp_of, eq]
+  module Rigid_var : sig
+    type t [@@deriving sexp_of, compare]
 
+    val id : t -> int
+    val hash : t -> int
+    val make : unit -> t
+  end
+
+  module Type : sig
     (** [t] represents a type. See "graphical types". *)
     type t [@@deriving sexp_of, compare]
 
     type non_productive_view = t former Non_productive_view.t
     type productive_view = t former Productive_view.t
 
-    val productive_view_map
-      :  productive_view
-      -> f:(t former -> t former)
-      -> productive_view
-
     type structure =
-      | Var of { mutable flexibility : flexibility }
+      | Flexible_var
+      | Rigid_var of Rigid_var.t
       | Former of productive_view
 
     val to_dot : t -> string
 
     (** Each graphical type node consists of:
         - a unique identifier [id] (used to define a total ordering).
-        - a non-productive view
+        - a mutable non-productive view [non_productive_view], containing the set of 
+          non-productive abbreviations
         - a mutable [structure], which contains the node structure.
         - a mutable piece of [metadata]. 
     *)
@@ -113,7 +102,9 @@ module type S = sig
     (** [id t] returns the unique identifier of the type [t]. *)
     val id : t -> int
 
+    (** [get_non_productive_view t] returns the non-productive view of the type. *)
     val get_non_productive_view : t -> non_productive_view
+
     val set_non_productive_view : t -> non_productive_view -> unit
 
     (** [get_structure t] returns the structure of [t]. *)
@@ -132,13 +123,22 @@ module type S = sig
         Based on it's integer field: id. *)
     val hash : t -> int
 
-    (** [make_var flexibility metadata] returns a fresh variable 
-        with flexibility [flexibility], and metadata [metadata]. *)
-    val make_var : flexibility -> metadata -> t
+    (** [make_var metadata] returns a fresh flexible variable with metadata [metadata]. *)
+    val make_flexible_var : metadata -> t
+
+    (** [make_rigid_var rigid_var metadata] returns a fresh rigid variable, that encodes
+        the rigid variable [rigid_var] w/ metadata[metadata]. *)
+    val make_rigid_var : Rigid_var.t -> metadata -> t
 
     (** [make_former ctx former metadata] returns a fresh type former
         with metadata [metadata]. *)
     val make_former : ctx:Abbreviations.Ctx.t -> t former -> metadata -> t
+
+    exception Cannot_flexize of t
+
+    (** [flexize ~src ~dst] performs flexization on [src], "linking" it to [dst].
+        Raises [Cannot_flexize] if [src] is not a rigid variable. *)
+    val flexize : src:t -> dst:t -> unit
   end
 
   (** [unify t1 t2] equates the graphical type nodes [t1] and [t2], 
@@ -183,7 +183,8 @@ module type S = sig
 
   val fold_acyclic
     :  Type.t
-    -> var:(Type.t -> 'a)
+    -> flexible_var:(Type.t -> 'a)
+    -> rigid_var:(Rigid_var.t -> Type.t -> 'a)
     -> former:('a former -> 'a)
     -> 'a
 
@@ -193,7 +194,8 @@ module type S = sig
 
   val fold_cyclic
     :  Type.t
-    -> var:(Type.t -> 'a)
+    -> flexible_var:(Type.t -> 'a)
+    -> rigid_var:(Rigid_var.t -> Type.t -> 'a)
     -> former:('a former -> 'a)
     -> mu:(Type.t -> 'a -> 'a)
     -> 'a

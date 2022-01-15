@@ -81,9 +81,12 @@ module type S = sig
 
   val enter : state -> unit
 
-  (** [make_var] creates a fresh unification variable. *)
+  (** [make_flexible_var] creates a fresh unification variable. *)
 
-  val make_var : state -> Unifier.Type.flexibility -> Unifier.Type.t
+  val make_flexible_var : state -> Unifier.Type.t
+
+  (** [make_rigid_var] creates a fresh rigid variable. *)
+  val make_rigid_var : state -> Unifier.Rigid_var.t -> Unifier.Type.t
 
   (** [make_former] creates a fresh unification type node 
       w/ the structure provided by the former. *)
@@ -101,11 +104,12 @@ module type S = sig
   *)
   val instantiate : state -> scheme -> variables * Unifier.Type.t
 
-  exception Rigid_variable_escape of Unifier.Type.t
+  exception Rigid_variable_escape of Unifier.Rigid_var.t
+  exception Cannot_flexize of Unifier.Rigid_var.t
 
   val exit
     :  state
-    -> rigid_vars:Unifier.Type.t list
+    -> rigid_vars:Unifier.Rigid_var.t list
     -> types:Unifier.Type.t list
     -> variables * scheme list
 end

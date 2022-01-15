@@ -116,7 +116,7 @@ module Type = struct
     let rec loop t =
       match t with
       | Ttyp_var x ->
-        Hashtbl.find_or_add table x ~default:(Unifier.Type.make_var Flexible)
+        Hashtbl.find_or_add table x ~default:(Unifier.Type.make_flexible_var)
       | Ttyp_int -> Unifier.Type.make_former ~ctx Int ()
       | Ttyp_arrow (t1, t2) ->
         let t1 = loop t1 in
@@ -153,7 +153,8 @@ let decode_acyclic t =
   let open Type in
   Unifier.fold_acyclic
     t
-    ~var:(fun var -> Ttyp_var (Unifier.Type.id var))
+    ~flexible_var:(fun var -> Ttyp_var (Unifier.Type.id var))
+    ~rigid_var:(fun _var _ -> assert false)
     ~former:(function
       | Arrow (t1, t2) -> Ttyp_arrow (t1, t2)
       | Int -> Ttyp_int)

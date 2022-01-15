@@ -61,7 +61,10 @@ module Type = Unifier.Type
 let ctx = Unifier.Abbreviations.Ctx.empty
 
 let unify = Unifier.unify ~ctx ~metadata:(fun () -> ())
-let make_var ?(flexibility = Type.Flexible) () = Unifier.Type.make_var flexibility ()
+let make_flexible_var () = Unifier.Type.make_flexible_var ()
+
+let make_rigid_var () = Unifier.Type.make_rigid_var (Unifier.Rigid_var.make ()) ()
+
 let ( @ ) f ts = Unifier.Type.make_former ~ctx (Constr (ts, f)) ()
 
 let print_type t =
@@ -74,14 +77,14 @@ let print_type t =
 
 
 let%expect_test "Test unify : correctness 1" =
-  let t1 = "P" @ [ make_var ~flexibility:Rigid () ]
-  and t2 = "P" @ [ make_var () ] in
+  let t1 = "P" @ [ make_rigid_var () ]
+  and t2 = "P" @ [ make_flexible_var () ] in
   unify t1 t2;
   print_type t1;
   [%expect
     {|
     ┌─────────────────┐
-    │        !        │
+    │        0        │
     └─────────────────┘
       │
       │
@@ -91,9 +94,9 @@ let%expect_test "Test unify : correctness 1" =
     └─────────────────┘ |}]
 
 let%expect_test "Test unify : correctness 2" =
-  let t1 = "P" @ [ "f" @ [ make_var ~flexibility:Rigid (); make_var () ] ]
+  let t1 = "P" @ [ "f" @ [ make_rigid_var (); make_flexible_var () ] ]
   and t2 =
-    let y = make_var () in
+    let y = make_flexible_var () in
     "P" @ [ "f" @ [ y; "g" @ [ y ] ] ]
   in
   unify t1 t2;
@@ -101,7 +104,7 @@ let%expect_test "Test unify : correctness 2" =
   [%expect
     {|
     ┌────────────────────┐
-    │         !          │ ─┐
+    │         1          │ ─┐
     └────────────────────┘  │
       │                     │
       │                     │
@@ -124,10 +127,10 @@ let%expect_test "Test unify : correctness 2" =
 
 let%expect_test "Test unify : correctness 3" =
   let t1 =
-    let y = make_var () in
+    let y = make_flexible_var () in
     "P" @ [ y; "f" @ [ y ] ]
   and t2 =
-    let x = make_var () in
+    let x = make_flexible_var () in
     "P" @ [ x; x ]
   in
   unify t1 t2;

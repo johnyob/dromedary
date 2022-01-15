@@ -36,14 +36,12 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
   module Non_productive_view = struct
     type 'a t = 'a Hash_set.t [@@deriving sexp_of]
 
-    let map _t ~f:_ = raise_s [%message "Non_productive_view cannot be mapped"]
     let iter = Hash_set.iter
     let fold t ~init ~f = Hash_set.fold t ~init ~f:(fun acc x -> f x acc)
     let repr t = Hash_set.find t ~f:(Fn.const true)
     let empty ~hash_key = Hash_set.create hash_key
     let add t x = Hash_set.add t x
     let merge t1 t2 = Hash_set.union t1 t2
-    let invariant t : unit = assert (Hash_set.length t = 0)
   end
 
   module Productive_view = struct
@@ -56,7 +54,6 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
       let value t = t.value
       let rank t = t.rank
-      let map t ~f = { t with value = f t.value }
     end
 
     type 'a t =
@@ -88,68 +85,38 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       { repr = desc; expansive; elts }
 
 
-    let map _t ~f:_ = raise_s [%message "Productive_view cannot be mapped"]
-
-    let map_ ~hash t ~f =
-      let expansive = Doubly_linked.map t.expansive ~f:(Elt.map ~f) in
-      let elts = Hashtbl.create (module Int) in
-      (* Add expansive elements to [elts] *)
-      Doubly_linked.unsafe_iter expansive ~f:(fun elt ->
-          let key = Doubly_linked.Elt.get_value elt |> Elt.value |> hash in
-          Hashtbl.set elts ~key ~data:(Expansive elt));
-      (* Add non-expansive elements to [elts] *)
-      Hashtbl.iter t.elts ~f:(fun desc ->
-          match desc with
-          | Expansive _ -> ()
-          | Non_expansive elt ->
-            let elt = Elt.map elt ~f in
-            Hashtbl.set
-              elts
-              ~key:(elt |> Elt.value |> hash)
-              ~data:(Non_expansive elt));
-      (* Determine new repr from [elts] *)
-      let repr =
-        Hashtbl.find_exn elts (elt_of_desc t.repr |> Elt.value |> hash)
-      in
-      (* Construct new view *)
-      { repr; expansive; elts }
-
-
     let iter t ~f =
-      (* First iter over expansives *)
-      Doubly_linked.iter t.expansive ~f:(fun elt -> f (Elt.value elt));
-      (* Then iter over non-expansives *)
-      Hashtbl.iter t.elts ~f:(fun desc ->
-          match desc with
-          | Expansive _ -> ()
-          | Non_expansive elt -> f (Elt.value elt))
+      Hashtbl.iter t.elts ~f:(fun desc -> elt_of_desc desc |> Elt.value |> f)
 
 
     let fold (type a b) (t : a t) ~(init : b) ~(f : a -> b -> b) : b =
-      let init =
-        Doubly_linked.fold t.expansive ~init ~f:(fun elt acc ->
-            f (Elt.value elt) acc)
-      in
       Hashtbl.fold t.elts ~init ~f:(fun ~key:_ ~data:desc acc ->
-          match desc with
-          | Expansive _ -> acc
-          | Non_expansive elt -> f (Elt.value elt) acc)
+          f (elt_of_desc desc |> Elt.value) acc)
 
 
     let repr t = t.repr |> elt_of_desc |> Elt.value
   end
 
-  module Type = struct
-    (* There are two kinds of variables [Flexible] and [Rigid]. 
-    
-       A [Flexible] variable can be unified with other variables and types. 
-       A [Rigid] (in general) cannot be unified. 
-    *)
-    type flexibility =
-      | Flexible
-      | Rigid
-    [@@deriving sexp_of, eq]
+  (* See: https://github.com/janestreet/base/issues/121 *)
+  let post_incr r =
+    let result = !r in
+    Int.incr r;
+    result
 
+
+  module Rigid_var = struct
+    type t = int [@@deriving compare, sexp_of]
+
+    let make =
+      let next = ref 0 in
+      fun () -> post_incr next
+
+
+    let id t = t
+    let hash t = t
+  end
+
+  module Type = struct
     (* A graphical type consists of a [Union_find] node,
        allowing reasoning w/ multi-equations of nodes. *)
 
@@ -191,7 +158,8 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
        This is required for unification under a mixed prefix. 
     *)
     and structure =
-      | Var of { mutable flexibility : flexibility }
+      | Flexible_var
+      | Rigid_var of Rigid_var.t
       | Former of productive_view
     [@@deriving sexp_of]
 
@@ -238,13 +206,6 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
     let hash t = Hashtbl.hash (id t)
 
-    (* See: https://github.com/janestreet/base/issues/121 *)
-    let post_incr r =
-      let result = !r in
-      Int.incr r;
-      result
-
-
     (* [make structure metadata] returns a fresh type w/ structure [structure] and
      metadata [metadata]. *)
     let make =
@@ -261,7 +222,8 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
     (* [make_var flexibility metadata] returns a fresh variable 
      with flexibility [flexibility], and metadata [metadata]. *)
-    let make_var flexibility metadata = make (Var { flexibility }) metadata
+    let make_flexible_var metadata = make Flexible_var metadata
+    let make_rigid_var rigid_var metadata = make (Rigid_var rigid_var) metadata
 
     (* [make_former ctx former metadata] returns a fresh former
        with former [former] and metadata [metadata] under abbreviation context [ctx].  *)
@@ -298,10 +260,6 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
         make (Former productive_view) metadata)
 
 
-    let productive_view_map productive_view ~f =
-      Productive_view.map_ ~hash:Former.hash productive_view ~f
-
-
     module To_dot = struct
       type state =
         { mutable id : int
@@ -317,8 +275,8 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
       let structure_to_string structure : string =
         match structure with
-        | Var { flexibility = Flexible } -> [%string "*"]
-        | Var { flexibility = Rigid } -> [%string "!"]
+        | Flexible_var -> [%string "*"]
+        | Rigid_var rigid_var -> Sexp.to_string (Rigid_var.sexp_of_t rigid_var)
         | Former productive_view ->
           Former.sexp_of_t
             (fun _ -> Atom "")
@@ -358,7 +316,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
             let me = register state t in
             Hashtbl.set table ~key:(id t) ~data:me;
             (match get_structure t with
-            | Var _ -> ()
+            | Flexible_var | Rigid_var _ -> ()
             | Former productive_view ->
               Former.iter (Productive_view.repr productive_view) ~f:(fun t ->
                   let from = loop t in
@@ -374,6 +332,25 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       let _root = follow_type state t in
       let contents = Buffer.contents state.buffer in
       [%string "digraph {\n %{contents}}"]
+
+
+    exception Cannot_flexize of t
+
+    let flexize_desc desc_src desc_dst =
+      { id = desc_dst.id
+      ; structure = desc_dst.structure
+      ; non_productive_view =
+          Non_productive_view.merge
+            desc_src.non_productive_view
+            desc_dst.non_productive_view
+      ; metadata = Metadata.merge desc_src.metadata desc_dst.metadata
+      }
+
+
+    let flexize ~src ~dst =
+      match get_structure src with
+      | Rigid_var _ -> Union_find.union src dst ~f:flexize_desc
+      | _ -> raise (Cannot_flexize src)
   end
 
   open Type
@@ -515,7 +492,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
         (* Convert variables first (some may be phantoms) *)
         let uvars =
           List.map avars ~f:(fun avar ->
-              let uvar = make_var Flexible (metadata ()) in
+              let uvar = make_flexible_var (metadata ()) in
               Hashtbl.set copied ~key:avar ~data:uvar;
               uvar)
         in
@@ -525,7 +502,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
           | Not_found_s _ ->
             let utype =
               match A.Type.get_structure atype with
-              | A.Type.Var -> make_var Flexible (metadata ())
+              | A.Type.Var -> make_flexible_var (metadata ())
               | A.Type.Former former ->
                 make_former ~ctx (Former.map ~f:copy former) (metadata ())
             in
@@ -605,13 +582,13 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
        not arise here since [Union_find.union] checks physical equality 
        before before [unify_structure] is executed. 
     *)
-    | Var { flexibility = Rigid }, Var { flexibility = Rigid } ->
-      raise Cannot_unify_rigid_variable
-    | Var { flexibility = Rigid }, Var { flexibility = Flexible }
-    | Var { flexibility = Flexible }, Var { flexibility = Rigid } ->
-      Var { flexibility = Rigid }
-    | Var { flexibility = Flexible }, Var { flexibility = Flexible } ->
-      Var { flexibility = Flexible }
+    | Rigid_var rigid_var1, Rigid_var rigid_var2 ->
+      if Rigid_var.compare rigid_var1 rigid_var2 = 0
+      then Rigid_var rigid_var1
+      else raise Cannot_unify_rigid_variable
+    | Rigid_var rigid_var, Flexible_var | Flexible_var, Rigid_var rigid_var ->
+      Rigid_var rigid_var
+    | Flexible_var, Flexible_var -> Flexible_var
     (* Unification of variables (leaves) and type formers (internal nodes)
     
        We may unify a flexible variable with a type former, yielding
@@ -620,13 +597,12 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
        Note that no propagation of metadata is performed. This is required
        by external modules. See {!generalization.ml}. 
     *)
-    | Var { flexibility = Flexible }, Former productive_view
+    | Flexible_var, Former productive_view
+    | Former productive_view, Flexible_var -> Former productive_view
     (* Unification between a rigid variable and a type former is not 
        permitted. We raise [Unify_rigid]. *)
-    | Former productive_view, Var { flexibility = Flexible } ->
-      Former productive_view
-    | Var { flexibility = Rigid }, Former _
-    | Former _, Var { flexibility = Rigid } -> raise Cannot_unify_rigid_variable
+    | Rigid_var _, Former _ | Former _, Rigid_var _ ->
+      raise Cannot_unify_rigid_variable
     (* Unification between type formers (via productive views).
     
        We may unify type formers recursively. See {!unify_former}. 
@@ -668,9 +644,9 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
                ~metadata
                productive_view1
                productive_view2
-               ~f:(unify_exn ~ctx ~metadata);
-             (* Caml.Format.printf "Expanded!\n" *)
+               ~f:(unify_exn ~ctx ~metadata)
            with
+          (* Caml.Format.printf "Expanded!\n" *)
           | Productive_view_.Cannot_expand ->
             (* Caml.Format.printf "Cannot expand!\n"; *)
             raise Clash);
@@ -710,7 +686,7 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       with
       | Not_found_s _ ->
         (match get_structure t with
-        | Var _ ->
+        | Flexible_var | Rigid_var _ ->
           (* A variable is a leaf. Hence no traversal is
              required, so simply mark as visited. *)
           Hashtbl.set table ~key:t ~data:true
@@ -731,7 +707,8 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
   let fold_acyclic
       (type a)
       type_
-      ~(var : Type.t -> a)
+      ~(flexible_var : Type.t -> a)
+      ~(rigid_var : Rigid_var.t -> Type.t -> a)
       ~(former : a Former.t -> a)
       : a
     =
@@ -744,7 +721,8 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       | Not_found_s _ ->
         let result =
           match get_structure type_ with
-          | Var _ -> var type_
+          | Flexible_var -> flexible_var type_
+          | Rigid_var a -> rigid_var a type_
           | Former productive_view ->
             former (Former.map ~f:loop (Productive_view.repr productive_view))
         in
@@ -759,7 +737,8 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
   let fold_cyclic
       (type a)
       type_
-      ~(var : Type.t -> a)
+      ~(flexible_var : Type.t -> a)
+      ~(rigid_var : Rigid_var.t -> Type.t -> a)
       ~(former : a Former.t -> a)
       ~(mu : Type.t -> a -> a)
       : a
@@ -770,15 +749,18 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
     (* Recursive loop that traverses the graph. *)
     let rec loop t =
       match get_structure t with
-      | Var _ ->
+      | Flexible_var ->
         Hashtbl.set table ~key:t ~data:true;
-        var t
+        flexible_var t
+      | Rigid_var a -> 
+        Hashtbl.set table ~key:t ~data:true;
+        rigid_var a t
       | Former productive_view ->
         if Hashtbl.mem table t
         then (
           (* Mark this node as black *)
           Hashtbl.set table ~key:t ~data:true;
-          var t)
+          flexible_var t)
         else (
           (* Mark this node as grey. *)
           Hashtbl.set table ~key:t ~data:false;

@@ -31,6 +31,7 @@ module Make (Algebra : Algebra) : sig
     | `Unbound_term_variable of Term_var.t
     | `Unbound_constraint_variable of Constraint.variable
     | `Rigid_variable_escape of Type_var.t
+    | `Cannot_flexize of Type_var.t
     ]
 
   val solve : ctx:Abbreviations.Ctx.t -> 'a Constraint.t -> ('a, [> error ]) Result.t

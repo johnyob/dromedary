@@ -841,4 +841,8 @@ let infer exp ~ctx ~env:env' =
                ((var :> int) : int)]
          | `Rigid_variable_escape var ->
            [%message
-             "Rigid type variable escaped when generalizing" (var : string)])
+             "Rigid type variable escaped when generalizing" (var : string)]
+         | `Cannot_flexize var ->
+           [%message
+             "Could not flexize rigid type variable when generalizing"
+               (var : string)])

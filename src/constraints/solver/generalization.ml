@@ -162,8 +162,12 @@ module Make (Former : Type_former.S) = struct
   (* [make_var_] and [make_former_] are internal functions for making type 
      variables and type formers wrapping [Unifier]. *)
 
-  let make_var_ flexibility level =
-    U.Type.make_var flexibility { level; is_generic = false }
+  let make_flexible_var_ level =
+    U.Type.make_flexible_var { level; is_generic = false }
+
+
+  let make_rigid_var_ rigid_var level =
+    U.Type.make_rigid_var rigid_var { level; is_generic = false }
 
 
   let make_former_ ~ctx former level =
@@ -208,10 +212,7 @@ module Make (Former : Type_former.S) = struct
   (* [make_state ()] makes a new empty state. *)
 
   let make_state abbrev_ctx =
-    { current_level = outermost_level - 1
-    ; regions = Vec.make ()
-    ; abbrev_ctx 
-    }
+    { current_level = outermost_level - 1; regions = Vec.make (); abbrev_ctx }
 
 
   (* let pp_type_explicit type_ =
@@ -262,7 +263,6 @@ module Make (Former : Type_former.S) = struct
     pp_current_level state;
     pp_regions state *)
 
-
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
 
   let set_region state type_ =
@@ -273,11 +273,19 @@ module Make (Former : Type_former.S) = struct
   (* [make_var] creates a fresh unification variable, setting it's level
      and region. *)
 
-  let make_var state flexibility =
-    let var = make_var_ flexibility state.current_level in
+  let make_flexible_var state =
+    let var = make_flexible_var_ state.current_level in
     set_region state var;
     (* Caml.Format.printf "New variable:\n";
     pp_type var; *)
+    var
+
+
+  let make_rigid_var state rigid_var =
+    let var = make_rigid_var_ rigid_var state.current_level in
+    set_region state var;
+    (* Caml.Format.printf "New variable:\n";
+      pp_type var; *)
     var
 
 
@@ -348,6 +356,21 @@ module Make (Former : Type_former.S) = struct
     Vec.get_exn state.regions state.current_level
 
 
+  (* [is_young state type_] determines whether [type_] is in the young region. 
+     Optimized for many executions for a given state. *)
+  let is_young state =
+    let young_region =
+      (* TODO: Make this more efficient. Could use hashtbl. *)
+      Hash_set.of_list
+        (module Int)
+        (young_region state |> Hash_set.to_list |> List.map ~f:U.Type.id)
+    in
+    fun type_ ->
+      let result = Hash_set.mem young_region (U.Type.id type_) in
+      (* Caml.Format.printf "is young? %d = %b\n" (U.Type.id type_) result; *)
+      result
+
+
   (* Generalization performs 4 functions:
       1) Propagate delayed level updated to nodes
       2) Check no rigid variables have escpaed
@@ -390,18 +413,7 @@ module Make (Former : Type_former.S) = struct
        
        To implement this, we convert the young region into a sorted array
        which we iterate over to begin the traversal. *)
-    (* [is_young state type_] determines whether [type_] is in the young region. *)
-    let is_young =
-      let young_region =
-        Hash_set.of_list
-          (module Int)
-          (young_region state |> Hash_set.to_list |> List.map ~f:U.Type.id)
-      in
-      fun type_ ->
-        let result = Hash_set.mem young_region (U.Type.id type_) in
-        (* Caml.Format.printf "is young? %d = %b\n" (U.Type.id type_) result; *)
-        result
-    in
+    let is_young = is_young state in
     let young_region = young_region state |> Hash_set.to_array in
     Array.sort young_region ~compare:(fun t1 t2 ->
         Int.compare (get_level t1) (get_level t2));
@@ -435,7 +447,7 @@ module Make (Former : Type_former.S) = struct
             (U.Type.get_non_productive_view type_)
             ~f:(Former.iter ~f:(fun type_ -> loop type_ level));
           match U.Type.get_structure type_ with
-          | U.Type.Var _ ->
+          | U.Type.Flexible_var | U.Type.Rigid_var _ ->
             (* In the variable case, we cannot traverse any further
               and no updates need be performed (since the level update)
               is performed above. 
@@ -465,7 +477,10 @@ module Make (Former : Type_former.S) = struct
     Array.iter ~f:(fun type_ -> loop type_ (get_level type_)) young_region
 
 
-  (* [generalize state] generalizes variables in the current
+  exception Rigid_variable_escape of U.Rigid_var.t
+  exception Cannot_flexize of U.Rigid_var.t
+
+  (* [generalize state ~rigid_vars] generalizes variables in the current
      region according to the new levels propagated by [update_levels].
      
      If a node has a level < !current_level, then it belongs in an 
@@ -476,19 +491,38 @@ module Make (Former : Type_former.S) = struct
      
      Once generalized, we compute the list of generalizable
      variables. 
+
+     The process of flexization, the conversion of rigid variables to
+     generic flexible variables also occurs here.
   *)
-  let generalize state =
+  let generalize state ~rigid_vars =
+    (* Create a mapping between rigid variables and flexible variables for flexization. *)
+    let rigid_vars =
+      Hashtbl.of_alist_exn
+        (module U.Rigid_var)
+        (List.map rigid_vars ~f:(fun rigid_var ->
+             rigid_var, make_flexible_var state))
+    in
     (* Get the young region, since we will be performing several traversals
        of it. *)
     let region = young_region state in
+    (* Iterate through the young region, performing flexization. *)
+    Hash_set.iter region ~f:(fun type_ ->
+        match U.Type.get_structure type_ with
+        | U.Type.Rigid_var rigid_var ->
+          (match Hashtbl.find rigid_vars rigid_var with
+          | Some dst -> U.Type.flexize ~src:type_ ~dst
+          | None -> raise (Cannot_flexize rigid_var))
+        | _ -> ());
     (* Iterate through the young region, generalizing variables 
        (or updating their region).  *)
     Hash_set.iter region ~f:(fun type_ ->
+        (* assert (not (is_rigid type_)); *)
         if get_level type_ < state.current_level
         then set_region state type_
-        else 
+        else
           (* Caml.Format.printf "Generalizing %d\n" (U.Type.id type_); *)
-        generalize_type type_);
+          generalize_type type_);
     (* Iterate through the young region, computing the list
        of generalizable variables. *)
     let generalizable =
@@ -498,18 +532,15 @@ module Make (Former : Type_former.S) = struct
              is_generic_at type_ state.current_level
              &&
              match U.Type.get_structure type_ with
-             | U.Type.Var flex ->
-               flex.flexibility <- Rigid;
-               true
+             | U.Type.Flexible_var -> true
+             | U.Type.Rigid_var _ -> assert false
              | U.Type.Former _ -> false)
       |> Hash_set.to_list
     in
     (* Clear the young region now *)
     Hash_set.clear region;
-    generalizable
+    Hashtbl.to_alist rigid_vars, generalizable
 
-
-  exception Rigid_variable_escape of U.Type.t
 
   (* [exit state ~rigid_vars ~types] performs generalization
      of [types], returns the list of generalized variables and schemes.
@@ -523,14 +554,14 @@ module Make (Former : Type_former.S) = struct
     (* Now update the lazily updated levels of every node in the young
        region. *)
     update_levels state;
+    (* Generalize variables. *)
+    let rigid_vars, generalizable = generalize state ~rigid_vars in
     (* Check that rigid variables have no escaped. *)
     (match
-       List.find rigid_vars ~f:(fun var -> get_level var < state.current_level)
+       List.find rigid_vars ~f:(fun (_, var) -> get_level var < state.current_level)
      with
     | None -> ()
-    | Some var -> raise (Rigid_variable_escape var));
-    (* Generalize variables. *)
-    let generalizable = generalize state in
+    | Some (rigid_var, _) -> raise (Rigid_variable_escape rigid_var));
     (* Helper function for constructing a new type scheme *)
     let make_scheme =
       let level = state.current_level in
@@ -545,6 +576,12 @@ module Make (Former : Type_former.S) = struct
   type variables = U.Type.t list
 
   let root { root; _ } = root
+
+  (* Usage of abbreviations in type schemes, etc. Abbreviations are dropped in type schemes. 
+
+     This is because the representative is used to avoid additional expansions, and abbreviations
+     are typically local.
+  *)
 
   let variables { root; level } =
     (* Hash set records whether we've visited a given 
@@ -561,18 +598,17 @@ module Make (Former : Type_former.S) = struct
            due to cycles in [root]. 
         *)
         Hash_set.add visited type_;
-        (* Iterate on non-productives
-           TODO: Implement U.Non_productive_view.map *)
-        (* U.Non_productive_view.iter (U.Type.get_non_productive_view type_)
-          ~f:(Former.iter ~f:loop); *)
         (* Check the structure of the type [typ]. 
            If [Var], add to the relevant quantifier list,
            otherwise recurse.  
         *)
         match U.Type.get_structure type_ with
-        | U.Type.Var _ -> variables := type_ :: !variables
+        | U.Type.Flexible_var -> variables := type_ :: !variables
+        | U.Type.Rigid_var _ ->
+          (* Rigid variables cannot occur as generalized variables in type schemes *)
+          assert false
         | U.Type.Former productive_view ->
-          U.Productive_view.iter productive_view ~f:(Former.iter ~f:loop))
+          U.Productive_view.repr productive_view |> Former.iter ~f:loop)
     in
     loop root;
     !variables
@@ -615,36 +651,30 @@ module Make (Former : Type_former.S) = struct
         (* Caml.Format.printf "%d is generic\n" (U.Type.id type_); *)
         try Hashtbl.find_exn copied type_ with
         | Not_found_s _ ->
-          (* Create arbitrary node. We use a variable initially,
-             but will set the structure later on. See below. *)
-          let new_type = make_var state Flexible in
+          let new_type =
+            match U.Type.get_structure type_ with
+            | U.Type.Rigid_var _ ->
+              (* Rigid variables cannot be generic. If they are, then flexization
+                has failed! *)
+              assert false
+            | U.Type.Flexible_var ->
+              (* The condition [get_level typ = level] now asserts
+                  [is_generic_at typ level], hence we need to instantiate
+                  the variable, adding it to the instance variables. 
+              *)
+              let new_type = make_flexible_var state in
+              if get_level type_ = level
+              then instance_variables := new_type :: !instance_variables;
+              new_type
+            | U.Type.Former productive_view ->
+              let former =
+                U.Productive_view.repr productive_view |> Former.map ~f:copy
+              in
+              make_former state former
+          in
           (* Set the mapping from the original node to the copied 
              node. *)
           Hashtbl.set copied ~key:type_ ~data:new_type;
-          (* We now update the structure according to the original 
-             structure of [typ].  *)
-          (* TODO: Determine non-productive views. We should map over them. 
-             This notion requires an ordering, which isn't permitted in the current 
-             implementation! *)
-          let structure' =
-            match U.Type.get_structure type_ with
-            | U.Type.Var _ ->
-              (* The condition [get_level typ = level] now asserts
-                 [is_generic_at typ level], hence we need to instantiate
-                 the variable, adding it to the instance variables. 
-              *)
-              if get_level type_ = level
-              then instance_variables := new_type :: !instance_variables;
-              U.Type.Var { flexibility = Flexible }
-            | U.Type.Former productive_view ->
-              U.Type.Former
-                (U.Type.productive_view_map
-                   ~f:(fun type_ ->
-                     (* Caml.Format.printf "Productive_view_map copy\n"; *)
-                     Former.map ~f:copy type_)
-                   productive_view)
-          in
-          U.Type.set_structure new_type structure';
           new_type)
     in
     (* Copy the root, yielding the instance variables (as a side-effect). *)

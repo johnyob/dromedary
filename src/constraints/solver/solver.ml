@@ -58,22 +58,26 @@ module Make (Algebra : Algebra) = struct
     let decode_variable var =
       assert (
         match U.Type.get_structure var with
-        | U.Type.Var _ -> true
+        | U.Type.Flexible_var -> true
         | _ -> false);
       Type_var.of_int (U.Type.id var)
 
+    let decode_rigid_variable rigid_var = 
+      Type_var.of_int (U.Rigid_var.id rigid_var)
 
     (* [decode_type_acyclic type_] decodes type [type_] (known to have no cycles) into a [Type]. *)
     let decode_type_acyclic : t =
       U.fold_acyclic
-        ~var:(fun v -> Type.var (decode_variable v))
+        ~flexible_var:(fun v -> Type.var (decode_variable v))
+        ~rigid_var:(fun v _ -> Type.var (decode_rigid_variable v))
         ~former:Type.former
 
 
     (* [decode_type_cyclic type_] decodes type [type_] (may contain cycles) into a [Type]. *)
     let decode_type_cyclic : t =
       U.fold_cyclic
-        ~var:(fun v -> Type.var (decode_variable v))
+        ~flexible_var:(fun v -> Type.var (decode_variable v))
+        ~rigid_var:(fun v _ -> Type.var (decode_rigid_variable v))
         ~former:Type.former
         ~mu:(fun v t -> Type.mu (decode_variable v) t)
 
@@ -94,8 +98,12 @@ module Make (Algebra : Algebra) = struct
 
   type state =
     { generalization_state : G.state
-    ; constraint_var_env : (int, U.Type.t) Hashtbl.t
+    ; constraint_var_env : (int, type_) Hashtbl.t
     }
+
+  and type_ = 
+    | Rigid_var of U.Rigid_var.t
+    | Type of U.Type.t
 
   (* [make_state ()] returns a fresh solver state. *)
   let make_state abbrev_ctx =
@@ -130,12 +138,16 @@ module Make (Algebra : Algebra) = struct
   *)
   exception Cycle of Type.t
   exception Rigid_variable_escape of Type_var.t
+  exception Cannot_flexize of Type_var.t
 
   let exit state ~rigid_vars ~types =
     try G.exit state.generalization_state ~rigid_vars ~types with
     | U.Cycle type_ -> raise (Cycle (Decoder.decode_type_cyclic type_))
-    | G.Rigid_variable_escape type_ ->
-      raise (Rigid_variable_escape (Decoder.decode_variable type_))
+    | G.Rigid_variable_escape rigid_var ->
+      raise (Rigid_variable_escape (Decoder.decode_rigid_variable rigid_var))
+    | G.Cannot_flexize rigid_var ->
+      raise (Cannot_flexize (Decoder.decode_rigid_variable rigid_var))
+      
 
 
   (* [find state var] returns the corresponding graphical type of [var],
@@ -149,7 +161,8 @@ module Make (Algebra : Algebra) = struct
   let find state (var : C.variable) =
     match Hashtbl.find state.constraint_var_env (var :> int) with
     | None -> raise (Unbound_constraint_variable var)
-    | Some type_ -> type_
+    | Some (Rigid_var rigid_var) -> G.make_rigid_var state.generalization_state rigid_var
+    | Some (Type type_) -> type_
 
 
   (* [bind state var type_] binds [type_] to the constraint variable [var] in 
@@ -166,22 +179,22 @@ module Make (Algebra : Algebra) = struct
   let bind_flexible state (var, former_opt) =
     let type_ =
       match former_opt with
-      | None -> G.make_var state.generalization_state Flexible
+      | None -> G.make_flexible_var state.generalization_state
       | Some former ->
         G.make_former
           state.generalization_state
           (Type_former.map former ~f:(find state))
     in
-    bind state var type_;
+    bind state var (Type type_);
     type_
 
 
   (* [bind_rigid state var] binds the rigid variable [var] in the environment. 
      Returning the graphical type mapped in the environment. *)
   let bind_rigid state var =
-    let type_ = G.make_var state.generalization_state Rigid in
-    bind state var type_;
-    type_
+    let rigid_var = U.Rigid_var.make () in
+    bind state var (Rigid_var rigid_var);
+    rigid_var
 
 
   (* An environment in our constraint solver is defined as a partial finite
@@ -542,6 +555,7 @@ module Make (Algebra : Algebra) = struct
     | `Unbound_term_variable of Term_var.t
     | `Unbound_constraint_variable of C.variable
     | `Rigid_variable_escape of Type_var.t
+    | `Cannot_flexize of Type_var.t
     ]
 
   let solve ~ctx cst =
@@ -552,6 +566,7 @@ module Make (Algebra : Algebra) = struct
     | Unify (t1, t2) -> Error (`Unify (t1, t2))
     | Cycle t -> Error (`Cycle t)
     | Rigid_variable_escape a -> Error (`Rigid_variable_escape a)
+    | Cannot_flexize a -> Error (`Cannot_flexize a)
     | Env.Unbound_term_variable x -> Error (`Unbound_term_variable x)
     | Unbound_constraint_variable a -> Error (`Unbound_constraint_variable a)
 end
