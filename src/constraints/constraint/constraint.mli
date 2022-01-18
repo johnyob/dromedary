@@ -134,6 +134,8 @@ module Make (Algebra : Algebra) : sig
       (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t 
       (** [decode ɑ] *)
+    | Implication : (Type.t * Type.t) list * 'a t -> 'a t
+      (** [E => C] *)
 
   and binding = Term_var.t * variable
 
@@ -253,4 +255,6 @@ module Make (Algebra : Algebra) : sig
     :  bindings:'a let_rec_binding list
     -> in_:'b t
     -> ('a term_let_rec_binding list * 'b) t
+
+  val ( #=> ) : (Type.t * Type.t) list -> 'a t -> 'a t
 end

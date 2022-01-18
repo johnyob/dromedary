@@ -20,9 +20,6 @@ module Make (Algebra : Algebra) : sig
   module Type_former := Types.Former
   module Constraint := Constraint.Make(Algebra)
 
-  (* TODO: Make high-level interface *)
-  module Abbreviations : Abbreviations.S with type 'a former := 'a Type_former.t
-
   (** [solve t] solves [t] and computes it's value. *)
 
   type error =
@@ -31,9 +28,13 @@ module Make (Algebra : Algebra) : sig
     | `Unbound_term_variable of Term_var.t
     | `Unbound_constraint_variable of Constraint.variable
     | `Rigid_variable_escape of Type_var.t
+    | `Cannot_flexize of Type_var.t
+    | `Scope_escape of Type.t
+    | `Non_rigid_equations
+    | `Inconsistent_equations
     ]
 
-  val solve : ctx:Abbreviations.Ctx.t -> 'a Constraint.t -> ('a, [> error ]) Result.t
+  val solve : 'a Constraint.t -> ('a, [> error ]) Result.t
 end
 
 (** [Private] submodule for [expect] tests. *)

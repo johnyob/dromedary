@@ -17,15 +17,7 @@ module Type_former = struct
   module T = struct
     type 'a t = Constr of 'a list * string [@@deriving sexp_of]
 
-    let hash (Constr (_, constr)) = String.hash constr
-
-    exception Not_found
-
-    let nth (Constr (ts, _)) i = 
-      try List.nth_exn ts i with _ -> raise Not_found
-
-    let length (Constr (ts, _)) = List.length ts
-
+    let id (Constr (_, constr)) = String.hash constr
 
     module Traverse (F : Applicative.S) = struct
       open F
@@ -58,11 +50,23 @@ end
 module Unifier = Unifier (Type_former) (Metadata)
 module Type = Unifier.Type
 
-let ctx = Unifier.Abbreviations.Ctx.empty
+let unify =
+  Unifier.unify
+    ~ctx:
+      { value = Unifier.Equations.Ctx.empty
+      ; make_var =
+          (fun rigid_var -> Unifier.Type.make_rigid_var rigid_var ())
+      ; make_former = (fun former -> Unifier.Type.make_former former ())
+      }
 
-let unify = Unifier.unify ~ctx ~metadata:(fun () -> ())
-let make_var ?(flexibility = Type.Flexible) () = Unifier.Type.make_var flexibility ()
-let ( @ ) f ts = Unifier.Type.make_former ~ctx (Constr (ts, f)) ()
+
+let make_flexible_var () = Unifier.Type.make_flexible_var ()
+
+let make_rigid_var () =
+  Unifier.Type.make_rigid_var (Unifier.Rigid_var.make ()) ()
+
+
+let ( @ ) f ts = Unifier.Type.make_former (Constr (ts, f)) ()
 
 let print_type t =
   let content = Type.to_dot t in
@@ -74,74 +78,74 @@ let print_type t =
 
 
 let%expect_test "Test unify : correctness 1" =
-  let t1 = "P" @ [ make_var ~flexibility:Rigid () ]
-  and t2 = "P" @ [ make_var () ] in
+  let t1 = "P" @ [ make_rigid_var () ]
+  and t2 = "P" @ [ make_flexible_var () ] in
   unify t1 t2;
   print_type t1;
   [%expect
     {|
-    ┌─────────────────┐
-    │        !        │
-    └─────────────────┘
-      │
-      │
-      ▼
-    ┌─────────────────┐
-    │ (Constr ("") P) │
-    └─────────────────┘ |}]
+      ┌─────────────────┐
+      │        0        │
+      └─────────────────┘
+        │
+        │
+        ▼
+      ┌─────────────────┐
+      │ (Constr ("") P) │
+      └─────────────────┘ |}]
 
 let%expect_test "Test unify : correctness 2" =
-  let t1 = "P" @ [ "f" @ [ make_var ~flexibility:Rigid (); make_var () ] ]
+  let t1 = "P" @ [ "f" @ [ make_rigid_var (); make_flexible_var () ] ]
   and t2 =
-    let y = make_var () in
+    let y = make_flexible_var () in
     "P" @ [ "f" @ [ y; "g" @ [ y ] ] ]
   in
   unify t1 t2;
   print_type t1;
   [%expect
     {|
-    ┌────────────────────┐
-    │         !          │ ─┐
-    └────────────────────┘  │
-      │                     │
-      │                     │
-      ▼                     │
-    ┌────────────────────┐  │
-    │  (Constr ("") g)   │  │
-    └────────────────────┘  │
-      │                     │
-      │                     │
-      ▼                     │
-    ┌────────────────────┐  │
-    │ (Constr ("" "") f) │ ◀┘
-    └────────────────────┘
-      │
-      │
-      ▼
-    ┌────────────────────┐
-    │  (Constr ("") P)   │
-    └────────────────────┘ |}]
+      ┌────────────────────┐
+      │         1          │ ─┐
+      └────────────────────┘  │
+        │                     │
+        │                     │
+        ▼                     │
+      ┌────────────────────┐  │
+      │  (Constr ("") g)   │  │
+      └────────────────────┘  │
+        │                     │
+        │                     │
+        ▼                     │
+      ┌────────────────────┐  │
+      │ (Constr ("" "") f) │ ◀┘
+      └────────────────────┘
+        │
+        │
+        ▼
+      ┌────────────────────┐
+      │  (Constr ("") P)   │
+      └────────────────────┘ |}]
 
 let%expect_test "Test unify : correctness 3" =
   let t1 =
-    let y = make_var () in
+    let y = make_flexible_var () in
     "P" @ [ y; "f" @ [ y ] ]
   and t2 =
-    let x = make_var () in
+    let x = make_flexible_var () in
     "P" @ [ x; x ]
   in
   unify t1 t2;
   print_type t1;
   [%expect
     {|
-       ┌────────────────────┐
-    ┌▶ │ (Constr ("" "") P) │
-    │  └────────────────────┘
-    │    ▲
-    │    │
-    │    │
-    │  ┌────────────────────┐
-    │  │                    │ ───┐
-    │  │  (Constr ("") f)   │    │
-    └─ │                    │ ◀──┘
-       └────────────────────┘ |}]
+         ┌────────────────────┐
+      ┌▶ │ (Constr ("" "") P) │
+      │  └────────────────────┘
+      │    ▲
+      │    │
+      │    │
+      │  ┌────────────────────┐
+      │  │                    │ ───┐
+      │  │  (Constr ("") f)   │    │
+      └─ │                    │ ◀──┘
+         └────────────────────┘ |}]

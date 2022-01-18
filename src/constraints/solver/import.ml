@@ -11,10 +11,15 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-
 include Base
-
 module Doubly_linked = Util.Doubly_linked
 
+(* See: https://github.com/janestreet/base/issues/121 *)
+let post_incr r =
+  let result = !r in
+  Int.incr r;
+  result
+
+
 module Constraint = Dromedary_constraints_constraint.Constraint
-include Constraint.Module_types 
+include Constraint.Module_types

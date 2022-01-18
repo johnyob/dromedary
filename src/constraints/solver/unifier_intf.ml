@@ -43,12 +43,13 @@ module type Metadata = sig
 end
 
 module type View = sig
-  (** ['a t] encodes a view with representive of type ['a] *)
+  (** ['a t] represents the view with representive of type ['a] *)
   type 'a t [@@deriving sexp_of]
 
   type 'a repr
 
-  val map : 'a t -> f:('a -> 'b) -> 'b t
+  val singleton : 'a repr -> 'a t
+
   val iter : 'a t -> f:('a -> unit) -> unit
   val fold : 'a t -> init:'b -> f:('a -> 'b -> 'b) -> 'b
   val repr : 'a t -> 'a repr
@@ -65,47 +66,68 @@ module type S = sig
       [Metadata]. *)
   type metadata
 
-  module Abbreviations : Abbreviations.S with type 'a former := 'a former
+  module Rigid_var : sig
+    type t [@@deriving sexp_of, compare]
 
-  module Non_productive_view : sig
-    include View with type 'a repr := 'a option
-
-    val invariant : 'a t -> unit
+    val id : t -> int
+    val hash : t -> int
+    val make : unit -> t
   end
 
-  module Productive_view : View with type 'a repr := 'a
+  module Rigid_type : sig
+    (** [t] represents a graphical encoding of a rigid type *)
+    type t [@@deriving sexp_of, compare]
+
+    type structure =
+      | Var of Rigid_var.t
+      | Former of t former
+
+    val make_var : Rigid_var.t -> t
+    val make_former : t former -> t
+  end
+
+  module Equations : sig
+    module Scope : sig
+      (** [t] represents the scope type *)
+      type t = int [@@deriving sexp_of]
+
+      val min : t -> t -> t
+      val max : t -> t -> t
+      val outermost_scope : t
+    end
+
+    module Ctx : sig
+      (** [t] represents a equational context. *)
+      type t
+
+      (** [empty] is the empty equational context. *)
+      val empty : t
+
+      exception Inconsistent
+
+      (** [add t type1 type2 scope] adds the equation [type1 = type2] 
+          in the scope [scope]. *)
+      val add : t -> Rigid_type.t -> Rigid_type.t -> Scope.t -> t
+    end
+  end
+
+  module Rigid_view : View with type 'a repr := Rigid_var.t
 
   module Type : sig
-    (** There are two kinds of variables [Flexible] and [Rigid]. 
-    
-        A [Flexible] variable can be unified with other variables and types. 
-        A [Rigid] (in general) cannot be unified. 
-    *)
-    type flexibility =
-      | Flexible
-      | Rigid
-    [@@deriving sexp_of, eq]
-
     (** [t] represents a type. See "graphical types". *)
     type t [@@deriving sexp_of, compare]
 
-    type non_productive_view = t former Non_productive_view.t
-    type productive_view = t former Productive_view.t
-
-    val productive_view_map
-      :  productive_view
-      -> f:(t former -> t former)
-      -> productive_view
-
     type structure =
-      | Var of { mutable flexibility : flexibility }
-      | Former of productive_view
+      | Flexible_var
+      | Rigid_var of rigid_view
+      | Former of t former
+
+    and rigid_view = t Rigid_view.t
 
     val to_dot : t -> string
 
     (** Each graphical type node consists of:
         - a unique identifier [id] (used to define a total ordering).
-        - a non-productive view
         - a mutable [structure], which contains the node structure.
         - a mutable piece of [metadata]. 
     *)
@@ -113,14 +135,17 @@ module type S = sig
     (** [id t] returns the unique identifier of the type [t]. *)
     val id : t -> int
 
-    val get_non_productive_view : t -> non_productive_view
-    val set_non_productive_view : t -> non_productive_view -> unit
-
     (** [get_structure t] returns the structure of [t]. *)
     val get_structure : t -> structure
 
     (** [set_structure t structure] sets the structure of [t] to [structure]. *)
     val set_structure : t -> structure -> unit
+
+    (** [get_scope t scope] returns the scope of [t]. *)
+    val get_scope : t -> Equations.Scope.t
+
+    (** [set_scope t scope] sets the scope of [t] to [scope]. *)
+    val set_scope : t -> Equations.Scope.t -> unit
 
     (** [get_metadata t] returns the metadata of [t]. *)
     val get_metadata : t -> metadata
@@ -132,13 +157,22 @@ module type S = sig
         Based on it's integer field: id. *)
     val hash : t -> int
 
-    (** [make_var flexibility metadata] returns a fresh variable 
+    (** [make_flexible_var metadata] returns a fresh variable 
         with flexibility [flexibility], and metadata [metadata]. *)
-    val make_var : flexibility -> metadata -> t
+    val make_flexible_var : metadata -> t
 
-    (** [make_former ctx former metadata] returns a fresh type former
+    (** [make_rigid_var rigid_var metadata] returns a fresh rigid type
+        variable w/ metadata [metadata]. *)
+    val make_rigid_var : Rigid_var.t -> metadata -> t
+
+    (** [make_former former metadata] returns a fresh type former
         with metadata [metadata]. *)
-    val make_former : ctx:Abbreviations.Ctx.t -> t former -> metadata -> t
+    val make_former : t former -> metadata -> t
+
+
+    exception Cannot_flexize of t
+
+    val flexize : src:t -> dst:t -> unit
   end
 
   (** [unify t1 t2] equates the graphical type nodes [t1] and [t2], 
@@ -160,12 +194,15 @@ module type S = sig
 
   exception Unify of Type.t * Type.t
 
-  val unify
-    :  ctx:Abbreviations.Ctx.t
-    -> metadata:(unit -> metadata)
-    -> Type.t
-    -> Type.t
-    -> unit
+  (** ['a expansive] is a wrapper for ['a] providing the necessary 
+      functions for expansion performed during unification. *)
+  type 'a expansive =
+    { value : 'a
+    ; make_var : Rigid_var.t -> Type.t
+    ; make_former : Type.t former -> Type.t
+    }
+
+  val unify : ctx:Equations.Ctx.t expansive -> Type.t -> Type.t -> unit
 
   (** [occurs_check t] detects whether there is a cycle in 
       the graphical type [t]. 
@@ -183,7 +220,8 @@ module type S = sig
 
   val fold_acyclic
     :  Type.t
-    -> var:(Type.t -> 'a)
+    -> flexible_var:(Type.t -> 'a)
+    -> rigid_var:(Rigid_var.t -> Type.t -> 'a)
     -> former:('a former -> 'a)
     -> 'a
 
@@ -193,7 +231,8 @@ module type S = sig
 
   val fold_cyclic
     :  Type.t
-    -> var:(Type.t -> 'a)
+    -> flexible_var:(Type.t -> 'a)
+    -> rigid_var:(Rigid_var.t -> Type.t -> 'a)
     -> former:('a former -> 'a)
     -> mu:(Type.t -> 'a -> 'a)
     -> 'a

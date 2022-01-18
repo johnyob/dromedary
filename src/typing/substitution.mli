@@ -37,6 +37,14 @@ val of_alist
   :  (string * Constraint.variable) list
   -> (t, [> `Duplicate_type_variable of string ]) Result.t
 
+val of_map
+  :  (String.t, Constraint.variable, String.comparator_witness) Map.t
+  -> t
+
+val to_map
+  :  t
+  -> (String.t, Constraint.variable, String.comparator_witness) Map.t
+
 (** [to_alist t] returns the alist defined by the substitution [t]. *)
 val to_alist : t -> (string * Constraint.variable) list
 

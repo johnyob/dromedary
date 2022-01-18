@@ -116,37 +116,79 @@ let make_constr_desc constr_name constr_arg constr_type
   }
 
 
+(* [substitution_of_vars vars] returns a substitution w/ 
+   domain [vars] bound to fresh variables. *)
+let substitution_of_vars vars =
+  Substitution.of_alist (List.map ~f:(fun x -> x, fresh ()) vars)
+
+
+(* [inst_constr_decl ~env constr] instantiates a constructor declaration w/ constructor name [constr] *)
 let inst_constr_decl ~env name
-    : (Constraint.variable list * Type.t option * Type.t, _) Result.t
+    : ( variable list
+        * (variable list * Type.t) option
+        * Type.t
+        * (Constraint.Type.t * Constraint.Type.t) list
+    , _ ) Result.t
   =
   let open Result in
   let open Let_syntax in
-  (* Determine the constructor argument and type parameters using
+  (* Determine the constructor argument, type and alphas using
      the environment [env] and the constructor name [name]. *)
   let%bind { constructor_arg = constr_arg
            ; constructor_type = constr_type
-           ; constructor_type_params = constr_type_params
+           ; constructor_alphas = constr_alphas
+           ; constructor_constraints = constr_constraints
            ; _
            }
     =
     Env.find_constr env name
   in
-  (* Compute a fresh set of existential variables *)
-  let%bind substitution =
-    Substitution.of_alist
-      (List.map ~f:(fun x -> x, fresh ()) constr_type_params)
+  (* Redefined due to repeated error function *)
+  let substitution_of_vars vars =
+    substitution_of_vars vars
     |> Result.map_error ~f:(fun (`Duplicate_type_variable var) ->
            `Duplicate_type_parameter_for_constructor (name, var))
   in
-  (* Compute the inferred type using the existential variables. *)
-  let%bind constr_arg =
-    match constr_arg with
-    | Some constr_arg ->
-      convert_type_expr ~substitution constr_arg >>| Option.some
-    | None -> return None
-  in
+  (* Compute fresh set of variables for [constr_alphas]. *)
+  let%bind substitution = substitution_of_vars constr_alphas in
+  let alphas = Substitution.rng substitution in
+  (* Compute the constructor (return) type. *)
   let%bind constr_type = convert_type_expr ~substitution constr_type in
-  return (Substitution.rng substitution, constr_arg, constr_type)
+  (* Compute the constructor argument. *)
+  let%bind constr_arg, substitution =
+    match constr_arg with
+    | Some
+        { constructor_arg_betas = constr_betas
+        ; constructor_arg_type = constr_arg
+        } ->
+      (* Assert that constr_betas and constr_alphas have no intersection. *)
+      let%bind () =
+        match
+          List.find ~f:(List.mem ~equal:String.equal constr_betas) constr_alphas
+        with
+        | Some var ->
+          fail (`Duplicate_type_parameter_for_constructor (name, var))
+        | None -> return ()
+      in
+      (* Compute fresh set of variables for [constr_betas]. *)
+      let%bind substitution' = substitution_of_vars constr_betas in
+      let betas = Substitution.rng substitution' in
+      (* Compute the type for the [constr_arg]. *)
+      let substitution = Substitution.merge substitution substitution' in
+      let%bind constr_arg = convert_type_expr ~substitution constr_arg in
+      (* Return the constructor argument and modified substitution, used for constraints. *)
+      return (Some (betas, constr_arg), substitution)
+    | None -> return (None, substitution)
+  in
+  (* Compute the converted type constraints. *)
+  let%bind constr_constraint =
+    List.map constr_constraints ~f:(fun (type1, type2) ->
+        let%bind type1 = convert_type_expr ~substitution type1 in
+        let%bind type2 = convert_type_expr ~substitution type2 in
+        return (type1, type2))
+    |> Result.all
+  in
+  return (alphas, constr_arg, constr_type, constr_constraint)
 
 
 let inst_label_decl ~env label
@@ -176,6 +218,50 @@ let make_label_desc label_name label_arg label_type
   and label_arg = decode label_arg in
   { label_name; label_type; label_arg }
 
+
+(* [is_constr_generalized ~enc constr] returns whether the constructor [constr] is a constructor of a GADT *)
+let is_constr_generalized ~env constr : (bool, _) Result.t =
+  let open Result.Let_syntax in
+  let%map { constructor_constraints; _ } = Env.find_constr env constr in
+  not (List.is_empty constructor_constraints)
+
+
+(* [is_pat_generalized ~env pat] returns whether the pattern [pat] contains a generalized constructor *)
+let rec is_pat_generalized ~env pat : (bool, _) Result.t =
+  let open Result.Let_syntax in
+  match pat with
+  | Ppat_construct (constr, pat) ->
+    if%bind is_constr_generalized ~env constr
+    then return true
+    else (
+      match pat with
+      | Some (_, pat) -> is_pat_generalized ~env pat
+      | None -> return false)
+  | Ppat_tuple pats ->
+    let%map is_pats_generalized =
+      List.map pats ~f:(is_pat_generalized ~env) |> Result.all
+    in
+    List.exists ~f:Fn.id is_pats_generalized
+  | Ppat_constraint (pat, _) | Ppat_alias (pat, _) ->
+    is_pat_generalized ~env pat
+  | Ppat_const _ | Ppat_any | Ppat_var _ -> return false
+
+
+(* [is_case_generalized ~env case] returns whether the case pattern contains a generalized pattern. *)
+let is_case_generalized ~env case : (bool, _) Result.t =
+  is_pat_generalized ~env case.pc_lhs
+
+
+(* [is_case_generalized ~env cases] returns whether the cases contains a generalized case. *)
+let is_cases_generalized ~env cases : (bool, _) Result.t =
+  let open Result.Let_syntax in
+  let%map is_cases_generalized =
+    List.map cases ~f:(is_case_generalized ~env) |> Result.all
+  in
+  List.exists ~f:Fn.id is_cases_generalized
+
+
+(* {3 : Polymorphic recursion functions} *)
 
 let rec find_annotation exp =
   let open Option.Let_syntax in
@@ -244,9 +330,11 @@ module Pattern = struct
             (var : string)])
 
 
-  let inst_constr_decl name : (Type.t option * Type.t) Binder.t =
+  let inst_constr_decl name
+      : ((variable list * Type.t) option * Type.t * (Constraint.Type.t * Constraint.Type.t) list) Binder.t
+    =
     let open Binder.Let_syntax in
-    let& vars, constr_arg, constr_type =
+    let& alphas, constr_arg, constr_type, constr_constraint =
       let%bind.Computation env = env in
       of_result (inst_constr_decl ~env name) ~message:(function
           | `Duplicate_type_parameter_for_constructor (constr, var) ->
@@ -267,22 +355,28 @@ module Pattern = struct
                occur! Good luck)"
                 (var : string)])
     in
-    let%bind () = exists_vars vars in
-    return (constr_arg, constr_type)
+    let%bind () = exists_vars alphas in
+    return (constr_arg, constr_type, constr_constraint)
 
 
   let infer_constr constr_name constr_type
-      : (constructor_description Constraint.t * variable option) Binder.t
+      : (constructor_description Constraint.t
+        * (variable list * variable) option
+        * (Constraint.Type.t * Constraint.Type.t) list)
+      Binder.t
     =
     let open Binder.Let_syntax in
     (* Instantiate the constructor description. *)
-    let%bind constr_arg, constr_type' = inst_constr_decl constr_name in
+    let%bind constr_arg, constr_type', constr_constraint =
+      inst_constr_decl constr_name
+    in
     (* Convert [const_arg] and [const_type'] to variables *)
     let%bind constr_arg =
       match constr_arg with
-      | Some constr_arg ->
+      | Some (constr_betas, constr_arg) ->
+        let%bind () = forall_vars constr_betas in
         let%bind constr_arg = of_type constr_arg in
-        return (Some constr_arg)
+        return (Some (constr_betas, constr_arg))
       | None -> return None
     in
     let%bind constr_type' = of_type constr_type' in
@@ -290,9 +384,9 @@ module Pattern = struct
     let constr_desc =
       constr_type
       =~ constr_type'
-      >> make_constr_desc constr_name constr_arg constr_type
+      >> make_constr_desc constr_name Option.(constr_arg >>| snd) constr_type
     in
-    return (constr_desc, constr_arg)
+    return (constr_desc, constr_arg, constr_constraint)
 
 
   let infer pat pat_type =
@@ -330,24 +424,39 @@ module Pattern = struct
           (let%map () = pat_type =~= tuple vars
            and pats = pats in
            Tpat_tuple pats)
-      | Ppat_constraint (pat, pat_type') ->
-        let@ pat_type' =
-          let open Binder.Let_syntax in
-          let& pat_type' = convert_core_type pat_type' in
-          of_type pat_type'
-        in
-        let%bind pat_desc = infer_pat_desc pat pat_type' in
-        return
-          (let%map () = pat_type =~ pat_type'
-           and pat_desc = pat_desc in
-           pat_desc)
       | Ppat_construct (constr, arg_pat) ->
-        let@ constr_desc, arg_pat_type = infer_constr constr pat_type in
+        let@ constr_desc, arg_pat_type, constr_constraint =
+          infer_constr constr pat_type
+        in
+        let%bind () = assert_ constr_constraint in
         let%bind arg_pat =
           match arg_pat, arg_pat_type with
-          | Some arg_pat, Some arg_pat_type ->
-            let%bind pat = infer_pat arg_pat arg_pat_type in
-            return (pat >>| Option.some)
+          | Some (betas, arg_pat), Some (constr_betas, arg_pat_type) ->
+            if List.is_empty betas
+            then (
+              let%bind pat = infer_pat arg_pat arg_pat_type in
+              return (constr_constraint #=> pat >>| Option.some))
+            else (
+              match List.zip betas constr_betas with
+              | Ok alist ->
+                let%bind substitution =
+                  of_result
+                    (Substitution.of_alist alist)
+                    ~message:(fun (`Duplicate_type_variable var) ->
+                      [%message
+                        "Duplicate type variable in constructor existentials"
+                          (var : string)])
+                in
+                let%bind () = extend_fragment_substitution substitution in
+                extend_substitution
+                  ~substitution
+                  (let%bind pat = infer_pat arg_pat arg_pat_type in
+                   return (constr_constraint #=> pat >>| Option.some))
+              | Unequal_lengths ->
+                fail
+                  [%message
+                    "Constructor existential variable mistmatch with \
+                     definition."])
           | None, None -> const None
           | _, _ ->
             fail
@@ -359,6 +468,17 @@ module Pattern = struct
           (let%map constr_desc = constr_desc
            and arg_pat = arg_pat in
            Tpat_construct (constr_desc, arg_pat))
+      | Ppat_constraint (pat, pat_type') ->
+        let@ pat_type' =
+          let open Binder.Let_syntax in
+          let& pat_type' = convert_core_type pat_type' in
+          of_type pat_type'
+        in
+        let%bind pat_desc = infer_pat_desc pat pat_type' in
+        return
+          (let%map () = pat_type =~ pat_type'
+           and pat_desc = pat_desc in
+           pat_desc)
     and infer_pats pats
         : (variable list * Typedtree.pattern list Constraint.t) Binder.t
       =
@@ -393,7 +513,7 @@ module Expression = struct
 
 
   (* TODO: Move to computation. *)
-  let extend_substitution vars ~f ~message =
+  let extend_substitution_vars vars ~f ~message =
     let open Computation.Let_syntax in
     let%bind substitution =
       of_result
@@ -415,9 +535,11 @@ module Expression = struct
             (var : string)])
 
 
-  let inst_constr_decl name : (Type.t option * Type.t) Binder.t =
+  let inst_constr_decl name
+      : (Type.t option * Type.t * (Constraint.Type.t * Constraint.Type.t) list) Binder.t
+    =
     let open Binder.Let_syntax in
-    let& vars, constr_arg, constr_type =
+    let& constr_alphas, constr_arg, constr_type, constr_constraints =
       let%bind.Computation env = env in
       (* TODO: Remove code duplication *)
       of_result (inst_constr_decl ~env name) ~message:(function
@@ -439,8 +561,15 @@ module Expression = struct
                occur! Good luck)"
                 (var : string)])
     in
-    let%bind () = exists_vars vars in
-    return (constr_arg, constr_type)
+    let%bind () = exists_vars constr_alphas in
+    let%bind constr_arg =
+      match constr_arg with
+      | Some (constr_betas, constr_arg) ->
+        let%bind () = forall_vars constr_betas in
+        return (Some constr_arg)
+      | None -> return None
+    in
+    return (constr_arg, constr_type, constr_constraints)
 
 
   let inst_label_decl label : (Type.t * Type.t) Binder.t =
@@ -469,13 +598,19 @@ module Expression = struct
     let%bind () = exists_vars vars in
     return (label_arg, constr_type)
 
+  let (-~-) type1 type2 : unit Constraint.t = 
+    let bindings1, var1 = Shallow_type.of_type type1 in 
+    let bindings2, var2 = Shallow_type.of_type type2 in
+    Constraint.exists (bindings1 @ bindings2) (var1 =~ var2)
 
   let infer_constr constr_name constr_type
       : (constructor_description Constraint.t * variable option) Binder.t
     =
     let open Binder.Let_syntax in
     (* Instantiate the constructor description. *)
-    let%bind constr_arg, constr_type' = inst_constr_decl constr_name in
+    let%bind constr_arg, constr_type', constr_constraint =
+      inst_constr_decl constr_name
+    in
     (* Convert [const_arg] and [const_type'] to variables *)
     let%bind constr_arg =
       match constr_arg with
@@ -488,6 +623,7 @@ module Expression = struct
     let constr_desc =
       constr_type
       =~- constr_type'
+      >> Constraint.all_unit (List.map constr_constraint ~f:(fun (t1, t2) -> t1 -~- t2))
       >> make_constr_desc constr_name constr_arg constr_type
     in
     return (constr_desc, constr_arg)
@@ -515,13 +651,35 @@ module Expression = struct
 
 
   let infer_pat pat pat_type
-      : (binding list * Typedtree.pattern Constraint.t) Binder.t
+      : (binding list
+        * Typedtree.pattern Constraint.t
+        * (Constraint.Type.t * Constraint.Type.t)  list
+        * Substitution.t)
+      Binder.t
     =
     let open Binder.Let_syntax in
+    (* print_endline
+      (Sexp.to_string_hum [%message "infer_pat" (pat : Parsetree.pattern)]); *)
     let& fragment, pat = Pattern.infer pat pat_type in
-    let existential_bindings, term_bindings = Fragment.to_bindings fragment in
+    let ( universal_bindings
+        , existential_bindings
+        , local_constraint
+        , term_bindings
+        , substitution )
+      =
+      Fragment.to_bindings fragment
+    in
+    (* List.iter existential_bindings ~f:(fun (var, binding) ->
+        Format.printf "Variable: %d@." (var :> int);
+        Format.printf
+          "Binding: %s@."
+          ([%sexp (binding : Shallow_type.t option)] |> Sexp.to_string_hum));
+    List.iter term_bindings ~f:(fun (term_var, var) ->
+        Format.printf "Term Variable: %s@." term_var;
+        Format.printf "Bound Variable: %d@." (var :> int)); *)
+    let%bind () = forall_vars universal_bindings in
     let%bind () = exists_bindings existential_bindings in
-    return (term_bindings, pat)
+    return (term_bindings, pat, local_constraint, substitution)
 
 
   let make_exp_desc_forall vars var exp_desc exp_type =
@@ -568,12 +726,14 @@ module Expression = struct
       | Pexp_fun (pat, exp) ->
         let@ var1 = exists () in
         let@ var2 = exists () in
-        let@ bindings, pat = infer_pat pat var1 in
-        let%bind exp = infer_exp exp var2 in
+        let@ bindings, pat, local_constraint, substitution =
+          infer_pat pat var1
+        in
+        let%bind exp = extend_substitution ~substitution (infer_exp exp var2) in
         return
           (let%map () = exp_type =~= var1 @-> var2
            and pat = pat
-           and exp = def ~bindings ~in_:exp in
+           and exp = local_constraint #=> (def ~bindings ~in_:exp) in
            Texp_fun (pat, exp))
       | Pexp_app (exp1, exp2) ->
         let@ var = exists () in
@@ -585,10 +745,11 @@ module Expression = struct
            Texp_app (exp1, exp2))
       | Pexp_constraint (exp, exp_type') ->
         let%bind exp_type' = convert_core_type exp_type' in
-        let@ exp_type' = of_type exp_type' in
-        let%bind exp_desc = infer_exp_desc exp exp_type' in
+        let@ exp_type1 = of_type exp_type' in
+        let@ exp_type2 = of_type exp_type' in
+        let%bind exp_desc = infer_exp_desc exp exp_type1 in
         return
-          (let%map () = exp_type =~ exp_type'
+          (let%map () = exp_type =~ exp_type2
            and exp_desc = exp_desc in
            exp_desc)
       | Pexp_tuple exps ->
@@ -616,7 +777,7 @@ module Expression = struct
            and else_exp = else_exp in
            Texp_ifthenelse (if_exp, then_exp, else_exp))
       | Pexp_exists (vars, exp) ->
-        extend_substitution
+        extend_substitution_vars
           vars
           ~f:(fun vars ->
             let@ () = exists_vars vars in
@@ -627,7 +788,7 @@ module Expression = struct
                 (exp : Parsetree.expression)
                 (var : string)])
       | Pexp_forall (vars, exp) ->
-        extend_substitution
+        extend_substitution_vars
           vars
           ~f:(fun vars ->
             let var = fresh () in
@@ -711,11 +872,15 @@ module Expression = struct
       let open Computation.Let_syntax in
       let%bind cases =
         List.map cases ~f:(fun { pc_lhs; pc_rhs } ->
-            let@ bindings, pat = infer_pat pc_lhs lhs_type in
-            let%bind exp = infer_exp pc_rhs rhs_type in
+            let@ bindings, pat, local_constraint, substitution =
+              infer_pat pc_lhs lhs_type
+            in
+            let%bind exp =
+              extend_substitution ~substitution (infer_exp pc_rhs rhs_type)
+            in
             return
               (let%map tc_lhs = pat
-               and tc_rhs = def ~bindings ~in_:exp in
+               and tc_rhs = local_constraint #=> (def ~bindings ~in_:exp) in
                { tc_lhs; tc_rhs }))
         |> all
       in
@@ -748,18 +913,33 @@ module Expression = struct
         : (Typedtree.pattern * Typedtree.expression) let_binding Computation.t
       =
       let open Computation.Let_syntax in
-      extend_substitution
+      extend_substitution_vars
         forall_vars
         ~f:(fun forall_vars ->
           let var = fresh () in
           let%bind fragment, pat = Pattern.infer pat var in
-          let existential_bindings, term_bindings =
+          let ( universal_bindings
+              , existential_bindings
+              , local_constraint
+              , term_bindings
+              , _substitution )
+            =
             Fragment.to_bindings fragment
           in
           let%bind exp = infer_exp exp var in
-          return
-            (((forall_vars, (var, None) :: existential_bindings) @. (pat &~ exp))
-            @=> term_bindings))
+          if not
+               (List.is_empty universal_bindings
+               && List.is_empty local_constraint)
+          then
+            fail
+              [%message
+                "Let binding contains local constraints or existential \
+                 variables."]
+          else
+            return
+              (((forall_vars, (var, None) :: existential_bindings)
+               @. (pat &~ exp))
+              @=> term_bindings))
         ~message:(fun var ->
           [%message
             "Duplicate variable in universal quantifier (let)"
@@ -777,7 +957,7 @@ module Expression = struct
       in
       match annotation with
       | `Annotated (forall_vars, f, exp, annotation) ->
-        extend_substitution
+        extend_substitution_vars
           forall_vars
           ~f:(fun forall_vars ->
             let%bind annotation = convert_core_type annotation in
@@ -791,7 +971,7 @@ module Expression = struct
             [%message
               "Duplicate variable in forall quantifier (let)" (var : string)])
       | `Unannotated (forall_vars, f, exp) ->
-        extend_substitution
+        extend_substitution_vars
           forall_vars
           ~f:(fun forall_vars ->
             let var = fresh () in
@@ -817,13 +997,13 @@ let let_0 ~in_ =
   | _ -> assert false
 
 
-let infer exp ~ctx ~env:env' =
+let infer exp ~env:env' =
   let open Result.Let_syntax in
   let%bind exp =
     let exp = Expression.infer exp in
     Computation.Expression.(run ~env:env' (exp >>| fun in_ -> let_0 ~in_))
   in
-  solve ~ctx exp
+  solve exp
   |> Result.map_error ~f:(function
          | `Unify (type_expr1, type_expr2) ->
            [%message
@@ -841,4 +1021,15 @@ let infer exp ~ctx ~env:env' =
                ((var :> int) : int)]
          | `Rigid_variable_escape var ->
            [%message
-             "Rigid type variable escaped when generalizing" (var : string)])
+             "Rigid type variable escaped when generalizing" (var : string)]
+         | `Cannot_flexize var ->
+           [%message
+             "Could not flexize rigid type variable when generalizing"
+               (var : string)]
+         | `Scope_escape type_expr ->
+           [%message
+             "Type escape it's equational scope" (type_expr : type_expr)]
+         | `Inconsistent_equations ->
+            [%message "Inconsistent equations added by local branches"]
+         | `Non_rigid_equations ->
+            [%message "Non rigid equations"])

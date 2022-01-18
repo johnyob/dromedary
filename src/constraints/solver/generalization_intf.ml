@@ -32,9 +32,6 @@ module type S = sig
   module Unifier :
     Unifier.S with type 'a former := 'a former and type metadata := Tag.t
 
-  module Abbreviations :
-    Abbreviations.S with type 'a former := 'a former
-
   (** The type [scheme] defines the abstract notion of a scheme in 
       "graphic" types.
       
@@ -74,23 +71,29 @@ module type S = sig
   type state
 
   (** [make_state ()] creates a new empty state. *)
-  val make_state : Abbreviations.Ctx.t -> state
+  val make_state : unit -> state
+
+  (** [current_scope state] returns the current equational scope of [state]. *)
+  val current_scope : state -> Unifier.Equations.Scope.t
 
   (** [enter state] creates a new "stack frame" in the constraint solver
      and enters it.  *)
 
   val enter : state -> unit
 
-  (** [make_var] creates a fresh unification variable. *)
+  (** [make_flexible_var] creates a fresh unification variable. *)
 
-  val make_var : state -> Unifier.Type.flexibility -> Unifier.Type.t
+  val make_flexible_var : state -> Unifier.Type.t
+
+  (** [make_rigid_var] creates a fresh rigid variable. *)
+  val make_rigid_var : state -> Unifier.Rigid_var.t -> Unifier.Type.t
 
   (** [make_former] creates a fresh unification type node 
       w/ the structure provided by the former. *)
 
   val make_former : state -> Unifier.Type.t former -> Unifier.Type.t
 
-  val unify : state -> Unifier.Type.t -> Unifier.Type.t -> unit
+  val unify : state -> ctx:Unifier.Equations.Ctx.t -> Unifier.Type.t -> Unifier.Type.t -> unit
 
   (** [instantiate scheme] instantates the scheme [scheme]. It does so, by
       taking fresh copies of the generic variables, without necessarily
@@ -101,11 +104,13 @@ module type S = sig
   *)
   val instantiate : state -> scheme -> variables * Unifier.Type.t
 
-  exception Rigid_variable_escape of Unifier.Type.t
+  exception Cannot_flexize of Unifier.Rigid_var.t
+  exception Rigid_variable_escape of Unifier.Rigid_var.t
+  exception Scope_escape of Unifier.Type.t
 
   val exit
     :  state
-    -> rigid_vars:Unifier.Type.t list
+    -> rigid_vars:Unifier.Rigid_var.t list
     -> types:Unifier.Type.t list
     -> variables * scheme list
 end

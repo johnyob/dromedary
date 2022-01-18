@@ -126,6 +126,7 @@ module Make (Algebra : Algebra) = struct
     | Match : 'a t * 'b case list -> ('a * 'b list) t
         (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
+    | Implication : (Type.t * Type.t) list * 'a t -> 'a t
 
   and binding = Term_var.t * variable
   and def_binding = binding
@@ -176,6 +177,7 @@ module Make (Algebra : Algebra) = struct
     | Map (t, _f) -> [%sexp Map (t : t)]
     | Match (t, cases) -> [%sexp Match (t : t), (cases : case list)]
     | Decode a -> [%sexp Decode (a : variable)]
+    | Implication (equations, t) -> [%sexp Implication (equations : (Type.t * Type.t) list), (t : t)]
 
 
   and sexp_of_binding = [%sexp_of: Term_var.t * variable]
@@ -290,9 +292,12 @@ module Make (Algebra : Algebra) = struct
 
   (* [forall vars t]  binds [vars] as universally quantifier variables in [t]. *)
   let forall vars t =
-    match t with
+    match vars with
+    | [] -> t
+    | vars ->
+    (match t with
     | Forall (vars', t) -> Forall (vars @ vars', t)
-    | t -> Forall (vars, t)
+    | t -> Forall (vars, t))
 
 
   (* [x #= a] yields the binding that binds [x] to [a]. *)
@@ -332,4 +337,9 @@ module Make (Algebra : Algebra) = struct
   (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
      constraint [in_]. *)
   let let_rec ~bindings ~in_ = Let_rec (bindings, in_)
+
+  let ( #=> ) equations t = 
+    match equations with
+    | [] -> t
+    | equations -> Implication (equations, t)
 end

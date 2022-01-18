@@ -85,7 +85,6 @@ end
 
 type type_declaration =
   { type_name : string
-  ; type_params : string list
   ; type_kind : type_decl_kind
   }
 [@@deriving sexp_of]
@@ -105,9 +104,16 @@ and label_declaration =
 
 and constructor_declaration =
   { constructor_name : string
-  ; constructor_type_params : string list
-  ; constructor_arg : type_expr option
+  ; constructor_alphas : string list
+  ; constructor_arg : constructor_argument option
   ; constructor_type : type_expr
+  ; constructor_constraints : (type_expr * type_expr) list
+  }
+[@@deriving sexp_of]
+
+and constructor_argument =
+  { constructor_arg_betas : string list
+  ; constructor_arg_type : type_expr
   }
 [@@deriving sexp_of]
 

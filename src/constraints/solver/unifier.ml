@@ -30,126 +30,153 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
      the notion provides useful insight. 
   *)
 
-  module Abbreviations = Abbreviations.Make (Former)
-  module A = Abbreviations
-
-  module Non_productive_view = struct
-    type 'a t = 'a Hash_set.t [@@deriving sexp_of]
-
-    let map _t ~f:_ = raise_s [%message "Non_productive_view cannot be mapped"]
-    let iter = Hash_set.iter
-    let fold t ~init ~f = Hash_set.fold t ~init ~f:(fun acc x -> f x acc)
-    let repr t = Hash_set.find t ~f:(Fn.const true)
-    let empty ~hash_key = Hash_set.create hash_key
-    let add t x = Hash_set.add t x
-    let merge t1 t2 = Hash_set.union t1 t2
-    let invariant t : unit = assert (Hash_set.length t = 0)
-  end
-
-  module Productive_view = struct
-    module Elt = struct
-      type 'a t =
-        { value : 'a
-        ; rank : int
-        }
-      [@@deriving sexp_of]
-
-      let value t = t.value
-      let rank t = t.rank
-      let map t ~f = { t with value = f t.value }
+  module Rigid_var = struct
+    module T = struct
+      type t = int [@@deriving sexp_of, compare]
     end
 
+    include T
+    include Comparator.Make (T)
+
+    let id t = t
+
+    let make =
+      let id = ref 0 in
+      fun () -> post_incr id
+
+
+    let hash = id
+  end
+
+  module Rigid_type = struct
+    module T = struct
+      type t = desc ref [@@deriving sexp_of]
+
+      and desc =
+        { id : int
+        ; structure : structure
+        }
+
+      and structure =
+        | Var of Rigid_var.t
+        | Former of t Former.t
+
+      let id t = !t.id
+      let compare t1 t2 = Int.compare (id t1) (id t2)
+      let hash t = id t
+    end
+
+    include T
+
+    let get_structure t = !t.structure
+
+    let make =
+      let id = ref 0 in
+      fun structure -> ref { id = post_incr id; structure }
+
+
+    let make_var rigid_var = make (Var rigid_var)
+    let make_former former = make (Former former)
+
+    let to_type ~make_var ~make_former rigid_type =
+      let copied : (T.t, _) Hashtbl.t = Hashtbl.create (module T) in
+      let rec copy rigid_type =
+        try Hashtbl.find_exn copied rigid_type with
+        | Not_found_s _ ->
+          let result =
+            match get_structure rigid_type with
+            | Var rigid_var -> make_var rigid_var
+            | Former former -> make_former (Former.map ~f:copy former)
+          in
+          Hashtbl.set copied ~key:rigid_type ~data:result;
+          result
+      in
+      copy rigid_type
+  end
+
+  module Equations = struct
+    module Scope = struct
+      type t = int [@@deriving sexp_of]
+
+      let max = max
+      let min = min
+      let outermost_scope = 0
+    end
+
+    module Ctx = struct
+      type t =
+        { equations :
+            ( Rigid_var.t
+            , Scope.t * Rigid_type.t
+            , Rigid_var.comparator_witness )
+            Map.t
+        }
+
+      let empty = { equations = Map.empty (module Rigid_var) }
+
+      exception Inconsistent
+
+      let get_equation t rigid_var = Map.find t.equations rigid_var
+
+      let rec add_equation t rigid_var type1 metadata =
+        match Map.find t.equations rigid_var with
+        | Some (_, type2) -> add_equations t type1 type2 metadata
+        | None ->
+          { equations =
+              Map.set t.equations ~key:rigid_var ~data:(metadata, type1)
+          }
+
+
+      and add_equations t type1 type2 metadata =
+        let open Rigid_type in
+        match get_structure type1, get_structure type2 with
+        | Var rigid_var, _ -> add_equation t rigid_var type2 metadata
+        | _, Var rigid_var -> add_equation t rigid_var type1 metadata
+        | Former former1, Former former2 ->
+          Former.fold2_exn former1 former2 ~init:t ~f:(fun type1 type2 t ->
+              add_equations t type1 type2 metadata)
+
+
+      let add t type1 type2 metadata =
+        try add_equations t type1 type2 metadata with
+        | Former.Fold2 -> raise Inconsistent
+    end
+  end
+
+  module Rigid_view = struct
     type 'a t =
-      { mutable repr : 'a desc
-      ; expansive : 'a Elt.t Doubly_linked.t
-      ; elts : (int, 'a desc) Hashtbl.t
+      { mutable former : ('a Former.t * Equations.Scope.t) option
+      ; elts : (Rigid_var.t, desc) Hashtbl.t
+      ; repr : Rigid_var.t
       }
     [@@deriving sexp_of]
 
-    and 'a desc =
-      | Non_expansive of 'a Elt.t
-      | Expansive of 'a Elt.t Doubly_linked.Elt.t
+    and desc =
+      { is_expansive : bool
+      ; scope : Equations.Scope.t
+      }
 
-    let elt_of_desc desc =
-      match desc with
-      | Non_expansive elt -> elt
-      | Expansive dl_elt -> Doubly_linked.Elt.get_value dl_elt
-
-
-    let singleton ~hash ~kind elt =
-      let expansive = Doubly_linked.empty () in
-      let desc =
-        match kind with
-        | `Non_expansive -> Non_expansive elt
-        | `Expansive -> Expansive (Doubly_linked.insert_first_elt expansive elt)
-      in
-      let elts = Hashtbl.create (module Int) in
-      Hashtbl.set elts ~key:(hash (Elt.value elt)) ~data:desc;
-      { repr = desc; expansive; elts }
-
-
-    let map _t ~f:_ = raise_s [%message "Productive_view cannot be mapped"]
-
-    let map_ ~hash t ~f =
-      let expansive = Doubly_linked.map t.expansive ~f:(Elt.map ~f) in
-      let elts = Hashtbl.create (module Int) in
-      (* Add expansive elements to [elts] *)
-      Doubly_linked.unsafe_iter expansive ~f:(fun elt ->
-          let key = Doubly_linked.Elt.get_value elt |> Elt.value |> hash in
-          Hashtbl.set elts ~key ~data:(Expansive elt));
-      (* Add non-expansive elements to [elts] *)
-      Hashtbl.iter t.elts ~f:(fun desc ->
-          match desc with
-          | Expansive _ -> ()
-          | Non_expansive elt ->
-            let elt = Elt.map elt ~f in
-            Hashtbl.set
-              elts
-              ~key:(elt |> Elt.value |> hash)
-              ~data:(Non_expansive elt));
-      (* Determine new repr from [elts] *)
-      let repr =
-        Hashtbl.find_exn elts (elt_of_desc t.repr |> Elt.value |> hash)
-      in
-      (* Construct new view *)
-      { repr; expansive; elts }
-
+    let repr t = t.repr
 
     let iter t ~f =
-      (* First iter over expansives *)
-      Doubly_linked.iter t.expansive ~f:(fun elt -> f (Elt.value elt));
-      (* Then iter over non-expansives *)
-      Hashtbl.iter t.elts ~f:(fun desc ->
-          match desc with
-          | Expansive _ -> ()
-          | Non_expansive elt -> f (Elt.value elt))
+      Option.iter t.former ~f:(fun (former, _) -> Former.iter former ~f)
 
 
-    let fold (type a b) (t : a t) ~(init : b) ~(f : a -> b -> b) : b =
-      let init =
-        Doubly_linked.fold t.expansive ~init ~f:(fun elt acc ->
-            f (Elt.value elt) acc)
-      in
-      Hashtbl.fold t.elts ~init ~f:(fun ~key:_ ~data:desc acc ->
-          match desc with
-          | Expansive _ -> acc
-          | Non_expansive elt -> f (Elt.value elt) acc)
+    let fold t ~init ~f =
+      Option.fold t.former ~init ~f:(fun init (former, _) ->
+          Former.fold former ~init ~f)
 
 
-    let repr t = t.repr |> elt_of_desc |> Elt.value
+    let singleton rigid_var =
+      let elts = Hashtbl.create (module Rigid_var) in
+      Hashtbl.set
+        elts
+        ~key:rigid_var
+        ~data:{ is_expansive = true; scope = Equations.Scope.outermost_scope };
+      { former = None; elts; repr = rigid_var }
   end
 
   module Type = struct
-    (* There are two kinds of variables [Flexible] and [Rigid]. 
-    
-       A [Flexible] variable can be unified with other variables and types. 
-       A [Rigid] (in general) cannot be unified. 
-    *)
-    type flexibility =
-      | Flexible
-      | Rigid
-    [@@deriving sexp_of, eq]
-
     (* A graphical type consists of a [Union_find] node,
        allowing reasoning w/ multi-equations of nodes. *)
 
@@ -179,48 +206,31 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
     and desc =
       { id : int
       ; mutable structure : structure
-      ; mutable non_productive_view : non_productive_view
+      ; mutable scope : Equations.Scope.t
       ; mutable metadata : Metadata.t
       }
     [@@deriving sexp_of]
 
     (* Graphical type node structures are either variables or type
-       formers. 
-       
-       A variable denotes it's flexibility, using {!flexibility}.
-       This is required for unification under a mixed prefix. 
-    *)
+       formers. *)
     and structure =
-      | Var of { mutable flexibility : flexibility }
-      | Former of productive_view
+      | Flexible_var
+      | Rigid_var of rigid_view
+      | Former of t Former.t
     [@@deriving sexp_of]
 
-    and non_productive_view = t Former.t Non_productive_view.t
-    [@@deriving sexp_of]
-
-    and productive_view = t Former.t Productive_view.t [@@deriving sexp_of]
-
-    module View_hash_key = struct
-      type type_ = t [@@deriving sexp_of]
-      type t = type_ Former.t [@@deriving sexp_of]
-
-      let hash t = Former.hash t
-      let compare t1 t2 = Int.compare (hash t1) (hash t2)
-    end
+    and rigid_view = t Rigid_view.t
 
     (* [id t] returns the unique identifier of the type [t]. *)
     let id t = (Union_find.find t).id
-    let get_non_productive_view t = (Union_find.find t).non_productive_view
-
-    let set_non_productive_view t non_productive_view =
-      (Union_find.find t).non_productive_view <- non_productive_view
-
 
     (* [get_structure t] returns the structure of [t]. *)
     let get_structure t = (Union_find.find t).structure
 
     (* [set_structure t structure] sets the structure of [t] to [structure]. *)
     let set_structure t structure = (Union_find.find t).structure <- structure
+    let get_scope t = (Union_find.find t).scope
+    let set_scope t scope = (Union_find.find t).scope <- scope
 
     (* [get_metadata t] returns the metadata of [t]. *)
     let get_metadata t = (Union_find.find t).metadata
@@ -238,15 +248,8 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
     let hash t = Hashtbl.hash (id t)
 
-    (* See: https://github.com/janestreet/base/issues/121 *)
-    let post_incr r =
-      let result = !r in
-      Int.incr r;
-      result
-
-
     (* [make structure metadata] returns a fresh type w/ structure [structure] and
-     metadata [metadata]. *)
+       metadata [metadata]. *)
     let make =
       let id = ref 0 in
       fun structure metadata ->
@@ -254,53 +257,21 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
           { id = post_incr id
           ; structure
           ; metadata
-          ; non_productive_view =
-              Non_productive_view.empty ~hash_key:(module View_hash_key)
+          ; scope = Equations.Scope.outermost_scope
           }
 
 
-    (* [make_var flexibility metadata] returns a fresh variable 
-     with flexibility [flexibility], and metadata [metadata]. *)
-    let make_var flexibility metadata = make (Var { flexibility }) metadata
+    (* [make_flexible_var metadata] returns a fresh variable 
+       with flexibility [flexibility], and metadata [metadata]. *)
+    let make_flexible_var metadata = make Flexible_var metadata
 
-    (* [make_former ctx former metadata] returns a fresh former
-       with former [former] and metadata [metadata] under abbreviation context [ctx].  *)
-    let make_former ~ctx former metadata =
-      if A.Ctx.has_abbrev ctx former
-      then (
-        (* [former] has an abbreviation and must be treated specially *)
-        match A.Ctx.get_productivity ctx former with
-        | Non_productive i ->
-          (* [former] is non-productive => equivalent to [Former.nth former i] *)
-          let type_ = Former.nth former i in
-          (* Add [former] to the non-productive views of [i] *)
-          Non_productive_view.add (get_non_productive_view type_) former;
-          set_metadata type_ metadata;
-          type_
-        | Productive ->
-          (* TODO: Remove code duplication! *)
-          let productive_view =
-            let open Productive_view in
-            let elt =
-              Elt.{ value = former; rank = A.Ctx.get_rank ctx former }
-            in
-            singleton ~hash:Former.hash ~kind:`Expansive elt
-          in
-          make (Former productive_view) metadata)
-      else (
-        (* [former] has no abbreviation => it is a primitive, thus
-           may be treated as "non-expansive" *)
-        let productive_view =
-          let open Productive_view in
-          let elt = Elt.{ value = former; rank = A.Ctx.get_rank ctx former } in
-          singleton ~hash:Former.hash ~kind:`Non_expansive elt
-        in
-        make (Former productive_view) metadata)
+    let make_rigid_var rigid_var metadata =
+      make (Rigid_var (Rigid_view.singleton rigid_var)) metadata
 
 
-    let productive_view_map productive_view ~f =
-      Productive_view.map_ ~hash:Former.hash productive_view ~f
-
+    (* [make_former former metadata] returns a fresh former
+       with former [former] and metadata [metadata]. *)
+    let make_former former metadata = make (Former former) metadata
 
     module To_dot = struct
       type state =
@@ -317,13 +288,10 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
 
       let structure_to_string structure : string =
         match structure with
-        | Var { flexibility = Flexible } -> [%string "*"]
-        | Var { flexibility = Rigid } -> [%string "!"]
-        | Former productive_view ->
-          Former.sexp_of_t
-            (fun _ -> Atom "")
-            (Productive_view.repr productive_view)
-          |> Sexp.to_string_hum
+        | Flexible_var -> [%string "*"]
+        | Rigid_var rigid_view -> Int.to_string (Rigid_view.repr rigid_view)
+        | Former former ->
+          Former.sexp_of_t (fun _ -> Atom "") former |> Sexp.to_string_hum
 
 
       let metadata_to_string metadata : string =
@@ -358,9 +326,9 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
             let me = register state t in
             Hashtbl.set table ~key:(id t) ~data:me;
             (match get_structure t with
-            | Var _ -> ()
-            | Former productive_view ->
-              Former.iter (Productive_view.repr productive_view) ~f:(fun t ->
+            | Flexible_var | Rigid_var _ -> ()
+            | Former former ->
+              Former.iter former ~f:(fun t ->
                   let from = loop t in
                   arrow state ~from ~to_:me));
             me
@@ -374,191 +342,176 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       let _root = follow_type state t in
       let contents = Buffer.contents state.buffer in
       [%string "digraph {\n %{contents}}"]
+
+
+    exception Cannot_flexize of t
+
+    let flexize_desc desc_src desc_dst =
+      { id = desc_dst.id
+      ; structure = desc_dst.structure
+      ; metadata = Metadata.merge desc_src.metadata desc_dst.metadata
+      ; scope = Equations.Scope.max desc_src.scope desc_dst.scope
+      }
+
+
+    let flexize ~src ~dst =
+      match get_structure src with
+      | Rigid_var _ -> Union_find.union src dst ~f:flexize_desc
+      | _ -> raise (Cannot_flexize src)
   end
 
   open Type
 
-  (* We now extend [Productive_view] for additional functions revelent to the 
-     unification of productive views. 
-     
-     These functions will be specialized to [Type.productive_view]. 
-  *)
+  type 'a expansive =
+    { value : 'a
+    ; make_var : Rigid_var.t -> Type.t
+    ; make_former : Type.t Former.t -> Type.t
+    }
 
-  module Productive_view_ = struct
-    open Productive_view
-
-    let find t key = Hashtbl.find_exn t.elts key |> elt_of_desc |> Elt.value
-
-    (* let former_of_desc desc = elt_of_desc desc |> Elt.value *)
-    let rank_of_desc desc = elt_of_desc desc |> Elt.rank
+  module Rigid_view_ = struct
+    open Rigid_view
 
     exception Cannot_merge
-
-    let iter_decomposable_positions ~ctx former1 former2 ~f =
-      assert (Former.hash former1 = Former.hash former2);
-      let decomposable_positions =
-        A.Ctx.get_decomposable_positions ctx former1
-      in
-      List.iter decomposable_positions ~f:(fun i ->
-          let type1 = Former.nth former1 i
-          and type2 = Former.nth former2 i in
-          f type1 type2)
-
-
-    let merge ~ctx t1 t2 ~f =
-      (* Determine whether there is a common former in [t1] or [t2] *)
-      let former_key =
-        Hash_set.inter
-          (Hash_set.of_hashtbl_keys t1.elts)
-          (Hash_set.of_hashtbl_keys t2.elts)
-        |> Hash_set.find ~f:(Fn.const true)
-      in
-      match former_key with
-      | None -> raise Cannot_merge
-      | Some former_key ->
-        (* Compute the merged former descriptor *)
-        let former =
-          let former1 = find t1 former_key
-          and former2 = find t2 former_key in
-          iter_decomposable_positions ~ctx former1 former2 ~f;
-          former1
-        in
-        (* Now determine the structure of the former descriptor,
-            we assert that they have the same descriptor structure *)
-        let desc =
-          match Hashtbl.find_exn t1.elts former_key with
-          | Non_expansive elt -> Non_expansive Elt.{ elt with value = former }
-          | Expansive dl_elt ->
-            let elt = Doubly_linked.Elt.get_value dl_elt in
-            Doubly_linked.Elt.set_value dl_elt Elt.{ elt with value = former };
-            Expansive dl_elt
-        in
-        Hashtbl.set t1.elts ~key:former_key ~data:desc;
-        (* Merge fields (picking t1 as the preferred view on duplicate) *)
-        let expansive =
-          Doubly_linked.merge
-            t1.expansive
-            t2.expansive
-            ~compare:(fun desc1 desc2 -> Int.compare desc1.rank desc2.rank)
-        in
-        let elts =
-          Hashtbl.merge t1.elts t2.elts ~f:(fun ~key:_ data ->
-              match data with
-              | `Left desc | `Right desc -> Some desc
-              | `Both (desc1, desc2) ->
-                (* In the case of a expansive descriptor, we must
-                   remove it from the sorted expansive list. *)
-                (match desc2 with
-                | Non_expansive _ -> ()
-                | Expansive dl_elt -> Doubly_linked.remove expansive dl_elt);
-                Some desc1)
-        in
-        (* Merge the representative *)
-        let repr =
-          Comparable.min
-            (fun desc1 desc2 ->
-              Int.compare (rank_of_desc desc1) (rank_of_desc desc2))
-            t1.repr
-            t2.repr
-        in
-        { repr; expansive; elts }
-
-
-    let clash ~ctx t1 t2 =
-      let formers t =
-        t.elts
-        |> Hashtbl.data
-        |> List.map ~f:(fun desc -> elt_of_desc desc |> Elt.value)
-      in
-      let formers1 = formers t1 in
-      let formers2 = formers t2 in
-      List.cartesian_product formers1 formers2
-      |> List.exists ~f:(fun (former1, former2) ->
-             A.Ctx.clash ctx former1 former2)
-
-
     exception Cannot_expand
+    exception Clash
 
-    let expand ~ctx ~metadata t1 t2 ~f =
-      (* Determine the expansive list we're modifying *)
-      let t, dl_elt =
-        (* Get the minimum expandable nodes *)
-        match
-          Doubly_linked.first t1.expansive, Doubly_linked.first t2.expansive
-        with
-        | None, None ->
-          (* If there are no expansive nodes left, then we raise [Cannot_expand] *)
-          raise Cannot_expand
-        | Some dl_elt, None ->
-          (* Trivial choice of a single expansive node *)
-          t1, dl_elt
-        | None, Some dl_elt -> t2, dl_elt
-        | Some dl_elt1, Some dl_elt2 ->
-          (* For 2 possible expansive nodes, we select the node with
-             the maximum rank. *)
-          let rank_of_dl_elt dl_elt =
-            dl_elt |> Doubly_linked.Elt.get_value |> Elt.rank
+    let merge_former t1 t2 =
+      match t1.former, t2.former with
+      | None, former | former, None -> former
+      | Some (former, scope1), Some (_, scope2) ->
+        Some (former, Equations.Scope.min scope1 scope2)
+
+
+    let merge_elts t1 t2 =
+      let elts =
+        Hashtbl.merge t1.elts t2.elts ~f:(fun ~key:_ data ->
+            match data with
+            | `Left desc | `Right desc -> Some desc
+            | `Both (desc1, desc2) ->
+              Some
+                { is_expansive = desc1.is_expansive && desc2.is_expansive
+                ; scope = Equations.Scope.min desc1.scope desc2.scope
+                })
+      in
+      elts
+
+
+    let rigid_vars t = Hash_set.of_hashtbl_keys t.elts
+    let former t = t.former
+    let scope t rigid_var = (Hashtbl.find_exn t.elts rigid_var).scope
+
+    (* [merge t1 t2 ~f] attempts to merge [t1] and [t2]. 
+       If we merge on [former], then we iterate over it w/ [f]. 
+       
+       Returns the newly created view and scope. *)
+    let merge t1 t2 ~f =
+      let merge () =
+        (* Merge former *)
+        let former = merge_former t1 t2 in
+        (* Merge the elements *)
+        let elts = merge_elts t1 t2 in
+        (* Pick arbitrary representative *)
+        let repr = t1.repr in
+        { repr; elts; former }
+      in
+      match Option.both t1.former t2.former with
+      | None ->
+        (* Attempt merge on rigid variables *)
+        let rigid_var =
+          Hash_set.inter (rigid_vars t1) (rigid_vars t2)
+          |> Hash_set.find ~f:(fun _ -> true)
+        in
+        (match rigid_var with
+        | None -> raise Cannot_merge
+        | Some rigid_var ->
+          (* Determine the merged equational metadata *)
+          let scope1 = scope t1 rigid_var in
+          let scope2 = scope t2 rigid_var in
+          Equations.Scope.max scope1 scope2, merge ())
+      | Some ((former1, scope1), (former2, scope2)) ->
+        (* Determine whether a clash would occur *)
+        if Former.id former1 <> Former.id former2 then raise Clash;
+        Former.iter2_exn former1 former2 ~f;
+        Equations.Scope.max scope1 scope2, merge ()
+
+
+    let get_min_expansive ~ctx t =
+      (* TODO: Come up w/ clever datastructure to compute this efficiently *)
+      Hashtbl.fold
+        t.elts
+        ~init:None
+        ~f:(fun
+             ~key:rigid_var
+             ~data:{ is_expansive; scope = rigid_var_scope }
+             acc
+           ->
+          if not is_expansive
+          then acc
+          else (
+            match acc, Equations.Ctx.get_equation ctx.value rigid_var with
+            | None, Some (rigid_type_scope, rigid_type) ->
+              Some (rigid_var_scope, rigid_var, rigid_type_scope, rigid_type)
+            | ( Some (_, _, rigid_type_scope', _)
+              , Some (rigid_type_scope, rigid_type) )
+              when rigid_type_scope < rigid_type_scope' ->
+              Some (rigid_var_scope, rigid_var, rigid_type_scope, rigid_type)
+            | _ -> acc))
+
+
+    let expand ~ctx t rigid_var_scope rigid_var rigid_type_scope rigid_type =
+      (* Add [rigid_type] to [t] *)
+      (match Rigid_type.get_structure rigid_type with
+      | Rigid_type.Var rigid_var' ->
+        (* Add [rigid_var'] to [elts] w/ scope [scope] (if not already present) *)
+        (match
+           Hashtbl.add
+             t.elts
+             ~key:rigid_var'
+             ~data:{ is_expansive = true; scope = rigid_type_scope }
+         with
+        | `Ok | `Duplicate -> ())
+      | Rigid_type.Former former ->
+        (* If we already have a former, don't expand *)
+        (match t.former with
+        | Some _ -> ()
+        | None ->
+          (* Convert [former] using [make] *)
+          let former =
+            Former.map
+              ~f:
+                (Rigid_type.to_type
+                   ~make_var:ctx.make_var
+                   ~make_former:ctx.make_former)
+              former
           in
-          if Int.compare (rank_of_dl_elt dl_elt1) (rank_of_dl_elt dl_elt2) > 0
-          then t1, dl_elt1
-          else t2, dl_elt2
+          t.former <- Some (former, rigid_type_scope)));
+      (* Set [rigid_var] to be non-expansive *)
+      Hashtbl.set
+        t.elts
+        ~key:rigid_var
+        ~data:{ is_expansive = false; scope = rigid_var_scope }
+
+
+    let expand1 ~ctx t =
+      match get_min_expansive ~ctx t with
+      | None -> raise Cannot_expand
+      | Some (rigid_var_scope, rigid_var, rigid_type_scope, rigid_type) ->
+        expand ~ctx t rigid_var_scope rigid_var rigid_type_scope rigid_type
+
+
+    let expand2 ~ctx t1 t2 =
+      (* Determine which view and which rigid variable we will be expanding *)
+      let t, (rigid_var_scope, rigid_var, rigid_type_scope, rigid_type) =
+        match get_min_expansive ~ctx t1, get_min_expansive ~ctx t2 with
+        | None, None -> raise Cannot_expand
+        | Some x, None -> t1, x
+        | None, Some x -> t2, x
+        | Some ((_, _, scope1, _) as x1), Some ((_, _, scope2, _) as x2) ->
+          if scope1 <= scope2 then t1, x1 else t2, x2
       in
-      let elt = Doubly_linked.Elt.get_value dl_elt in
-      let former = Elt.value elt in
-      (* Determine the expansion of the former *)
-      let avars, aformer = A.Ctx.get_expansion ctx former in
-      (* Convert the expansion type to a unifier type *)
-      let uvars, uformer =
-        let copied : (A.Type.t, Type.t) Hashtbl.t =
-          Hashtbl.create (module A.Type)
-        in
-        (* Convert variables first (some may be phantoms) *)
-        let uvars =
-          List.map avars ~f:(fun avar ->
-              let uvar = make_var Flexible (metadata ()) in
-              Hashtbl.set copied ~key:avar ~data:uvar;
-              uvar)
-        in
-        (* Assume [atype] is acyclic *)
-        let rec copy atype =
-          try Hashtbl.find_exn copied atype with
-          | Not_found_s _ ->
-            let utype =
-              match A.Type.get_structure atype with
-              | A.Type.Var -> make_var Flexible (metadata ())
-              | A.Type.Former former ->
-                make_former ~ctx (Former.map ~f:copy former) (metadata ())
-            in
-            Hashtbl.set copied ~key:atype ~data:utype;
-            utype
-        in
-        uvars, Former.map ~f:copy aformer
-      in
-      (* Remove [dl_elt] from expansive, add to non-expansive. *)
-      Doubly_linked.remove t.expansive dl_elt;
-      Hashtbl.set t.elts ~key:(Former.hash former) ~data:(Non_expansive elt);
-      (* Add new former to either expansive or primitives (non-expansive) *)
-      let elt' = Elt.{ value = uformer; rank = A.Ctx.get_rank ctx uformer } in
-      let desc' =
-        if A.Ctx.has_abbrev ctx uformer
-        then Expansive (Doubly_linked.insert_first_elt t.expansive elt')
-        else Non_expansive elt'
-      in
-      Hashtbl.set t.elts ~key:(Former.hash uformer) ~data:desc';
-      (* Update representive, expanded former may be new minima. *)
-      if elt'.rank < rank_of_desc t.repr then t.repr <- desc';
-      (* Iterate on decomposable positions of [former], unifying 
-         vars of [former] and [uvars] *)
-      let decomposable_positions =
-        A.Ctx.get_decomposable_positions ctx former
-      in
-      List.iter decomposable_positions ~f:(fun i ->
-          let type1 = Former.nth former i
-          and type2 = List.nth_exn uvars i in
-          f type1 type2)
+      expand ~ctx t rigid_var_scope rigid_var rigid_type_scope rigid_type
   end
 
-  exception Cannot_unify_rigid_variable
   exception Clash
 
   (* [unify_exn] unifies two graphical types. No exception handling is 
@@ -566,33 +519,29 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
      
      Possible exceptions include:
      - [Former.Iter2], raised when executing Former.iter2 in {unify_form}.
-     - [Unify_rigid], raised when incorrectly unifying a rigid variable.
+     - [Clash], raised when incorrectly unifying a rigid variable.
 
      See {!unify}. 
   *)
-
-  let rec unify_exn ~ctx ~metadata t1 t2 =
-    Union_find.union ~f:(unify_desc ~ctx ~metadata) t1 t2
-
+  let rec unify_exn ~ctx t1 t2 = Union_find.union ~f:(unify_desc ~ctx) t1 t2
 
   (* [unify_desc desc1 desc2] unifies the descriptors of the graph types
      (of multi-equations). *)
-
-  and unify_desc ~ctx ~metadata desc1 desc2 =
+  and unify_desc ~ctx desc1 desc2 =
+    let scope, structure =
+      unify_structure ~ctx desc1.structure desc2.structure
+    in
     { id = desc1.id
-    ; structure = unify_structure ~ctx ~metadata desc1.structure desc2.structure
+    ; structure
     ; metadata = Metadata.merge desc1.metadata desc2.metadata
-    ; non_productive_view =
-        Non_productive_view.merge
-          desc1.non_productive_view
-          desc2.non_productive_view
+    ; scope =
+        Equations.Scope.max desc1.scope (Equations.Scope.max desc2.scope scope)
     }
 
 
   (* [unify_structure structure1 structure2] unifies two graph type node
      structures. We handle rigid variables here. *)
-
-  and unify_structure ~ctx ~metadata structure1 structure2 =
+  and unify_structure ~ctx structure1 structure2 =
     match structure1, structure2 with
     (* Unification of variables
     
@@ -600,44 +549,41 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
        both variables are *not* rigid.
   
        In the case of 2 rigid variable, we raise [Cannot_unify_rigid_variable].
-
        We may unify a rigid variable with itself. However, this case does 
        not arise here since [Union_find.union] checks physical equality 
        before before [unify_structure] is executed. 
     *)
-    | Var { flexibility = Rigid }, Var { flexibility = Rigid } ->
-      raise Cannot_unify_rigid_variable
-    | Var { flexibility = Rigid }, Var { flexibility = Flexible }
-    | Var { flexibility = Flexible }, Var { flexibility = Rigid } ->
-      Var { flexibility = Rigid }
-    | Var { flexibility = Flexible }, Var { flexibility = Flexible } ->
-      Var { flexibility = Flexible }
+    | Rigid_var rigid_view1, Rigid_var rigid_view2 ->
+      let scope, rigid_view = unify_rigid_view ~ctx rigid_view1 rigid_view2 in
+      scope, Rigid_var rigid_view
+    | Rigid_var rigid_view, Flexible_var | Flexible_var, Rigid_var rigid_view ->
+      Equations.Scope.outermost_scope, Rigid_var rigid_view
+    | Flexible_var, Flexible_var ->
+      Equations.Scope.outermost_scope, Flexible_var
     (* Unification of variables (leaves) and type formers (internal nodes)
     
        We may unify a flexible variable with a type former, yielding
        the same type former. 
-
        Note that no propagation of metadata is performed. This is required
        by external modules. See {!generalization.ml}. 
     *)
-    | Var { flexibility = Flexible }, Former productive_view
+    | Flexible_var, Former former | Former former, Flexible_var ->
+      Equations.Scope.outermost_scope, Former former
     (* Unification between a rigid variable and a type former is not 
-       permitted. We raise [Unify_rigid]. *)
-    | Former productive_view, Var { flexibility = Flexible } ->
-      Former productive_view
-    | Var { flexibility = Rigid }, Former _
-    | Former _, Var { flexibility = Rigid } -> raise Cannot_unify_rigid_variable
-    (* Unification between type formers (via productive views).
+       permitted. We raise [Cannot_unify_rigid_variable]. *)
+    | Rigid_var rigid_view, Former former | Former former, Rigid_var rigid_view
+      ->
+      let scope, rigid_view =
+        unify_rigid_view_and_former ~ctx rigid_view former
+      in
+      scope, Rigid_var rigid_view
+    (* Unification between type formers 
     
        We may unify type formers recursively. See {!unify_former}. 
     *)
-    | Former productive_view1, Former productive_view2 ->
-      Former
-        (unify_productive_views
-           ~ctx
-           ~metadata
-           productive_view1
-           productive_view2)
+    | Former former1, Former former2 ->
+      ( Equations.Scope.outermost_scope
+      , Former (unify_former ~ctx former1 former2) )
 
 
   (* [unify_former former1 former2] recursively unifies 2 type formers.
@@ -645,45 +591,45 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
      Here we use our internal unification function [unify_exn],
      to allow exception propagation to the top-level call. *)
 
-  and unify_productive_views ~ctx ~metadata productive_view1 productive_view2 =
+  and unify_former ~ctx former1 former2 =
+    Former.iter2_exn former1 former2 ~f:(unify_exn ~ctx);
+    former1
+
+
+  and unify_rigid_view ~ctx rigid_view1 rigid_view2 =
     let rec loop () =
-      (* First attempt to merge the views *)
-      try
-        Productive_view_.merge
-          ~ctx
-          productive_view1
-          productive_view2
-          ~f:(unify_exn ~ctx ~metadata)
-      with
-      | Productive_view_.Cannot_merge ->
-        (* If cannot merge, then determine whether a clash occurs *)
-        if Productive_view_.clash ~ctx productive_view1 productive_view2
-        then raise Clash
-        else (
-          (* We now expand, and then recurse  *)
-          (try
-             (* Caml.Format.printf "Expanding\n"; *)
-             Productive_view_.expand
-               ~ctx
-               ~metadata
-               productive_view1
-               productive_view2
-               ~f:(unify_exn ~ctx ~metadata);
-             (* Caml.Format.printf "Expanded!\n" *)
-           with
-          | Productive_view_.Cannot_expand ->
-            (* Caml.Format.printf "Cannot expand!\n"; *)
-            raise Clash);
-          loop ())
+      try Rigid_view_.merge rigid_view1 rigid_view2 ~f:(unify_exn ~ctx) with
+      | Rigid_view_.Clash -> raise Clash
+      | Rigid_view_.Cannot_merge ->
+        (try Rigid_view_.expand2 ~ctx rigid_view1 rigid_view2 with
+        | Rigid_view_.Cannot_expand -> raise Clash);
+        loop ()
     in
     loop ()
 
 
+  and unify_rigid_view_and_former ~ctx rigid_view former =
+    let rec loop () =
+      match Rigid_view_.former rigid_view with
+      | None ->
+        (try Rigid_view_.expand1 ~ctx rigid_view with
+        | Rigid_view_.Cannot_expand -> raise Clash);
+        loop ()
+      | Some (former', scope) ->
+        (* No need to update [rigid_view.former], since we unify on the formers, ensuring they are equal *)
+        Former.iter2_exn former former' ~f:(unify_exn ~ctx);
+        (* Return scope of equation used. *)
+        scope
+    in
+    let scope = loop () in
+    scope, rigid_view
+
+
   exception Unify of Type.t * Type.t
 
-  let unify ~ctx ~metadata t1 t2 =
-    try unify_exn ~ctx ~metadata t1 t2 with
-    | Clash | Cannot_unify_rigid_variable -> raise (Unify (t1, t2))
+  let unify ~ctx t1 t2 =
+    try unify_exn ~ctx t1 t2 with
+    | Former.Iter2 | Clash -> raise (Unify (t1, t2))
 
 
   exception Cycle of Type.t
@@ -710,15 +656,15 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       with
       | Not_found_s _ ->
         (match get_structure t with
-        | Var _ ->
+        | Flexible_var | Rigid_var _ ->
           (* A variable is a leaf. Hence no traversal is
              required, so simply mark as visited. *)
           Hashtbl.set table ~key:t ~data:true
-        | Former productive_view ->
+        | Former former ->
           (* Mark this node as grey. *)
           Hashtbl.set table ~key:t ~data:false;
           (* Visit children *)
-          Productive_view.iter productive_view ~f:(Former.iter ~f:loop);
+          Former.iter ~f:loop former;
           (* Mark this variable as black. *)
           Hashtbl.set table ~key:t ~data:true)
     in
@@ -731,7 +677,8 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
   let fold_acyclic
       (type a)
       type_
-      ~(var : Type.t -> a)
+      ~(flexible_var : Type.t -> a)
+      ~(rigid_var : Rigid_var.t -> Type.t -> a)
       ~(former : a Former.t -> a)
       : a
     =
@@ -744,9 +691,9 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
       | Not_found_s _ ->
         let result =
           match get_structure type_ with
-          | Var _ -> var type_
-          | Former productive_view ->
-            former (Former.map ~f:loop (Productive_view.repr productive_view))
+          | Flexible_var -> flexible_var type_
+          | Rigid_var rigid_view -> rigid_var (Rigid_view.repr rigid_view) type_
+          | Former former' -> former (Former.map ~f:loop former')
         in
         (* We assume we can set [type_] in [visited] *after* traversing
           it's children, since the graph is acyclic. *)
@@ -759,7 +706,8 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
   let fold_cyclic
       (type a)
       type_
-      ~(var : Type.t -> a)
+      ~(flexible_var : Type.t -> a)
+      ~(rigid_var : Rigid_var.t -> Type.t -> a)
       ~(former : a Former.t -> a)
       ~(mu : Type.t -> a -> a)
       : a
@@ -768,27 +716,28 @@ module Make (Former : Type_former.S) (Metadata : Metadata) :
        or black ([true]). *)
     let table = Hashtbl.create (module Type) in
     (* Recursive loop that traverses the graph. *)
-    let rec loop t =
-      match get_structure t with
-      | Var _ ->
-        Hashtbl.set table ~key:t ~data:true;
-        var t
-      | Former productive_view ->
-        if Hashtbl.mem table t
+    let rec loop type_ =
+      match get_structure type_ with
+      | Flexible_var ->
+        Hashtbl.set table ~key:type_ ~data:true;
+        flexible_var type_
+      | Rigid_var rigid_view ->
+        Hashtbl.set table ~key:type_ ~data:true;
+        rigid_var (Rigid_view.repr rigid_view) type_
+      | Former former' ->
+        if Hashtbl.mem table type_
         then (
           (* Mark this node as black *)
-          Hashtbl.set table ~key:t ~data:true;
-          var t)
+          Hashtbl.set table ~key:type_ ~data:true;
+          flexible_var type_)
         else (
           (* Mark this node as grey. *)
-          Hashtbl.set table ~key:t ~data:false;
+          Hashtbl.set table ~key:type_ ~data:false;
           (* Visit children *)
-          let result =
-            former (Former.map ~f:loop (Productive_view.repr productive_view))
-          in
-          let status = Hashtbl.find_exn table t in
-          Hashtbl.remove table t;
-          if status then mu t result else result)
+          let result = former (Former.map ~f:loop former') in
+          let status = Hashtbl.find_exn table type_ in
+          Hashtbl.remove table type_;
+          if status then mu type_ result else result)
     in
     loop type_
 end

@@ -28,7 +28,6 @@ module Make (Algebra : Algebra) : sig
   (** [variable] is the for the constraint variables *)
   type variable = private int
 
-
   (** A constraint of type ['a Constraint.t] represents a constraint of
     type ['a]. 
     
@@ -37,15 +36,10 @@ module Make (Algebra : Algebra) : sig
   *)
 
   type 'a t
-
   and binding = Term_var.t * variable
-
   and def_binding = binding
-
   and 'a let_binding
-
   and 'a let_rec_binding
-
   and 'a case
 
   val sexp_of_t : 'a t -> Sexp.t
@@ -122,14 +116,6 @@ module Make (Algebra : Algebra) : sig
   include Applicative.S with type 'a t := 'a t
   include Applicative.Let_syntax with type 'a t := 'a t
 
-  (** 
-   
-  *)
-
-  (* TODO: Create a public interface *)
-
-  module Abbreviations : Private.Abbreviations.S with type 'a former := 'a Type_former.t
-
   module Solver : sig
     module Type := Types.Type
 
@@ -139,14 +125,18 @@ module Make (Algebra : Algebra) : sig
       | `Unbound_term_variable of Term_var.t
       | `Unbound_constraint_variable of variable
       | `Rigid_variable_escape of Type_var.t
+      | `Cannot_flexize of Type_var.t
+      | `Scope_escape of Type.t
+      | `Non_rigid_equations
+      | `Inconsistent_equations
       ]
 
-    val solve : ctx:Abbreviations.Ctx.t -> 'a t -> ('a, [> error ]) Result.t
+    val solve : 'a t -> ('a, [> error ]) Result.t
   end
 
   (** [solve t] solves the constraint [t], returning it's value 
       or an error. *)
-  val solve : ctx:Abbreviations.Ctx.t -> 'a t -> ('a, [> Solver.error ]) Result.t
+  val solve : 'a t -> ('a, [> Solver.error ]) Result.t
 
   (** [&~] is an infix alias for [both]. *)
   val ( &~ ) : 'a t -> 'b t -> ('a * 'b) t
@@ -163,11 +153,8 @@ module Make (Algebra : Algebra) : sig
   val ( =~- ) : variable -> Type.t -> unit t
 
   type 'a bound = Type_var.t list * 'a
-
   and term_binding = Term_var.t * Types.scheme
-
   and 'a term_let_binding = term_binding list * 'a bound
-
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   (** [inst x a] is the constraint that instantiates [x] to [a].
@@ -207,7 +194,7 @@ module Make (Algebra : Algebra) : sig
     :  variable list * Shallow_type.binding list * 'a t
     -> binding
     -> 'a let_rec_binding
-  
+
   val ( #~> )
     :  variable list * Shallow_type.binding list * 'a t
     -> binding
@@ -225,6 +212,8 @@ module Make (Algebra : Algebra) : sig
     :  bindings:'a let_rec_binding list
     -> in_:'b t
     -> ('a term_let_rec_binding list * 'b) t
+
+  val ( #=> ) : (Type.t * Type.t) list -> 'a t -> 'a t
 end
 
 module Private : sig

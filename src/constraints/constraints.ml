@@ -19,8 +19,6 @@ module Make (Algebra : Algebra) = struct
 
   module Solver = Private.Solver.Make (Algebra)
 
-  module Abbreviations = Solver.Abbreviations
-
   let solve = Solver.solve
 
 end

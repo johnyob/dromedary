@@ -20,23 +20,11 @@ module Type_former = struct
       | Int
     [@@deriving sexp_of]
 
-    let hash t = 
+    let id t =
       match t with
       | Arrow _ -> 0
       | Int -> 1
 
-    exception Not_found
-
-    let nth t i = 
-      match t, i with
-      | Arrow (t1, _), 0 -> t1
-      | Arrow (_, t2), 1 -> t2
-      | _ -> raise Not_found
-
-    let length t = 
-      match t with
-      | Arrow _ -> 2
-      | Int -> 0
 
     module Traverse (F : Applicative.S) = struct
       module Intf = struct
@@ -96,9 +84,15 @@ module Unifier = struct
   end
 end
 
-let ctx = Unifier.Abbreviations.Ctx.empty
+let unify =
+  Unifier.unify
+    ~ctx:
+      { value = Unifier.Equations.Ctx.empty
+      ; make_var =
+          (fun rigid_var -> Unifier.Type.make_rigid_var rigid_var ())
+      ; make_former = (fun former -> Unifier.Type.make_former former ())
+      }
 
-let unify = Unifier.unify ~ctx ~metadata:(fun () -> ())
 
 module Type = struct
   type t =
@@ -116,12 +110,13 @@ module Type = struct
     let rec loop t =
       match t with
       | Ttyp_var x ->
-        Hashtbl.find_or_add table x ~default:(Unifier.Type.make_var Flexible)
-      | Ttyp_int -> Unifier.Type.make_former ~ctx Int ()
+        Hashtbl.find_or_add table x ~default:(fun () ->
+            Unifier.Type.make_flexible_var ())
+      | Ttyp_int -> Unifier.Type.make_former Int ()
       | Ttyp_arrow (t1, t2) ->
         let t1 = loop t1 in
         let t2 = loop t2 in
-        Unifier.Type.make_former ~ctx (Arrow (t1, t2)) ()
+        Unifier.Type.make_former (Arrow (t1, t2)) ()
     in
     loop t
 end
@@ -153,7 +148,8 @@ let decode_acyclic t =
   let open Type in
   Unifier.fold_acyclic
     t
-    ~var:(fun var -> Ttyp_var (Unifier.Type.id var))
+    ~flexible_var:(fun var -> Ttyp_var (Unifier.Type.id var))
+    ~rigid_var:(fun _var _ -> assert false)
     ~former:(function
       | Arrow (t1, t2) -> Ttyp_arrow (t1, t2)
       | Int -> Ttyp_int)
