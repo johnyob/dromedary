@@ -16,6 +16,18 @@
 
 open! Import
 
+module type View = sig
+  (** ['a t] encodes a view of ['a former]s. *)
+  type 'a t [@@deriving sexp_of]
+
+  (** ['a repr] encodes the representative of the view *)
+  type 'a repr
+
+  val repr : 'a t -> 'a repr
+  val iter : 'a t -> f:('a -> unit) -> unit
+  val fold : 'a t -> f:('a -> 'b -> 'b) -> init:'b -> 'b
+end
+
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
@@ -23,7 +35,9 @@ module type S = sig
       given by the functor argument [Former]. *)
   type 'a former
 
-  module Type : sig
+  type metadata
+
+  module Abbrev_type : sig
     (** [t] represents a graphical encoding of an abbreviational type *)
     type t [@@deriving sexp_of, compare]
 
@@ -31,77 +45,67 @@ module type S = sig
       | Var
       | Former of t former
 
-    (** [id t] is a unique identifier for the type [t]. (used for hashing, etc) *)
-    val id : t -> int
-
-    (** [get_structure t] returns the structure of [t]. *)
-    val get_structure : t -> structure
-
-    (** [hash] is an alias for [id] (required for [Hash_key] intf). *)
-    val hash : t -> int
-
+    (** [make_var ()] returns a fresh abbreviation type variable. *)
     val make_var : unit -> t
+
+    (** [make_former former] returns a fresh abbreviation former for [former]. *)
     val make_former : t former -> t
   end
 
   module Abbreviation : sig
     type t
 
-    type productivity =
-      | Non_productive of int
-      | Productive of Type.t former
-
     val make
       :  former:_ former
       -> rank:int
       -> decomposable_positions:int list
-      -> productivity:productivity
-      -> type_:Type.t list * Type.t former
+      -> productivity:
+           [ `Non_productive of int | `Productive of Abbrev_type.t former ]
+      -> type_:Abbrev_type.t list * Abbrev_type.t former
       -> t
   end
 
-  module Ctx : sig
-    (** type [t] encodes the abbreviation context, mapping [_ former]s to 
-        abbreviations. *)
-    type t
+  module Non_productive_view : View with type 'a repr := 'a former option
+  module Productive_view : View with type 'a repr := 'a former
 
-    (** [empty] is the empty type abbreviation context.  *)
-    val empty : t
+  (** ['a ctx] is the context used for type abbreviations within the unifier *)
+  type 'a ctx
 
-    val add : t -> abbrev:Abbreviation.t -> t
-    val has_abbrev : t -> _ former -> bool
-
-    exception Not_found
-
-    type productivity =
-      | Non_productive of int
-          (** [Non_productive i] encodes that the abbreviation expands to [aᵢ] *)
-      | Productive
-          (** [Productive] encodes that the former has a productive abbreviation *)
-
-    (** [get_productivity t former] returns whether the productivity of the 
-        former [former] in the context [t]. Raises [Not_found] if former is primitive. *)
-    val get_productivity : t -> _ former -> productivity
-
-    (** [get_expansion t former] returns the expansion of [former] in context. 
-        Raises [Not_found] is [former] has no expansion *)
-    val get_expansion : t -> _ former -> Type.t list * Type.t former
-
-    (** [decomposable_positions t former] returns the decomposable positions
-        of [former]. *)
-    val get_decomposable_positions : t -> _ former -> int list
-
-    (** [get_rank t former] returns the rank of the former in [t]. *)
-    val get_rank : t -> _ former -> int
-
-    (** [clash t former1 former2] returns [true] if [former1] and [former2] are not
-      equivalent under context [t]. *)
-    val clash : t -> _ former -> _ former -> bool
+  module Metadata : sig
+    type 'a t =
+      { non_productive_view : 'a Non_productive_view.t
+      ; metadata : metadata
+      }
+    [@@deriving sexp_of]
   end
+
+  module Unifier :
+    Unifier.S
+      with type 'a former := 'a Productive_view.t
+       and type 'a ctx := 'a ctx
+       and type 'a metadata := 'a Metadata.t
+
+  module Ctx : sig
+    type t
+    val empty : t
+    val add : t -> abbrev:Abbreviation.t -> t
+  end
+
+  val unify : ctx:Ctx.t -> metadata:(unit -> metadata) -> Unifier.Type.t -> Unifier.Type.t -> unit
+
+  val make_flexible_var : metadata -> Unifier.Type.t
+  val make_rigid_var : Unifier.Rigid_var.t -> metadata -> Unifier.Type.t
+
+  val make_former
+    :  ctx:Ctx.t
+    -> Unifier.Type.t former
+    -> metadata
+    -> Unifier.Type.t
 end
 
 module type Intf = sig
   module type S = S
 
-  module Make (Former : Type_former.S) : S with type 'a former := 'a Former.t
+  module Make (Former : Type_former.S) (Metadata : Unifier.Metadata.S) :
+    S with type 'a former := 'a Former.t and type metadata := Metadata.t
 end

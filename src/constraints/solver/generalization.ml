@@ -128,18 +128,24 @@ module Make (Former : Type_former.S) = struct
     let generalize t = t.is_generic <- true
   end
 
-  module Unifier = Unifier.Make (Former) (Tag)
-  module Abbreviations = Unifier.Abbreviations
+  module Abbreviations = Abbreviations.Make (Former) (Tag)
+  module Unifier = Abbreviations.Unifier
 
   (* [U] and [A] are aliases, used for a short prefix below. *)
   module U = Unifier
   module A = Abbreviations
 
+  let get_tag type_ = (U.Type.get_metadata type_).metadata
+
+  let get_non_productive_view type_ =
+    (U.Type.get_metadata type_).non_productive_view
+
+
   (* [set_level type_ level] sets the level of the type [type_] to [level]. *)
-  let set_level type_ level = Tag.set_level (U.Type.get_metadata type_) level
+  let set_level type_ level = Tag.set_level (get_tag type_) level
 
   (* [get_level type_] returns the level of type [type_]. *)
-  let get_level type_ = Tag.get_level (U.Type.get_metadata type_)
+  let get_level type_ = Tag.get_level (get_tag type_)
 
   (* [update_level type_ level] is equivalent to [set_level type_ (min (get_level type_) level)]. *)
   let update_level type_ level =
@@ -147,31 +153,31 @@ module Make (Former : Type_former.S) = struct
 
 
   (* [is_generic type_] returns whether the current type [type_] is "generic". *)
-  let is_generic type_ = Tag.is_generic (U.Type.get_metadata type_)
+  let is_generic type_ = Tag.is_generic (get_tag type_)
 
   (* [is_generic_at type_ level] returns whether the current type [type] is 
      generic and is generalized at level [level]. *)
   let is_generic_at type_ level =
-    let tag = U.Type.get_metadata type_ in
+    let tag = get_tag type_ in
     Tag.is_generic tag && Tag.get_level tag = level
 
 
   (* [generalize_type type_] generalizes the type [type_]. *)
-  let generalize_type type_ = Tag.generalize (U.Type.get_metadata type_)
+  let generalize_type type_ = Tag.generalize (get_tag type_)
 
   (* [make_var_] and [make_former_] are internal functions for making type 
      variables and type formers wrapping [Unifier]. *)
 
   let make_flexible_var_ level =
-    U.Type.make_flexible_var { level; is_generic = false }
+    A.make_flexible_var { level; is_generic = false }
 
 
   let make_rigid_var_ rigid_var level =
-    U.Type.make_rigid_var rigid_var { level; is_generic = false }
+    A.make_rigid_var rigid_var { level; is_generic = false }
 
 
   let make_former_ ~ctx former level =
-    U.Type.make_former ~ctx former { level; is_generic = false }
+    A.make_former ~ctx former { level; is_generic = false }
 
 
   (* Generalization regions
@@ -307,7 +313,7 @@ module Make (Former : Type_former.S) = struct
 
   let unify state t1 t2 =
     (* Caml.Format.printf "Unify: %d %d\n" (U.Type.id t1) (U.Type.id t2); *)
-    U.unify
+    A.unify
       ~ctx:state.abbrev_ctx
       ~metadata:(fun () -> { level = state.current_level; is_generic = false })
       t1
@@ -443,9 +449,9 @@ module Make (Former : Type_former.S) = struct
              If the view is non-empty => contains a reference back to [type_] in the view, hence 
              maximum level is [level].
           *)
-          U.Non_productive_view.iter
-            (U.Type.get_non_productive_view type_)
-            ~f:(Former.iter ~f:(fun type_ -> loop type_ level));
+          A.Non_productive_view.iter
+            (get_non_productive_view type_)
+            ~f:(fun type_ -> loop type_ level);
           match U.Type.get_structure type_ with
           | U.Type.Flexible_var | U.Type.Rigid_var _ ->
             (* In the variable case, we cannot traverse any further
@@ -466,13 +472,12 @@ module Make (Former : Type_former.S) = struct
             *)
             update_level
               type_
-              (U.Productive_view.fold
+              (A.Productive_view.fold
                  productive_view
                  ~init:outermost_level
-                 ~f:(fun former acc ->
-                   Former.fold former ~init:acc ~f:(fun type_ acc ->
-                       loop type_ level;
-                       max (get_level type_) acc)))))
+                 ~f:(fun type_ acc ->
+                   loop type_ level;
+                   max (get_level type_) acc))))
     in
     Array.iter ~f:(fun type_ -> loop type_ (get_level type_)) young_region
 
@@ -558,7 +563,8 @@ module Make (Former : Type_former.S) = struct
     let rigid_vars, generalizable = generalize state ~rigid_vars in
     (* Check that rigid variables have no escaped. *)
     (match
-       List.find rigid_vars ~f:(fun (_, var) -> get_level var < state.current_level)
+       List.find rigid_vars ~f:(fun (_, var) ->
+           get_level var < state.current_level)
      with
     | None -> ()
     | Some (rigid_var, _) -> raise (Rigid_variable_escape rigid_var));
@@ -608,7 +614,7 @@ module Make (Former : Type_former.S) = struct
           (* Rigid variables cannot occur as generalized variables in type schemes *)
           assert false
         | U.Type.Former productive_view ->
-          U.Productive_view.repr productive_view |> Former.iter ~f:loop)
+          A.Productive_view.repr productive_view |> Former.iter ~f:loop)
     in
     loop root;
     !variables
@@ -668,7 +674,7 @@ module Make (Former : Type_former.S) = struct
               new_type
             | U.Type.Former productive_view ->
               let former =
-                U.Productive_view.repr productive_view |> Former.map ~f:copy
+                A.Productive_view.repr productive_view |> Former.map ~f:copy
               in
               make_former state former
           in
@@ -682,4 +688,78 @@ module Make (Former : Type_former.S) = struct
     (* Caml.Format.printf "Instantiated result:\n"; *)
     (* pp_type_explicit root; *)
     !instance_variables, root
+
+
+  (* [fold_acyclic type_ ~var ~form] will perform a bottom-up fold
+     over the (assumed) acyclic graph defined by the type [type_]. *)
+
+  let fold_acyclic
+      (type a)
+      type_
+      ~(flexible_var : U.Type.t -> a)
+      ~(rigid_var : U.Rigid_var.t -> U.Type.t -> a)
+      ~(former : a Former.t -> a)
+      : a
+    =
+    (* Hash table records whether node has been visited, and 
+     it's computed value. *)
+    let visited : (U.Type.t, a) Hashtbl.t = Hashtbl.create (module U.Type) in
+    (* Recursive loop, folding over the graph *)
+    let rec loop type_ =
+      try Hashtbl.find_exn visited type_ with
+      | Not_found_s _ ->
+        let result =
+          match U.Type.get_structure type_ with
+          | Flexible_var -> flexible_var type_
+          | Rigid_var a -> rigid_var a type_
+          | Former productive_view ->
+            former (A.Productive_view.repr productive_view |> Former.map ~f:loop)
+        in
+        (* We assume we can set [type_] in [visited] *after* traversing
+         it's children, since the graph is acyclic. *)
+        Hashtbl.set visited ~key:type_ ~data:result;
+        result
+    in
+    loop type_
+
+
+  let fold_cyclic
+      (type a)
+      type_
+      ~(flexible_var : U.Type.t -> a)
+      ~(rigid_var : U.Rigid_var.t -> U.Type.t -> a)
+      ~(former : a Former.t -> a)
+      ~(mu : U.Type.t -> a -> a)
+      : a
+    =
+    (* Hash table records the variables that are grey ([false])
+      or black ([true]). *)
+    let table = Hashtbl.create (module U.Type) in
+    (* Recursive loop that traverses the graph. *)
+    let rec loop t =
+      match U.Type.get_structure t with
+      | Flexible_var ->
+        Hashtbl.set table ~key:t ~data:true;
+        flexible_var t
+      | Rigid_var a -> 
+        Hashtbl.set table ~key:t ~data:true;
+        rigid_var a t
+      | Former productive_view ->
+        if Hashtbl.mem table t
+        then (
+          (* Mark this node as black *)
+          Hashtbl.set table ~key:t ~data:true;
+          flexible_var t)
+        else (
+          (* Mark this node as grey. *)
+          Hashtbl.set table ~key:t ~data:false;
+          (* Visit children *)
+          let result =
+            former (A.Productive_view.repr productive_view |> Former.map ~f:loop)
+          in
+          let status = Hashtbl.find_exn table t in
+          Hashtbl.remove table t;
+          if status then mu t result else result)
+    in
+    loop type_
 end

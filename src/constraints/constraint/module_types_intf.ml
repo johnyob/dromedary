@@ -38,12 +38,9 @@ module Type_former = struct
     *)
     type 'a t [@@deriving sexp_of]
 
-    val hash : 'a t -> int
+    val id : 'a t -> int
 
-    exception Not_found
-    val nth : 'a t -> int -> 'a
 
-    val length : 'a t -> int
 
     (** ['a t] is a traversable, hence is foldable and a functor. See Haskell type classes. *)
     module Traverse (F : Applicative.S) : sig
@@ -59,13 +56,14 @@ module Type_former = struct
 
   module type S = sig
     type 'a t [@@deriving sexp_of]
-
-    val hash : 'a t -> int
+    val id : 'a t -> int
 
     exception Not_found
-    val nth : 'a t -> int -> 'a
+    
+    val nth : 'a t -> int -> 'a option
+    
+    val nth_exn : 'a t -> int -> 'a
 
-    val length : 'a t -> int
     val map : 'a t -> f:('a -> 'b) -> 'b t
     val fold : 'a t -> f:('a -> 'b -> 'b) -> init:'b -> 'b
     val iter : 'a t -> f:('a -> unit) -> unit
@@ -73,6 +71,10 @@ module Type_former = struct
     exception Iter2
 
     val iter2_exn : 'a t -> 'b t -> f:('a -> 'b -> unit) -> unit
+
+    exception Fold2
+
+    val fold2_exn : 'a t -> 'b t -> init:'c -> f:('a -> 'b -> 'c -> 'c) -> 'c
   end
 end
 

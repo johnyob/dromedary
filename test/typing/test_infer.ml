@@ -1585,38 +1585,39 @@ let%expect_test "let rec - polymorphic recursion" =
 let%expect_test "abbrev - morel" =
   let abbrev_ctx =
     let open Types.Algebra.Type_former in
+    let open Abbreviations in
     let abbrev_k =
-      let a = Abbreviations.Type.make_var () in
+      let a = Abbrev_type.make_var () in
       let pair = Tuple [ a; a ] in
       Abbreviations.Abbreviation.(
         make
           ~former:(Constr ([], "K"))
           ~rank:1
           ~decomposable_positions:[ 0 ]
-          ~productivity:(Productive pair)
+          ~productivity:(`Productive pair)
           ~type_:([ a ], pair))
     in
     let abbrev_f =
-      let a = Abbreviations.Type.make_var () in
+      let a = Abbrev_type.make_var () in
       let arr = Arrow (a, a) in
       Abbreviations.Abbreviation.(
         make
           ~former:(Constr ([], "F"))
           ~rank:1
-          ~productivity:(Productive arr)
+          ~productivity:(`Productive arr)
           ~decomposable_positions:[ 0 ]
           ~type_:([ a ], arr))
     in
     let abbrev_g =
-      let a = Abbreviations.Type.make_var () in
-      let k = Abbreviations.Type.make_former (Constr ([ a ], "K")) in
+      let a = Abbrev_type.make_var () in
+      let k = Abbrev_type.make_former (Constr ([ a ], "K")) in
       let f = Constr ([ k ], "F") in
       Abbreviations.Abbreviation.(
         make
           ~former:(Constr ([], "G"))
           ~rank:2
           ~decomposable_positions:[ 0 ]
-          ~productivity:(Productive (Arrow (k, k)))
+          ~productivity:(`Productive (Arrow (k, k)))
           ~type_:([ a ], f))
     in
     Abbreviations.Ctx.empty

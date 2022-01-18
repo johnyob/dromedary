@@ -32,26 +32,44 @@ open! Import
     This abstraction forms a commutative monoid. 
 *)
 
-module type Metadata = sig
-  (** [t] is the abstract type of the metadata associated with each types. *)
+module Metadata = struct
+  module type S = sig
+    (** [t] is the abstract type of the metadata associated with each types. *)
 
-  type t [@@deriving sexp_of]
+    type t [@@deriving sexp_of]
 
-  (** [merge] is performed when unifying two types. 
+    (** [merge] is performed when unifying two types. 
       We assume that [merge] is associative and commutative. *)
-  val merge : t -> t -> t
+    val merge : t -> t -> t
+  end
+
+  module type S1 = sig
+    (** [t] is the abstract type of the metadata associated with each types. *)
+
+    type 'a t [@@deriving sexp_of]
+
+    (** [merge] is performed when unifying two types. 
+        We assume that [merge] is associative and commutative. *)
+    val merge : 'a t -> 'a t -> 'a t
+  end
 end
 
-module type View = sig
-  (** ['a t] encodes a view with representive of type ['a]. *)
+module type Ctx = sig
+  type 'a t [@@deriving sexp_of]
+end
+
+module type Former = sig
   type 'a t [@@deriving sexp_of]
 
-  (** ['a repr] encodes the representative of the view. *)
-  type 'a repr
+  module Ctx : Ctx
 
+  val map : 'a t -> f:('a -> 'b) -> 'b t
+  val fold : 'a t -> f:('a -> 'b -> 'b) -> init:'b -> 'b
   val iter : 'a t -> f:('a -> unit) -> unit
-  val fold : 'a t -> init:'b -> f:('a -> 'b -> 'b) -> 'b
-  val repr : 'a t -> 'a repr
+
+  exception Iter2
+
+  val iter2_exn : ctx:'a Ctx.t -> 'a t -> 'a t -> f:('a -> 'a -> unit) -> unit
 end
 
 module type S = sig
@@ -61,13 +79,12 @@ module type S = sig
       given by the functor argument [Former]. *)
   type 'a former
 
+  (** The type ['a ctx] is the arbitrary context used by formers. *)
+  type 'a ctx
+
   (** [metadata] is the type of metadata, given by the functor argument
       [Metadata]. *)
-  type metadata
-
-  module Abbreviations : Abbreviations.S with type 'a former := 'a former
-  module Non_productive_view : View with type 'a repr := 'a option
-  module Productive_view : View with type 'a repr := 'a
+  type 'a metadata
 
   module Rigid_var : sig
     type t [@@deriving sexp_of, compare]
@@ -77,35 +94,22 @@ module type S = sig
     val make : unit -> t
   end
 
+
   module Type : sig
     (** [t] represents a type. See "graphical types". *)
     type t [@@deriving sexp_of, compare]
 
-    type non_productive_view = t former Non_productive_view.t
-    type productive_view = t former Productive_view.t
-
     type structure =
       | Flexible_var
       | Rigid_var of Rigid_var.t
-      | Former of productive_view
+      | Former of t former
+
+    type nonrec metadata = t metadata
 
     val to_dot : t -> string
 
-    (** Each graphical type node consists of:
-        - a unique identifier [id] (used to define a total ordering).
-        - a mutable non-productive view [non_productive_view], containing the set of 
-          non-productive abbreviations
-        - a mutable [structure], which contains the node structure.
-        - a mutable piece of [metadata]. 
-    *)
-
     (** [id t] returns the unique identifier of the type [t]. *)
     val id : t -> int
-
-    (** [get_non_productive_view t] returns the non-productive view of the type. *)
-    val get_non_productive_view : t -> non_productive_view
-
-    val set_non_productive_view : t -> non_productive_view -> unit
 
     (** [get_structure t] returns the structure of [t]. *)
     val get_structure : t -> structure
@@ -120,19 +124,17 @@ module type S = sig
     val set_metadata : t -> metadata -> unit
 
     (** [hash t] computes the hash of the graphical type [t]. 
-        Based on it's integer field: id. *)
+     Based on it's integer field: id. *)
     val hash : t -> int
 
     (** [make_var metadata] returns a fresh flexible variable with metadata [metadata]. *)
     val make_flexible_var : metadata -> t
 
-    (** [make_rigid_var rigid_var metadata] returns a fresh rigid variable, that encodes
-        the rigid variable [rigid_var] w/ metadata[metadata]. *)
     val make_rigid_var : Rigid_var.t -> metadata -> t
 
-    (** [make_former ctx former metadata] returns a fresh type former
+    (** [make_former former metadata] returns a fresh type former
         with metadata [metadata]. *)
-    val make_former : ctx:Abbreviations.Ctx.t -> t former -> metadata -> t
+    val make_former : t former -> metadata -> t
 
     exception Cannot_flexize of t
 
@@ -141,7 +143,7 @@ module type S = sig
     val flexize : src:t -> dst:t -> unit
   end
 
-  (** [unify t1 t2] equates the graphical type nodes [t1] and [t2], 
+  (** [unify ~ctx t1 t2] equates the graphical type nodes [t1] and [t2], 
       and forms a multi-equation node.
       
       Identifiers are merged arbitrarily.
@@ -160,12 +162,7 @@ module type S = sig
 
   exception Unify of Type.t * Type.t
 
-  val unify
-    :  ctx:Abbreviations.Ctx.t
-    -> metadata:(unit -> metadata)
-    -> Type.t
-    -> Type.t
-    -> unit
+  val unify : ctx:Type.t ctx -> Type.t -> Type.t -> unit
 
   (** [occurs_check t] detects whether there is a cycle in 
       the graphical type [t]. 
@@ -177,38 +174,35 @@ module type S = sig
 
   val occurs_check : Type.t -> unit
 
-  (** [fold_acyclic type_ ~var ~former] will perform a bottom-up fold
-      over the (assumed) acyclic graph defined by the type [type_].  
-  *)
-
+  (* (** [fold_acyclic type_ ~var ~former] will perform a bottom-up fold
+      over the (assumed) acyclic graph defined by the type [type_]. *)
   val fold_acyclic
     :  Type.t
-    -> flexible_var:(Type.t -> 'a)
-    -> rigid_var:(Rigid_var.t -> Type.t -> 'a)
+    -> var:(Type.t -> 'a)
     -> former:('a former -> 'a)
     -> 'a
 
   (** [fold_cyclic type_ ~var ~former ~mu] will perform a fold over
-      the (potentially) cyclic graph defined by the type [type_].  
-  *)
-
+      the (potentially) cyclic graph defined by the type [type_]. *)
   val fold_cyclic
     :  Type.t
-    -> flexible_var:(Type.t -> 'a)
-    -> rigid_var:(Rigid_var.t -> Type.t -> 'a)
+    -> var:(Type.t -> 'a)
     -> former:('a former -> 'a)
     -> mu:(Type.t -> 'a -> 'a)
-    -> 'a
+    -> 'a *)
 end
 
 (** The interface of {unifier.ml}. *)
 
 module type Intf = sig
-  module type View = View
-  module type Metadata = Metadata
+  module Metadata = Metadata
+  module type Former = Former
   module type S = S
 
   (** The functor [Make]. *)
-  module Make (Former : Type_former.S) (Metadata : Metadata) :
-    S with type 'a former := 'a Former.t and type metadata := Metadata.t
+  module Make (Former : Former) (Metadata : Metadata.S1) :
+    S
+      with type 'a former := 'a Former.t
+       and type 'a ctx := 'a Former.Ctx.t
+       and type 'a metadata := 'a Metadata.t
 end

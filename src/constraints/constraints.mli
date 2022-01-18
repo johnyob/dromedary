@@ -128,10 +128,49 @@ module Make (Algebra : Algebra) : sig
 
   (* TODO: Create a public interface *)
 
-  module Abbreviations : Private.Abbreviations.S with type 'a former := 'a Type_former.t
+  module Abbreviations : sig
+    module Abbrev_type : sig
+      (** [t] represents a graphical encoding of an abbreviational type *)
+      type t [@@deriving sexp_of, compare]
+
+      type structure =
+        | Var
+        | Former of t Type_former.t
+
+      (** [make_var ()] returns a fresh abbreviation type variable. *)
+      val make_var : unit -> t
+
+      (** [make_former former] returns a fresh abbreviation former for [former]. *)
+      val make_former : t Type_former.t -> t
+    end
+
+    module Abbreviation : sig
+      type t
+
+      val make
+        :  former:_ Type_former.t
+        -> rank:int
+        -> decomposable_positions:int list
+        -> productivity:
+             [ `Non_productive of int
+             | `Productive of Abbrev_type.t Type_former.t
+             ]
+        -> type_:Abbrev_type.t list * Abbrev_type.t Type_former.t
+        -> t
+    end
+
+    module Ctx : sig
+      type t
+
+      val empty : t
+      val add : t -> abbrev:Abbreviation.t -> t
+    end
+  end
 
   module Solver : sig
     module Type := Types.Type
+
+    
 
     type error =
       [ `Unify of Type.t * Type.t

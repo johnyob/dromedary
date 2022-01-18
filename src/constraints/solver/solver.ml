@@ -67,7 +67,7 @@ module Make (Algebra : Algebra) = struct
 
     (* [decode_type_acyclic type_] decodes type [type_] (known to have no cycles) into a [Type]. *)
     let decode_type_acyclic : t =
-      U.fold_acyclic
+      G.fold_acyclic
         ~flexible_var:(fun v -> Type.var (decode_variable v))
         ~rigid_var:(fun v _ -> Type.var (decode_rigid_variable v))
         ~former:Type.former
@@ -75,7 +75,7 @@ module Make (Algebra : Algebra) = struct
 
     (* [decode_type_cyclic type_] decodes type [type_] (may contain cycles) into a [Type]. *)
     let decode_type_cyclic : t =
-      U.fold_cyclic
+      G.fold_cyclic
         ~flexible_var:(fun v -> Type.var (decode_variable v))
         ~rigid_var:(fun v _ -> Type.var (decode_rigid_variable v))
         ~former:Type.former

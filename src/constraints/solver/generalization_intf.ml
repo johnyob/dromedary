@@ -29,11 +29,10 @@ module type S = sig
     type t [@@deriving sexp_of]
   end
 
-  module Unifier :
-    Unifier.S with type 'a former := 'a former and type metadata := Tag.t
-
   module Abbreviations :
-    Abbreviations.S with type 'a former := 'a former
+    Abbreviations.S with type 'a former := 'a former and type metadata := Tag.t
+
+  module Unifier = Abbreviations.Unifier
 
   (** The type [scheme] defines the abstract notion of a scheme in 
       "graphic" types.
@@ -92,7 +91,6 @@ module type S = sig
       w/ the structure provided by the former. *)
 
   val make_former : state -> Unifier.Type.t former -> Unifier.Type.t
-
   val unify : state -> Unifier.Type.t -> Unifier.Type.t -> unit
 
   (** [instantiate scheme] instantates the scheme [scheme]. It does so, by
@@ -112,6 +110,29 @@ module type S = sig
     -> rigid_vars:Unifier.Rigid_var.t list
     -> types:Unifier.Type.t list
     -> variables * scheme list
+
+  (** [fold_acyclic type_ ~var ~former] will perform a bottom-up fold
+      over the (assumed) acyclic graph defined by the type [type_].  
+  *)
+
+  val fold_acyclic
+    :  Unifier.Type.t
+    -> flexible_var:(Unifier.Type.t -> 'a)
+    -> rigid_var:(Unifier.Rigid_var.t -> Unifier.Type.t -> 'a)
+    -> former:('a former -> 'a)
+    -> 'a
+
+  (** [fold_cyclic type_ ~var ~former ~mu] will perform a fold over
+      the (potentially) cyclic graph defined by the type [type_].  
+  *)
+
+  val fold_cyclic
+    :  Unifier.Type.t
+    -> flexible_var:(Unifier.Type.t -> 'a)
+    -> rigid_var:(Unifier.Rigid_var.t -> Unifier.Type.t -> 'a)
+    -> former:('a former -> 'a)
+    -> mu:(Unifier.Type.t -> 'a -> 'a)
+    -> 'a
 end
 
 (** The interface of {generalization.ml}. *)
