@@ -47,11 +47,7 @@ module type S = sig
       is provided by the parameter [term].
   *)
 
-  type term =
-    { fold : 'a. 'a t -> 'a
-    ; unfold : 'a. 'a -> 'a t
-    }
-
+  type term = { fold : 'a. 'a t -> 'a }
   type ctx
 
   exception Cannot_merge
@@ -75,7 +71,15 @@ module type Intf = sig
     val hash : t -> int
   end
 
-  module Amibvalence (S : S) : sig
+  module First_order (S : S) : sig
+    type 'a t =
+      | Var
+      | Structure of 'a S.t
+
+    include S with type 'a t := 'a t
+  end
+
+  module Ambivalent (S : S) : sig
     module Rigid_type : sig
       type t =
         | Rigid_var of Rigid_var.t
@@ -86,7 +90,7 @@ module type Intf = sig
       module Scope : sig
         (** [t] represents the "scope" of the equation. It is used to track 
             consistency in level-based generalization *)
-        type t = int [@@deriving compare]
+        type t = int 
 
         val outermost_scope : t
       end
@@ -115,6 +119,6 @@ module type Intf = sig
 
     type ctx = Equations.Ctx.t * S.ctx
 
-    include S with type 'a t := 'a t and type ctx := S.ctx
+    include S with type 'a t := 'a t and type ctx := ctx
   end
 end

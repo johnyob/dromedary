@@ -30,7 +30,48 @@ module Rigid_var = struct
   let hash t = t
 end
 
-module Ambivalence (Structure : S) = struct
+module First_order (Structure : S) = struct
+  type 'a t =
+    | Var
+    | Structure of 'a Structure.t
+
+  let iter t ~f =
+    match t with
+    | Var -> ()
+    | Structure structure -> Structure.iter structure ~f
+
+
+  let map t ~f =
+    match t with
+    | Var -> Var
+    | Structure structure -> Structure (Structure.map structure ~f)
+
+
+  let fold t ~f ~init =
+    match t with
+    | Var -> init
+    | Structure structure -> Structure.fold structure ~f ~init
+
+
+  type term = { fold : 'a. 'a t -> 'a }
+  type ctx = Structure.ctx
+
+  exception Cannot_merge
+
+  let merge ~term ~ctx ~equate t1 t2 =
+    match t1, t2 with
+    | Var, structure | structure, Var -> structure
+    | Structure structure1, Structure structure2 ->
+      let term : Structure.term =
+        { fold = (fun structure -> Structure structure |> term.fold) }
+      in
+      (try
+         Structure (Structure.merge ~term ~ctx ~equate structure1 structure2)
+       with
+      | Structure.Cannot_merge -> raise Cannot_merge)
+end
+
+module Ambivalent (Structure : S) = struct
   module Rigid_type = struct
     type t =
       | Rigid_var of Rigid_var.t
@@ -40,16 +81,18 @@ module Ambivalence (Structure : S) = struct
   module Equations = struct
     module Scope = struct
       type t = int
-
       let min = min
       let max = max
       let outermost_scope = 0
     end
 
+    type 'a scoped = 'a * Scope.t
+
+
     module Ctx = struct
       type t =
         ( Rigid_var.t
-        , Scope.t * Rigid_type.t
+        , Rigid_type.t scoped
         , Rigid_var.comparator_witness )
         Map.t
 
@@ -63,13 +106,12 @@ module Ambivalence (Structure : S) = struct
   end
 
   type 'a t =
-    { mutable structure : 'a Structure.t scoped option
+    { mutable structure : 'a Structure.t Equations.scoped option
     ; scope : Equations.Scope.t
-    ; rigid_vars : (Rigid_var.t, bool scoped) Hashtbl.t
+    ; rigid_vars : (Rigid_var.t, bool Equations.scoped) Hashtbl.t
     }
 
-  and 'a scoped = 'a * Equations.Scope.t
-
+  
   let make_rigid_var rigid_var =
     let rigid_vars = Hashtbl.create (module Rigid_var) in
     Hashtbl.set
@@ -89,7 +131,7 @@ module Ambivalence (Structure : S) = struct
     }
 
 
-  let structure t = t.structure
+  let structure t = t.structure |> Option.map ~f:fst
   let scope t = t.scope
   let rigid_vars t = Hash_set.of_hashtbl_keys t.rigid_vars
 
@@ -116,10 +158,7 @@ module Ambivalence (Structure : S) = struct
   let ectx = fst
   let sctx = snd
 
-  type term =
-    { fold : 'a. 'a t -> 'a
-    ; unfold : 'a. 'a -> 'a t
-    }
+  type term = { fold : 'a. 'a t -> 'a }
 
   exception Cannot_merge
 
@@ -161,7 +200,7 @@ module Ambivalence (Structure : S) = struct
            | Some scope -> if scope' < scope then Some scope' else Some scope)
 
 
-  let get_min_expansive ~ctx t =
+  let get_min_expansive ~(ctx : ctx) t =
     (* TODO: Come up w/ clever datastructure to compute this efficiently *)
     Hashtbl.fold
       t.rigid_vars
@@ -207,10 +246,11 @@ module Ambivalence (Structure : S) = struct
       | Some (structure1, structure2) ->
         (* Determine the merged structure *)
         let structure =
-          (* let term = 
-            { fold = fun structure -> make_structure (Some structure) |> term.fold 
-            ; unfold = fun t -> term.unfold t |> structure   }
-          in *)
+          let term : Structure.term =
+            { fold =
+                (fun structure -> make_structure (Some structure) |> term.fold)
+            }
+          in
           merge_scoped
             structure1
             structure2
@@ -229,13 +269,18 @@ module Ambivalence (Structure : S) = struct
   exception Cannot_expand
 
   let convert_rigid_type ~term rigid_type =
-    term.fold
-      (match rigid_type with
-      | Rigid_type.Rigid_var rigid_var -> make_rigid_var rigid_var
-      | Rigid_type.Structure structure -> make_structure (Some structure))
+    let rec loop rigid_type = 
+      term.fold
+        (match rigid_type with
+        | Rigid_type.Rigid_var rigid_var -> make_rigid_var rigid_var
+        | Rigid_type.Structure structure -> 
+          let structure = Structure.map structure ~f:loop in
+          make_structure (Some structure))
+    in
+    loop rigid_type
 
 
-  let expand ~term ~ctx t1 t2 =
+  let expand ~term ~(ctx : ctx) t1 t2 =
     (* We first must determine which ambivalence we will
        be expanding. *)
     let t, (rigid_var, rigid_type) =
@@ -268,7 +313,7 @@ module Ambivalence (Structure : S) = struct
     Hashtbl.set t.rigid_vars ~key:(fst rigid_var) ~data:(false, snd rigid_var)
 
 
-  let merge ~term ~ctx ~equate t1 t2 =
+  let merge ~term ~(ctx : ctx) ~equate t1 t2 =
     let rec loop () =
       try decompose ~term ~ctx ~equate t1 t2 with
       | Structure.Cannot_merge -> raise Cannot_merge
