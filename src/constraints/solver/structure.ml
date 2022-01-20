@@ -34,6 +34,7 @@ module First_order (Structure : S) = struct
   type 'a t =
     | Var
     | Structure of 'a Structure.t
+  [@@deriving sexp_of]
 
   let iter t ~f =
     match t with
@@ -53,16 +54,15 @@ module First_order (Structure : S) = struct
     | Structure structure -> Structure.fold structure ~f ~init
 
 
-  type term = { fold : 'a. 'a t -> 'a }
-  type ctx = Structure.ctx
-
+  type 'a term = { fold : 'a t -> 'a }
+  
   exception Cannot_merge
 
   let merge ~term ~ctx ~equate t1 t2 =
     match t1, t2 with
     | Var, structure | structure, Var -> structure
     | Structure structure1, Structure structure2 ->
-      let term : Structure.term =
+      let term : _ Structure.term =
         { fold = (fun structure -> Structure structure |> term.fold) }
       in
       (try
@@ -81,6 +81,7 @@ module Ambivalent (Structure : S) = struct
   module Equations = struct
     module Scope = struct
       type t = int
+
       let min = min
       let max = max
       let outermost_scope = 0
@@ -88,13 +89,9 @@ module Ambivalent (Structure : S) = struct
 
     type 'a scoped = 'a * Scope.t
 
-
     module Ctx = struct
       type t =
-        ( Rigid_var.t
-        , Rigid_type.t scoped
-        , Rigid_var.comparator_witness )
-        Map.t
+        (Rigid_var.t, Rigid_type.t scoped, Rigid_var.comparator_witness) Map.t
 
       let empty = Map.empty (module Rigid_var)
 
@@ -110,8 +107,8 @@ module Ambivalent (Structure : S) = struct
     ; scope : Equations.Scope.t
     ; rigid_vars : (Rigid_var.t, bool Equations.scoped) Hashtbl.t
     }
-
   
+
   let make_rigid_var rigid_var =
     let rigid_vars = Hashtbl.create (module Rigid_var) in
     Hashtbl.set
@@ -134,6 +131,11 @@ module Ambivalent (Structure : S) = struct
   let structure t = t.structure |> Option.map ~f:fst
   let scope t = t.scope
   let rigid_vars t = Hash_set.of_hashtbl_keys t.rigid_vars
+  let update_scope t scope = if t.scope < scope then { t with scope } else t
+
+
+  let sexp_of_t sexp_of_a t = 
+    structure t |> Option.sexp_of_t (Structure.sexp_of_t sexp_of_a)
 
   let iter t ~f =
     Option.iter t.structure ~f:(fun (structure, _) ->
@@ -158,7 +160,7 @@ module Ambivalent (Structure : S) = struct
   let ectx = fst
   let sctx = snd
 
-  type term = { fold : 'a. 'a t -> 'a }
+  type 'a term = { fold : 'a t -> 'a }
 
   exception Cannot_merge
 
@@ -246,7 +248,7 @@ module Ambivalent (Structure : S) = struct
       | Some (structure1, structure2) ->
         (* Determine the merged structure *)
         let structure =
-          let term : Structure.term =
+          let term : _ Structure.term =
             { fold =
                 (fun structure -> make_structure (Some structure) |> term.fold)
             }
@@ -269,11 +271,11 @@ module Ambivalent (Structure : S) = struct
   exception Cannot_expand
 
   let convert_rigid_type ~term rigid_type =
-    let rec loop rigid_type = 
+    let rec loop rigid_type =
       term.fold
         (match rigid_type with
         | Rigid_type.Rigid_var rigid_var -> make_rigid_var rigid_var
-        | Rigid_type.Structure structure -> 
+        | Rigid_type.Structure structure ->
           let structure = Structure.map structure ~f:loop in
           make_structure (Some structure))
     in

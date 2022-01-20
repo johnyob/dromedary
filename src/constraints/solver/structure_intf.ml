@@ -13,6 +13,8 @@
 
 (* This module implements signatured used for unification structures. *)
 
+open! Import
+
 module type S = sig
   (** A structure defines the "structure" of the unification type.
       Namely, the unification type is given by the fixed point of the 
@@ -24,7 +26,7 @@ module type S = sig
       - Rows
       - Ambivalence
   *)
-  type 'a t
+  type 'a t [@@deriving sexp_of]
 
   val map : 'a t -> f:('a -> 'b) -> 'b t
   val iter : 'a t -> f:('a -> unit) -> unit
@@ -42,18 +44,18 @@ module type S = sig
       (e.g. Abbreviations, and Ambivalence), thus [merge] requires a
       context [ctx]. 
       
-      In some cases, consistency may also fold and unfold the fixed point, 
+      In some cases, consistency may also fold the fixed point, 
       used by the unifier (e.g. Rows, Abbreviations and Ambivalence). This
       is provided by the parameter [term].
   *)
 
-  type term = { fold : 'a. 'a t -> 'a }
+  type 'a term = { fold : 'a t -> 'a }
   type ctx
 
   exception Cannot_merge
 
   val merge
-    :  term:term
+    :  term:'a term
     -> ctx:ctx
     -> equate:('a -> 'a -> unit)
     -> 'a t
@@ -76,7 +78,7 @@ module type Intf = sig
       | Var
       | Structure of 'a S.t
 
-    include S with type 'a t := 'a t
+    include S with type 'a t := 'a t and type ctx := S.ctx
   end
 
   module Ambivalent (S : S) : sig
@@ -90,7 +92,7 @@ module type Intf = sig
       module Scope : sig
         (** [t] represents the "scope" of the equation. It is used to track 
             consistency in level-based generalization *)
-        type t = int 
+        type t = int
 
         val outermost_scope : t
       end
@@ -110,15 +112,34 @@ module type Intf = sig
       end
     end
 
+    (** ['a t] represents an ambivalent structure w/ children of type ['a]. *)
     type 'a t
 
+    (** [make_rigid_var rigid_var] returns an ambivalent structure representing 
+        the rigid variable [rigid_var] *)
     val make_rigid_var : Rigid_var.t -> 'a t
+
+    (** [make_structure structure] returns an ambivalent structure representing
+        [structure]. 
+        
+        In comparison to [First_order], [None] is equivalent to a flexible variable,
+        and [Some structure] is equivalent to the structure [structure]. 
+    *)
     val make_structure : 'a S.t option -> 'a t
+
+    (** [structure t] returns the structure of the ambivalent structure. *)
     val structure : 'a t -> 'a S.t option
+
+    (** [scope t] returns the scope of the ambivalent structure. *)
     val scope : 'a t -> Equations.Scope.t
 
-    type ctx = Equations.Ctx.t * S.ctx
+    (** [rigid_vars t] returns the set of ambivalent rigid variables in the structure [t]. *)
+    val rigid_vars : 'a t -> Rigid_var.t Hash_set.t
 
-    include S with type 'a t := 'a t and type ctx := ctx
+    (** [update_scope t scope] returns [t] with an updated scope. If [scope t < scope], 
+        then [t] has the new scope [scope]. *)
+    val update_scope : 'a t -> Equations.Scope.t -> 'a t
+
+    include S with type 'a t := 'a t and type ctx := Equations.Ctx.t * S.ctx
   end
 end
