@@ -144,6 +144,7 @@ module Ambivalent (Structure : S) = struct
 
 
   let structure t = t.structure |> Option.map ~f:fst
+
   let scope t = t.scope
   let rigid_vars t = Hash_set.of_hashtbl_keys t.rigid_vars
   let update_scope t scope = if t.scope < scope then { t with scope } else t

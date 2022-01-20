@@ -67,7 +67,7 @@ module type Intf = sig
   module type S = S
 
   module Rigid_var : sig
-    type t = private int [@@deriving compare]
+    type t = private int [@@deriving sexp_of, compare]
 
     val make : unit -> t
     val hash : t -> int
@@ -135,6 +135,7 @@ module type Intf = sig
 
     (** [structure t] returns the structure of the ambivalent structure. *)
     val structure : 'a t -> 'a S.t option
+
 
     (** [scope t] returns the scope of the ambivalent structure. *)
     val scope : 'a t -> Equations.Scope.t
