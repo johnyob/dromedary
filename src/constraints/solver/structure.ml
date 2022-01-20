@@ -30,6 +30,20 @@ module Rigid_var = struct
   let hash t = t
 end
 
+module Of_former (Former : Type_former.S) = struct
+  include Former
+
+  type ctx = unit
+  type 'a term = { fold : 'a t -> 'a }
+  
+  exception Cannot_merge
+
+  let merge ~term:_ ~ctx:() ~equate t1 t2 = 
+    (try Former.iter2_exn t1 t2 ~f:equate with Former.Iter2 -> raise Cannot_merge);
+    t1
+    
+end
+
 module First_order (Structure : S) = struct
   type 'a t =
     | Var
@@ -55,7 +69,8 @@ module First_order (Structure : S) = struct
 
 
   type 'a term = { fold : 'a t -> 'a }
-  
+  type ctx = Structure.ctx
+
   exception Cannot_merge
 
   let merge ~term ~ctx ~equate t1 t2 =

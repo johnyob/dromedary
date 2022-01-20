@@ -73,12 +73,18 @@ module type Intf = sig
     val hash : t -> int
   end
 
+  module Of_former (Former : Type_former.S) : sig
+    type 'a t = 'a Former.t
+
+    include S with type 'a t := 'a t and type ctx = unit
+  end
+
   module First_order (S : S) : sig
     type 'a t =
       | Var
       | Structure of 'a S.t
 
-    include S with type 'a t := 'a t and type ctx := S.ctx
+    include S with type 'a t := 'a t and type ctx = S.ctx
   end
 
   module Ambivalent (S : S) : sig
@@ -140,6 +146,6 @@ module type Intf = sig
         then [t] has the new scope [scope]. *)
     val update_scope : 'a t -> Equations.Scope.t -> 'a t
 
-    include S with type 'a t := 'a t and type ctx := Equations.Ctx.t * S.ctx
+    include S with type 'a t := 'a t and type ctx = Equations.Ctx.t * S.ctx
   end
 end
