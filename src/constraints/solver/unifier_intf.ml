@@ -23,7 +23,6 @@
 
 open! Import
 
-
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
@@ -34,6 +33,8 @@ module type S = sig
   (** The type [ctx] is the arbitrary unification context determined by
       the structure's context, given by [Structure]  *)
   type ctx
+
+  type 'a expansive
 
   module Type : sig
     (** [t] represents a type. See "graphical types". *)
@@ -74,7 +75,7 @@ module type S = sig
 
   exception Unify of Type.t * Type.t
 
-  val unify : ctx:ctx -> Type.t -> Type.t -> unit
+  val unify : expansive:Type.t expansive -> ctx:ctx -> Type.t -> Type.t -> unit
 
   (** [occurs_check t] detects whether there is a cycle in 
       the graphical type [t]. 
@@ -88,10 +89,7 @@ module type S = sig
 
   (** [fold_acyclic type_ ~f] will perform a bottom-up fold
       over the (assumed) acyclic graph defined by the type [type_]. *)
-  val fold_acyclic
-    :  Type.t
-    -> f:('a structure -> 'a)
-    -> 'a
+  val fold_acyclic : Type.t -> f:('a structure -> 'a) -> 'a
 
   (** [fold_cyclic type_ ~f ~var ~mu] will perform a fold over
       the (potentially) cyclic graph defined by the type [type_]. *)
@@ -110,5 +108,8 @@ module type Intf = sig
 
   (** The functor [Make]. *)
   module Make (Structure : Structure.S) :
-    S with type 'a structure := 'a Structure.t and type ctx := Structure.ctx
+    S
+      with type 'a structure := 'a Structure.t
+       and type ctx := Structure.ctx
+       and type 'a expansive := 'a Structure.expansive
 end

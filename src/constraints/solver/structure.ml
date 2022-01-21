@@ -34,14 +34,14 @@ module Of_former (Former : Type_former.S) = struct
   include Former
 
   type ctx = unit
-  type 'a term = { fold : 'a t -> 'a }
-  
+  type 'a expansive = unit
+
   exception Cannot_merge
 
-  let merge ~term:_ ~ctx:() ~equate t1 t2 = 
-    (try Former.iter2_exn t1 t2 ~f:equate with Former.Iter2 -> raise Cannot_merge);
+  let merge ~expansive:() ~ctx:() ~equate t1 t2 =
+    (try Former.iter2_exn t1 t2 ~f:equate with
+    | Former.Iter2 -> raise Cannot_merge);
     t1
-    
 end
 
 module First_order (Structure : S) = struct
@@ -68,20 +68,18 @@ module First_order (Structure : S) = struct
     | Structure structure -> Structure.fold structure ~f ~init
 
 
-  type 'a term = { fold : 'a t -> 'a }
+  type 'a expansive = 'a Structure.expansive
   type ctx = Structure.ctx
 
   exception Cannot_merge
 
-  let merge ~term ~ctx ~equate t1 t2 =
+  let merge ~expansive ~ctx ~equate t1 t2 =
     match t1, t2 with
     | Var, structure | structure, Var -> structure
     | Structure structure1, Structure structure2 ->
-      let term : _ Structure.term =
-        { fold = (fun structure -> Structure structure |> term.fold) }
-      in
       (try
-         Structure (Structure.merge ~term ~ctx ~equate structure1 structure2)
+         Structure
+           (Structure.merge ~expansive ~ctx ~equate structure1 structure2)
        with
       | Structure.Cannot_merge -> raise Cannot_merge)
 end
@@ -122,7 +120,6 @@ module Ambivalent (Structure : S) = struct
     ; scope : Equations.Scope.t
     ; rigid_vars : (Rigid_var.t, bool Equations.scoped) Hashtbl.t
     }
-  
 
   let make_rigid_var rigid_var =
     let rigid_vars = Hashtbl.create (module Rigid_var) in
@@ -144,14 +141,13 @@ module Ambivalent (Structure : S) = struct
 
 
   let structure t = t.structure |> Option.map ~f:fst
-
   let scope t = t.scope
   let rigid_vars t = Hash_set.of_hashtbl_keys t.rigid_vars
   let update_scope t scope = if t.scope < scope then { t with scope } else t
 
-
-  let sexp_of_t sexp_of_a t = 
+  let sexp_of_t sexp_of_a t =
     structure t |> Option.sexp_of_t (Structure.sexp_of_t sexp_of_a)
+
 
   let iter t ~f =
     Option.iter t.structure ~f:(fun (structure, _) ->
@@ -173,10 +169,14 @@ module Ambivalent (Structure : S) = struct
 
   type ctx = Equations.Ctx.t * Structure.ctx
 
+  type 'a expansive =
+    { make : 'a t -> 'a
+    ; sexpansive : 'a Structure.expansive
+    }
+
   let ectx = fst
   let sctx = snd
 
-  type 'a term = { fold : 'a t -> 'a }
 
   exception Cannot_merge
 
@@ -238,7 +238,7 @@ module Ambivalent (Structure : S) = struct
 
   exception Cannot_decompose
 
-  let decompose ~term ~ctx ~equate t1 t2 =
+  let decompose ~expansive ~ctx ~equate t1 t2 =
     (* In order to decompose 2 ambivalent types, we determine the common member 
        (if one exists) with the smallest "scope" to decompose "on". *)
     (* There are 2 rules for decomposition of ambivalent types:
@@ -264,15 +264,14 @@ module Ambivalent (Structure : S) = struct
       | Some (structure1, structure2) ->
         (* Determine the merged structure *)
         let structure =
-          let term : _ Structure.term =
-            { fold =
-                (fun structure -> make_structure (Some structure) |> term.fold)
-            }
-          in
           merge_scoped
             structure1
             structure2
-            ~f:(Structure.merge ~term ~ctx:(sctx ctx) ~equate)
+            ~f:
+              (Structure.merge
+                 ~expansive:expansive.sexpansive
+                 ~ctx:(sctx ctx)
+                 ~equate)
         in
         (* Compute the required scope for the decomposition. *)
         let scope =
@@ -286,9 +285,9 @@ module Ambivalent (Structure : S) = struct
 
   exception Cannot_expand
 
-  let convert_rigid_type ~term rigid_type =
+  let convert_rigid_type ~make rigid_type =
     let rec loop rigid_type =
-      term.fold
+      make
         (match rigid_type with
         | Rigid_type.Rigid_var rigid_var -> make_rigid_var rigid_var
         | Rigid_type.Structure structure ->
@@ -298,7 +297,7 @@ module Ambivalent (Structure : S) = struct
     loop rigid_type
 
 
-  let expand ~term ~(ctx : ctx) t1 t2 =
+  let expand ~expansive ~(ctx : ctx) t1 t2 =
     (* We first must determine which ambivalence we will
        be expanding. *)
     let t, (rigid_var, rigid_type) =
@@ -325,18 +324,20 @@ module Ambivalent (Structure : S) = struct
       | Some _ -> ()
       | None ->
         (* Convert [structure] using [term]. *)
-        let structure = Structure.map structure ~f:(convert_rigid_type ~term) in
+        let structure =
+          Structure.map structure ~f:(convert_rigid_type ~make:expansive.make)
+        in
         t.structure <- Some (structure, snd rigid_type)));
     (* Set [rigid_var]  to be non-expansive *)
     Hashtbl.set t.rigid_vars ~key:(fst rigid_var) ~data:(false, snd rigid_var)
 
 
-  let merge ~term ~(ctx : ctx) ~equate t1 t2 =
+  let merge ~expansive ~(ctx : ctx) ~equate t1 t2 =
     let rec loop () =
-      try decompose ~term ~ctx ~equate t1 t2 with
+      try decompose ~expansive ~ctx ~equate t1 t2 with
       | Structure.Cannot_merge -> raise Cannot_merge
       | Cannot_decompose ->
-        (try expand ~term ~ctx t1 t2 with
+        (try expand ~expansive ~ctx t1 t2 with
         | Cannot_expand -> raise Cannot_merge);
         loop ()
     in

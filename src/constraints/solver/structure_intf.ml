@@ -44,18 +44,17 @@ module type S = sig
       (e.g. Abbreviations, and Ambivalence), thus [merge] requires a
       context [ctx]. 
       
-      In some cases, consistency may also fold the fixed point, 
-      used by the unifier (e.g. Rows, Abbreviations and Ambivalence). This
-      is provided by the parameter [term].
+      In some cases, consistency may also a notion of "expansiveness", the ability
+      to create new terms during [merge]. This is defined in the context ['a expansive]
   *)
 
-  type 'a term = { fold : 'a t -> 'a }
+  type 'a expansive
   type ctx
 
   exception Cannot_merge
 
   val merge
-    :  term:'a term
+    :  expansive:'a expansive
     -> ctx:ctx
     -> equate:('a -> 'a -> unit)
     -> 'a t
@@ -76,7 +75,7 @@ module type Intf = sig
   module Of_former (Former : Type_former.S) : sig
     type 'a t = 'a Former.t
 
-    include S with type 'a t := 'a t and type ctx = unit
+    include S with type 'a t := 'a t and type ctx = unit and type 'a expansive = unit
   end
 
   module First_order (S : S) : sig
@@ -84,7 +83,11 @@ module type Intf = sig
       | Var
       | Structure of 'a S.t
 
-    include S with type 'a t := 'a t and type ctx = S.ctx
+    include
+      S
+        with type 'a t := 'a t
+         and type ctx = S.ctx
+         and type 'a expansive = 'a S.expansive
   end
 
   module Ambivalent (S : S) : sig
@@ -136,7 +139,6 @@ module type Intf = sig
     (** [structure t] returns the structure of the ambivalent structure. *)
     val structure : 'a t -> 'a S.t option
 
-
     (** [scope t] returns the scope of the ambivalent structure. *)
     val scope : 'a t -> Equations.Scope.t
 
@@ -147,6 +149,8 @@ module type Intf = sig
         then [t] has the new scope [scope]. *)
     val update_scope : 'a t -> Equations.Scope.t -> 'a t
 
-    include S with type 'a t := 'a t and type ctx = Equations.Ctx.t * S.ctx
+    type 'a expansive = { make : 'a t -> 'a; sexpansive : 'a S.expansive }
+
+    include S with type 'a t := 'a t and type ctx = Equations.Ctx.t * S.ctx and type 'a expansive := 'a expansive
   end
 end

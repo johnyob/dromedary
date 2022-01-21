@@ -155,29 +155,28 @@ module Make (Structure : Structure.S) = struct
 
      See {!unify}. 
   *)
-  let rec unify_exn ~ctx t1 t2 = Union_find.union ~f:(unify_desc ~ctx) t1 t2
+  let rec unify_exn ~expansive ~ctx t1 t2 = Union_find.union ~f:(unify_desc ~expansive ~ctx) t1 t2
 
   (* [unify_desc desc1 desc2] unifies the descriptors of the graph types
      (of multi-equations). *)
-  and unify_desc ~ctx desc1 desc2 =
+  and unify_desc ~expansive ~ctx desc1 desc2 =
     { id = desc1.id
-    ; structure = unify_structure ~ctx desc1.structure desc2.structure
+    ; structure = unify_structure ~expansive ~ctx desc1.structure desc2.structure
     }
 
 
   (* [unify_structure structure1 structure2] unifies two graph type node
      structures. We handle rigid variables here. *)
-  and unify_structure =
-    let term : _ Structure.term = { fold = make } in
-    let merge = Structure.merge ~term in
+  and unify_structure ~expansive =
+    let merge = Structure.merge ~expansive in
     fun ~ctx structure1 structure2 ->
-      merge ~ctx ~equate:(unify_exn ~ctx) structure1 structure2
+      merge ~ctx ~equate:(unify_exn ~expansive ~ctx) structure1 structure2
 
 
   exception Unify of Type.t * Type.t
 
-  let unify ~ctx t1 t2 =
-    try unify_exn ~ctx t1 t2 with
+  let unify ~expansive ~ctx t1 t2 =
+    try unify_exn ~expansive ~ctx t1 t2 with
     | Structure.Cannot_merge -> raise (Unify (t1, t2))
 
 

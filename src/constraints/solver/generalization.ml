@@ -125,16 +125,18 @@ module Make (Former : Type_former.S) = struct
 
     exception Cannot_merge
 
-    type 'a term = { fold : 'a t -> 'a }
+    type 'a expansive = { make : 'a Ambivalent.t -> 'a }
     type ctx = Ambivalent.Equations.Ctx.t
 
-    (* TODO: Figure out how to get additional state *)
-    let merge ~term ~ctx ~equate t1 t2 =
+    let merge ~expansive ~ctx ~equate t1 t2 =
       assert (not (t1.is_generic || t2.is_generic));
       (try
          t1.structure
            <- Ambivalent.merge
-                ~term:{ fold = (fun _structure -> assert false) }
+                ~expansive:
+                  { make = (fun structure -> expansive.make structure)
+                  ; sexpansive = ()
+                  }
                 ~ctx:(ctx, ())
                 ~equate
                 t1.structure
@@ -299,20 +301,23 @@ module Make (Former : Type_former.S) = struct
     Hash_set.add (Vec.get_exn state.regions (level type_)) type_
 
 
+  let make state structure = 
+    let new_type = U.Type.make { structure; level = state.current_level; is_generic = false} in
+    set_region state new_type;
+    new_type
+
   (* [make_var] creates a fresh unification variable, setting it's level
      and region. *)
 
   let make_flexible_var state =
-    let var = make_flexible_var_ state.current_level in
-    set_region state var;
+    let var = make state (Ambivalent.make_structure None) in
     Caml.Format.printf "New variable:\n";
     pp_type var;
     var
 
 
   let make_rigid_var state rigid_var =
-    let var = make_rigid_var_ rigid_var state.current_level in
-    set_region state var;
+    let var = make state (Ambivalent.make_rigid_var rigid_var) in
     Caml.Format.printf "New rigid variable: %d\n" (rigid_var :> int);
     pp_type var;
     var
@@ -324,8 +329,7 @@ module Make (Former : Type_former.S) = struct
      It initialize the level to the current level. 
   *)
   let make_former state former =
-    let former = make_former_ former state.current_level in
-    set_region state former;
+    let former = make state (Ambivalent.make_structure (Some former)) in
     Caml.Format.printf "New former:\n";
     pp_type former;
     pp_type_explicit former;
@@ -334,17 +338,7 @@ module Make (Former : Type_former.S) = struct
 
   let unify state ~ctx t1 t2 =
     Caml.Format.printf "Unify: %d %d\n" (U.Type.id t1) (U.Type.id t2);
-    assert false
-
-
-  (* U.unify
-      ~ctx:
-        { value = ctx
-        ; make_var = make_rigid_var state
-        ; make_former = make_former state
-        }
-      t1
-      t2 *)
+    U.unify ~expansive:{ make = make state } ~ctx t1 t2
 
   let current_scope state = state.current_level
 
