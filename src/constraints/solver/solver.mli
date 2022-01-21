@@ -39,13 +39,16 @@ end
 
 (** [Private] submodule for [expect] tests. *)
 module Private : sig
+  module Structure = Structure
+
   module Generalization (Type_former : Type_former.S) :
     Generalization.S with type 'a former := 'a Type_former.t
 
-  module Unifier (Type_former : Type_former.S) (Metadata : Unifier.Metadata) :
+  module Unifier (Structure : Structure.S) :
     Unifier.S
-      with type 'a former := 'a Type_former.t
-       and type metadata := Metadata.t
+      with type 'a structure = 'a Structure.t
+       and type ctx = Structure.ctx
+       and type 'a expansive = 'a Structure.expansive
 
   module Union_find : module type of Union_find
 end

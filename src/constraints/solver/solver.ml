@@ -15,6 +15,7 @@
    Pottier's paper ??. *)
 
 open! Import
+open Structure
 
 module Make (Algebra : Algebra) = struct
   open Algebra
@@ -55,30 +56,36 @@ module Make (Algebra : Algebra) = struct
     (* [decode_variable var] decodes [var] into a [Type_var] using it's unique identifier. *)
     let decode_variable var =
       assert (
-        match U.Type.get_structure var with
-        | U.Type.Flexible_var -> true
+        match G.repr (U.Type.get_structure var)  with
+        | G.Flexible_var -> true
         | _ -> false);
       Type_var.of_int (U.Type.id var)
 
 
-    let decode_rigid_variable rigid_var =
-      Type_var.of_int (U.Rigid_var.id rigid_var)
+    let decode_rigid_variable (rigid_var : Rigid_var.t) =
+      Type_var.of_int (rigid_var :> int)
 
 
     (* [decode_type_acyclic type_] decodes type [type_] (known to have no cycles) into a [Type]. *)
     let decode_type_acyclic : t =
       U.fold_acyclic
-        ~flexible_var:(fun v -> Type.var (decode_variable v))
-        ~rigid_var:(fun v _ -> Type.var (decode_rigid_variable v))
-        ~former:Type.former
+        ~f:(fun type_ structure ->
+          match G.repr structure with
+          | G.Flexible_var -> Type.var (decode_variable type_) 
+          | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
+          | G.Former former -> Type.former former)
+
 
 
     (* [decode_type_cyclic type_] decodes type [type_] (may contain cycles) into a [Type]. *)
     let decode_type_cyclic : t =
       U.fold_cyclic
-        ~flexible_var:(fun v -> Type.var (decode_variable v))
-        ~rigid_var:(fun v _ -> Type.var (decode_rigid_variable v))
-        ~former:Type.former
+        ~f:(fun type_ structure ->
+          match G.repr structure with
+          | G.Flexible_var -> Type.var (decode_variable type_) 
+          | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
+          | G.Former former -> Type.former former)
+        ~var:(fun type_ -> Type.var (decode_variable type_))  
         ~mu:(fun v t -> Type.mu (decode_variable v) t)
 
 
@@ -100,7 +107,7 @@ module Make (Algebra : Algebra) = struct
     }
 
   and type_ =
-    | Rigid_var of U.Rigid_var.t
+    | Rigid_var of Rigid_var.t
     | Type of U.Type.t
 
   (* [make_state ()] returns a fresh solver state. *)
@@ -111,7 +118,6 @@ module Make (Algebra : Algebra) = struct
 
 
   let enter state = G.enter state.generalization_state
-  let current_scope state = G.current_scope state.generalization_state
 
   (* [exit state ~rigid_vars ~types] generalizes the types [types], returning
      the generalized variables and schemes. 
@@ -155,8 +161,8 @@ module Make (Algebra : Algebra) = struct
     | None -> raise (Unbound_constraint_variable var)
     | Some (Rigid_var rigid_var) -> Some rigid_var
     | Some (Type type_) ->
-      (match U.Type.get_structure type_ with
-      | U.Type.Rigid_var rigid_view -> Some (U.Rigid_view.repr rigid_view)
+      (match G.repr (U.Type.get_structure type_) with
+      | G.Rigid_var rigid_var -> Some rigid_var
       | _ -> None)
 
 
@@ -187,7 +193,7 @@ module Make (Algebra : Algebra) = struct
      Returning the graphical type mapped in the environment. *)
   let bind_rigid state var =
     Caml.Format.printf "Solver: bind_rigid\n";
-    let rigid_var = U.Rigid_var.make () in
+    let rigid_var = Rigid_var.make () in
     bind state var (Rigid_var rigid_var);
     rigid_var
 
@@ -219,12 +225,12 @@ module Make (Algebra : Algebra) = struct
     type t =
       { term_var_env :
           (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
-      ; equations : U.Equations.Ctx.t
+      ; equations : G.Equations.t
       }
 
     let empty =
       { term_var_env = Map.empty (module Term_var_comparator)
-      ; equations = U.Equations.Ctx.empty
+      ; equations = G.Equations.empty
       }
 
 
@@ -252,28 +258,28 @@ module Make (Algebra : Algebra) = struct
 
     let equations t = t.equations
 
-    let add_equation t (rigid_type1, rigid_type2) scope =
+    let add_equation state t (rigid_type1, rigid_type2) =
       { t with
         equations =
-          U.Equations.Ctx.add t.equations rigid_type1 rigid_type2 scope
+          G.Equations.add state.generalization_state t.equations rigid_type1 rigid_type2
       }
 
 
-    let add_equations t equations scope =
+    let add_equations state t equations =
       List.fold_left equations ~init:t ~f:(fun t equation ->
-          add_equation t equation scope)
+          add_equation state t equation)
   end
 
   exception Invalid_rigid_type
 
-  let rec type_to_rigid_type state type_ : U.Rigid_type.t =
+  let rec type_to_rigid_type state type_ : G.Rigid_type.t =
     match type_ with
     | C.Type.Var x ->
       (match find_rigid state x with
-      | Some rigid_var -> U.Rigid_type.make_var rigid_var
+      | Some rigid_var -> G.Rigid_type.make_var rigid_var
       | None -> raise Invalid_rigid_type)
     | C.Type.Former former ->
-      U.Rigid_type.make_former
+      G.Rigid_type.make_former
         (Type_former.map former ~f:(type_to_rigid_type state))
 
 
@@ -287,7 +293,7 @@ module Make (Algebra : Algebra) = struct
       with
       | Invalid_rigid_type -> raise Non_rigid_equations
     in
-    Env.add_equations env equations (current_scope state)
+    Env.add_equations state env equations
 
 
   (* [unify type1 type2] unifies [type1] and [type2], raising [Unify] is the 
@@ -650,10 +656,11 @@ module Make (Algebra : Algebra) = struct
     | Env.Unbound_term_variable x -> Error (`Unbound_term_variable x)
     | Unbound_constraint_variable a -> Error (`Unbound_constraint_variable a)
     | Non_rigid_equations -> Error (`Non_rigid_equations)
-    | U.Equations.Ctx.Inconsistent -> Error (`Inconsistent_equations)
+    | G.Equations.Inconsistent -> Error (`Inconsistent_equations)
 end
 
 module Private = struct
+  module Structure = Structure
   module Generalization = Generalization.Make
   module Unifier = Unifier.Make
   module Union_find = Union_find

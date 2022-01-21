@@ -69,6 +69,13 @@ module type S = sig
   (** [make_former former] creates a unification type w/ former [former]. *)
   val make_former : state -> Type.t former -> Type.t
 
+  type 'a repr = 
+    | Flexible_var
+    | Rigid_var of Rigid_var.t
+    | Former of 'a former
+
+  val repr : 'a Unifier.structure -> 'a repr
+
   (** The type [scheme] defines the abstract notion of a scheme in 
       "graphic" types.
       

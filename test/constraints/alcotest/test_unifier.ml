@@ -72,7 +72,7 @@ module Metadata = struct
 end
 
 module Unifier = struct
-  include Unifier (Type_former) (Metadata)
+  include Unifier (Structure.First_order (Structure.Of_former (Type_former)))
 
   module Type = struct
     include Type
@@ -86,13 +86,9 @@ end
 
 let unify =
   Unifier.unify
-    ~ctx:
-      { value = Unifier.Equations.Ctx.empty
-      ; make_var =
-          (fun rigid_var -> Unifier.Type.make_rigid_var rigid_var ())
-      ; make_former = (fun former -> Unifier.Type.make_former former ())
-      }
-
+  ~expansive:()  
+  ~ctx:()
+      
 
 module Type = struct
   type t =
@@ -111,12 +107,12 @@ module Type = struct
       match t with
       | Ttyp_var x ->
         Hashtbl.find_or_add table x ~default:(fun () ->
-            Unifier.Type.make_flexible_var ())
-      | Ttyp_int -> Unifier.Type.make_former Int ()
+            Unifier.Type.make Var)
+      | Ttyp_int -> Unifier.Type.make (Structure Int)
       | Ttyp_arrow (t1, t2) ->
         let t1 = loop t1 in
         let t2 = loop t2 in
-        Unifier.Type.make_former (Arrow (t1, t2)) ()
+        Unifier.Type.make (Structure (Arrow (t1, t2)))
     in
     loop t
 end
@@ -148,11 +144,11 @@ let decode_acyclic t =
   let open Type in
   Unifier.fold_acyclic
     t
-    ~flexible_var:(fun var -> Ttyp_var (Unifier.Type.id var))
-    ~rigid_var:(fun _var _ -> assert false)
-    ~former:(function
-      | Arrow (t1, t2) -> Ttyp_arrow (t1, t2)
-      | Int -> Ttyp_int)
+    ~f:(fun type_ structure ->
+      match structure with
+      | Var -> Ttyp_var (Unifier.Type.id type_)
+      | Structure (Arrow (t1, t2)) -> Ttyp_arrow (t1, t2)
+      | Structure (Int) -> Ttyp_int)
 
 
 let assume_unifiable t1 t2 =

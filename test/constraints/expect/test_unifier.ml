@@ -47,26 +47,27 @@ module Metadata = struct
   let merge t1 _ = t1
 end
 
-module Unifier = Unifier (Type_former) (Metadata)
+module Unifier =
+  Unifier (Structure.First_order (Structure.Of_former (Type_former)))
+
 module Type = Unifier.Type
 
-let unify =
-  Unifier.unify
-    ~ctx:
-      { value = Unifier.Equations.Ctx.empty
-      ; make_var =
-          (fun rigid_var -> Unifier.Type.make_rigid_var rigid_var ())
-      ; make_former = (fun former -> Unifier.Type.make_former former ())
-      }
+let unify = Unifier.unify ~expansive:() ~ctx:()
+let make_flexible_var () = Unifier.Type.make Var
+
+let make_rigid_var =
+  let next_rigid = ref (-1) in
+  fun () -> Unifier.Type.make
+    (Structure
+       (Constr
+          ( []
+          , "rigid"
+            ^
+            (Int.incr next_rigid;
+             Int.to_string !next_rigid) )))
 
 
-let make_flexible_var () = Unifier.Type.make_flexible_var ()
-
-let make_rigid_var () =
-  Unifier.Type.make_rigid_var (Unifier.Rigid_var.make ()) ()
-
-
-let ( @ ) f ts = Unifier.Type.make_former (Constr (ts, f)) ()
+let ( @ ) f ts = Unifier.Type.make (Structure (Constr (ts, f)))
 
 let print_type t =
   let content = Type.to_dot t in
@@ -84,15 +85,15 @@ let%expect_test "Test unify : correctness 1" =
   print_type t1;
   [%expect
     {|
-      ┌─────────────────┐
-      │        0        │
-      └─────────────────┘
+      ┌────────────────────────────────┐
+      │ (Structure (Constr () rigid0)) │
+      └────────────────────────────────┘
         │
         │
         ▼
-      ┌─────────────────┐
-      │ (Constr ("") P) │
-      └─────────────────┘ |}]
+      ┌────────────────────────────────┐
+      │  (Structure (Constr ("") P))   │
+      └────────────────────────────────┘ |}]
 
 let%expect_test "Test unify : correctness 2" =
   let t1 = "P" @ [ "f" @ [ make_rigid_var (); make_flexible_var () ] ]
@@ -104,27 +105,27 @@ let%expect_test "Test unify : correctness 2" =
   print_type t1;
   [%expect
     {|
-      ┌────────────────────┐
-      │         1          │ ─┐
-      └────────────────────┘  │
-        │                     │
-        │                     │
-        ▼                     │
-      ┌────────────────────┐  │
-      │  (Constr ("") g)   │  │
-      └────────────────────┘  │
-        │                     │
-        │                     │
-        ▼                     │
-      ┌────────────────────┐  │
-      │ (Constr ("" "") f) │ ◀┘
-      └────────────────────┘
+      ┌────────────────────────────────┐
+      │ (Structure (Constr () rigid1)) │ ─┐
+      └────────────────────────────────┘  │
+        │                                 │
+        │                                 │
+        ▼                                 │
+      ┌────────────────────────────────┐  │
+      │  (Structure (Constr ("") g))   │  │
+      └────────────────────────────────┘  │
+        │                                 │
+        │                                 │
+        ▼                                 │
+      ┌────────────────────────────────┐  │
+      │ (Structure (Constr ("" "") f)) │ ◀┘
+      └────────────────────────────────┘
         │
         │
         ▼
-      ┌────────────────────┐
-      │  (Constr ("") P)   │
-      └────────────────────┘ |}]
+      ┌────────────────────────────────┐
+      │  (Structure (Constr ("") P))   │
+      └────────────────────────────────┘ |}]
 
 let%expect_test "Test unify : correctness 3" =
   let t1 =
@@ -138,14 +139,14 @@ let%expect_test "Test unify : correctness 3" =
   print_type t1;
   [%expect
     {|
-         ┌────────────────────┐
-      ┌▶ │ (Constr ("" "") P) │
-      │  └────────────────────┘
+         ┌────────────────────────────────┐
+      ┌▶ │ (Structure (Constr ("" "") P)) │
+      │  └────────────────────────────────┘
       │    ▲
       │    │
       │    │
-      │  ┌────────────────────┐
-      │  │                    │ ───┐
-      │  │  (Constr ("") f)   │    │
-      └─ │                    │ ◀──┘
-         └────────────────────┘ |}]
+      │  ┌────────────────────────────────┐
+      │  │                                │ ───┐
+      │  │  (Structure (Constr ("") f))   │    │
+      └─ │                                │ ◀──┘
+         └────────────────────────────────┘ |}]

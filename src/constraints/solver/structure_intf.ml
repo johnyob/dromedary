@@ -136,6 +136,9 @@ module type Intf = sig
     *)
     val make_structure : 'a S.t option -> 'a t
 
+    (** [make_copy t ~copy] returns a copy of the structure, recursively mapping [copy]. *)
+    val make_copy : 'a t -> copy:('a -> 'b) -> 'b t
+
     (** [structure t] returns the structure of the ambivalent structure. *)
     val structure : 'a t -> 'a S.t option
 
@@ -148,6 +151,15 @@ module type Intf = sig
     (** [update_scope t scope] returns [t] with an updated scope. If [scope t < scope], 
         then [t] has the new scope [scope]. *)
     val update_scope : 'a t -> Equations.Scope.t -> 'a t
+
+    (** ['a repr] encodes the "structure" of the Ambivalent. *)
+    type 'a repr = 
+      | Rigid_var of Rigid_var.t
+      | Flexible_var
+      | Structure of 'a S.t
+
+    (** [repr t] returns the representation of [t]. *)
+    val repr : 'a t -> 'a repr
 
     type 'a expansive = { make : 'a t -> 'a; sexpansive : 'a S.expansive }
 

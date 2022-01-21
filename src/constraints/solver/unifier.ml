@@ -29,6 +29,10 @@ module Make (Structure : Structure.S) = struct
      the notion provides useful insight. 
   *)
 
+  type 'a structure = 'a Structure.t
+  type ctx = Structure.ctx
+  type 'a expansive = 'a Structure.expansive
+
   module Type = struct
     (* A graphical type consists of a [Union_find] node,
        allowing reasoning w/ multi-equations of nodes. *)
@@ -215,7 +219,7 @@ module Make (Structure : Structure.S) = struct
   (* [fold_acyclic type_ ~var ~form] will perform a bottom-up fold
      over the (assumed) acyclic graph defined by the type [type_]. *)
 
-  let fold_acyclic (type a) type_ ~(f : a Structure.t -> a) : a =
+  let fold_acyclic (type a) type_ ~(f : Type.t -> a Structure.t -> a) : a =
     (* Hash table records whether node has been visited, and 
       it's computed value. *)
     let visited : (Type.t, a) Hashtbl.t = Hashtbl.create (module Type) in
@@ -223,7 +227,7 @@ module Make (Structure : Structure.S) = struct
     let rec loop type_ =
       try Hashtbl.find_exn visited type_ with
       | Not_found_s _ ->
-        let result = f (get_structure type_ |> Structure.map ~f:loop) in
+        let result = f type_ (get_structure type_ |> Structure.map ~f:loop) in
         (* We assume we can set [type_] in [visited] *after* traversing
           it's children, since the graph is acyclic. *)
         Hashtbl.set visited ~key:type_ ~data:result;
@@ -235,7 +239,7 @@ module Make (Structure : Structure.S) = struct
   let fold_cyclic
       (type a)
       type_
-      ~(f : a Structure.t -> a)
+      ~(f : Type.t -> a Structure.t -> a)
       ~(var : Type.t -> a)
       ~(mu : Type.t -> a -> a)
       : a
@@ -254,7 +258,7 @@ module Make (Structure : Structure.S) = struct
         (* Mark this node as grey. *)
         Hashtbl.set table ~key:type_ ~data:false;
         (* Visit children *)
-        let result = f (get_structure type_ |> Structure.map ~f:loop) in
+        let result = f type_ (get_structure type_ |> Structure.map ~f:loop) in
         let status = Hashtbl.find_exn table type_ in
         Hashtbl.remove table type_;
         if status then mu type_ result else result)

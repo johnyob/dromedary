@@ -89,13 +89,13 @@ module type S = sig
 
   (** [fold_acyclic type_ ~f] will perform a bottom-up fold
       over the (assumed) acyclic graph defined by the type [type_]. *)
-  val fold_acyclic : Type.t -> f:('a structure -> 'a) -> 'a
+  val fold_acyclic : Type.t -> f:(Type.t -> 'a structure -> 'a) -> 'a
 
   (** [fold_cyclic type_ ~f ~var ~mu] will perform a fold over
       the (potentially) cyclic graph defined by the type [type_]. *)
   val fold_cyclic
     :  Type.t
-    -> f:('a structure -> 'a)
+    -> f:(Type.t -> 'a structure -> 'a)
     -> var:(Type.t -> 'a)
     -> mu:(Type.t -> 'a -> 'a)
     -> 'a
@@ -109,7 +109,7 @@ module type Intf = sig
   (** The functor [Make]. *)
   module Make (Structure : Structure.S) :
     S
-      with type 'a structure := 'a Structure.t
-       and type ctx := Structure.ctx
-       and type 'a expansive := 'a Structure.expansive
+      with type 'a structure = 'a Structure.t
+       and type ctx = Structure.ctx
+       and type 'a expansive = 'a Structure.expansive
 end

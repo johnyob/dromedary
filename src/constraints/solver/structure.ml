@@ -140,6 +140,16 @@ module Ambivalent (Structure : S) = struct
     }
 
 
+  let make_copy t ~copy =
+    { structure =
+        Option.(
+          t.structure
+          >>| fun (structure, scope) -> Structure.map structure ~f:copy, scope)
+    ; scope = t.scope
+    ; rigid_vars = Hashtbl.copy t.rigid_vars
+    }
+
+
   let structure t = t.structure |> Option.map ~f:fst
   let scope t = t.scope
   let rigid_vars t = Hash_set.of_hashtbl_keys t.rigid_vars
@@ -174,9 +184,33 @@ module Ambivalent (Structure : S) = struct
     ; sexpansive : 'a Structure.expansive
     }
 
+  type 'a repr = 
+    | Rigid_var of Rigid_var.t
+    | Flexible_var
+    | Structure of 'a Structure.t
+
+  (* Determines the rigid variable w/ scope 0 in [t] *)
+  let rigid_var t = 
+    t.rigid_vars
+    |> Hashtbl.to_alist
+    |> List.find_map_exn ~f:(fun (rigid_var, (_, scope)) -> 
+      Option.some_if (scope = 0) rigid_var)
+
+
+  let repr t = 
+    match t.structure with
+    | None ->
+       if Hashtbl.is_empty t.rigid_vars then Flexible_var else Rigid_var (rigid_var t)
+    | Some (structure, scope) ->
+      if t.scope < scope then
+        (* The equation that introduced [structure] has not been used. 
+           Thus we cannot consider it to the be representative. *)
+        Rigid_var (rigid_var t)
+      else
+        Structure structure
+
   let ectx = fst
   let sctx = snd
-
 
   exception Cannot_merge
 
@@ -332,14 +366,20 @@ module Ambivalent (Structure : S) = struct
     Hashtbl.set t.rigid_vars ~key:(fst rigid_var) ~data:(false, snd rigid_var)
 
 
+  let is_variable t = 
+    Option.is_none t.structure && Hashtbl.is_empty t.rigid_vars
+
   let merge ~expansive ~(ctx : ctx) ~equate t1 t2 =
-    let rec loop () =
-      try decompose ~expansive ~ctx ~equate t1 t2 with
-      | Structure.Cannot_merge -> raise Cannot_merge
-      | Cannot_decompose ->
-        (try expand ~expansive ~ctx t1 t2 with
-        | Cannot_expand -> raise Cannot_merge);
-        loop ()
-    in
-    loop ()
+    if is_variable t1 then t2
+    else if is_variable t2 then t1 
+    else
+      let rec loop () =
+        try decompose ~expansive ~ctx ~equate t1 t2 with
+        | Structure.Cannot_merge -> raise Cannot_merge
+        | Cannot_decompose ->
+          (try expand ~expansive ~ctx t1 t2 with
+          | Cannot_expand -> raise Cannot_merge);
+          loop ()
+      in
+      loop ()
 end
