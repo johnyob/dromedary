@@ -122,7 +122,7 @@ module Make (Algebra : Algebra) : sig
       (** [x <= ɑ] *)
     | Def : binding list * 'a t -> 'a t
       (** [def x1 : t1 and ... and xn : tn in C] *)
-    | Def_poly : poly_binding list * 'a t -> 'a t
+    | Def_poly : Shallow_type.binding list * binding list * 'a t -> 'a t
     | Let : 'a let_binding list * 'b t -> ('a term_let_binding list * 'b) t
       (** [let Γ in C] *)
     | Let_rec :
@@ -140,15 +140,7 @@ module Make (Algebra : Algebra) : sig
 
   and binding = Term_var.t * variable
 
-  and poly_binding = 
-    { term_var : Term_var.t
-    ; flexible_vars : Shallow_type.binding list
-    ; type_ : variable
-    }
-
   and def_binding = binding
-
-  and def_poly_binding = poly_binding
 
   and 'a let_binding =
     | Let_binding of
@@ -229,9 +221,7 @@ module Make (Algebra : Algebra) : sig
   (** [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
   val def : bindings:def_binding list -> in_:'a t -> 'a t
 
-  val ( @= ) : Term_var.t -> Shallow_type.binding list * variable -> poly_binding
-
-  val def_poly : bindings:def_poly_binding list -> in_:'a t -> 'a t
+  val def_poly : flexible_vars:Shallow_type.binding list -> bindings:binding list -> in_:'a t -> 'a t
 
   (** ([ |., @=>, @~> ]) are combinators designed for the infix construction
       of let and let rec bindings. *)

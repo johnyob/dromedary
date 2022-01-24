@@ -121,7 +121,7 @@ module Make (Former : Type_former.S) = struct
     type ctx = Ambivalent.Equations.Ctx.t
 
     let merge ~expansive ~ctx ~equate t1 t2 =
-      assert (not (t1.is_generic || t2.is_generic));
+      (* assert (not (t1.is_generic || t2.is_generic)); *)
       t1.structure
         <- Ambivalent.merge
              ~expansive:
@@ -133,6 +133,7 @@ module Make (Former : Type_former.S) = struct
              t1.structure
              t2.structure;
       update_level t1 t2.level;
+      t1.is_generic <- false;
       t1
   end
 

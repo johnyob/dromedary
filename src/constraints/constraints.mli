@@ -177,6 +177,8 @@ module Make (Algebra : Algebra) : sig
   (** [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
   val def : bindings:def_binding list -> in_:'a t -> 'a t
 
+  val def_poly : flexible_vars:Shallow_type.binding list -> bindings:binding list -> in_:'a t -> 'a t
+
   (** ([ |., @=>, @~> ]) are combinators designed for the infix construction
       of let and let rec bindings. *)
 

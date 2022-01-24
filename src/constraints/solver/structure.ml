@@ -235,12 +235,15 @@ module Ambivalent (Structure : S) = struct
   let is_equivalent ~ctx rigid_var1 rigid_var2 =
     let rec loop rigid_var1 rigid_var2 scope =
       let open Rigid_type in
-      match Equations.Ctx.get_equation (ectx ctx) rigid_var1 with
-      | Some (Rigid_var rigid_var2', scope') ->
-        if rigid_var2 = rigid_var2'
-        then true, max scope scope'
-        else loop rigid_var2' rigid_var2 (Equations.Scope.max scope scope')
-      | _ -> false, Equations.Scope.outermost_scope
+      if rigid_var1 = rigid_var2
+      then true, scope
+      else (
+        match Equations.Ctx.get_equation (ectx ctx) rigid_var1 with
+        | Some (Rigid_var rigid_var2', scope') ->
+          if rigid_var2 = rigid_var2'
+          then true, max scope scope'
+          else loop rigid_var2' rigid_var2 (Equations.Scope.max scope scope')
+        | _ -> false, Equations.Scope.outermost_scope)
     in
     let first, scope1 =
       loop rigid_var1 rigid_var2 Equations.Scope.outermost_scope

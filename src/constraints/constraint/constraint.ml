@@ -107,13 +107,6 @@ module Make (Algebra : Algebra) = struct
   and 'a term_let_binding = term_binding list * 'a bound
   and 'a term_let_rec_binding = term_binding * 'a bound
 
-  type poly_binding =
-    { term_var : Term_var.t
-    ; flexible_vars : Shallow_type.binding list
-    ; type_ : variable
-    }
-  [@@deriving sexp_of]
-
   (* ['a t] is a constraint with value type ['a]. *)
   type _ t =
     | True : unit t (** [true] *)
@@ -124,7 +117,7 @@ module Make (Algebra : Algebra) = struct
     | Instance : Term_var.t * variable -> Types.Type.t list t (** [x <= ɑ] *)
     | Def : binding list * 'a t -> 'a t
         (** [def x1 : t1 and ... and xn : tn in C] *)
-    | Def_poly : poly_binding list * 'a t -> 'a t
+    | Def_poly : Shallow_type.binding list * binding list * 'a t -> 'a t
     | Let : 'a let_binding list * 'b t -> ('a term_let_binding list * 'b) t
         (** [let Γ in C] *)
     | Let_rec :
@@ -138,7 +131,6 @@ module Make (Algebra : Algebra) = struct
 
   and binding = Term_var.t * variable
   and def_binding = binding
-  and def_poly_binding = poly_binding
 
   and 'a let_binding =
     | Let_binding of
@@ -179,8 +171,11 @@ module Make (Algebra : Algebra) = struct
     | Forall (vars, t) -> [%sexp Forall (vars : variable list), (t : t)]
     | Instance (x, a) -> [%sexp Instance (x : Term_var.t), (a : variable)]
     | Def (bindings, t) -> [%sexp Def (bindings : binding list), (t : t)]
-    | Def_poly (bindings, t) ->
-      [%sexp Def_poly (bindings : poly_binding list), (t : t)]
+    | Def_poly (flexible_vars, bindings, t) ->
+      [%sexp
+        Def_poly (flexible_vars : Shallow_type.binding list)
+        , (bindings : binding list)
+        , (t : t)]
     | Let (let_bindings, t) ->
       [%sexp Let (let_bindings : let_binding list), (t : t)]
     | Let_rec (let_rec_bindings, t) ->
@@ -315,14 +310,10 @@ module Make (Algebra : Algebra) = struct
   (* [x #= a] yields the binding that binds [x] to [a]. *)
   let ( #= ) x a : binding = x, a
 
-  let ( @= ) term_var (flexible_vars, type_) =
-    { term_var; flexible_vars; type_ }
-
 
   (* [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
   let def ~bindings ~in_ = Def (bindings, in_)
-
-  let def_poly ~bindings ~in_ = Def_poly (bindings, in_)
+  let def_poly ~flexible_vars ~bindings ~in_ = Def_poly (flexible_vars, bindings, in_)
 
   (* [rvs, fvs @. in_ @=> bindings] returns the let binding, that binds 
      the rigid vars [rvs] and flexible vars [fvs] w/ the constraint [in_]

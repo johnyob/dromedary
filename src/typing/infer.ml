@@ -331,7 +331,10 @@ module Pattern = struct
 
 
   let inst_constr_decl name
-      : ((variable list * Type.t) option * Type.t * (Constraint.Type.t * Constraint.Type.t) list) Binder.t
+      : ((variable list * Type.t) option
+        * Type.t
+        * (Constraint.Type.t * Constraint.Type.t) list)
+      Binder.t
     =
     let open Binder.Let_syntax in
     let& alphas, constr_arg, constr_type, constr_constraint =
@@ -469,16 +472,17 @@ module Pattern = struct
            and arg_pat = arg_pat in
            Tpat_construct (constr_desc, arg_pat))
       | Ppat_constraint (pat, pat_type') ->
-        let@ pat_type' =
-          let open Binder.Let_syntax in
-          let& pat_type' = convert_core_type pat_type' in
-          of_type pat_type'
-        in
-        let%bind pat_desc = infer_pat_desc pat pat_type' in
-        return
-          (let%map () = pat_type =~ pat_type'
-           and pat_desc = pat_desc in
-           pat_desc)
+        annotation (fun () ->
+            let@ pat_type' =
+              let open Binder.Let_syntax in
+              let& pat_type' = convert_core_type pat_type' in
+              of_type pat_type'
+            in
+            let%bind pat_desc = infer_pat_desc pat pat_type' in
+            return
+              (let%map () = pat_type =~ pat_type'
+               and pat_desc = pat_desc in
+               pat_desc))
     and infer_pats pats
         : (variable list * Typedtree.pattern list Constraint.t) Binder.t
       =
@@ -536,7 +540,8 @@ module Expression = struct
 
 
   let inst_constr_decl name
-      : (Type.t option * Type.t * (Constraint.Type.t * Constraint.Type.t) list) Binder.t
+      : (Type.t option * Type.t * (Constraint.Type.t * Constraint.Type.t) list)
+      Binder.t
     =
     let open Binder.Let_syntax in
     let& constr_alphas, constr_arg, constr_type, constr_constraints =
@@ -598,10 +603,12 @@ module Expression = struct
     let%bind () = exists_vars vars in
     return (label_arg, constr_type)
 
-  let (-~-) type1 type2 : unit Constraint.t = 
-    let bindings1, var1 = Shallow_type.of_type type1 in 
+
+  let ( -~- ) type1 type2 : unit Constraint.t =
+    let bindings1, var1 = Shallow_type.of_type type1 in
     let bindings2, var2 = Shallow_type.of_type type2 in
     Constraint.exists (bindings1 @ bindings2) (var1 =~ var2)
+
 
   let infer_constr constr_name constr_type
       : (constructor_description Constraint.t * variable option) Binder.t
@@ -623,7 +630,8 @@ module Expression = struct
     let constr_desc =
       constr_type
       =~- constr_type'
-      >> Constraint.all_unit (List.map constr_constraint ~f:(fun (t1, t2) -> t1 -~- t2))
+      >> Constraint.all_unit
+           (List.map constr_constraint ~f:(fun (t1, t2) -> t1 -~- t2))
       >> make_constr_desc constr_name constr_arg constr_type
     in
     return (constr_desc, constr_arg)
@@ -653,8 +661,10 @@ module Expression = struct
   let infer_pat pat pat_type
       : (binding list
         * Typedtree.pattern Constraint.t
-        * (Constraint.Type.t * Constraint.Type.t)  list
-        * Substitution.t)
+        * (Constraint.Type.t * Constraint.Type.t) list
+        * Substitution.t
+        * Shallow_type.binding list
+        * binding list)
       Binder.t
     =
     let open Binder.Let_syntax in
@@ -665,7 +675,9 @@ module Expression = struct
         , existential_bindings
         , local_constraint
         , term_bindings
-        , substitution )
+        , substitution
+        , poly_flexible_vars
+        , poly_term_bindings )
       =
       Fragment.to_bindings fragment
     in
@@ -679,7 +691,13 @@ module Expression = struct
         Format.printf "Bound Variable: %d@." (var :> int)); *)
     let%bind () = forall_vars universal_bindings in
     let%bind () = exists_bindings existential_bindings in
-    return (term_bindings, pat, local_constraint, substitution)
+    return
+      ( term_bindings
+      , pat
+      , local_constraint
+      , substitution
+      , poly_flexible_vars
+      , poly_term_bindings )
 
 
   let make_exp_desc_forall vars var exp_desc exp_type =
@@ -726,14 +744,29 @@ module Expression = struct
       | Pexp_fun (pat, exp) ->
         let@ var1 = exists () in
         let@ var2 = exists () in
-        let@ bindings, pat, local_constraint, substitution =
+        let@ ( bindings
+             , pat
+             , local_constraint
+             , substitution
+             , poly_flexible_vars
+             , poly_bindings )
+          =
           infer_pat pat var1
         in
         let%bind exp = extend_substitution ~substitution (infer_exp exp var2) in
         return
           (let%map () = exp_type =~= var1 @-> var2
            and pat = pat
-           and exp = local_constraint #=> (def ~bindings ~in_:exp) in
+           and exp =
+             local_constraint
+             #=> (def
+                    ~bindings
+                    ~in_:
+                      (def_poly
+                         ~flexible_vars:poly_flexible_vars
+                         ~bindings:poly_bindings
+                         ~in_:exp))
+           in
            Texp_fun (pat, exp))
       | Pexp_app (exp1, exp2) ->
         let@ var = exists () in
@@ -872,7 +905,13 @@ module Expression = struct
       let open Computation.Let_syntax in
       let%bind cases =
         List.map cases ~f:(fun { pc_lhs; pc_rhs } ->
-            let@ bindings, pat, local_constraint, substitution =
+            let@ ( bindings
+                 , pat
+                 , local_constraint
+                 , substitution
+                 , poly_flexible_vars
+                 , poly_bindings )
+              =
               infer_pat pc_lhs lhs_type
             in
             let%bind exp =
@@ -880,7 +919,16 @@ module Expression = struct
             in
             return
               (let%map tc_lhs = pat
-               and tc_rhs = local_constraint #=> (def ~bindings ~in_:exp) in
+               and tc_rhs =
+                 local_constraint
+                 #=> (def
+                        ~bindings
+                        ~in_:
+                          (def_poly
+                             ~flexible_vars:poly_flexible_vars
+                             ~bindings:poly_bindings
+                             ~in_:exp))
+               in
                { tc_lhs; tc_rhs }))
         |> all
       in
@@ -921,8 +969,10 @@ module Expression = struct
           let ( universal_bindings
               , existential_bindings
               , local_constraint
-              , term_bindings
-              , _substitution )
+              , bindings
+              , _substitution
+              , poly_flexible_vars
+              , poly_bindings )
             =
             Fragment.to_bindings fragment
           in
@@ -937,9 +987,11 @@ module Expression = struct
                  variables."]
           else
             return
-              (((forall_vars, (var, None) :: existential_bindings)
+              ((( forall_vars
+                , ((var, None) :: existential_bindings) @ poly_flexible_vars )
                @. (pat &~ exp))
-              @=> term_bindings))
+              @=> bindings
+              @ poly_bindings))
         ~message:(fun var ->
           [%message
             "Duplicate variable in universal quantifier (let)"
@@ -997,13 +1049,8 @@ let let_0 ~in_ =
   | _ -> assert false
 
 
-let infer exp ~env:env' =
-  let open Result.Let_syntax in
-  let%bind exp =
-    let exp = Expression.infer exp in
-    Computation.Expression.(run ~env:env' (exp >>| fun in_ -> let_0 ~in_))
-  in
-  solve exp
+let solve cst =
+  solve cst
   |> Result.map_error ~f:(function
          | `Unify (type_expr1, type_expr2) ->
            [%message
@@ -1030,6 +1077,14 @@ let infer exp ~env:env' =
            [%message
              "Type escape it's equational scope" (type_expr : type_expr)]
          | `Inconsistent_equations ->
-            [%message "Inconsistent equations added by local branches"]
-         | `Non_rigid_equations ->
-            [%message "Non rigid equations"])
+           [%message "Inconsistent equations added by local branches"]
+         | `Non_rigid_equations -> [%message "Non rigid equations"])
+
+
+let infer exp ~env:env' =
+  let open Result.Let_syntax in
+  let%bind exp =
+    let exp = Expression.infer exp in
+    Computation.Expression.(run ~env:env' (exp >>| fun in_ -> let_0 ~in_))
+  in
+  solve exp

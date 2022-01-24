@@ -56,7 +56,7 @@ module Make (Algebra : Algebra) = struct
     (* [decode_variable var] decodes [var] into a [Type_var] using it's unique identifier. *)
     let decode_variable var =
       assert (
-        match G.repr (U.Type.get_structure var)  with
+        match G.repr (U.Type.get_structure var) with
         | G.Flexible_var -> true
         | _ -> false);
       Type_var.of_int (U.Type.id var)
@@ -68,13 +68,11 @@ module Make (Algebra : Algebra) = struct
 
     (* [decode_type_acyclic type_] decodes type [type_] (known to have no cycles) into a [Type]. *)
     let decode_type_acyclic : t =
-      U.fold_acyclic
-        ~f:(fun type_ structure ->
+      U.fold_acyclic ~f:(fun type_ structure ->
           match G.repr structure with
-          | G.Flexible_var -> Type.var (decode_variable type_) 
+          | G.Flexible_var -> Type.var (decode_variable type_)
           | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
           | G.Former former -> Type.former former)
-
 
 
     (* [decode_type_cyclic type_] decodes type [type_] (may contain cycles) into a [Type]. *)
@@ -82,10 +80,10 @@ module Make (Algebra : Algebra) = struct
       U.fold_cyclic
         ~f:(fun type_ structure ->
           match G.repr structure with
-          | G.Flexible_var -> Type.var (decode_variable type_) 
+          | G.Flexible_var -> Type.var (decode_variable type_)
           | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
           | G.Former former -> Type.former former)
-        ~var:(fun type_ -> Type.var (decode_variable type_))  
+        ~var:(fun type_ -> Type.var (decode_variable type_))
         ~mu:(fun v t -> Type.mu (decode_variable v) t)
 
 
@@ -261,7 +259,11 @@ module Make (Algebra : Algebra) = struct
     let add_equation state t (rigid_type1, rigid_type2) =
       { t with
         equations =
-          G.Equations.add state.generalization_state t.equations rigid_type1 rigid_type2
+          G.Equations.add
+            state.generalization_state
+            t.equations
+            rigid_type1
+            rigid_type2
       }
 
 
@@ -343,7 +345,7 @@ module Make (Algebra : Algebra) = struct
         map value ~f
       | Conj (cst1, cst2) ->
         let value1 = solve ~state ~env cst1 in
-        let value2 = solve ~state ~env cst2 in 
+        let value2 = solve ~state ~env cst2 in
         both value1 value2
       | Eq (a, a') ->
         unify ~state ~env (find state a) (find state a');
@@ -391,7 +393,9 @@ module Make (Algebra : Algebra) = struct
               solve ~state ~env in_)
         in
         both value (list case_values)
-      | Decode a -> fun () -> Decoder.decode_type_acyclic (find state a)
+      | Decode a -> 
+        let var = find state a in
+        fun () -> Decoder.decode_type_acyclic var
       | Implication (equations, t) ->
         (* Enter a new scope (region) *)
         enter state;
@@ -403,40 +407,18 @@ module Make (Algebra : Algebra) = struct
         ignore
           (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
         value
-      | Def_poly (bindings, in_) ->
+      | Def_poly (flexible_vars, bindings, in_) ->
         (* Compute the type schemes for the polymorphic bindings *)
-        let bindings =
-          List.map
-            bindings
-            ~f:(fun
-                ({ term_var; flexible_vars; type_ = a })
-              ->
-              (* Enter a new region to generalize annotation *)
-              enter state;
-              let _flexible_vars =
-                List.map ~f:(bind_flexible state) flexible_vars
-              in
-              (* Lookup the bound type *)
-              let type_ = find state a in
-              (* Generalize and exit *)
-              let _generalizable, schemes =
-                exit state ~rigid_vars:[ ] ~types:[ type_ ]
-              in
-              (* TODO: Add assertion here: ensure generalizable = rigid_vars *)
-              let scheme = List.hd_exn schemes in
-              term_var, scheme)
-        in
-        (* Extend environment that binds the polymorphic bindings *)
+        enter state;
+        let _flexible_vars = List.map ~f:(bind_flexible state) flexible_vars in
+        let types = List.map ~f:(fun (_, a) -> find state a) bindings in
+        let _generalizable, schemes = exit state ~rigid_vars:[] ~types in
+        (* Extend the environment *)
         let env =
-          List.fold_left
-            bindings
-            ~init:env
-            ~f:(fun env (x, scheme) ->
+          List.fold2_exn bindings schemes ~init:env ~f:(fun env (x, _) scheme ->
               Env.extend env x scheme)
         in
         solve ~state ~env in_
-
-
 
 
   and solve_let_binding
@@ -689,8 +671,8 @@ module Make (Algebra : Algebra) = struct
     | Scope_escape t -> Error (`Scope_escape t)
     | Env.Unbound_term_variable x -> Error (`Unbound_term_variable x)
     | Unbound_constraint_variable a -> Error (`Unbound_constraint_variable a)
-    | Non_rigid_equations -> Error (`Non_rigid_equations)
-    | G.Equations.Inconsistent -> Error (`Inconsistent_equations)
+    | Non_rigid_equations -> Error `Non_rigid_equations
+    | G.Equations.Inconsistent -> Error `Inconsistent_equations
 end
 
 module Private = struct

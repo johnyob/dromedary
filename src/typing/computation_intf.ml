@@ -185,10 +185,14 @@ module type Intf = sig
          * (Type.t * Type.t) list
          * binding list
          * Substitution.t
+         * Shallow_type.binding list
+         * binding list
   end
 
   module Pattern : sig
     include S
+
+    val annotation : (unit -> 'a t) -> 'a t
 
     val write : Fragment.t -> unit t
     val extend : string -> Constraint.variable -> unit t

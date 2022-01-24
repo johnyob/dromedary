@@ -14,6 +14,13 @@ let print_constraint_result ~env exp =
   output |> Sexp.to_string_hum |> print_endline
 
 
+let print_solve_result cst =
+  Constraint.sexp_of_t cst |> Sexp.to_string_hum |> print_endline;
+  match Infer.solve cst with
+  | Ok _ -> Format.fprintf Format.std_formatter "Constraint is true.\n"
+  | Error err -> Sexp.to_string_hum err |> print_endline
+
+
 let print_infer_result ~env exp =
   let texp = Infer.infer ~env exp in
   match texp with
@@ -524,6 +531,34 @@ let%expect_test "function - identity" =
     id = 61, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Unify: 58 61
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 60, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 58, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 59, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 58, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 60, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 58, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 59, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 58, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
     Unify: 60 59
     Before exit:
     Current level: 0
@@ -536,6 +571,7 @@ let%expect_test "function - identity" =
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     id = 58, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
     Scope Array order:
     58,60,58,60
     Array order:
@@ -543,6 +579,7 @@ let%expect_test "function - identity" =
     After exit:
     Current level: -1
     Region 0
+    Region 1
     Variables: α60
     Expression:
     └──Expression:
@@ -584,6 +621,34 @@ let%expect_test "function - curry" =
     id = 65, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Unify: 62 65
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 62, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 63, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 62, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 64, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 62, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 63, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 62, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 64, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
     New variable:
     id = 66, level = 0 is_generic = false, scope = 0
     New variable:
@@ -592,6 +657,44 @@ let%expect_test "function - curry" =
     id = 68, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Unify: 64 68
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 67, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 64, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 62, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 63, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 66, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 64, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 67, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 64, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 62, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 63, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 66, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 64, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
     New variable:
     id = 69, level = 0 is_generic = false, scope = 0
     New variable:
@@ -600,6 +703,54 @@ let%expect_test "function - curry" =
     id = 71, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Unify: 67 71
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 67, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 64, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 62, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 69, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 63, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 66, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 70, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 67, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    Region 3
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 67, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 64, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 62, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 69, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 63, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 66, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 70, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 67, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    Region 3
     New variable:
     id = 72, level = 0 is_generic = false, scope = 0
     New former:
@@ -645,6 +796,9 @@ let%expect_test "function - curry" =
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 73, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    Region 3
     Scope Array order:
     73,67,70,74,73,74,75,62,75,72,64,72,67
     Array order:
@@ -652,6 +806,9 @@ let%expect_test "function - curry" =
     After exit:
     Current level: -1
     Region 0
+    Region 1
+    Region 2
+    Region 3
     Variables: α70,α74,α75
     Expression:
     └──Expression:
@@ -739,6 +896,34 @@ let%expect_test "function - uncurry" =
     id = 80, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Unify: 77 80
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 77, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 78, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 77, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 79, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 77, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 78, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 77, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 79, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
     New variable:
     id = 81, level = 0 is_generic = false, scope = 0
     New variable:
@@ -755,6 +940,52 @@ let%expect_test "function - uncurry" =
     id = 86, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
     Unify: 81 86
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 81, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 83, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 84, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 77, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 79, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 81, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 78, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 82, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 81, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 83, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 84, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 77, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 79, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 81, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 78, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 82, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
     New variable:
     id = 87, level = 0 is_generic = false, scope = 0
     New former:
@@ -795,6 +1026,8 @@ let%expect_test "function - uncurry" =
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     id = 82, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
     Scope Array order:
     82,89,90,90,81,79,87,77,89,87,88,81
     Array order:
@@ -802,6 +1035,8 @@ let%expect_test "function - uncurry" =
     After exit:
     Current level: -1
     Region 0
+    Region 1
+    Region 2
     Variables: α82,α89,α87
     Expression:
     └──Expression:
@@ -892,6 +1127,34 @@ let%expect_test "function - compose" =
     id = 94, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Unify: 91 94
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 92, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 93, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 91, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 91, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 92, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 93, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 91, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 91, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
     New variable:
     id = 95, level = 0 is_generic = false, scope = 0
     New variable:
@@ -900,6 +1163,44 @@ let%expect_test "function - compose" =
     id = 97, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Unify: 93 97
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 93, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 96, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 92, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 95, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 93, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 91, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 93, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 96, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 92, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 95, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 93, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 91, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
     New variable:
     id = 98, level = 0 is_generic = false, scope = 0
     New variable:
@@ -908,6 +1209,54 @@ let%expect_test "function - compose" =
     id = 100, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Unify: 96 100
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 93, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 96, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 99, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 91, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 98, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 92, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 96, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 95, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    Region 3
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 93, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 96, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 99, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 91, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 98, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 92, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 96, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 95, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    Region 3
     New variable:
     id = 101, level = 0 is_generic = false, scope = 0
     New former:
@@ -948,6 +1297,9 @@ let%expect_test "function - compose" =
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 104, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    Region 3
     Scope Array order:
     104,96,102,104,103,91,101,103,102,99,96,93
     Array order:
@@ -955,6 +1307,9 @@ let%expect_test "function - compose" =
     After exit:
     Current level: -1
     Region 0
+    Region 1
+    Region 2
+    Region 3
     Variables: α101,α103,α99
     Expression:
     └──Expression:
@@ -1046,6 +1401,46 @@ let%expect_test "function - fst" =
     id = 111, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
     Unify: 106 111
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 105, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 109, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 106, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 106, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 107, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 108, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 105, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 105, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 109, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 106, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 106, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 107, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 108, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 105, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
     Unify: 107 109
     Before exit:
     Current level: 0
@@ -1064,6 +1459,7 @@ let%expect_test "function - fst" =
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     id = 105, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
     Scope Array order:
     105,108,107,106,106,107,105
     Array order:
@@ -1071,6 +1467,7 @@ let%expect_test "function - fst" =
     After exit:
     Current level: -1
     Region 0
+    Region 1
     Variables: α108,α107
     Expression:
     └──Expression:
@@ -1122,6 +1519,46 @@ let%expect_test "function - snd" =
     id = 118, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
     Unify: 113 118
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 113, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 114, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 115, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 113, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 112, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 116, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 112, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 113, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 114, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 115, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 113, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 112, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 116, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 112, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
     Unify: 114 115
     Before exit:
     Current level: 0
@@ -1140,6 +1577,7 @@ let%expect_test "function - snd" =
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     id = 112, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
     Scope Array order:
     112,116,112,113,114,114,113
     Array order:
@@ -1147,6 +1585,7 @@ let%expect_test "function - snd" =
     After exit:
     Current level: -1
     Region 0
+    Region 1
     Variables: α116,α114
     Expression:
     └──Expression:
@@ -1213,6 +1652,62 @@ let%expect_test "function - hd" =
     id = 129, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
     Unify: 124 129
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 120, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
+    id = 119, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 122, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 123, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
+    id = 123, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
+    id = 120, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
+    id = 121, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 119, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 124, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 124, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 122, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 120, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
+    id = 119, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 122, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 123, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
+    id = 123, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
+    id = 120, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
+    id = 121, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 119, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 124, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 124, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
+    id = 122, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
     Unify: 121 122
     Before exit:
     Current level: 0
@@ -1239,6 +1734,7 @@ let%expect_test "function - hd" =
     ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))))))(scope 0)))(level 0)(is_generic false))
     id = 121, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
     Scope Array order:
     121,124,124,119,121,120,123,123,121,119,120
     Array order:
@@ -1246,6 +1742,7 @@ let%expect_test "function - hd" =
     After exit:
     Current level: -1
     Region 0
+    Region 1
     Variables: α121
     Expression:
     └──Expression:
@@ -1309,6 +1806,38 @@ let%expect_test "annotation - identity" =
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Unify: 130 134
     Unify: 132 131
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 132, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 130, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 130, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 133, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 132, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 132, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 130, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 130, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 133, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 132, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
     Unify: 133 132
     Before exit:
     Current level: 0
@@ -1323,6 +1852,7 @@ let%expect_test "annotation - identity" =
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     id = 133, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
     Scope Array order:
     133,133,130,130,133
     Array order:
@@ -1330,6 +1860,7 @@ let%expect_test "annotation - identity" =
     After exit:
     Current level: -1
     Region 0
+    Region 1
     Variables: α133
     Expression:
     └──Expression:
@@ -1353,89 +1884,144 @@ let%expect_test "annotation - identity" =
       , Pexp_fun (Ppat_constraint (Ppat_var "x", Ptyp_var "a"), Pexp_var "x") )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  "Assert_failure src/constraints/solver/generalization.ml:124:6"
-  Raised at Dromedary_constraints_solver__Generalization.Make.Structure.merge in file "src/constraints/solver/generalization.ml", line 124, characters 6-51
-  Called from Dromedary_constraints_solver__Unifier.Make.unify_desc in file "src/constraints/solver/unifier.ml", line 168, characters 18-81
-  Called from Dromedary_constraints_solver__Union_find.link in file "src/constraints/solver/union_find.ml", line 119, characters 17-30
-  Called from Dromedary_constraints_solver__Unifier.Make.unify in file "src/constraints/solver/unifier.ml", line 183, characters 8-39
-  Called from Base__Hashtbl.iteri in file "src/hashtbl.ml", line 294, characters 48-60
-  Re-raised at Base__Hashtbl.iteri in file "src/hashtbl.ml", line 301, characters 6-15
-  Called from Base__Hash_set.Accessors.iter in file "src/hash_set.ml" (inlined), line 53, characters 18-40
-  Called from Dromedary_constraints_solver__Generalization.Make.exit.(fun) in file "src/constraints/solver/generalization.ml", line 591, characters 12-70
-  Called from Base__List.count_map in file "src/list.ml", line 387, characters 13-17
-  Called from Base__List.map in file "src/list.ml" (inlined), line 418, characters 15-31
-  Called from Dromedary_constraints_solver__Generalization.Make.exit in file "src/constraints/solver/generalization.ml", line 587, characters 6-424
-  Called from Dromedary_constraints_solver__Solver.Make.exit in file "src/constraints/solver/solver.ml", line 134, characters 8-60
-  Called from Dromedary_constraints_solver__Solver.Make.solve_let_binding in file "src/constraints/solver/solver.ml", line 426, characters 33-62
-  Called from Dromedary_constraints_solver__Solver.Make.solve_let_bindings.(fun) in file "src/constraints/solver/solver.ml", line 455, characters 12-53
-  Called from Stdlib__list.fold_left in file "list.ml", line 121, characters 24-34
-  Called from Dromedary_constraints_solver__Solver.Make.solve_let_bindings in file "src/constraints/solver/solver.ml", line 451, characters 6-281
-  Called from Dromedary_constraints_solver__Solver.Make.solve.(fun) in file "src/constraints/solver/solver.ml", line 376, characters 10-53
-  Called from Dromedary_constraints_solver__Solver.Make.solve.(fun) in file "src/constraints/solver/solver.ml", line 342, characters 20-41
-  Called from Dromedary_constraints_solver__Solver.Make.solve.(fun) in file "src/constraints/solver/solver.ml", line 345, characters 21-43
-  Called from Dromedary_constraints_solver__Solver.Make.solve.(fun) in file "src/constraints/solver/solver.ml", line 342, characters 20-41
-  Called from Dromedary_constraints_solver__Solver.Make.solve_let_binding in file "src/constraints/solver/solver.ml", line 424, characters 16-37
-  Called from Dromedary_constraints_solver__Solver.Make.solve_let_bindings.(fun) in file "src/constraints/solver/solver.ml", line 455, characters 12-53
-  Called from Stdlib__list.fold_left in file "list.ml", line 121, characters 24-34
-  Called from Dromedary_constraints_solver__Solver.Make.solve_let_bindings in file "src/constraints/solver/solver.ml", line 451, characters 6-281
-  Called from Dromedary_constraints_solver__Solver.Make.solve.(fun) in file "src/constraints/solver/solver.ml", line 376, characters 10-53
-  Called from Dromedary_constraints_solver__Solver.Make.solve.(fun) in file "src/constraints/solver/solver.ml", line 342, characters 20-41
-  Called from Dromedary_constraints_solver__Solver.Make.solve in file "src/constraints/solver/solver.ml", line 649, characters 24-73
-  Called from Typing__Infer.infer.(fun) in file "src/typing/infer.ml", line 1006, characters 2-11
-  Called from Test_typing__Test_infer.print_infer_result in file "test/typing/test_infer.ml", line 18, characters 13-33
-  Called from Test_typing__Test_infer.(fun) in file "test/typing/test_infer.ml", line 1355, characters 2-39
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  New variable:
-  id = 135, level = 0 is_generic = false, scope = 0
-  New variable:
-  id = 136, level = 1 is_generic = false, scope = 0
-  Solver: bind_rigid
-  New variable:
-  id = 137, level = 1 is_generic = false, scope = 0
-  New variable:
-  id = 138, level = 1 is_generic = false, scope = 0
-  New former:
-  id = 139, level = 1 is_generic = false, scope = 0
-  ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-  Unify: 136 139
-  New rigid variable: 0
-  id = 140, level = 1 is_generic = false, scope = 0
-  Unify: 137 140
-  New rigid variable: 0
-  id = 141, level = 1 is_generic = false, scope = 0
-  Unify: 138 141
-  Before exit:
-  Current level: 1
-  Region 0
-  id = 135, level = 0 is_generic = false, scope = 0
-  ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
-  Region 1
-  id = 136, level = 1 is_generic = false, scope = 0
-  ((structure((desc(Structure(Arrow((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-  id = 138, level = 1 is_generic = false, scope = 0
-  ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
-  id = 137, level = 1 is_generic = false, scope = 0
-  ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
-  id = 137, level = 1 is_generic = false, scope = 0
-  ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
-  id = 138, level = 1 is_generic = false, scope = 0
-  ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
-  Scope Array order:
-  138,137,137,138,136
-  Array order:
-  138,137,137,138,136
-  New variable:
-  id = 142, level = 1 is_generic = false, scope = 0
-  Unify: 137 142 |}]
+  [%expect
+    {|
+    New variable:
+    id = 135, level = 0 is_generic = false, scope = 0
+    New variable:
+    id = 136, level = 1 is_generic = false, scope = 0
+    Solver: bind_rigid
+    New variable:
+    id = 137, level = 1 is_generic = false, scope = 0
+    New variable:
+    id = 138, level = 1 is_generic = false, scope = 0
+    New former:
+    id = 139, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 136 139
+    New rigid variable: 0
+    id = 140, level = 1 is_generic = false, scope = 0
+    Unify: 137 140
+    New rigid variable: 0
+    id = 141, level = 2 is_generic = false, scope = 0
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 135, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 136, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 138, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 137, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
+    id = 137, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    id = 141, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 0))(scope 0)))(level 2)(is_generic false))
+    Scope Array order:
+    141
+    Array order:
+    141
+    After exit:
+    Current level: 1
+    Region 0
+    id = 135, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 136, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 138, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 137, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
+    id = 137, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    New rigid variable: 0
+    id = 142, level = 1 is_generic = false, scope = 0
+    Unify: 138 142
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 135, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 136, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 138, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
+    id = 137, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
+    id = 137, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
+    id = 138, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 0))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Scope Array order:
+    138,137,137,138,136
+    Array order:
+    138,137,137,138,136
+    New variable:
+    id = 143, level = 1 is_generic = false, scope = 0
+    Unify: 138 143
+    Unify: 137 138
+    Unify: 141 137
+    After exit:
+    Current level: 0
+    Region 0
+    id = 135, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 141, level = 1 is_generic = true, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic true))
+    Region 2
+    New variable:
+    id = 144, level = 0 is_generic = false, scope = 0
+    New former:
+    id = 145, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Unify: 135 145
+    Before exit:
+    Current level: 0
+    Region 0
+    id = 135, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 144, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 135, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 141, level = 1 is_generic = true, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic true))
+    Region 2
+    Scope Array order:
+    135,144,135
+    Array order:
+    135,144,135
+    After exit:
+    Current level: -1
+    Region 0
+    Region 1
+    id = 141, level = 1 is_generic = true, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic true))
+    Region 2
+    Variables: α144
+    Expression:
+    └──Expression:
+       └──Type expr: Arrow
+          └──Type expr: Variable: α144
+          └──Type expr: Variable: α144
+       └──Desc: Function
+          └──Pattern:
+             └──Type expr: Variable: α141
+             └──Desc: Variable: x
+          └──Expression:
+             └──Type expr: Variable: α141
+             └──Desc: Variable
+                └──Variable: x |}]
 
 let%expect_test "annotation - succ" =
   let exp =
@@ -1452,85 +2038,119 @@ let%expect_test "annotation - succ" =
   [%expect
     {|
     New variable:
-    id = 143, level = 0 is_generic = false, scope = 0
-    New variable:
-    id = 144, level = 0 is_generic = false, scope = 0
-    New variable:
-    id = 145, level = 0 is_generic = false, scope = 0
-    New variable:
     id = 146, level = 0 is_generic = false, scope = 0
-    New former:
+    New variable:
     id = 147, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    Unify: 143 147
-    Unify: 145 144
     New variable:
     id = 148, level = 0 is_generic = false, scope = 0
-    New former:
-    id = 149, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     New variable:
-    id = 150, level = 0 is_generic = false, scope = 0
+    id = 149, level = 0 is_generic = false, scope = 0
     New former:
+    id = 150, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Unify: 146 150
+    Unify: 148 147
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 148, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 146, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 148, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 146, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 149, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 0
+    Region 0
+    id = 148, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 146, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 148, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 146, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 149, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    New variable:
     id = 151, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     New former:
     id = 152, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    New former:
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    New variable:
     id = 153, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
     New former:
     id = 154, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     New former:
     id = 155, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
     New former:
     id = 156, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    Unify: 151 156
-    Unify: 150 145
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
     New former:
     id = 157, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    Unify: 148 157
+    New former:
+    id = 158, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    New former:
+    id = 159, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Unify: 154 159
+    Unify: 153 148
+    New former:
+    id = 160, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    Unify: 151 160
     Before exit:
     Current level: 0
     Region 0
-    id = 149, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 153, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
     id = 146, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 150, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 150, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 150, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 148, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 148, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 151, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 148, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 149, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 146, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 143, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 151, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 152, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 154, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 153, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 153, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 152, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 151, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 149, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 149, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 154, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 151, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    Region 1
     Scope Array order:
-    151,143,146,149,148,151,148,148,150,150,150,146,149
+    151,154,149,149,151,152,153,153,154,152,151,146,153
     Array order:
-    151,143,146,149,148,151,148,148,150,150,150,146,149
+    151,154,149,149,151,152,153,153,154,152,151,146,153
     After exit:
     Current level: -1
     Region 0
+    Region 1
     Variables:
     Expression:
     └──Expression:
@@ -1579,50 +2199,88 @@ let%expect_test "annotation - succ" =
   [%expect
     {|
     New variable:
-    id = 158, level = 0 is_generic = false, scope = 0
+    id = 161, level = 0 is_generic = false, scope = 0
     New variable:
-    id = 159, level = 1 is_generic = false, scope = 0
+    id = 162, level = 1 is_generic = false, scope = 0
     Solver: bind_rigid
     New variable:
-    id = 160, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 161, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 162, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 159 162
-    New rigid variable: 1
     id = 163, level = 1 is_generic = false, scope = 0
-    Unify: 160 163
-    New rigid variable: 1
+    New variable:
     id = 164, level = 1 is_generic = false, scope = 0
-    New variable:
+    New former:
     id = 165, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 166, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 162 165
+    New rigid variable: 1
+    id = 166, level = 1 is_generic = false, scope = 0
+    Unify: 163 166
+    New rigid variable: 1
+    id = 167, level = 2 is_generic = false, scope = 0
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 161, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 164, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 163, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 1))(scope 0)))(level 1)(is_generic false))
+    id = 162, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Rigid_var 1))(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 163, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 1))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    id = 167, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 1))(scope 0)))(level 2)(is_generic false))
+    Scope Array order:
+    167
+    Array order:
+    167
+    After exit:
+    Current level: 1
+    Region 0
+    id = 161, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 164, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 163, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 1))(scope 0)))(level 1)(is_generic false))
+    id = 162, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Rigid_var 1))(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 163, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 1))(scope 0)))(level 1)(is_generic false))
+    Region 2
     New variable:
-    id = 167, level = 1 is_generic = false, scope = 0
-    New former:
     id = 168, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 169, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    New former:
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New variable:
     id = 170, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 171, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 172, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 173, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 174, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 175, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 176, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 168 173
-    Unify: 167 164
+    Unify: 171 176
+    New rigid variable: 1
+    id = 177, level = 1 is_generic = false, scope = 0
+    Unify: 170 177
     ("Cannot unify types" (type_expr1 (Ttyp_constr (() int)))
      (type_expr2 (Ttyp_var "\206\1771"))) |}]
 
@@ -1643,94 +2301,132 @@ let%expect_test "let - identity" =
   [%expect
     {|
     New variable:
-    id = 174, level = 0 is_generic = false, scope = 0
+    id = 178, level = 0 is_generic = false, scope = 0
     New variable:
-    id = 175, level = 1 is_generic = false, scope = 0
+    id = 179, level = 1 is_generic = false, scope = 0
     New variable:
-    id = 176, level = 1 is_generic = false, scope = 0
+    id = 180, level = 1 is_generic = false, scope = 0
     New variable:
-    id = 177, level = 1 is_generic = false, scope = 0
+    id = 181, level = 1 is_generic = false, scope = 0
     New former:
-    id = 178, level = 1 is_generic = false, scope = 0
+    id = 182, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 175 178
-    Unify: 177 176
+    Unify: 179 182
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 178, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 180, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 179, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 181, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 179, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 178, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 180, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 179, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 181, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 179, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Unify: 181 180
     Before exit:
     Current level: 1
     Region 0
-    id = 174, level = 0 is_generic = false, scope = 0
+    id = 178, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
-    id = 175, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 177, level = 1 is_generic = false, scope = 0
+    id = 181, level = 1 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
-    id = 175, level = 1 is_generic = false, scope = 0
+    id = 179, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 177, level = 1 is_generic = false, scope = 0
+    id = 181, level = 1 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 179, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
     Scope Array order:
-    177,175,177,175
+    179,181,179,181
     Array order:
-    177,175,177,175
+    179,181,179,181
     After exit:
     Current level: 0
     Region 0
-    id = 174, level = 0 is_generic = false, scope = 0
+    id = 178, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
-    New variable:
-    id = 179, level = 0 is_generic = false, scope = 0
-    New former:
-    id = 180, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    New variable:
-    id = 181, level = 0 is_generic = false, scope = 0
-    New former:
-    id = 182, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 2
     New variable:
     id = 183, level = 0 is_generic = false, scope = 0
     New former:
     id = 184, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    Unify: 182 184
     New variable:
     id = 185, level = 0 is_generic = false, scope = 0
     New former:
     id = 186, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    Unify: 180 186
-    New former:
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    New variable:
     id = 187, level = 0 is_generic = false, scope = 0
+    New former:
+    id = 188, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Unify: 186 188
+    New variable:
+    id = 189, level = 0 is_generic = false, scope = 0
+    New former:
+    id = 190, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Unify: 184 190
+    New former:
+    id = 191, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
-    Unify: 174 187
+    Unify: 178 191
     Before exit:
     Current level: 0
     Region 0
-    id = 174, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
-    id = 174, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
-    id = 174, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
-    id = 174, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
-    id = 180, level = 0 is_generic = false, scope = 0
+    id = 184, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 180, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 182, level = 0 is_generic = false, scope = 0
+    id = 178, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
+    id = 186, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 178, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
+    id = 178, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
+    id = 184, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 178, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
     Region 1
+    Region 2
     Scope Array order:
-    182,180,180,174,174,174,174
+    178,184,178,178,186,178,184
     Array order:
-    182,180,180,174,174,174,174
+    178,184,178,178,186,178,184
     After exit:
     Current level: -1
     Region 0
     Region 1
+    Region 2
     Variables:
     Expression:
     └──Expression:
@@ -1740,21 +2436,21 @@ let%expect_test "let - identity" =
              └──Value binding:
                 └──Pattern:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: α177
-                      └──Type expr: Variable: α177
+                      └──Type expr: Variable: α181
+                      └──Type expr: Variable: α181
                    └──Desc: Variable: id
                 └──Abstraction:
-                   └──Variables: α177
+                   └──Variables: α181
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: α177
-                         └──Type expr: Variable: α177
+                         └──Type expr: Variable: α181
+                         └──Type expr: Variable: α181
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: α177
+                            └──Type expr: Variable: α181
                             └──Desc: Variable: x
                          └──Expression:
-                            └──Type expr: Variable: α177
+                            └──Type expr: Variable: α181
                             └──Desc: Variable
                                └──Variable: x
           └──Expression:
@@ -1852,350 +2548,638 @@ let%expect_test "let - map" =
   [%expect
     {|
     New variable:
-    id = 188, level = 0 is_generic = false, scope = 0
-    New variable:
-    id = 189, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 190, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 191, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 192, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 189 192
+    id = 192, level = 0 is_generic = false, scope = 0
     New variable:
     id = 193, level = 1 is_generic = false, scope = 0
     New variable:
     id = 194, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 195, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 191 195
     New variable:
+    id = 195, level = 1 is_generic = false, scope = 0
+    New former:
     id = 196, level = 1 is_generic = false, scope = 0
-    Unify: 196 193
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 193 196
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 192, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 194, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 195, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 193, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 193, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 192, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 194, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 195, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 193, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 193, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
     New variable:
     id = 197, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 198, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
-    Unify: 196 198
     New variable:
-    id = 199, level = 1 is_generic = false, scope = 0
+    id = 198, level = 1 is_generic = false, scope = 0
     New former:
+    id = 199, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 195 199
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 192, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 195, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 197, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 195, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 194, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 198, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 193, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 192, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 195, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 197, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 195, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 194, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 198, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 193, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    New variable:
     id = 200, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
-    Unify: 194 200
+    Unify: 200 197
     New variable:
     id = 201, level = 1 is_generic = false, scope = 0
     New former:
     id = 202, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
-    New former:
+    Unify: 200 202
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 192, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 195, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 201, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 193, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 200, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 200, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 194, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 198, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Region 4
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 192, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 195, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 201, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 193, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 200, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 200, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 194, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 198, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Region 4
+    New variable:
     id = 203, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 204, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    Unify: 198 204
     New variable:
     id = 205, level = 1 is_generic = false, scope = 0
-    New variable:
+    New former:
     id = 206, level = 1 is_generic = false, scope = 0
-    Unify: 196 204
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 207, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
-    Unify: 203 207
-    New variable:
-    id = 208, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 209, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
-    New former:
-    id = 210, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 208, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    New variable:
+    id = 209, level = 1 is_generic = false, scope = 0
+    New variable:
+    id = 210, level = 1 is_generic = false, scope = 0
+    Unify: 200 208
     New former:
     id = 211, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
-    Unify: 194 211
-    New variable:
-    id = 212, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 213, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 214, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
-    Unify: 210 214
-    New variable:
-    id = 215, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 216, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 216 190
-    Unify: 215 197
-    New variable:
-    id = 217, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 218, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    New variable:
-    id = 219, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 220, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 220 189
-    Unify: 219 219
-    Unify: 217 202
+    Unify: 207 211
     Before exit:
+    Current level: 2
+    Region 0
+    id = 192, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 195, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 203, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 207, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
+    id = 201, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 198, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 206, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 201, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 193, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 207, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
+    id = 200, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 206, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 200, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 200, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 201, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 194, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 198, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Region 4
+    Region 5
+    Scope Array order:
+
+    Array order:
+
+    After exit:
     Current level: 1
     Region 0
-    id = 188, level = 0 is_generic = false, scope = 0
+    id = 192, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
+    id = 195, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     id = 203, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
-    id = 209, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
-    id = 209, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
-    id = 220, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 219, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 217, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
-    id = 199, level = 1 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
-    id = 210, level = 1 is_generic = false, scope = 0
+    id = 207, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
-    id = 217, level = 1 is_generic = false, scope = 0
+    id = 201, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 198, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
-    id = 209, level = 1 is_generic = false, scope = 0
+    id = 206, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
-    id = 209, level = 1 is_generic = false, scope = 0
+    id = 201, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 193, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 207, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
+    id = 200, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 206, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 200, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 200, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 201, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 194, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 198, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Region 4
+    Region 5
+    New variable:
+    id = 212, level = 1 is_generic = false, scope = 0
+    New former:
+    id = 213, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 214, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
+    New former:
     id = 215, level = 1 is_generic = false, scope = 0
-    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
-    id = 217, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    Unify: 198 215
+    New variable:
+    id = 216, level = 1 is_generic = false, scope = 0
+    New variable:
+    id = 217, level = 1 is_generic = false, scope = 0
+    New former:
+    id = 218, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
+    Unify: 214 218
+    New variable:
     id = 219, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New former:
     id = 220, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 199, level = 1 is_generic = false, scope = 0
-    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
-    id = 219, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 199, level = 1 is_generic = false, scope = 0
-    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
-    id = 210, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
-    id = 218, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 218, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 215, level = 1 is_generic = false, scope = 0
-    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
-    Scope Array order:
-    215,218,218,210,199,219,199,220,219,217,215,209,209,217,210,199,217,219,220,209,209,203
-    Array order:
-    215,218,218,210,199,219,199,220,219,217,215,209,209,217,210,199,217,219,220,209,209,203
-    After exit:
-    Current level: 0
-    Region 0
-    id = 188, level = 0 is_generic = false, scope = 0
-    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
-    Region 1
+    Unify: 220 194
+    Unify: 219 201
     New variable:
     id = 221, level = 1 is_generic = false, scope = 0
-    New variable:
+    New former:
     id = 222, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New variable:
     id = 223, level = 1 is_generic = false, scope = 0
     New former:
     id = 224, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 221 224
-    New variable:
-    id = 225, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 226, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    New variable:
-    id = 227, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 228, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    New former:
-    id = 229, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    New former:
-    id = 230, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    New former:
-    id = 231, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    New former:
-    id = 232, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    New former:
-    id = 233, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 228 233
-    Unify: 227 222
-    New former:
-    id = 234, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    Unify: 225 234
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 224 193
+    Unify: 223 223
+    Unify: 221 206
     Before exit:
     Current level: 1
     Region 0
-    id = 188, level = 0 is_generic = false, scope = 0
+    id = 192, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
-    id = 225, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 227, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 221, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 221, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 226, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 228, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 222, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 203, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 219, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 207, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
     id = 223, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 203, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 224, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 203, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 214, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
+    id = 213, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
     id = 223, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 225, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 226, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 228, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 227, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 227, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 225, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 213, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 221, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 213, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 223, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 221, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 224, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 219, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 221, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 214, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Tuple(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))))))(scope 0)))(level 1)(is_generic false))
+    id = 213, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))
+    id = 222, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))list)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     Region 2
+    Region 3
+    Region 4
+    Region 5
     Scope Array order:
-    225,227,227,228,226,225,223,223,228,226,221,221,227,225
+    222,213,214,221,219,224,221,223,213,221,213,223,213,214,203,224,203,223,207,219,203,222
     Array order:
-    225,227,227,228,226,225,223,223,228,226,221,221,227,225
+    222,213,214,221,219,224,221,223,213,221,213,223,213,214,203,224,203,223,207,219,203,222
     After exit:
     Current level: 0
     Region 0
-    id = 188, level = 0 is_generic = false, scope = 0
+    id = 192, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
-    id = 225, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 223, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 226, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 228, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 221, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 227, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
     Region 1
     Region 2
+    Region 3
+    Region 4
+    Region 5
     New variable:
-    id = 235, level = 0 is_generic = false, scope = 0
-    New former:
-    id = 236, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 225, level = 1 is_generic = false, scope = 0
     New variable:
-    id = 237, level = 0 is_generic = false, scope = 0
+    id = 226, level = 1 is_generic = false, scope = 0
+    New variable:
+    id = 227, level = 1 is_generic = false, scope = 0
     New former:
-    id = 238, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 228, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 225 228
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 192, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 225, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 226, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 225, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 227, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    Region 7
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 192, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 225, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 226, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 225, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 227, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    Region 7
+    New variable:
+    id = 229, level = 1 is_generic = false, scope = 0
+    New former:
+    id = 230, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New variable:
+    id = 231, level = 1 is_generic = false, scope = 0
+    New former:
+    id = 232, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 233, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 234, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 235, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 236, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 237, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 232 237
+    Unify: 231 226
+    New former:
+    id = 238, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    Unify: 229 238
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 192, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 227, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 229, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 225, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 229, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 232, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 231, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 232, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 231, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 230, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 231, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 230, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 225, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 227, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 229, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    Region 7
+    Scope Array order:
+    229,227,225,230,231,230,231,232,231,232,229,225,229,227
+    Array order:
+    229,227,225,230,231,230,231,232,231,232,229,225,229,227
+    After exit:
+    Current level: 0
+    Region 0
+    id = 225, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 229, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 231, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 192, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 227, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 230, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 232, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    Region 7
     New variable:
     id = 239, level = 0 is_generic = false, scope = 0
-    New variable:
-    id = 240, level = 0 is_generic = false, scope = 0
     New former:
-    id = 241, level = 0 is_generic = false, scope = 0
+    id = 240, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    New variable:
+    id = 241, level = 0 is_generic = false, scope = 0
     New former:
     id = 242, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
-    New former:
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    New variable:
     id = 243, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
-    New former:
+    New variable:
     id = 244, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     New former:
     id = 245, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    Unify: 238 245
-    Unify: 237 221
-    New variable:
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    New former:
     id = 246, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
     New former:
     id = 247, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
-    Unify: 235 247
+    New former:
+    id = 248, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    New former:
+    id = 249, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    Unify: 242 249
+    Unify: 241 225
+    New variable:
+    id = 250, level = 0 is_generic = false, scope = 0
+    New former:
+    id = 251, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
+    Unify: 239 251
     Before exit:
     Current level: 0
     Region 0
-    id = 235, level = 0 is_generic = false, scope = 0
+    id = 192, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
-    id = 238, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 237, level = 0 is_generic = false, scope = 0
+    id = 241, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 239, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 225, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 235, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
-    id = 237, level = 0 is_generic = false, scope = 0
+    id = 239, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
+    id = 241, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 188, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
-    id = 237, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 238, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 240, level = 0 is_generic = false, scope = 0
+    id = 229, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 236, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 188, level = 0 is_generic = false, scope = 0
+    id = 192, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
-    id = 235, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
-    id = 226, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 236, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 240, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 228, level = 0 is_generic = false, scope = 0
+    id = 232, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 239, level = 0 is_generic = false, scope = 0
+    id = 243, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 243, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 241, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 240, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 244, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 230, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 243, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 242, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 240, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 244, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
     id = 239, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    ((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))
+    id = 242, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))list)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Region 1
     Region 2
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    Region 7
     Scope Array order:
-    239,239,228,240,236,226,235,188,236,240,238,237,188,237,235,225,239,237,238,235
+    242,239,244,240,242,243,230,244,240,241,243,243,232,192,229,241,239,239,241,192
     Array order:
-    239,239,228,240,236,226,235,188,236,240,238,237,188,237,235,225,239,237,238,235
+    242,239,244,240,242,243,230,244,240,241,243,243,232,192,229,241,239,239,241,192
     After exit:
     Current level: -1
     Region 0
     Region 1
     Region 2
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    Region 7
     Variables:
     Expression:
     └──Expression:
@@ -2206,158 +3190,158 @@ let%expect_test "let - map" =
              └──Value binding:
                 └──Variable: map
                 └──Abstraction:
-                   └──Variables: α199,α215
+                   └──Variables: α203,α219
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Arrow
-                            └──Type expr: Variable: α215
-                            └──Type expr: Variable: α199
+                            └──Type expr: Variable: α219
+                            └──Type expr: Variable: α203
                          └──Type expr: Arrow
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: α215
+                               └──Type expr: Variable: α219
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: α199
+                               └──Type expr: Variable: α203
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: α215
-                               └──Type expr: Variable: α199
+                               └──Type expr: Variable: α219
+                               └──Type expr: Variable: α203
                             └──Desc: Variable: f
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: α215
+                                  └──Type expr: Variable: α219
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: α199
+                                  └──Type expr: Variable: α203
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: α215
+                                     └──Type expr: Variable: α219
                                   └──Desc: Variable: xs
                                └──Expression:
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: α199
+                                     └──Type expr: Variable: α203
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: list
-                                           └──Type expr: Variable: α215
+                                           └──Type expr: Variable: α219
                                         └──Desc: Variable
                                            └──Variable: xs
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: α215
+                                        └──Type expr: Variable: α219
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: α215
+                                                 └──Type expr: Variable: α219
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: α215
+                                                          └──Type expr: Variable: α219
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: α199
+                                                 └──Type expr: Variable: α203
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: α199
+                                                          └──Type expr: Variable: α203
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: α215
+                                                 └──Type expr: Variable: α219
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Cons
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: α215
+                                                          └──Type expr: Variable: α219
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: α215
+                                                             └──Type expr: Variable: α219
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: α215
+                                                          └──Type expr: Variable: α219
                                                  └──Pattern:
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: α215
+                                                       └──Type expr: Variable: α219
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: α215
+                                                          └──Type expr: Variable: α219
                                                     └──Desc: Tuple
                                                        └──Pattern:
-                                                          └──Type expr: Variable: α215
+                                                          └──Type expr: Variable: α219
                                                           └──Desc: Variable: x
                                                        └──Pattern:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: α215
+                                                             └──Type expr: Variable: α219
                                                           └──Desc: Variable: xs
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: α199
+                                                 └──Type expr: Variable: α203
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Cons
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: α199
+                                                          └──Type expr: Variable: α203
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: α199
+                                                             └──Type expr: Variable: α203
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: α199
+                                                          └──Type expr: Variable: α203
                                                  └──Expression:
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: α199
+                                                       └──Type expr: Variable: α203
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: α199
+                                                          └──Type expr: Variable: α203
                                                     └──Desc: Tuple
                                                        └──Expression:
-                                                          └──Type expr: Variable: α199
+                                                          └──Type expr: Variable: α203
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
-                                                                   └──Type expr: Variable: α215
-                                                                   └──Type expr: Variable: α199
+                                                                   └──Type expr: Variable: α219
+                                                                   └──Type expr: Variable: α203
                                                                 └──Desc: Variable
                                                                    └──Variable: f
                                                              └──Expression:
-                                                                └──Type expr: Variable: α215
+                                                                └──Type expr: Variable: α219
                                                                 └──Desc: Variable
                                                                    └──Variable: x
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: α199
+                                                             └──Type expr: Variable: α203
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: α215
+                                                                      └──Type expr: Variable: α219
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: α199
+                                                                      └──Type expr: Variable: α203
                                                                 └──Desc: Application
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
                                                                          └──Type expr: Arrow
-                                                                            └──Type expr: Variable: α215
-                                                                            └──Type expr: Variable: α199
+                                                                            └──Type expr: Variable: α219
+                                                                            └──Type expr: Variable: α203
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: α215
+                                                                               └──Type expr: Variable: α219
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: α199
+                                                                               └──Type expr: Variable: α203
                                                                       └──Desc: Variable
                                                                          └──Variable: map
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
-                                                                         └──Type expr: Variable: α215
-                                                                         └──Type expr: Variable: α199
+                                                                         └──Type expr: Variable: α219
+                                                                         └──Type expr: Variable: α203
                                                                       └──Desc: Variable
                                                                          └──Variable: f
                                                              └──Expression:
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: α215
+                                                                   └──Type expr: Variable: α219
                                                                 └──Desc: Variable
                                                                    └──Variable: xs
           └──Expression:
@@ -2471,107 +3455,205 @@ let%expect_test "let rec - monomorphic recursion" =
   [%expect
     {|
     New variable:
-    id = 248, level = 0 is_generic = false, scope = 0
+    id = 252, level = 0 is_generic = false, scope = 0
     New variable:
-    id = 249, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 250, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 251, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 252, level = 1 is_generic = false, scope = 0
-    New former:
     id = 253, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 249 253
-    Unify: 252 251
     New variable:
     id = 254, level = 1 is_generic = false, scope = 0
     New variable:
     id = 255, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 256, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 250 256
     New variable:
+    id = 256, level = 1 is_generic = false, scope = 0
+    New former:
     id = 257, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 258, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 258 249
-    New former:
+    Unify: 253 257
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 252, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 254, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 256, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 253, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 255, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 253, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 252, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 254, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 256, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 253, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 255, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 253, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Unify: 256 255
+    New variable:
+    id = 258, level = 1 is_generic = false, scope = 0
+    New variable:
     id = 259, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 260, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 254 260
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 252, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 254, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 256, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 259, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 253, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 254, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 256, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 253, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 258, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 252, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 254, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 256, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 259, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 253, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 254, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 256, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 253, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 258, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    New variable:
+    id = 261, level = 1 is_generic = false, scope = 0
+    New former:
+    id = 262, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 262 253
+    New former:
+    id = 263, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    Unify: 255 260
-    Unify: 259 254
+    New former:
+    id = 264, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    Unify: 259 264
+    Unify: 263 258
     Before exit:
     Current level: 1
     Region 0
-    id = 248, level = 0 is_generic = false, scope = 0
+    id = 252, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
-    id = 255, level = 1 is_generic = false, scope = 0
+    id = 259, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     id = 259, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 255, level = 1 is_generic = false, scope = 0
+    id = 263, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 250, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 258, level = 1 is_generic = false, scope = 0
+    id = 263, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 254, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     id = 259, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 255, level = 1 is_generic = false, scope = 0
+    id = 259, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 255, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 258, level = 1 is_generic = false, scope = 0
+    id = 262, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 262, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
     Scope Array order:
-    258,255,255,259,258,250,255,259,255
+    262,262,259,259,254,263,263,259,259
     Array order:
-    258,255,255,259,258,250,255,259,255
+    262,262,259,259,254,263,263,259,259
     After exit:
     Current level: 0
     Region 0
-    id = 248, level = 0 is_generic = false, scope = 0
+    id = 254, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 252, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     id = 259, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 255, level = 0 is_generic = false, scope = 0
+    id = 263, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 250, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 258, level = 0 is_generic = false, scope = 0
+    id = 262, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Region 1
-    Unify: 248 258
+    Region 2
+    Region 3
+    Unify: 252 262
     Before exit:
     Current level: 0
     Region 0
-    id = 248, level = 0 is_generic = false, scope = 0
+    id = 254, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 252, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 259, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 255, level = 0 is_generic = false, scope = 0
+    id = 263, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 250, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 248, level = 0 is_generic = false, scope = 0
+    id = 252, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     Region 1
+    Region 2
+    Region 3
     Scope Array order:
-    248,250,255,259,248
+    252,263,259,252,254
     Array order:
-    248,250,255,259,248
+    252,263,259,252,254
     After exit:
     Current level: -1
     Region 0
     Region 1
+    Region 2
+    Region 3
     Variables:
     Expression:
     └──Expression:
@@ -2672,356 +3754,514 @@ let%expect_test "let rec - mutual recursion (monomorphic)" =
   [%expect
     {|
     New variable:
-    id = 261, level = 0 is_generic = false, scope = 0
+    id = 265, level = 0 is_generic = false, scope = 0
     New variable:
-    id = 262, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 263, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 264, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 265, level = 1 is_generic = false, scope = 0
-    New former:
     id = 266, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 262 266
-    New former:
+    New variable:
     id = 267, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
     New variable:
     id = 268, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 269, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New variable:
+    id = 269, level = 1 is_generic = false, scope = 0
+    New former:
     id = 270, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 266 270
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 265, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 269, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 268, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 266, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 266, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 267, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 265, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 269, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 268, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 266, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 266, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 267, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
     New former:
     id = 271, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    New former:
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    New variable:
     id = 272, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 273, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    New former:
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New variable:
     id = 274, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 275, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 276, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 271 276
-    Unify: 270 264
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 277, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    Unify: 268 277
     New former:
     id = 278, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
-    Unify: 265 278
-    New variable:
+    New former:
     id = 279, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 280, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 280 263
-    New variable:
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 275 280
+    Unify: 274 268
+    New former:
     id = 281, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    Unify: 272 281
     New former:
     id = 282, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    Unify: 269 282
     New variable:
     id = 283, level = 1 is_generic = false, scope = 0
     New former:
     id = 284, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    New former:
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 284 267
+    New variable:
     id = 285, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 286, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    New former:
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New variable:
     id = 287, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 288, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 289, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 284 289
-    Unify: 283 270
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 290, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    Unify: 281 290
-    New variable:
+    New former:
     id = 291, level = 1 is_generic = false, scope = 0
-    New variable:
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    New former:
     id = 292, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 293, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 280 293
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 288 293
+    Unify: 287 274
     New former:
     id = 294, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    Unify: 285 294
     New variable:
     id = 295, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 296, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New variable:
+    id = 296, level = 1 is_generic = false, scope = 0
+    New former:
     id = 297, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 284 297
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 265, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 288, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 271, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    id = 284, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 284, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 287, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 269, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    id = 287, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 275, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 287, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 285, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 283, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 283, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 286, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 266, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 272, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 284, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 269, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    id = 273, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 283, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 285, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 286, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 288, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 285, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 265, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 288, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 271, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    id = 284, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 284, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 287, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 269, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    id = 287, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 275, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 287, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 285, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 283, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 283, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 286, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 266, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 272, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 284, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 269, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    id = 273, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 283, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 285, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 286, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 288, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 285, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
     New former:
     id = 298, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    New former:
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    New variable:
     id = 299, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 300, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    New former:
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New variable:
     id = 301, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 302, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 303, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 298 303
-    Unify: 297 279
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 304, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    Unify: 295 304
     New former:
     id = 305, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
-    Unify: 265 305
-    New variable:
+    New former:
     id = 306, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 307, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 307 262
-    New variable:
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 302 307
+    Unify: 301 283
+    New former:
     id = 308, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    Unify: 299 308
     New former:
     id = 309, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    Unify: 269 309
     New variable:
     id = 310, level = 1 is_generic = false, scope = 0
     New former:
     id = 311, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    New former:
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 311 266
+    New variable:
     id = 312, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 313, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    New former:
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New variable:
     id = 314, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 315, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 316, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 311 316
-    Unify: 310 297
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     New former:
     id = 317, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    Unify: 308 317
+    New former:
+    id = 318, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 319, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 320, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 315 320
+    Unify: 314 301
+    New former:
+    id = 321, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    Unify: 312 321
     Before exit:
     Current level: 1
     Region 0
-    id = 261, level = 0 is_generic = false, scope = 0
+    id = 265, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
-    id = 309, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 271, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 310, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 310, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 310, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 307, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 296, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 310, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 309, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 306, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 306, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 265, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
-    id = 282, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 280, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 311, level = 1 is_generic = false, scope = 0
+    id = 315, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 298, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 298, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 265, level = 1 is_generic = false, scope = 0
+    id = 315, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 271, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
-    id = 308, level = 1 is_generic = false, scope = 0
+    id = 312, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 281, level = 1 is_generic = false, scope = 0
+    id = 302, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 310, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 267, level = 1 is_generic = false, scope = 0
+    id = 299, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 269, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
-    id = 307, level = 1 is_generic = false, scope = 0
+    id = 314, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 300, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 295, level = 1 is_generic = false, scope = 0
+    id = 273, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 285, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 308, level = 1 is_generic = false, scope = 0
+    id = 311, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 314, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 306, level = 1 is_generic = false, scope = 0
+    id = 286, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 298, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    id = 298, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    id = 288, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 312, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 313, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 275, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 300, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 299, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 314, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 312, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 311, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 272, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     id = 284, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     id = 269, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 295, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 268, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 308, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 296, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    id = 313, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 302, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     id = 310, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 294, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
-    id = 295, level = 1 is_generic = false, scope = 0
+    id = 314, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    id = 294, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
-    id = 311, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 299, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 310, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 314, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
     Scope Array order:
-    311,294,295,294,310,296,308,268,295,269,284,306,308,295,307,267,281,308,265,298,298,311,280,282,265,306,306,309,310,296,307,310,310,310,271,309
+    314,310,299,314,310,302,313,269,284,272,311,312,314,299,300,275,313,312,288,298,298,286,314,311,285,273,300,314,269,299,310,302,312,271,315,315
     Array order:
-    311,294,295,294,310,296,308,268,295,269,284,306,308,295,307,267,281,308,265,298,298,311,280,282,265,306,306,309,310,296,307,310,310,310,271,309
+    314,310,299,314,310,302,313,269,284,272,311,312,314,299,300,275,313,312,288,298,298,286,314,311,285,273,300,314,269,299,310,302,312,271,315,315
     After exit:
     Current level: 0
     Region 0
+    id = 288, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 315, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 271, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
+    id = 312, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 275, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 281, level = 0 is_generic = false, scope = 0
+    id = 299, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 267, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
-    id = 307, level = 0 is_generic = false, scope = 0
+    id = 300, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 296, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 309, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 306, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 308, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
     id = 265, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
-    id = 261, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    id = 314, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 272, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
     id = 284, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 282, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 269, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
+    id = 273, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 295, level = 0 is_generic = false, scope = 0
+    id = 285, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 268, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 280, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 311, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 313, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 302, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 310, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 286, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 298, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 294, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
     Region 1
-    Unify: 261 307
+    Region 2
+    Region 3
+    Unify: 265 311
     Before exit:
     Current level: 0
     Region 0
+    id = 288, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 315, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 271, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 281, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 267, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
-    id = 261, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 296, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 309, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 306, level = 0 is_generic = false, scope = 0
+    id = 312, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 308, level = 0 is_generic = false, scope = 0
+    id = 275, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 299, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 300, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 265, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 314, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 272, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 284, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 269, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
+    id = 273, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 285, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
     id = 265, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
-    id = 261, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 284, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 282, level = 0 is_generic = false, scope = 0
+    id = 313, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 269, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 295, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 268, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 280, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 311, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
+    id = 302, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 310, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 286, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 298, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    id = 294, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
     Region 1
+    Region 2
+    Region 3
     Scope Array order:
-    294,298,310,311,280,268,295,269,282,284,261,265,308,306,309,296,261,267,281,271
+    298,286,310,302,313,265,285,273,269,284,272,314,265,300,299,275,312,271,315,288
     Array order:
-    294,298,310,311,280,268,295,269,282,284,261,265,308,306,309,296,261,267,281,271
+    298,286,310,302,313,265,285,273,269,284,272,314,265,300,299,275,312,271,315,288
     After exit:
     Current level: -1
     Region 0
     Region 1
+    Region 2
+    Region 3
     Variables:
     Expression:
     └──Expression:
@@ -3199,23 +4439,11 @@ let%expect_test "let rec - mutual recursion (polymorphic)" =
   [%expect
     {|
     New variable:
-    id = 318, level = 0 is_generic = false, scope = 0
+    id = 322, level = 0 is_generic = false, scope = 0
     New variable:
-    id = 319, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 320, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 321, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 322, level = 1 is_generic = false, scope = 0
-    New former:
     id = 323, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 319 323
-    New former:
+    New variable:
     id = 324, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
-    Unify: 322 324
     New variable:
     id = 325, level = 1 is_generic = false, scope = 0
     New variable:
@@ -3223,94 +4451,200 @@ let%expect_test "let rec - mutual recursion (polymorphic)" =
     New former:
     id = 327, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 320 327
+    Unify: 323 327
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 322, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 323, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 324, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 325, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 326, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 323, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 322, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 323, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 324, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 325, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 326, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 323, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
     New former:
     id = 328, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
     Unify: 326 328
+    New variable:
+    id = 329, level = 1 is_generic = false, scope = 0
+    New variable:
+    id = 330, level = 1 is_generic = false, scope = 0
+    New former:
+    id = 331, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 324 331
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 322, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 329, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 330, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 324, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 325, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 324, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 326, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 323, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 322, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 329, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 330, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 324, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 325, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 324, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 326, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 323, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    New former:
+    id = 332, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    Unify: 330 332
     Before exit:
     Current level: 1
     Region 0
-    id = 318, level = 0 is_generic = false, scope = 0
+    id = 322, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
-    id = 320, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 320, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 321, level = 1 is_generic = false, scope = 0
+    id = 329, level = 1 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
-    id = 326, level = 1 is_generic = false, scope = 0
+    id = 330, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    id = 330, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    id = 324, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     id = 325, level = 1 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
-    id = 319, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 322, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 324, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     id = 326, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 1)(is_generic false))
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false))
+    id = 323, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
     Scope Array order:
-    326,322,319,325,326,321,320,320
+    323,326,324,325,324,330,330,329
     Array order:
-    326,322,319,325,326,321,320,320
+    323,326,324,325,324,330,330,329
     After exit:
     Current level: 0
     Region 0
     id = 322, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 318, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     id = 326, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 330, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
     Region 1
+    Region 2
+    Region 3
     New variable:
-    id = 329, level = 0 is_generic = false, scope = 0
+    id = 333, level = 0 is_generic = false, scope = 0
     New former:
-    id = 330, level = 0 is_generic = false, scope = 0
+    id = 334, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
-    Unify: 318 330
+    Unify: 322 334
     Before exit:
     Current level: 0
     Region 0
-    id = 329, level = 0 is_generic = false, scope = 0
-    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
-    id = 318, level = 0 is_generic = false, scope = 0
+    id = 330, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
+    id = 322, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 322, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
-    id = 318, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false)))))(scope 0)))(level 0)(is_generic false))
     id = 326, level = 0 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()bool)))(scope 0)))(level 0)(is_generic false))
+    ((structure((desc(Structure(Constr()int)))(scope 0)))(level 0)(is_generic false))
+    id = 333, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
+    Region 2
+    Region 3
     Scope Array order:
-    326,318,322,318,329
+    333,326,322,322,330
     Array order:
-    326,318,322,318,329
+    333,326,322,322,330
     After exit:
     Current level: -1
     Region 0
     Region 1
-    Variables: α329
+    Region 2
+    Region 3
+    Variables: α333
     Expression:
     └──Expression:
        └──Type expr: Arrow
-          └──Type expr: Variable: α329
+          └──Type expr: Variable: α333
           └──Type expr: Constructor: int
        └──Desc: Let rec
           └──Value bindings:
              └──Value binding:
                 └──Variable: bar
                 └──Abstraction:
-                   └──Variables: α325
+                   └──Variables: α329
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: α321
+                         └──Type expr: Variable: α325
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: α321
+                            └──Type expr: Variable: α325
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: int
@@ -3318,25 +4652,25 @@ let%expect_test "let rec - mutual recursion (polymorphic)" =
              └──Value binding:
                 └──Variable: foo
                 └──Abstraction:
-                   └──Variables: α321
+                   └──Variables: α325
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: α325
+                         └──Type expr: Variable: α329
                          └──Type expr: Constructor: bool
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: α325
+                            └──Type expr: Variable: α329
                             └──Desc: Variable: y
                          └──Expression:
                             └──Type expr: Constructor: bool
                             └──Desc: Constant: true
           └──Expression:
              └──Type expr: Arrow
-                └──Type expr: Variable: α329
+                └──Type expr: Variable: α333
                 └──Type expr: Constructor: int
              └──Desc: Variable
                 └──Variable: foo
-                └──Type expr: Variable: α329 |}]
+                └──Type expr: Variable: α333 |}]
 
 let%expect_test "f-pottier elaboration 1" =
   let exp =
@@ -3357,26 +4691,14 @@ let%expect_test "f-pottier elaboration 1" =
   [%expect
     {|
     New variable:
-    id = 331, level = 0 is_generic = false, scope = 0
-    New variable:
-    id = 332, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 333, level = 1 is_generic = false, scope = 0
-    New former:
-    id = 334, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    New variable:
-    id = 335, level = 1 is_generic = false, scope = 0
+    id = 335, level = 0 is_generic = false, scope = 0
     New variable:
     id = 336, level = 1 is_generic = false, scope = 0
-    New former:
+    New variable:
     id = 337, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 334 337
     New former:
     id = 338, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 1)(is_generic false))
-    Unify: 332 338
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
     New variable:
     id = 339, level = 1 is_generic = false, scope = 0
     New variable:
@@ -3384,55 +4706,161 @@ let%expect_test "f-pottier elaboration 1" =
     New former:
     id = 341, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    Unify: 333 341
-    Unify: 340 339
+    Unify: 338 341
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 335, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 338, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 338, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 336, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 337, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 336, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 337, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 335, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 338, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 338, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 336, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 337, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 336, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 337, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    New former:
+    id = 342, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 1)(is_generic false))
+    Unify: 336 342
+    New variable:
+    id = 343, level = 1 is_generic = false, scope = 0
+    New variable:
+    id = 344, level = 1 is_generic = false, scope = 0
+    New former:
+    id = 345, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 337 345
+    Before exit:
+    Current level: 2
+    Region 0
+    id = 335, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 338, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()unit)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 336, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 1)(is_generic false))
+    id = 337, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 344, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 337, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 343, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 1
+    Region 0
+    id = 335, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 338, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()unit)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 336, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 1)(is_generic false))
+    id = 337, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 344, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 337, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 343, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
+    Unify: 344 343
     Before exit:
     Current level: 1
     Region 0
-    id = 331, level = 0 is_generic = false, scope = 0
+    id = 335, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
-    id = 340, level = 1 is_generic = false, scope = 0
-    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
-    id = 340, level = 1 is_generic = false, scope = 0
-    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
-    id = 332, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 1)(is_generic false))
-    id = 333, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 333, level = 1 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
-    id = 334, level = 1 is_generic = false, scope = 0
+    id = 338, level = 1 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr()unit)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 336, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 1)(is_generic false))
+    id = 337, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 344, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 337, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 344, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    Region 3
     Scope Array order:
-    334,333,333,332,340,340
+    344,337,344,337,336,338
     Array order:
-    334,333,333,332,340,340
+    344,337,344,337,336,338
     After exit:
     Current level: 0
     Region 0
-    id = 331, level = 0 is_generic = false, scope = 0
+    id = 335, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
-    id = 332, level = 0 is_generic = false, scope = 0
+    id = 336, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
     Region 1
-    Unify: 331 332
+    Region 2
+    Region 3
+    Unify: 335 336
     Before exit:
     Current level: 0
     Region 0
-    id = 331, level = 0 is_generic = false, scope = 0
+    id = 335, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
-    id = 331, level = 0 is_generic = false, scope = 0
+    id = 335, level = 0 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
     Region 1
+    Region 2
+    Region 3
     Scope Array order:
-    331,331
+    335,335
     Array order:
-    331,331
+    335,335
     After exit:
     Current level: -1
     Region 0
     Region 1
+    Region 2
+    Region 3
     Variables:
     Expression:
     └──Expression:
@@ -3444,35 +4872,35 @@ let%expect_test "f-pottier elaboration 1" =
                    └──Type expr: Constructor: unit
                    └──Desc: Variable: u
                 └──Abstraction:
-                   └──Variables: α340
+                   └──Variables: α344
                    └──Expression:
                       └──Type expr: Constructor: unit
                       └──Desc: Application
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Arrow
-                                  └──Type expr: Variable: α340
-                                  └──Type expr: Variable: α340
+                                  └──Type expr: Variable: α344
+                                  └──Type expr: Variable: α344
                                └──Type expr: Constructor: unit
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Arrow
-                                     └──Type expr: Variable: α340
-                                     └──Type expr: Variable: α340
+                                     └──Type expr: Variable: α344
+                                     └──Type expr: Variable: α344
                                   └──Desc: Variable: f
                                └──Expression:
                                   └──Type expr: Constructor: unit
                                   └──Desc: Constant: ()
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: α340
-                               └──Type expr: Variable: α340
+                               └──Type expr: Variable: α344
+                               └──Type expr: Variable: α344
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: α340
+                                  └──Type expr: Variable: α344
                                   └──Desc: Variable: x
                                └──Expression:
-                                  └──Type expr: Variable: α340
+                                  └──Type expr: Variable: α344
                                   └──Desc: Variable
                                      └──Variable: x
           └──Expression:
@@ -3500,7 +4928,7 @@ let add_eq env =
 
 
 let%expect_test "coerce" =
-  (* let coerce = forall a b -> fun eq x -> match (eq : (a, b) eq) with Refl -> (x : a :> b) in () *)
+  (* let coerce = forall a b -> fun eq x -> match (eq : (a, b) eq) with Refl -> (x : b) in () *)
   let env = add_eq Env.empty in
   let exp =
     Pexp_let
@@ -3515,18 +4943,18 @@ let%expect_test "coerce" =
                     , Pexp_fun
                         ( Ppat_constraint
                             (Ppat_var "x", Ptyp_constr ([ Ptyp_var "a" ], "t"))
-                        , Pexp_constraint
-                            ( Pexp_match
-                                ( Pexp_constraint
-                                    ( Pexp_var "eq"
-                                    , Ptyp_constr
-                                        ([ Ptyp_var "a"; Ptyp_var "b" ], "eq")
-                                    )
-                                , [ { pc_lhs = Ppat_construct ("Refl", None)
-                                    ; pc_rhs = Pexp_var "x"
-                                    }
-                                  ] )
-                            , Ptyp_constr ([ Ptyp_var "b" ], "t") ) ) ) )
+                        , Pexp_match
+                            ( Pexp_constraint
+                                ( Pexp_var "eq"
+                                , Ptyp_constr
+                                    ([ Ptyp_var "a"; Ptyp_var "b" ], "eq") )
+                            , [ { pc_lhs = Ppat_construct ("Refl", None)
+                                ; pc_rhs =
+                                    Pexp_constraint
+                                      ( Pexp_var "x"
+                                      , Ptyp_constr ([ Ptyp_var "b" ], "t") )
+                                }
+                              ] ) ) ) )
           }
         ]
       , Pexp_const Const_unit )
@@ -3551,195 +4979,118 @@ let%expect_test "coerce" =
                       ((Exist ((332 ()) (333 ())))
                        (Map
                         ((Conj
-                          ((Exist ((346 ((Arrow 332 333))))) ((Eq 331) 346)))
+                          ((Exist ((347 ((Arrow 332 333))))) ((Eq 331) 347)))
                          ((Conj (Map ((Conj (Map True)) (Decode 332))))
                           ((Def ((eq 332)))
-                           (Map
-                            ((Conj
-                              ((Exist
-                                ((334 ()) (335 ()) (336 ((Constr (329) t)))))
-                               (Map
-                                ((Conj
-                                  ((Exist ((345 ((Arrow 334 335)))))
-                                   ((Eq 333) 345)))
+                           ((Def_poly ()) ()
+                            (Map
+                             ((Conj
+                               ((Exist
+                                 ((334 ()) (335 ()) (336 ((Constr (329) t)))))
+                                (Map
                                  ((Conj
-                                   (Map
-                                    ((Conj
-                                      (Map ((Conj ((Eq 334) 336)) (Map True))))
-                                     (Decode 334))))
-                                  ((Def ((x 336)))
-                                   (Map
-                                    ((Conj
-                                      ((Exist
-                                        ((337 ((Constr (330) t)))
-                                         (338 ((Constr (330) t)))))
-                                       (Map
-                                        ((Conj ((Eq 335) 338))
-                                         ((Exist ((339 ())))
-                                          (Map
-                                           ((Conj
-                                             (Map
-                                              ((Conj
-                                                ((Exist
-                                                  ((340 ((Constr (329 330) eq)))
-                                                   (341 ((Constr (329 330) eq)))))
-                                                 (Map
-                                                  ((Conj ((Eq 339) 341))
-                                                   (Map ((Instance eq) 340))))))
-                                               (Decode 339))))
-                                            ((Conj (Decode 339))
-                                             (Map
-                                              ((Conj
+                                   ((Exist ((346 ((Arrow 334 335)))))
+                                    ((Eq 333) 346)))
+                                  ((Conj
+                                    (Map
+                                     ((Conj
+                                       (Map ((Conj ((Eq 334) 336)) (Map True))))
+                                      (Decode 334))))
+                                   ((Def ())
+                                    ((Def_poly ((337 ((Constr (329) t)))))
+                                     ((x 337))
+                                     (Map
+                                      ((Conj
+                                        ((Exist ((338 ())))
+                                         (Map
+                                          ((Conj
+                                            (Map
+                                             ((Conj
+                                               ((Exist
+                                                 ((339 ((Constr (329 330) eq)))
+                                                  (340 ((Constr (329 330) eq)))))
                                                 (Map
-                                                 ((Exist
-                                                   ((342 ()) (343 ())
-                                                    (344 ((Constr (342 343) eq)))))
-                                                  (Map
-                                                   ((Conj
-                                                     (Map
-                                                      ((Conj
-                                                        (Map
-                                                         ((Conj
-                                                           (Map
-                                                            ((Conj
-                                                              ((Eq 339) 344))
-                                                             (Map
-                                                              ((Conj
-                                                                (Decode 339))
-                                                               (Map True))))))
-                                                          (Map True))))
-                                                       (Decode 339))))
-                                                    ((Implication
-                                                      (((Var 342) (Var 343))))
-                                                     ((Def ())
+                                                 ((Conj ((Eq 338) 340))
+                                                  (Map ((Instance eq) 339))))))
+                                              (Decode 338))))
+                                           ((Conj (Decode 338))
+                                            (Map
+                                             ((Conj
+                                               (Map
+                                                ((Exist
+                                                  ((341 ()) (342 ())
+                                                   (343 ((Constr (341 342) eq)))))
+                                                 (Map
+                                                  ((Conj
+                                                    (Map
+                                                     ((Conj
+                                                       (Map
+                                                        ((Conj
+                                                          (Map
+                                                           ((Conj ((Eq 338) 343))
+                                                            (Map
+                                                             ((Conj (Decode 338))
+                                                              (Map True))))))
+                                                         (Map True))))
+                                                      (Decode 338))))
+                                                   ((Implication
+                                                     (((Var 341) (Var 342))))
+                                                    ((Def ())
+                                                     ((Def_poly ()) ()
                                                       (Map
                                                        ((Conj
-                                                         (Map ((Instance x) 337)))
-                                                        (Decode 337))))))))))
-                                               (Map True)))))))))))
-                                     (Decode 335)))))))))
-                             (Decode 333)))))))))))
+                                                         ((Exist
+                                                           ((344
+                                                             ((Constr (330) t)))
+                                                            (345
+                                                             ((Constr (330) t)))))
+                                                          (Map
+                                                           ((Conj ((Eq 335) 345))
+                                                            (Map
+                                                             ((Instance x) 344))))))
+                                                        (Decode 335)))))))))))
+                                              (Map True))))))))
+                                       (Decode 335))))))))))
+                              (Decode 333))))))))))))
                    ((Instance @dromedary.internal.pexp_forall) 328))))
                 (Decode 328)))))))
           (Map
-           ((Conj (Map ((Exist ((347 ((Constr () unit))))) ((Eq 327) 347))))
+           ((Conj (Map ((Exist ((348 ((Constr () unit))))) ((Eq 327) 348))))
             (Decode 327))))))
        (Decode 327))))
     New variable:
-    id = 342, level = 0 is_generic = false, scope = 0
+    id = 346, level = 0 is_generic = false, scope = 0
     New variable:
-    id = 343, level = 1 is_generic = false, scope = 0
-    New variable:
-    id = 344, level = 2 is_generic = false, scope = 0
-    Solver: bind_rigid
-    Solver: bind_rigid
-    New variable:
-    id = 345, level = 2 is_generic = false, scope = 0
-    New variable:
-    id = 346, level = 2 is_generic = false, scope = 0
-    New former:
-    id = 347, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
-    Unify: 344 347
+    id = 347, level = 1 is_generic = false, scope = 0
     New variable:
     id = 348, level = 2 is_generic = false, scope = 0
+    Solver: bind_rigid
+    Solver: bind_rigid
     New variable:
     id = 349, level = 2 is_generic = false, scope = 0
-    New rigid variable: 2
+    New variable:
     id = 350, level = 2 is_generic = false, scope = 0
     New former:
     id = 351, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
-    New former:
-    id = 352, level = 2 is_generic = false, scope = 0
     ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
-    Unify: 346 352
     Unify: 348 351
-    New rigid variable: 3
-    id = 353, level = 2 is_generic = false, scope = 0
-    New former:
-    id = 354, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
-    New rigid variable: 3
-    id = 355, level = 2 is_generic = false, scope = 0
-    New former:
-    id = 356, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
-    Unify: 349 356
-    New variable:
-    id = 357, level = 2 is_generic = false, scope = 0
-    New rigid variable: 2
-    id = 358, level = 2 is_generic = false, scope = 0
-    New rigid variable: 3
-    id = 359, level = 2 is_generic = false, scope = 0
-    New former:
-    id = 360, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    New rigid variable: 2
-    id = 361, level = 2 is_generic = false, scope = 0
-    New rigid variable: 3
-    id = 362, level = 2 is_generic = false, scope = 0
-    New former:
-    id = 363, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    Unify: 357 363
-    Unify: 360 345
-    New variable:
-    id = 364, level = 2 is_generic = false, scope = 0
-    New variable:
-    id = 365, level = 2 is_generic = false, scope = 0
-    New former:
-    id = 366, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    Unify: 357 366
-    Unify: 354 348
     Before exit:
     Current level: 3
     Region 0
-    id = 342, level = 0 is_generic = false, scope = 0
+    id = 346, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
-    id = 343, level = 1 is_generic = false, scope = 0
+    id = 347, level = 1 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
     Region 2
-    id = 353, level = 2 is_generic = false, scope = 3
-    ((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false))
-    id = 359, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
-    id = 346, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
-    id = 362, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
-    id = 357, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 357, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 361, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
-    id = 344, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
-    id = 357, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 361, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
-    id = 354, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
-    id = 360, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 353, level = 2 is_generic = false, scope = 3
-    ((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false))
-    id = 360, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 362, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
-    id = 354, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    id = 348, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 348, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 350, level = 2 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))
     id = 349, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
-    id = 358, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
-    id = 355, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))
     Region 3
     Scope Array order:
 
@@ -3748,105 +5099,681 @@ let%expect_test "coerce" =
     After exit:
     Current level: 2
     Region 0
-    id = 342, level = 0 is_generic = false, scope = 0
+    id = 346, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
-    id = 343, level = 1 is_generic = false, scope = 0
+    id = 347, level = 1 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
     Region 2
-    id = 353, level = 2 is_generic = false, scope = 3
-    ((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false))
-    id = 359, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
-    id = 346, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
-    id = 362, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
-    id = 357, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 357, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 361, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
-    id = 344, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
-    id = 357, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 361, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
-    id = 354, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
-    id = 360, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 353, level = 2 is_generic = false, scope = 3
-    ((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false))
-    id = 360, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 362, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
-    id = 354, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    id = 348, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 348, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 350, level = 2 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))
     id = 349, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
-    id = 358, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
-    id = 355, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))
     Region 3
+    New variable:
+    id = 352, level = 2 is_generic = false, scope = 0
+    New variable:
+    id = 353, level = 2 is_generic = false, scope = 0
+    New rigid variable: 2
+    id = 354, level = 2 is_generic = false, scope = 0
+    New former:
+    id = 355, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    New former:
+    id = 356, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    Unify: 350 356
+    Unify: 352 355
+    New rigid variable: 2
+    id = 357, level = 3 is_generic = false, scope = 0
+    New former:
+    id = 358, level = 3 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 3)(is_generic false)))t)))(scope 0)))(level 3)(is_generic false))
+    Before exit:
+    Current level: 3
+    Region 0
+    id = 346, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 347, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    id = 350, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 354, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 349, level = 2 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))
+    id = 350, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 348, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 353, level = 2 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))
+    id = 352, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    id = 352, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    Region 3
+    id = 358, level = 3 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 3)(is_generic false)))t)))(scope 0)))(level 3)(is_generic false))
+    id = 357, level = 3 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 3)(is_generic false))
+    Region 4
+    Scope Array order:
+    357,358
+    Array order:
+    357,358
+    After exit:
+    Current level: 2
+    Region 0
+    id = 346, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 347, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    id = 350, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 354, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 349, level = 2 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))
+    id = 350, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 348, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 353, level = 2 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))
+    id = 352, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    id = 352, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    Region 3
+    Region 4
+    New variable:
+    id = 359, level = 2 is_generic = false, scope = 0
+    New rigid variable: 2
+    id = 360, level = 2 is_generic = false, scope = 0
+    New rigid variable: 3
+    id = 361, level = 2 is_generic = false, scope = 0
+    New former:
+    id = 362, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    New rigid variable: 2
+    id = 363, level = 2 is_generic = false, scope = 0
+    New rigid variable: 3
+    id = 364, level = 2 is_generic = false, scope = 0
+    New former:
+    id = 365, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    Unify: 359 365
+    Unify: 362 349
+    New variable:
+    id = 366, level = 2 is_generic = false, scope = 0
+    New variable:
+    id = 367, level = 2 is_generic = false, scope = 0
+    New former:
+    id = 368, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    Unify: 359 368
+    Before exit:
+    Current level: 4
+    Region 0
+    id = 346, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 347, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    id = 350, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 359, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 359, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 362, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 364, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 353, level = 2 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))
+    id = 363, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 364, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 363, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 359, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 354, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 361, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 362, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 348, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 360, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 352, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    Scope Array order:
+
+    Array order:
+
+    After exit:
+    Current level: 3
+    Region 0
+    id = 346, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 347, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    id = 350, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 359, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 359, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 362, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 364, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 353, level = 2 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false))
+    id = 363, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 364, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 363, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 359, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 354, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 361, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 362, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 348, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 360, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 352, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    New rigid variable: 3
+    id = 369, level = 3 is_generic = false, scope = 0
+    New former:
+    id = 370, level = 3 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 3)(is_generic false)))t)))(scope 0)))(level 3)(is_generic false))
+    New rigid variable: 3
+    id = 371, level = 3 is_generic = false, scope = 0
+    New former:
+    id = 372, level = 3 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 3)(is_generic false)))t)))(scope 0)))(level 3)(is_generic false))
+    Unify: 353 372
+    New rigid variable: 2
+    id = 373, level = 3 is_generic = false, scope = 0
+    New former:
+    id = 374, level = 3 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 3)(is_generic false)))t)))(scope 0)))(level 3)(is_generic false))
+    Unify: 370 374
+    Before exit:
+    Current level: 3
+    Region 0
+    id = 346, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 347, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    id = 350, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 3)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 359, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 359, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 362, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 364, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 353, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 3)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    id = 363, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 364, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 363, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 359, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 354, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 361, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 362, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 348, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 3)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 360, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 352, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    Region 3
+    id = 369, level = 3 is_generic = false, scope = 3
+    ((structure((desc(Rigid_var 3))(scope 3)))(level 3)(is_generic false))
+    id = 369, level = 3 is_generic = false, scope = 3
+    ((structure((desc(Rigid_var 3))(scope 3)))(level 3)(is_generic false))
+    id = 370, level = 3 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 3)(is_generic false)))t)))(scope 0)))(level 3)(is_generic false))
+    id = 371, level = 3 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 3)(is_generic false))
+    id = 353, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 3)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    id = 370, level = 3 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 3)(is_generic false)))t)))(scope 0)))(level 3)(is_generic false))
+    Region 4
+    Region 5
+    Region 6
+    Scope Array order:
+    369,369,370,353,371,370
+    Array order:
+    353,370,371,370,369,369
+    After exit:
+    Current level: 2
+    Region 0
+    id = 346, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 347, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    id = 350, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 359, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 362, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 364, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 363, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 361, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 348, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 360, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 353, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    id = 354, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 371, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 352, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
+    Region 3
+    Region 4
+    Region 5
+    Region 6
     Before exit:
     Current level: 2
     Region 0
-    id = 342, level = 0 is_generic = false, scope = 0
+    id = 346, level = 0 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
     Region 1
-    id = 343, level = 1 is_generic = false, scope = 0
+    id = 347, level = 1 is_generic = false, scope = 0
     ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
     Region 2
-    id = 353, level = 2 is_generic = false, scope = 3
-    ((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false))
+    id = 350, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
     id = 359, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
-    id = 346, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
-    id = 362, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
-    id = 357, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 357, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 361, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
-    id = 344, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
-    id = 357, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 361, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
-    id = 354, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
-    id = 360, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
-    id = 353, level = 2 is_generic = false, scope = 3
-    ((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false))
-    id = 360, level = 2 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
     id = 362, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))
+    id = 364, level = 2 is_generic = false, scope = 0
     ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
-    id = 354, level = 2 is_generic = false, scope = 0
-    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 3)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
-    id = 349, level = 2 is_generic = false, scope = 0
+    id = 363, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 361, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 348, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))eq)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false)))))(scope 0)))(level 2)(is_generic false))
+    id = 360, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
+    id = 353, level = 2 is_generic = false, scope = 0
     ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
-    id = 358, level = 2 is_generic = false, scope = 0
+    id = 354, level = 2 is_generic = false, scope = 0
     ((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false))
-    id = 355, level = 2 is_generic = false, scope = 0
+    id = 371, level = 2 is_generic = false, scope = 0
     ((structure((desc(Rigid_var 3))(scope 0)))(level 2)(is_generic false))
+    id = 352, level = 2 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc(Rigid_var 2))(scope 0)))(level 2)(is_generic false)))t)))(scope 0)))(level 2)(is_generic false))
     Region 3
+    Region 4
+    Region 5
+    Region 6
     Scope Array order:
-    353,353,355,358,349,354,362,360,360,354,361,357,344,361,357,357,362,346,359
+    352,371,354,353,360,348,361,363,364,362,359,350
     Array order:
-    355,358,349,354,362,360,353,360,354,361,357,344,361,357,357,362,346,359,353
-    Scope escape: id=353, level=2, scope=3
-    ("Type escape it's equational scope" (type_expr (Ttyp_var "\206\1773"))) |}]
+    352,371,354,353,360,348,361,363,364,362,359,350
+    New variable:
+    id = 375, level = 2 is_generic = false, scope = 0
+    Unify: 354 375
+    Unify: 357 354
+    Unify: 360 357
+    Unify: 363 360
+    New variable:
+    id = 376, level = 2 is_generic = false, scope = 0
+    Unify: 369 376
+    Unify: 361 369
+    Unify: 364 361
+    Unify: 371 364
+    After exit:
+    Current level: 1
+    Region 0
+    id = 346, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 347, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    Region 2
+    id = 363, level = 2 is_generic = true, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic true))
+    id = 371, level = 2 is_generic = true, scope = 3
+    ((structure((desc Flexible_var)(scope 3)))(level 2)(is_generic true))
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    New variable:
+    id = 377, level = 1 is_generic = false, scope = 0
+    New variable:
+    id = 378, level = 1 is_generic = false, scope = 0
+    New former:
+    id = 379, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))eq)))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 380, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 381, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 382, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    New former:
+    id = 383, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))eq)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Unify: 347 383
+    Before exit:
+    Current level: 1
+    Region 0
+    id = 346, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    id = 377, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 347, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))eq)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 381, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false))
+    id = 379, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))eq)))(scope 0)))(level 1)(is_generic false))
+    id = 347, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))eq)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    id = 378, level = 1 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false))
+    id = 380, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false))
+    id = 382, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Structure(Arrow((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false))((structure((desc(Structure(Constr(((structure((desc Flexible_var)(scope 0)))(level 1)(is_generic false)))t)))(scope 0)))(level 1)(is_generic false)))))(scope 0)))(level 1)(is_generic false))
+    Region 2
+    id = 363, level = 2 is_generic = true, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic true))
+    id = 371, level = 2 is_generic = true, scope = 3
+    ((structure((desc Flexible_var)(scope 3)))(level 2)(is_generic true))
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    Scope Array order:
+    382,380,378,347,379,381,347,377
+    Array order:
+    382,380,378,347,379,381,347,377
+    After exit:
+    Current level: 0
+    Region 0
+    id = 346, level = 0 is_generic = false, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    id = 363, level = 2 is_generic = true, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic true))
+    id = 371, level = 2 is_generic = true, scope = 3
+    ((structure((desc Flexible_var)(scope 3)))(level 2)(is_generic true))
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    New former:
+    id = 384, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
+    Unify: 346 384
+    Before exit:
+    Current level: 0
+    Region 0
+    id = 346, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
+    id = 346, level = 0 is_generic = false, scope = 0
+    ((structure((desc(Structure(Constr()unit)))(scope 0)))(level 0)(is_generic false))
+    Region 1
+    Region 2
+    id = 363, level = 2 is_generic = true, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic true))
+    id = 371, level = 2 is_generic = true, scope = 3
+    ((structure((desc Flexible_var)(scope 3)))(level 2)(is_generic true))
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    Scope Array order:
+    346,346
+    Array order:
+    346,346
+    After exit:
+    Current level: -1
+    Region 0
+    Region 1
+    Region 2
+    id = 363, level = 2 is_generic = true, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 2)(is_generic true))
+    id = 371, level = 2 is_generic = true, scope = 3
+    ((structure((desc Flexible_var)(scope 3)))(level 2)(is_generic true))
+    Region 3
+    Region 4
+    Region 5
+    Region 6
+    Variables:
+    Expression:
+    └──Expression:
+       └──Type expr: Constructor: unit
+       └──Desc: Let
+          └──Value bindings:
+             └──Value binding:
+                └──Pattern:
+                   └──Type expr: Arrow
+                      └──Type expr: Constructor: eq
+                         └──Type expr: Variable: α377
+                         └──Type expr: Variable: α378
+                      └──Type expr: Arrow
+                         └──Type expr: Constructor: t
+                            └──Type expr: Variable: α377
+                         └──Type expr: Constructor: t
+                            └──Type expr: Variable: α378
+                   └──Desc: Variable: coerce
+                └──Abstraction:
+                   └──Variables: α378,α377
+                   └──Expression:
+                      └──Type expr: Arrow
+                         └──Type expr: Constructor: eq
+                            └──Type expr: Variable: α377
+                            └──Type expr: Variable: α378
+                         └──Type expr: Arrow
+                            └──Type expr: Constructor: t
+                               └──Type expr: Variable: α377
+                            └──Type expr: Constructor: t
+                               └──Type expr: Variable: α378
+                      └──Desc: Function
+                         └──Pattern:
+                            └──Type expr: Constructor: eq
+                               └──Type expr: Variable: α363
+                               └──Type expr: Variable: α371
+                            └──Desc: Variable: eq
+                         └──Expression:
+                            └──Type expr: Arrow
+                               └──Type expr: Constructor: t
+                                  └──Type expr: Variable: α363
+                               └──Type expr: Constructor: t
+                                  └──Type expr: Variable: α371
+                            └──Desc: Function
+                               └──Pattern:
+                                  └──Type expr: Constructor: t
+                                     └──Type expr: Variable: α363
+                                  └──Desc: Variable: x
+                               └──Expression:
+                                  └──Type expr: Constructor: t
+                                     └──Type expr: Variable: α371
+                                  └──Desc: Match
+                                     └──Expression:
+                                        └──Type expr: Constructor: eq
+                                           └──Type expr: Variable: α363
+                                           └──Type expr: Variable: α371
+                                        └──Desc: Variable
+                                           └──Variable: eq
+                                     └──Type expr: Constructor: eq
+                                        └──Type expr: Variable: α363
+                                        └──Type expr: Variable: α371
+                                     └──Cases:
+                                        └──Case:
+                                           └──Pattern:
+                                              └──Type expr: Constructor: eq
+                                                 └──Type expr: Variable: α363
+                                                 └──Type expr: Variable: α371
+                                              └──Desc: Construct
+                                                 └──Constructor description:
+                                                    └──Name: Refl
+                                                    └──Constructor type:
+                                                       └──Type expr: Constructor: eq
+                                                          └──Type expr: Variable: α363
+                                                          └──Type expr: Variable: α371
+                                           └──Expression:
+                                              └──Type expr: Constructor: t
+                                                 └──Type expr: Variable: α371
+                                              └──Desc: Variable
+                                                 └──Variable: x
+          └──Expression:
+             └──Type expr: Constructor: unit
+             └──Desc: Constant: () |}]
+
+let%expect_test "solve" =
+  let open Constraint in
+  let cst =
+    let a1 = fresh () in
+    let a2 = fresh () in
+    forall
+      [ a1; a2 ]
+      (def_poly
+         ~flexible_vars:[]
+         ~bindings:[ "x" #= a1 ]
+         ~in_:[ Var a1, Var a2 ] #=> (inst "x" a2))
+  in
+  print_solve_result cst;
+  [%expect
+    {|
+    ((Forall (371 372))
+     ((Def_poly ()) ((x 371))
+      ((Implication (((Var 371) (Var 372)))) ((Instance x) 372))))
+    Solver: bind_rigid
+    Solver: bind_rigid
+    New rigid variable: 4
+    id = 385, level = 1 is_generic = false, scope = 0
+    Before exit:
+    Current level: 1
+    Region 0
+    Region 1
+    id = 385, level = 1 is_generic = false, scope = 0
+    ((structure((desc(Rigid_var 4))(scope 0)))(level 1)(is_generic false))
+    Scope Array order:
+    385
+    Array order:
+    385
+    After exit:
+    Current level: 0
+    Region 0
+    Region 1
+    New rigid variable: 4
+    id = 386, level = 1 is_generic = false, scope = 0
+    New rigid variable: 5
+    id = 387, level = 1 is_generic = false, scope = 0
+    Unify: 387 386
+    Before exit:
+    Current level: 1
+    Region 0
+    Region 1
+    id = 387, level = 1 is_generic = false, scope = 1
+    ((structure((desc(Rigid_var 5))(scope 1)))(level 1)(is_generic false))
+    id = 387, level = 1 is_generic = false, scope = 1
+    ((structure((desc(Rigid_var 5))(scope 1)))(level 1)(is_generic false))
+    Region 2
+    Scope Array order:
+    387,387
+    Array order:
+    387,387
+    After exit:
+    Current level: 0
+    Region 0
+    Region 1
+    Region 2
+    Before exit:
+    Current level: 0
+    Region 0
+    Region 1
+    Region 2
+    Scope Array order:
+
+    Array order:
+
+    New variable:
+    id = 388, level = 0 is_generic = false, scope = 0
+    Unify: 385 388
+    New variable:
+    id = 389, level = 0 is_generic = false, scope = 0
+    Unify: 387 389
+    After exit:
+    Current level: -1
+    Region 0
+    id = 387, level = 0 is_generic = true, scope = 1
+    ((structure((desc Flexible_var)(scope 1)))(level 0)(is_generic true))
+    id = 385, level = 0 is_generic = true, scope = 0
+    ((structure((desc Flexible_var)(scope 0)))(level 0)(is_generic true))
+    Region 1
+    Region 2
+    Constraint is true. |}]
 
 (* 
 let%expect_test "abbrev - morel" =
