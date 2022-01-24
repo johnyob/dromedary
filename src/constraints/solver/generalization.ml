@@ -100,44 +100,38 @@ module Make (Former : Type_former.S) = struct
       }
     [@@deriving sexp_of]
 
-    let former t = Ambivalent.structure t.structure
+    let structure t = Ambivalent.desc t.structure
+
+    let set_structure t structure' = Ambivalent.set_desc t.structure structure'
+
     let scope t = Ambivalent.scope t.structure
-
-    let update_scope t scope =
-      t.structure <- Ambivalent.update_scope t.structure scope
-
-
+    let update_scope t scope = Ambivalent.update_scope t.structure scope
     let level t = t.level
     let update_level t level = if level < t.level then t.level <- level
     let is_generic t = t.is_generic
     let is_generic_at t level = t.is_generic && t.level = level
     let generalize t = t.is_generic <- true
-
-    (* let set_former t former = t.structure <- Ambivalent.set_structure t.structure former *)
     let map t ~f = { t with structure = Ambivalent.map t.structure ~f }
     let iter t ~f = Ambivalent.iter t.structure ~f
     let fold t ~f ~init = Ambivalent.fold t.structure ~f ~init
 
-    exception Cannot_merge
+    exception Cannot_merge = Ambivalent.Cannot_merge
 
     type 'a expansive = { make : 'a Ambivalent.t -> 'a }
     type ctx = Ambivalent.Equations.Ctx.t
 
     let merge ~expansive ~ctx ~equate t1 t2 =
       assert (not (t1.is_generic || t2.is_generic));
-      (try
-         t1.structure
-           <- Ambivalent.merge
-                ~expansive:
-                  { make = (fun structure -> expansive.make structure)
-                  ; sexpansive = ()
-                  }
-                ~ctx:(ctx, ())
-                ~equate
-                t1.structure
-                t2.structure
-       with
-      | Ambivalent.Cannot_merge -> raise Cannot_merge);
+      t1.structure
+        <- Ambivalent.merge
+             ~expansive:
+               { make = (fun structure -> expansive.make structure)
+               ; sexpansive = ()
+               }
+             ~ctx:(ctx, ())
+             ~equate
+             t1.structure
+             t2.structure;
       update_level t1 t2.level;
       t1
   end
@@ -147,8 +141,10 @@ module Make (Former : Type_former.S) = struct
   (* [U] and [A] are aliases, used for a short prefix below. *)
   module U = Unifier
 
-  let repr type_ = (U.Type.get_structure type_).structure |> Ambivalent.repr
-  let former type_ = U.Type.get_structure type_ |> Structure.former
+  let structure type_ = U.Type.get_structure type_ |> Structure.structure
+
+  let set_structure type_ structure = Structure.set_structure (U.Type.get_structure type_) structure
+
   let level type_ = U.Type.get_structure type_ |> Structure.level
   let scope type_ = U.Type.get_structure type_ |> Structure.scope
   let is_generic type_ = U.Type.get_structure type_ |> Structure.is_generic
@@ -198,7 +194,7 @@ module Make (Former : Type_former.S) = struct
 
   type state =
     { mutable current_level : level
-    ; rigid_vars : (Rigid_var.t, U.Type.t) Hashtbl.t
+    ; rigid_vars : (Rigid_var.t, U.Type.t Hash_set.t) Hashtbl.t
     ; regions : (region, [ `R | `W ]) Vec.t
     }
 
@@ -226,7 +222,13 @@ module Make (Former : Type_former.S) = struct
     exception Inconsistent = Ambivalent.Equations.Ctx.Inconsistent
 
     let add state t rigid_type1 rigid_type2 =
-      Ambivalent.Equations.Ctx.add t rigid_type1 rigid_type2 state.current_level
+      Ambivalent.Equations.Ctx.add
+        ~expansive:()
+        ~ctx:()
+        t
+        rigid_type1
+        rigid_type2
+        state.current_level
   end
 
   let pp_type_explicit type_ =
@@ -285,14 +287,14 @@ module Make (Former : Type_former.S) = struct
      and region. *)
 
   let make_flexible_var state =
-    let var = make state (Ambivalent.make_structure None) in
+    let var = make state (Ambivalent.make Flexible_var) in
     Caml.Format.printf "New variable:\n";
     pp_type var;
     var
 
 
   let make_rigid_var state rigid_var =
-    let var = make state (Ambivalent.make_rigid_var rigid_var) in
+    let var = make state  (Ambivalent.make (Rigid_var rigid_var)) in
     Caml.Format.printf "New rigid variable: %d\n" (rigid_var :> int);
     pp_type var;
     var
@@ -304,7 +306,7 @@ module Make (Former : Type_former.S) = struct
      It initialize the level to the current level. 
   *)
   let make_former state former =
-    let former = make state (Ambivalent.make_structure (Some former)) in
+    let former = make state (Ambivalent.make (Structure former)) in
     Caml.Format.printf "New former:\n";
     pp_type former;
     pp_type_explicit former;
@@ -314,6 +316,11 @@ module Make (Former : Type_former.S) = struct
   let unify state ~ctx t1 t2 =
     Caml.Format.printf "Unify: %d %d\n" (U.Type.id t1) (U.Type.id t2);
     U.unify ~expansive:{ make = make state } ~ctx t1 t2
+
+
+  let flexize state src dst =
+    set_structure src Flexible_var;
+    unify state ~ctx:Equations.empty src dst
 
 
   (* [enter ()] creates a new stack frame and enter it. *)
@@ -472,14 +479,14 @@ module Make (Former : Type_former.S) = struct
         (* If a node is old, then we stop traversing (hence the [is_young] check). *)
         if is_young type_
         then (
-          match former type_ with
-          | None ->
+          match structure type_ with
+          | Flexible_var | Rigid_var _ ->
             (* In the variable case, we cannot traverse any further
               and no updates need be performed (since the level update)
               is performed above. 
             *)
             ()
-          | Some former ->
+          | Structure former ->
             (* If the node is a type former, then we need to traverse it's 
               children and determine it's correct level.
               
@@ -527,27 +534,20 @@ module Make (Former : Type_former.S) = struct
     (* Get the young region, since we will be performing several traversals
        of it. *)
     let region = young_region state in
-    (* Iterate through the young region, performing flexization. *)
-    Hash_set.iter region ~f:(fun type_ ->
-        match repr type_ with
-        | Rigid_var rigid_var ->
-          (match Hashtbl.find state.rigid_vars rigid_var with
-          | Some dst ->
-            (* Flexize *)
-            U.Type.set_structure type_ (U.Type.get_structure dst);
-            unify state ~ctx:Equations.empty type_ dst
-          | None ->
-            Caml.Format.printf "Cannot flexize rigid var, as it is unbound!";
-            raise (Cannot_flexize rigid_var))
-        | _ -> ());
     (* Iterate through the young region, generalizing variables 
-       (or updating their region).  *)
+       (or updating their region), adding rigid variables to flexization queue.  *)
     Hash_set.iter region ~f:(fun type_ ->
         if level type_ < state.current_level
         then set_region state type_
-        else
-          (* Caml.Format.printf "Generalizing %d\n" (U.Type.id type_); *)
-          generalize_type type_);
+        else generalize_type type_;
+        match structure type_ with
+        | Rigid_var rigid_var ->
+          let rigid_vars =
+            Hashtbl.find_or_add state.rigid_vars rigid_var ~default:(fun () ->
+                Hash_set.create (module U.Type))
+          in
+          Hash_set.add rigid_vars type_
+        | _ -> ());
     (* Iterate through the young region, computing the list
        of generalizable variables. *)
     let generalizable =
@@ -556,7 +556,7 @@ module Make (Former : Type_former.S) = struct
       |> Hash_set.filter ~f:(fun type_ ->
              is_generic_at type_ state.current_level
              &&
-             match repr type_ with
+             match structure type_ with
              | Flexible_var -> true
              | _ -> false)
       |> Hash_set.to_list
@@ -582,15 +582,18 @@ module Make (Former : Type_former.S) = struct
     update_levels state;
     (* Generalize variables. *)
     let generalizable = generalize state in
-    (* Check that rigid variables have no escaped. *)
-    List.iter rigid_vars ~f:(fun rigid_var ->
-        match Hashtbl.find state.rigid_vars rigid_var with
-        | Some var ->
-          if level var < state.current_level
-          then raise (Rigid_variable_escape rigid_var)
-        | None ->
-          (* TODO: Create different exn *)
-          raise (Rigid_variable_escape rigid_var));
+    (* Flexize the variable *)
+    let rigid_vars =
+      List.map rigid_vars ~f:(fun rigid_var ->
+          match Hashtbl.find state.rigid_vars rigid_var with
+          | Some rigid_vars ->
+            let var = make_flexible_var state in
+            Hash_set.iter rigid_vars ~f:(fun x -> flexize state x var);
+            Hashtbl.remove state.rigid_vars rigid_var;
+            generalize_type var;
+            var
+          | None -> raise (Rigid_variable_escape rigid_var))
+    in
     (* Helper function for constructing a new type scheme *)
     let make_scheme =
       let level = state.current_level in
@@ -599,7 +602,7 @@ module Make (Former : Type_former.S) = struct
     (* Exit the current region *)
     state.current_level <- state.current_level - 1;
     pp_state state "After exit";
-    generalizable, List.map ~f:make_scheme types
+    rigid_vars @ generalizable, List.map ~f:make_scheme types
 
 
   type variables = U.Type.t list
@@ -625,7 +628,7 @@ module Make (Former : Type_former.S) = struct
            If [Var], add to the relevant quantifier list,
            otherwise recurse.  
         *)
-        match repr type_ with
+        match structure type_ with
         | Flexible_var -> variables := type_ :: !variables
         | Rigid_var _ -> ()
         | Structure former -> Former.iter ~f:loop former)
@@ -634,11 +637,7 @@ module Make (Former : Type_former.S) = struct
     !variables
 
 
-  let mono_scheme type_ =
-    (* Determine whether [type_] contains rigid variables, if so, then we also need
-       to generalize, for a partial copy. *)
-    { root = type_; level = level type_ + 1 }
-
+  let mono_scheme type_ = { root = type_; level = level type_ + 1 }
 
   (* When instantiating a scheme [scheme], we must traverse it's body, 
      creating new (copied) variables for each generic variable, returning 
@@ -678,7 +677,7 @@ module Make (Former : Type_former.S) = struct
           (* We now update the structure according to the original 
              structure of [typ].  *)
           let new_type =
-            match repr type_ with
+            match structure type_ with
             | Flexible_var ->
               let new_type = make_flexible_var state in
               if level type_ = level'
@@ -704,8 +703,8 @@ module Make (Former : Type_former.S) = struct
     | Rigid_var of Rigid_var.t
     | Former of 'a Former.t
 
-  let repr structure =
-    match Ambivalent.repr Structure.(structure.structure) with
+  let repr structure' =
+    match Ambivalent.desc Structure.(structure'.structure) with
     | Flexible_var -> Flexible_var
     | Rigid_var rigid_var -> Rigid_var rigid_var
     | Structure former -> Former former

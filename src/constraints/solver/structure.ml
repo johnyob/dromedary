@@ -93,9 +93,9 @@ module Ambivalent (Structure : S) = struct
 
   module Equations = struct
     module Scope = struct
-      type t = int
+      type t = int [@@deriving sexp_of]
 
-      let min = min
+      (* let min = min *)
       let max = max
       let outermost_scope = 0
     end
@@ -110,71 +110,81 @@ module Ambivalent (Structure : S) = struct
 
       exception Inconsistent
 
-      let add _t _rigid_type1 _rigid_type2 _scope = assert false
+      let rec add_equation ~expansive ~ctx t rigid_var type1 scope =
+        match Map.find !t rigid_var with
+        | Some (type2, _) -> add_equations ~expansive ~ctx t type1 type2 scope
+        | None -> t := Map.set !t ~key:rigid_var ~data:(type1, scope)
+
+
+      and add_equations ~expansive ~ctx t type1 type2 scope =
+        let open Rigid_type in
+        match type1, type2 with
+        | Rigid_var rigid_var, type2 ->
+          add_equation ~expansive ~ctx t rigid_var type2 scope
+        | type1, Rigid_var rigid_var ->
+          add_equation ~expansive ~ctx t rigid_var type1 scope
+        | Structure structure1, Structure structure2 ->
+          ignore
+            (Structure.merge
+               ~expansive
+               ~ctx
+               ~equate:(fun type1' type2' ->
+                 add_equations ~expansive ~ctx t type1' type2' scope)
+               structure1
+               structure2
+              : _ Structure.t)
+
+
+      let add ~expansive ~ctx t type1 type2 scope =
+        try
+          let t = ref t in
+          add_equations ~expansive ~ctx t type1 type2 scope;
+          !t
+        with
+        | Structure.Cannot_merge -> raise Inconsistent
+
+
       let get_equation t rigid_var = Map.find t rigid_var
     end
   end
 
   type 'a t =
-    { mutable structure : 'a Structure.t Equations.scoped option
-    ; scope : Equations.Scope.t
-    ; rigid_vars : (Rigid_var.t, bool Equations.scoped) Hashtbl.t
+    { mutable desc : 'a desc
+    ; mutable scope : Equations.Scope.t
     }
+  [@@deriving sexp_of]
 
-  let make_rigid_var rigid_var =
-    let rigid_vars = Hashtbl.create (module Rigid_var) in
-    Hashtbl.set
-      rigid_vars
-      ~key:rigid_var
-      ~data:(true, Equations.Scope.outermost_scope);
-    { structure = None; scope = Equations.Scope.outermost_scope; rigid_vars }
+  and 'a desc =
+    | Flexible_var
+    | Rigid_var of Rigid_var.t
+    | Structure of 'a Structure.t
 
-
-  let make_structure structure =
-    { structure =
-        Option.(
-          structure
-          >>| fun structure -> structure, Equations.Scope.outermost_scope)
-    ; scope = Equations.Scope.outermost_scope
-    ; rigid_vars = Hashtbl.create (module Rigid_var)
-    }
-
-
-  let make_copy t ~copy =
-    { structure =
-        Option.(
-          t.structure
-          >>| fun (structure, scope) -> Structure.map structure ~f:copy, scope)
-    ; scope = t.scope
-    ; rigid_vars = Hashtbl.copy t.rigid_vars
-    }
-
-
-  let structure t = t.structure |> Option.map ~f:fst
+  let make desc = { desc; scope = Equations.Scope.outermost_scope }
+  let desc t = t.desc
+  let set_desc t desc' = t.desc <- desc'
   let scope t = t.scope
-  let rigid_vars t = Hash_set.of_hashtbl_keys t.rigid_vars
-  let update_scope t scope = if t.scope < scope then { t with scope } else t
-
-  let sexp_of_t sexp_of_a t =
-    structure t |> Option.sexp_of_t (Structure.sexp_of_t sexp_of_a)
-
+  let update_scope t scope = if t.scope < scope then t.scope <- scope
 
   let iter t ~f =
-    Option.iter t.structure ~f:(fun (structure, _) ->
-        Structure.iter structure ~f)
+    match t.desc with
+    | Flexible_var | Rigid_var _ -> ()
+    | Structure structure -> Structure.iter structure ~f
 
 
   let fold t ~f ~init =
-    Option.fold t.structure ~init ~f:(fun init (structure, _) ->
-        Structure.fold structure ~init ~f)
+    match t.desc with
+    | Flexible_var | Rigid_var _ -> init
+    | Structure structure -> Structure.fold structure ~f ~init
 
 
   let map t ~f =
-    { t with
-      structure =
-        Option.map t.structure ~f:(fun (structure, scope) ->
-            Structure.map structure ~f, scope)
-    }
+    let map_desc t ~f =
+      match t with
+      | Flexible_var -> Flexible_var
+      | Rigid_var rigid_var -> Rigid_var rigid_var
+      | Structure structure -> Structure (Structure.map structure ~f)
+    in
+    { t with desc = map_desc t.desc ~f }
 
 
   type ctx = Equations.Ctx.t * Structure.ctx
@@ -184,37 +194,111 @@ module Ambivalent (Structure : S) = struct
     ; sexpansive : 'a Structure.expansive
     }
 
-  type 'a repr = 
-    | Rigid_var of Rigid_var.t
-    | Flexible_var
-    | Structure of 'a Structure.t
-
-  (* Determines the rigid variable w/ scope 0 in [t] *)
-  let rigid_var t = 
-    t.rigid_vars
-    |> Hashtbl.to_alist
-    |> List.find_map_exn ~f:(fun (rigid_var, (_, scope)) -> 
-      Option.some_if (scope = 0) rigid_var)
-
-
-  let repr t = 
-    match t.structure with
-    | None ->
-       if Hashtbl.is_empty t.rigid_vars then Flexible_var else Rigid_var (rigid_var t)
-    | Some (structure, scope) ->
-      if t.scope < scope then
-        (* The equation that introduced [structure] has not been used. 
-           Thus we cannot consider it to the be representative. *)
-        Rigid_var (rigid_var t)
-      else
-        Structure structure
-
   let ectx = fst
   let sctx = snd
 
-  exception Cannot_merge
+  exception Cannot_expand
 
-  let merge_scoped scoped1 scoped2 ~f =
+  let convert_rigid_type ~expansive rigid_type =
+    let rec loop rigid_type =
+      let open Rigid_type in
+      expansive.make
+        (match rigid_type with
+        | Rigid_var rigid_var -> make (Rigid_var rigid_var)
+        | Structure structure ->
+          let structure = Structure.map structure ~f:loop in
+          make (Structure structure))
+    in
+    loop rigid_type
+
+
+  (* [expand ~expansive ~ctx rigid_var] returns a ['a Structure.t, scope] determined by [ctx].
+     Otherwise, raises Cannot_expansive *)
+  let expand ~expansive ~ctx rigid_var =
+    let rec loop rigid_var scope =
+      let open Rigid_type in
+      match Equations.Ctx.get_equation (ectx ctx) rigid_var with
+      | Some (Rigid_var rigid_var, scope') ->
+        loop rigid_var (Equations.Scope.max scope scope')
+      | Some (Structure structure, scope') ->
+        (* Convert [structure] using [term]. *)
+        let structure =
+          Structure.map structure ~f:(convert_rigid_type ~expansive)
+        in
+        structure, Equations.Scope.max scope scope'
+      | None -> raise Cannot_expand
+    in
+    loop rigid_var Equations.Scope.outermost_scope
+
+
+  (* [is_equivalent] *)
+  let is_equivalent ~ctx rigid_var1 rigid_var2 =
+    let rec loop rigid_var1 rigid_var2 scope =
+      let open Rigid_type in
+      match Equations.Ctx.get_equation (ectx ctx) rigid_var1 with
+      | Some (Rigid_var rigid_var2', scope') ->
+        if rigid_var2 = rigid_var2'
+        then true, max scope scope'
+        else loop rigid_var2' rigid_var2 (Equations.Scope.max scope scope')
+      | _ -> false, Equations.Scope.outermost_scope
+    in
+    let first, scope1 =
+      loop rigid_var1 rigid_var2 Equations.Scope.outermost_scope
+    in
+    if first
+    then true, scope1
+    else loop rigid_var2 rigid_var1 Equations.Scope.outermost_scope
+
+
+  exception Cannot_merge = Structure.Cannot_merge
+
+  let merge_desc ~expansive ~ctx ~equate t1 t2 =
+    match t1, t2 with
+    | Flexible_var, desc | desc, Flexible_var ->
+      desc, Equations.Scope.outermost_scope
+    | Structure structure1, Structure structure2 ->
+      ( Structure
+          (Structure.merge
+             ~expansive:expansive.sexpansive
+             ~ctx:(sctx ctx)
+             ~equate
+             structure1
+             structure2)
+      , Equations.Scope.outermost_scope )
+    | Rigid_var rigid_var, Structure structure
+    | Structure structure, Rigid_var rigid_var ->
+      (* Expand rigid variable to structure under [ectx ctx]. *)
+      let structure', scope =
+        try expand ~expansive ~ctx rigid_var with
+        | Cannot_expand -> raise Cannot_merge
+      in
+      (* Equate the 2 structures. *)
+      ignore
+        (Structure.merge
+           ~expansive:expansive.sexpansive
+           ~ctx:(sctx ctx)
+           ~equate
+           structure
+           structure'
+          : _ Structure.t);
+      (* Descriptor remains as [Rigid_var] *)
+      Rigid_var rigid_var, scope
+    | Rigid_var rigid_var1, Rigid_var rigid_var2 ->
+      (* Determine whether [rigid_var1], [rigid_var2] are equivalent under
+         [ectx ctx]. *)
+      let is_equiv, scope = is_equivalent ~ctx rigid_var1 rigid_var2 in
+      if not is_equiv then raise Cannot_merge;
+      (* Return arbitrary rigid variable *)
+      Rigid_var rigid_var1, scope
+
+
+  let merge ~expansive ~ctx ~equate t1 t2 =
+    let desc, scope = merge_desc ~expansive ~equate ~ctx t1.desc t2.desc in
+    { desc
+    ; scope = Equations.Scope.max t1.scope (Equations.Scope.max t2.scope scope)
+    }
+
+  (* let merge_scoped scoped1 scoped2 ~f =
     let t1, scope1 = scoped1 in
     let t2, scope2 = scoped2 in
     f t1 t2, Equations.Scope.min scope1 scope2
@@ -319,16 +403,7 @@ module Ambivalent (Structure : S) = struct
 
   exception Cannot_expand
 
-  let convert_rigid_type ~make rigid_type =
-    let rec loop rigid_type =
-      make
-        (match rigid_type with
-        | Rigid_type.Rigid_var rigid_var -> make_rigid_var rigid_var
-        | Rigid_type.Structure structure ->
-          let structure = Structure.map structure ~f:loop in
-          make_structure (Some structure))
-    in
-    loop rigid_type
+
 
 
   let expand ~expansive ~(ctx : ctx) t1 t2 =
@@ -366,13 +441,15 @@ module Ambivalent (Structure : S) = struct
     Hashtbl.set t.rigid_vars ~key:(fst rigid_var) ~data:(false, snd rigid_var)
 
 
-  let is_variable t = 
-    Option.is_none t.structure && Hashtbl.is_empty t.rigid_vars
+  let is_variable t =
+    Option.is_none t.structure && Hashtbl.is_empty t.rigid_vars *)
 
-  let merge ~expansive ~(ctx : ctx) ~equate t1 t2 =
-    if is_variable t1 then t2
-    else if is_variable t2 then t1 
-    else
+  (* let merge ~expansive ~(ctx : ctx) ~equate t1 t2 =
+    if is_variable t1
+    then t2
+    else if is_variable t2
+    then t1
+    else (
       let rec loop () =
         try decompose ~expansive ~ctx ~equate t1 t2 with
         | Structure.Cannot_merge -> raise Cannot_merge
@@ -381,5 +458,5 @@ module Ambivalent (Structure : S) = struct
           | Cannot_expand -> raise Cannot_merge);
           loop ()
       in
-      loop ()
+      loop ()) *)
 end
