@@ -403,6 +403,40 @@ module Make (Algebra : Algebra) = struct
         ignore
           (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
         value
+      | Def_poly (bindings, in_) ->
+        (* Compute the type schemes for the polymorphic bindings *)
+        let bindings =
+          List.map
+            bindings
+            ~f:(fun
+                ({ term_var; flexible_vars; type_ = a })
+              ->
+              (* Enter a new region to generalize annotation *)
+              enter state;
+              let _flexible_vars =
+                List.map ~f:(bind_flexible state) flexible_vars
+              in
+              (* Lookup the bound type *)
+              let type_ = find state a in
+              (* Generalize and exit *)
+              let _generalizable, schemes =
+                exit state ~rigid_vars:[ ] ~types:[ type_ ]
+              in
+              (* TODO: Add assertion here: ensure generalizable = rigid_vars *)
+              let scheme = List.hd_exn schemes in
+              term_var, scheme)
+        in
+        (* Extend environment that binds the polymorphic bindings *)
+        let env =
+          List.fold_left
+            bindings
+            ~init:env
+            ~f:(fun env (x, scheme) ->
+              Env.extend env x scheme)
+        in
+        solve ~state ~env in_
+
+
 
 
   and solve_let_binding
