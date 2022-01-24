@@ -131,12 +131,12 @@ module Make (Algebra : Algebra) : sig
       | `Inconsistent_equations
       ]
 
-    val solve : 'a t -> ('a, [> error ]) Result.t
+    val solve : ?debug:bool -> 'a t -> ('a, [> error ]) Result.t
   end
 
   (** [solve t] solves the constraint [t], returning it's value 
       or an error. *)
-  val solve : 'a t -> ('a, [> Solver.error ]) Result.t
+  val solve : ?debug:bool -> 'a t -> ('a, [> Solver.error ]) Result.t
 
   (** [&~] is an infix alias for [both]. *)
   val ( &~ ) : 'a t -> 'b t -> ('a * 'b) t

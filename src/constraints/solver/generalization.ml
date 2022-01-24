@@ -101,9 +101,7 @@ module Make (Former : Type_former.S) = struct
     [@@deriving sexp_of]
 
     let structure t = Ambivalent.desc t.structure
-
     let set_structure t structure' = Ambivalent.set_desc t.structure structure'
-
     let scope t = Ambivalent.scope t.structure
     let update_scope t scope = Ambivalent.update_scope t.structure scope
     let level t = t.level
@@ -144,7 +142,9 @@ module Make (Former : Type_former.S) = struct
 
   let structure type_ = U.Type.get_structure type_ |> Structure.structure
 
-  let set_structure type_ structure = Structure.set_structure (U.Type.get_structure type_) structure
+  let set_structure type_ structure =
+    Structure.set_structure (U.Type.get_structure type_) structure
+
 
   let level type_ = U.Type.get_structure type_ |> Structure.level
   let scope type_ = U.Type.get_structure type_ |> Structure.scope
@@ -232,15 +232,16 @@ module Make (Former : Type_former.S) = struct
         state.current_level
   end
 
-  let pp_type_explicit type_ =
+  let pp_type_explicit ppf type_ =
     let rec pp_type_explicit type_ =
       U.Type.get_structure type_ |> Structure.sexp_of_t pp_type_explicit
     in
-    Caml.Format.printf "%s\n" (Sexp.to_string_mach (pp_type_explicit type_))
+    Format.fprintf ppf "%s\n" (Sexp.to_string_hum (pp_type_explicit type_))
 
 
-  let pp_type type_ =
-    Caml.Format.printf
+  let pp_type ppf type_ =
+    Format.fprintf
+      ppf
       "id = %d, level = %d is_generic = %b, scope = %d\n"
       (U.Type.id type_)
       (level type_)
@@ -248,31 +249,29 @@ module Make (Former : Type_former.S) = struct
       (scope type_)
 
 
-  let pp_region i region =
-    Caml.Format.printf "Region %d\n" i;
+  let pp_region ppf i region =
+    Format.fprintf ppf "Region %d\n" i;
     Hash_set.iter
       ~f:(fun type_ ->
-        pp_type type_;
-        pp_type_explicit type_)
+        pp_type ppf type_;
+        pp_type_explicit ppf type_)
       region
 
 
-  let pp_regions state = Vec.iteri pp_region state.regions
+  let pp_regions ppf state = Vec.iteri (pp_region ppf) state.regions
 
-  let pp_current_level state =
-    Caml.Format.printf "Current level: %d\n" state.current_level
+  let pp_current_level ppf state =
+    Format.fprintf ppf "Current level: %d\n" state.current_level
 
 
-  let pp_state state debug_label =
-    Caml.Format.printf "%s:\n" debug_label;
-    pp_current_level state;
-    pp_regions state
+  let pp_state ppf state =
+    pp_current_level ppf state;
+    pp_regions ppf state
 
 
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
 
   let set_region state type_ =
-    (* Stdio.print_string "set_region"; *)
     Hash_set.add (Vec.get_exn state.regions (level type_)) type_
 
 
@@ -289,15 +288,14 @@ module Make (Former : Type_former.S) = struct
 
   let make_flexible_var state =
     let var = make state (Ambivalent.make Flexible_var) in
-    Caml.Format.printf "New variable:\n";
-    pp_type var;
+    Log.debug (fun m -> m "New variable:\n %a" pp_type var);
     var
 
 
   let make_rigid_var state rigid_var =
-    let var = make state  (Ambivalent.make (Rigid_var rigid_var)) in
-    Caml.Format.printf "New rigid variable: %d\n" (rigid_var :> int);
-    pp_type var;
+    let var = make state (Ambivalent.make (Rigid_var rigid_var)) in
+    Log.debug (fun m ->
+        m "New rigid variable: %d.\n %a" (rigid_var :> int) pp_type var);
     var
 
 
@@ -308,18 +306,18 @@ module Make (Former : Type_former.S) = struct
   *)
   let make_former state former =
     let former = make state (Ambivalent.make (Structure former)) in
-    Caml.Format.printf "New former:\n";
-    pp_type former;
-    pp_type_explicit former;
+    Log.debug (fun m -> m "New former:\n %a" pp_type former);
     former
 
 
   let unify state ~ctx t1 t2 =
-    Caml.Format.printf "Unify: %d %d\n" (U.Type.id t1) (U.Type.id t2);
+    Log.debug (fun m -> m "Unify: %d %d.\n" (U.Type.id t1) (U.Type.id t2));
     U.unify ~expansive:{ make = make state } ~ctx t1 t2
 
 
   let flexize state src dst =
+    Log.debug (fun m ->
+        m "Flexize: %d -> %d.\n" (U.Type.id src) (U.Type.id dst));
     set_structure src Flexible_var;
     unify state ~ctx:Equations.empty src dst
 
@@ -328,6 +326,7 @@ module Make (Former : Type_former.S) = struct
 
   let enter state =
     state.current_level <- state.current_level + 1;
+    Log.debug (fun m -> m "Entering level: %d.\n" state.current_level);
     Vec.push (Hash_set.create (module U.Type)) state.regions
 
 
@@ -361,10 +360,7 @@ module Make (Former : Type_former.S) = struct
 
   (* [young_region state] returns the "young" region in [state] *)
 
-  let young_region state =
-    (* Stdio.print_string "young_region"; *)
-    Vec.get_exn state.regions state.current_level
-
+  let young_region state = Vec.get_exn state.regions state.current_level
 
   (* [is_young state type_] determines whether [type_] is in the young region. 
      Optimized for many executions for a given state. *)
@@ -377,7 +373,6 @@ module Make (Former : Type_former.S) = struct
     in
     fun type_ ->
       let result = Hash_set.mem young_region (U.Type.id type_) in
-      (* Caml.Format.printf "is young? %d = %b\n" (U.Type.id type_) result; *)
       result
 
 
@@ -415,37 +410,44 @@ module Make (Former : Type_former.S) = struct
   *)
 
   let update_scopes state =
+    Log.debug (fun m -> m "Updating scopes.\n");
     (* [is_young state type_] determines whether [type_] is in the young region. *)
     let is_young = is_young state in
     let young_region = young_region state |> Hash_set.to_array in
     (* Order the young region in highest to lowest scopes. *)
     Array.sort young_region ~compare:(fun t1 t2 ->
         -Int.compare (scope t1) (scope t2));
-    Caml.Format.printf "Scope Array order:\n";
-    Caml.Format.printf
-      "%s\n"
-      (Array.to_list young_region
-      |> List.map ~f:(fun t -> Int.to_string (U.Type.id t))
-      |> String.concat ~sep:",");
+    Log.debug (fun m ->
+        let young_region =
+          young_region
+          |> Array.to_list
+          |> List.map ~f:(fun t -> U.Type.id t |> Int.to_string)
+          |> String.concat
+        in
+        m "Young region (ordered by scope): %s\n" young_region);
     (* Hash set records whether we've visited a given 
        graphic type node. Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
     let rec loop type_ scope =
       if not (Hash_set.mem visited type_)
       then (
+        Log.debug (fun m -> m "Visiting %d.\n" (U.Type.id type_));
         Hash_set.add visited type_;
+        Log.debug (fun m -> m "Updating scope to %d.\n" scope);
         update_scope type_ scope;
         if is_young type_
         then
           U.Type.get_structure type_
           |> Structure.iter ~f:(fun type_ -> loop type_ scope))
     in
-    Array.iter ~f:(fun type_ -> loop type_ (scope type_)) young_region
+    Array.iter ~f:(fun type_ -> loop type_ (scope type_)) young_region;
+    Log.debug (fun m -> m "Finished updating scopes.")
 
 
   exception Scope_escape of U.Type.t
 
   let update_levels state =
+    Log.debug (fun m -> m "Updating levels.\n");
     (* We note that levels only decrease (since we take the minimum when merging),
        hence we process nodes in level order. 
        
@@ -459,24 +461,28 @@ module Make (Former : Type_former.S) = struct
     let young_region = young_region state |> Hash_set.to_array in
     Array.sort young_region ~compare:(fun t1 t2 ->
         Int.compare (level t1) (level t2));
-    Caml.Format.printf "Array order:\n";
-    Caml.Format.printf
-      "%s\n"
-      (Array.to_list young_region
-      |> List.map ~f:(fun t -> Int.to_string (U.Type.id t))
-      |> String.concat ~sep:",");
+    Log.debug (fun m ->
+        let young_region =
+          young_region
+          |> Array.to_list
+          |> List.map ~f:(fun t -> U.Type.id t |> Int.to_string)
+          |> String.concat
+        in
+        m "Young region (ordered by level): %s\n" young_region);
     (* Hash set records whether we've visited a given 
        graphic type node. Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
     let rec loop type_ level' =
       if not (Hash_set.mem visited type_)
       then (
+        Log.debug (fun m -> m "Visiting %d.\n" (U.Type.id type_));
         (* Mark as visited first. This is required with graphic types
            containing cycles. Allows us to reduce # of occurs checks. *)
         Hash_set.add visited type_;
         (* Regardless of whether a node is young or old, 
           we update it's level. *)
         update_level type_ level';
+        Log.debug (fun m -> m "Updating level w/ %d.\n" level');
         (* If a node is old, then we stop traversing (hence the [is_young] check). *)
         if is_young type_
         then (
@@ -506,11 +512,12 @@ module Make (Former : Type_former.S) = struct
         (* Perform scope check *)
         if level type_ < scope type_
         then (
-          Caml.Format.printf
-            "Scope escape: id=%d, level=%d, scope=%d\n"
-            (U.Type.id type_)
-            (level type_)
-            (scope type_);
+          Log.debug (fun m ->
+              m
+                "Scope escape: id=%d, level=%d, scope=%d\n"
+                (U.Type.id type_)
+                (level type_)
+                (scope type_));
           raise (Scope_escape type_)))
     in
     Array.iter ~f:(fun type_ -> loop type_ (level type_)) young_region
@@ -573,7 +580,8 @@ module Make (Former : Type_former.S) = struct
      Ensures [rigid_vars] do not escape. 
   *)
   let exit state ~rigid_vars ~types =
-    pp_state state "Before exit";
+    Log.debug (fun m -> m "Exiting level: %d\n" state.current_level);
+    Log.debug (fun m -> m "State before exit:\n%a" pp_state state);
     (* Detect cycles in roots. *)
     List.iter ~f:U.occurs_check types;
     (* Now update the lazily updated scopes of every node in the young region *)
@@ -602,7 +610,7 @@ module Make (Former : Type_former.S) = struct
     in
     (* Exit the current region *)
     state.current_level <- state.current_level - 1;
-    pp_state state "After exit";
+    Log.debug (fun m -> m "State after exit:\n%a" pp_state state);
     rigid_vars @ generalizable, List.map ~f:make_scheme types
 
 

@@ -34,7 +34,7 @@ module Make (Algebra : Algebra) : sig
     | `Inconsistent_equations
     ]
 
-  val solve : 'a Constraint.t -> ('a, [> error ]) Result.t
+  val solve : ?debug:bool -> 'a Constraint.t -> ('a, [> error ]) Result.t
 end
 
 (** [Private] submodule for [expect] tests. *)

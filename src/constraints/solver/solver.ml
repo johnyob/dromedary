@@ -190,7 +190,6 @@ module Make (Algebra : Algebra) = struct
   (* [bind_rigid state var] binds the rigid variable [var] in the environment. 
      Returning the graphical type mapped in the environment. *)
   let bind_rigid state var =
-    Caml.Format.printf "Solver: bind_rigid\n";
     let rigid_var = Rigid_var.make () in
     bind state var (Rigid_var rigid_var);
     rigid_var
@@ -393,7 +392,7 @@ module Make (Algebra : Algebra) = struct
               solve ~state ~env in_)
         in
         both value (list case_values)
-      | Decode a -> 
+      | Decode a ->
         let var = find state a in
         fun () -> Decoder.decode_type_acyclic var
       | Implication (equations, t) ->
@@ -659,8 +658,10 @@ module Make (Algebra : Algebra) = struct
     | `Inconsistent_equations
     ]
 
-  let solve cst =
+  let solve ?debug:(debug_flag = false) cst =
     (* Wrap exceptions raised by solving in a [Result] type. *)
+    Logs.set_reporter reporter;
+    Logs.Src.set_level src Logs.(if debug_flag then Some Debug else Some Info);
     try
       Ok (Elaborate.run (solve ~state:(make_state ()) ~env:Env.empty cst))
     with
