@@ -62,6 +62,12 @@ module type S = sig
     -> 'a t
 end
 
+module type Identifiable = sig
+  type 'a t
+
+  val id : 'a t -> int
+end
+
 module type Intf = sig
   module type S = S
 
@@ -89,6 +95,47 @@ module type Intf = sig
         with type 'a t := 'a t
          and type ctx = S.ctx
          and type 'a expansive = 'a S.expansive
+  end
+
+  module Abbreviations (S : S) (Id : Identifiable with type 'a t := 'a S.t) : sig
+    module Abbrev_type : sig
+      type t [@@deriving sexp_of, compare]
+
+      type structure =
+        | Var
+        | Structure of t S.t
+
+      val make : structure -> t
+    end
+
+    module Abbrev : sig
+      type t
+
+      val make : Abbrev_type.t S.t -> Abbrev_type.t -> t
+    end
+
+    module Ctx : sig
+      type t
+
+      val empty : t
+      val add : t -> abbrev:Abbrev.t -> t
+    end
+
+    type 'a t
+
+    val make : 'a S.t -> 'a t
+
+    type 'a expansive =
+      { make_structure : 'a S.t -> 'a
+      ; make_var : unit -> 'a
+      ; sexpansive : 'a S.expansive
+      }
+
+    include
+      S
+        with type 'a t := 'a t
+         and type ctx := Ctx.t * S.ctx
+         and type 'a expansive := 'a expansive
   end
 
   module Ambivalent (S : S) : sig

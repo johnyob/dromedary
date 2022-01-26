@@ -84,6 +84,134 @@ module First_order (Structure : S) = struct
       | Structure.Cannot_merge -> raise Cannot_merge)
 end
 
+module Abbreviations
+    (Structure : S)
+    (Id : Identifiable with type 'a t := 'a Structure.t) =
+struct
+  module Abbrev_type = struct
+    type t = desc ref [@@deriving sexp_of]
+
+    and desc =
+      { id : int
+      ; structure : structure
+      }
+
+    and structure =
+      | Var
+      | Structure of t Structure.t
+
+    let make =
+      let id = ref 0 in
+      fun structure -> ref { id = post_incr id; structure }
+
+
+    let structure t = !t.structure
+    let id t = !t.id
+    let compare t1 t2 = Int.compare (id t1) (id t2)
+    let hash = id
+  end
+
+  module Abbrev = struct
+    type t =
+      { id : int
+      ; abbrev : Abbrev_type.t Structure.t * Abbrev_type.t
+      }
+
+    let make abbrev_structure abbrev_type =
+      let id = Id.id abbrev_structure in
+      { id; abbrev = abbrev_structure, abbrev_type }
+
+
+    let id t = t.id
+    let abbrev t = t.abbrev
+  end
+
+  module Ctx = struct
+    type t = (Int.t, Abbrev.t, Int.comparator_witness) Map.t
+
+    let empty : t = Map.empty (module Int)
+    let add (t : t) ~abbrev = Map.set t ~key:(Abbrev.id abbrev) ~data:abbrev
+    let has_abbrev (t : t) id = Map.mem t id
+
+    exception Not_found
+
+    let find_abbrev (t : t) id =
+      match Map.find t id with
+      | Some abbrev -> abbrev
+      | None -> raise Not_found
+  end
+
+  include Structure
+
+  let actx = fst
+  let sctx = snd
+  let make t = t
+
+  type 'a expansive =
+    { make_structure : 'a Structure.t -> 'a
+    ; make_var : unit -> 'a
+    ; sexpansive : 'a Structure.expansive
+    }
+
+  let convert_abbrev ~expansive abbrev =
+    let abbrev_structure, abbrev_type = Abbrev.abbrev abbrev in
+    let copied : (Abbrev_type.t, _) Hashtbl.t =
+      Hashtbl.create (module Abbrev_type)
+    in
+    (* Assume [abbrev_type] is acyclic *)
+    let rec copy type_ =
+      try Hashtbl.find_exn copied type_ with
+      | Not_found_s _ ->
+        let new_type =
+          match Abbrev_type.structure type_ with
+          | Var -> expansive.make_var ()
+          | Structure structure ->
+            expansive.make_structure (Structure.map ~f:copy structure)
+        in
+        Hashtbl.set copied ~key:type_ ~data:new_type;
+        new_type
+    in
+    let abbrev_structure = Structure.map ~f:copy abbrev_structure in
+    let abbrev_type = copy abbrev_type in
+    abbrev_structure, abbrev_type
+
+  let merge ~expansive ~ctx ~equate t1 t2 =
+    let ( =- ) =
+      Structure.merge ~expansive:expansive.sexpansive ~ctx:(sctx ctx) ~equate
+    in
+    let ( =~ ) a t =
+      let a' = expansive.make_structure t in
+      equate a a'
+    in
+    let expand t =
+      (* Determine abbreviation of [t] *)
+      let abbrev = Ctx.find_abbrev (actx ctx) (Id.id t) in
+      (* Expand the abbreviation of [t] *)
+      let abbrev_structure, abbrev_type = convert_abbrev ~expansive abbrev in
+      (* Equate the variables and children of [t]. *)
+      ignore (t =- abbrev_structure : _ Structure.t);
+      abbrev_type
+    in
+    (* TODO: Perhaps remove [has_abbrev] and use match on options instead. *)
+    if Id.id t1 = Id.id t2
+    then t1 =- t2
+    else if Ctx.has_abbrev (actx ctx) (Id.id t1)
+    then (
+      (* Expand [t1] to [t1'], and merge [t1'] and [t2] *)
+      let t1' = expand t1 in
+      (* Merge [t1'] and [t2]. *)
+      t1' =~ t2;
+      (* If the above merge is successful, then return [t1]. *)
+      t1)
+    else if Ctx.has_abbrev (actx ctx) (Id.id t2)
+    then (
+      let t2' = expand t2 in
+      (* Merge [t1] and [t2']. *)
+      t2' =~ t1;
+      t2)
+    else raise Cannot_merge
+end
+
 module Ambivalent (Structure : S) = struct
   module Rigid_type = struct
     type t =
