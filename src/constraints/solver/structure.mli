@@ -11,4 +11,4 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-include Abbreviations_intf.Intf (** @inline *)
+include Structure_intf.Intf (** @inline *)

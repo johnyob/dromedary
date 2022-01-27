@@ -62,23 +62,6 @@ module Type_former = struct
       (Traverse.traverse t ~f) init
 
 
-    exception Not_found
-
-    let nth t n =
-      let i = ref 0 in
-      let post_incr i =
-        let result = !i in
-        Int.incr i;
-        result
-      in
-      fold t ~init:None ~f:(fun t acc ->
-          if post_incr i = n then Some t else acc)
-
-    let nth_exn t n =
-      match nth t n with
-      | None -> raise Not_found
-      | Some t -> t
-
     let map2 t1 t2 ~f =
       let module Traverse = T.Traverse (Ident) in
       Traverse.traverse2 t1 t2 ~f
@@ -98,8 +81,8 @@ module Type_former = struct
         (type a b c)
         (t1 : a t)
         (t2 : b t)
-        ~(init : c)
         ~(f : a -> b -> c -> c)
+        ~(init : c)
         : c
       =
       let module Traverse =

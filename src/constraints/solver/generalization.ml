@@ -19,6 +19,7 @@ open! Import
 (* Include module types and type definitions from the [_intf] file. *)
 
 include Generalization_intf
+open Structure
 
 module Make (Former : Type_former.S) = struct
   (* We implement efficient level-based generalization by Remy [??].
@@ -89,95 +90,89 @@ module Make (Former : Type_former.S) = struct
 
   let outermost_level = 0
 
-  (* [merge_level l1 l2] merges levels [l1] and [l2]. To merge two arbitrary 
-     levels, we take their minimum. *)
-  let merge_level = min
+  module Abbreviations_ = Abbreviations (Of_former (Former)) (Former)
+  module Ambivalent = Ambivalent (Abbreviations_)
 
-  module Tag = struct
-    (* [t] is the type of tags, encoding the level and whether the node is generic. *)
-    type t =
-      { mutable level : level
+  module Structure = struct
+    type 'a t =
+      { mutable structure : 'a Ambivalent.t
+      ; mutable level : int
       ; mutable is_generic : bool
       }
     [@@deriving sexp_of]
 
-    exception Cannot_update_generic of t
-
-    (* [merge t1 t2] merges 2 tags, merging their levels. 
-       Generic tags cannot be merged, raising [Cannot_update_generic]. *)
-    let merge t1 t2 =
-      if t1.is_generic then raise (Cannot_update_generic t1);
-      if t2.is_generic then raise (Cannot_update_generic t2);
-      { level = merge_level t1.level t2.level; is_generic = false }
-
-
-    (* [set_level t l] sets the level of [t] to [l]. 
-       [Cannot_update_generic t] is raised if [t] is generic. *)
-    let set_level t level =
-      if t.is_generic then raise (Cannot_update_generic t);
-      t.level <- level
-
-
-    (* [get_level t] returns the level of the tag [t]. *)
-    let get_level t = t.level
-
-    (* [is_generic t] returns whether t is generic. *)
+    let structure t = Ambivalent.desc t.structure
+    let set_structure t structure' = Ambivalent.set_desc t.structure structure'
+    let scope t = Ambivalent.scope t.structure
+    let update_scope t scope = Ambivalent.update_scope t.structure scope
+    let level t = t.level
+    let update_level t level = if level < t.level then t.level <- level
     let is_generic t = t.is_generic
-
-    (* [generalize t] lifts the tag [t] to a generic tag. *)
+    let is_generic_at t level = t.is_generic && t.level = level
     let generalize t = t.is_generic <- true
+    let map t ~f = { t with structure = Ambivalent.map t.structure ~f }
+    let iter t ~f = Ambivalent.iter t.structure ~f
+    let fold t ~f ~init = Ambivalent.fold t.structure ~f ~init
+
+    exception Cannot_merge = Ambivalent.Cannot_merge
+
+    type 'a expansive = { make : 'a Ambivalent.t -> 'a }
+    type ctx = Ambivalent.Equations.Ctx.t * Abbreviations_.Ctx.t
+
+    let make_expansive expansive : _ Ambivalent.expansive =
+      { make = (fun structure -> expansive.make structure)
+      ; sexpansive =
+          { make_var = (fun () -> expansive.make Ambivalent.(make Flexible_var))
+          ; make_structure =
+              (fun structure ->
+                expansive.make
+                  Ambivalent.(make (Structure (Abbreviations_.make structure))))
+          ; sexpansive = ()
+          }
+      }
+
+
+    let merge ~expansive ~ctx:(ectx, actx) ~equate t1 t2 =
+      (* assert (not (t1.is_generic || t2.is_generic)); *)
+      t1.structure
+        <- Ambivalent.merge
+             ~expansive:(make_expansive expansive)
+             ~ctx:(ectx, (actx, ()))
+             ~equate
+             t1.structure
+             t2.structure;
+      update_level t1 t2.level;
+      t1.is_generic <- false;
+      t1
   end
 
-  module Abbreviations = Abbreviations.Make (Former) (Tag)
-  module Unifier = Abbreviations.Unifier
+  module Unifier = Unifier.Make (Structure)
 
   (* [U] and [A] are aliases, used for a short prefix below. *)
   module U = Unifier
-  module A = Abbreviations
 
-  let get_tag type_ = (U.Type.get_metadata type_).metadata
+  let structure type_ = U.Type.get_structure type_ |> Structure.structure
 
-  let get_non_productive_view type_ =
-    (U.Type.get_metadata type_).non_productive_view
-
-
-  (* [set_level type_ level] sets the level of the type [type_] to [level]. *)
-  let set_level type_ level = Tag.set_level (get_tag type_) level
-
-  (* [get_level type_] returns the level of type [type_]. *)
-  let get_level type_ = Tag.get_level (get_tag type_)
-
-  (* [update_level type_ level] is equivalent to [set_level type_ (min (get_level type_) level)]. *)
-  let update_level type_ level =
-    if level < get_level type_ then set_level type_ level
+  let set_structure type_ structure =
+    Structure.set_structure (U.Type.get_structure type_) structure
 
 
-  (* [is_generic type_] returns whether the current type [type_] is "generic". *)
-  let is_generic type_ = Tag.is_generic (get_tag type_)
+  let level type_ = U.Type.get_structure type_ |> Structure.level
+  let scope type_ = U.Type.get_structure type_ |> Structure.scope
+  let is_generic type_ = U.Type.get_structure type_ |> Structure.is_generic
 
-  (* [is_generic_at type_ level] returns whether the current type [type] is 
-     generic and is generalized at level [level]. *)
   let is_generic_at type_ level =
-    let tag = get_tag type_ in
-    Tag.is_generic tag && Tag.get_level tag = level
+    Structure.is_generic_at (U.Type.get_structure type_) level
 
 
-  (* [generalize_type type_] generalizes the type [type_]. *)
-  let generalize_type type_ = Tag.generalize (get_tag type_)
+  let generalize_type type_ = U.Type.get_structure type_ |> Structure.generalize
 
-  (* [make_var_] and [make_former_] are internal functions for making type 
-     variables and type formers wrapping [Unifier]. *)
-
-  let make_flexible_var_ level =
-    A.make_flexible_var { level; is_generic = false }
+  let update_level type_ level =
+    Structure.update_level (U.Type.get_structure type_) level
 
 
-  let make_rigid_var_ rigid_var level =
-    A.make_rigid_var rigid_var { level; is_generic = false }
-
-
-  let make_former_ ~ctx former level =
-    A.make_former ~ctx former { level; is_generic = false }
+  let update_scope type_ scope =
+    Structure.update_scope (U.Type.get_structure type_) scope
 
 
   (* Generalization regions
@@ -211,88 +206,128 @@ module Make (Former : Type_former.S) = struct
 
   type state =
     { mutable current_level : level
+    ; rigid_vars : (Rigid_var.t, U.Type.t Hash_set.t) Hashtbl.t
     ; regions : (region, [ `R | `W ]) Vec.t
-    ; abbrev_ctx : A.Ctx.t
     }
 
   (* [make_state ()] makes a new empty state. *)
 
-  let make_state abbrev_ctx =
-    { current_level = outermost_level - 1; regions = Vec.make (); abbrev_ctx }
+  let make_state () =
+    { current_level = outermost_level - 1
+    ; regions = Vec.make ()
+    ; rigid_vars = Hashtbl.create (module Rigid_var)
+    }
 
 
-  (* let pp_type_explicit type_ =
+  module Rigid_type = struct
+    type t = Ambivalent.Rigid_type.t
+
+    let make_var rigid_var = Ambivalent.Rigid_type.Rigid_var rigid_var
+
+    let make_former former =
+      Ambivalent.Rigid_type.Structure (Abbreviations_.make former)
+  end
+
+  module Abbrev_type = Abbreviations_.Abbrev_type
+  module Abbrev = Abbreviations_.Abbrev
+  module Abbreviations = Abbreviations_.Ctx
+
+  module Equations = struct
+    type t = Ambivalent.Equations.Ctx.t
+
+    let empty = Ambivalent.Equations.Ctx.empty
+
+    exception Inconsistent = Ambivalent.Equations.Ctx.Inconsistent
+
+    let expansive : Rigid_type.t Abbreviations_.expansive =
+      { make_var = (fun () -> assert false)
+      ; make_structure = (fun _ -> assert false)
+      ; sexpansive = ()
+      }
+
+
+    (* [type ('a list) elem = 'a] 
+      
+       a = c elem
+       => c = a list
+       => 
+    *)
+
+    let add state t rigid_type1 rigid_type2 =
+      Ambivalent.Equations.Ctx.add
+        ~expansive
+        ~ctx:(Abbreviations.empty, ())
+        t
+        rigid_type1
+        rigid_type2
+        state.current_level
+  end
+
+  let pp_type_explicit ppf type_ =
     let rec pp_type_explicit type_ =
-      match U.Type.get_structure type_ with
-      | U.Type.Var { flexibility = _ } ->
-        Sexp.Atom (Int.to_string (U.Type.id type_))
-      | U.Type.Former productive_view ->
-        Former.sexp_of_t
-          pp_type_explicit
-          (U.Productive_view.repr productive_view)
+      U.Type.get_structure type_ |>  Structure.sexp_of_t pp_type_explicit
     in
-    Caml.Format.printf "%s\n" (Sexp.to_string_mach (pp_type_explicit type_))
+    Format.fprintf ppf "%s\n" (Sexp.to_string_hum (pp_type_explicit type_))
 
 
-  let pp_type type_ =
-    Caml.Format.printf
-      "id = %d, level = %d, is_generic = %b"
+  let pp_type ppf type_ =
+    Format.fprintf
+      ppf
+      "id = %d, level = %d is_generic = %b, scope = %d\n"
       (U.Type.id type_)
-      (get_level type_)
-      (is_generic type_);
-    (match U.Type.get_structure type_ with
-    | Var { flexibility } ->
-      Caml.Format.printf
-        ", flexibility = %s"
-        (Sexp.to_string_hum (U.Type.sexp_of_flexibility flexibility))
-    | _ -> ());
-    Caml.Format.printf "\n"
+      (level type_)
+      (is_generic type_)
+      (scope type_)
 
 
-  let pp_region i region =
-    Caml.Format.printf "Region %d\n" i;
+  let pp_region ppf i region =
+    Format.fprintf ppf "Region %d\n" i;
     Hash_set.iter
       ~f:(fun type_ ->
-        pp_type type_;
-        pp_type_explicit type_)
+        pp_type ppf type_;
+        pp_type_explicit ppf type_)
       region
 
 
-  let pp_regions state = Vec.iteri pp_region state.regions
+  let pp_regions ppf state = Vec.iteri (pp_region ppf) state.regions
 
-  let pp_current_level state =
-    Caml.Format.printf "Current level: %d\n" state.current_level
+  let pp_current_level ppf state =
+    Format.fprintf ppf "Current level: %d\n" state.current_level
 
 
-  let pp_state state debug_label =
-    Caml.Format.printf "%s:\n" debug_label;
-    pp_current_level state;
-    pp_regions state *)
+  let pp_state ppf state =
+    pp_current_level ppf state;
+    pp_regions ppf state
 
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
 
   let set_region state type_ =
-    (* Stdio.print_string "set_region"; *)
-    Hash_set.add (Vec.get_exn state.regions (get_level type_)) type_
+    Hash_set.add (Vec.get_exn state.regions (level type_)) type_
+
+
+  let make state structure =
+    let new_type =
+      U.Type.make { structure; level = state.current_level; is_generic = false }
+    in
+    set_region state new_type;
+    new_type
 
 
   (* [make_var] creates a fresh unification variable, setting it's level
      and region. *)
 
   let make_flexible_var state =
-    let var = make_flexible_var_ state.current_level in
-    set_region state var;
-    (* Caml.Format.printf "New variable:\n";
-    pp_type var; *)
+    let var = make state (Ambivalent.make Flexible_var) in
+    Log.debug (fun m -> m "New variable:\n %a" pp_type var);
     var
 
 
   let make_rigid_var state rigid_var =
-    let var = make_rigid_var_ rigid_var state.current_level in
-    set_region state var;
-    (* Caml.Format.printf "New variable:\n";
-      pp_type var; *)
+    let var = make state (Ambivalent.make (Rigid_var rigid_var)) in
+    Log.debug (fun m ->
+        m "New rigid variable: %d.\n %a" (rigid_var :> int) pp_type var);
     var
+
 
 
   (* [make_former] creates a fresh unification type node 
@@ -302,28 +337,29 @@ module Make (Former : Type_former.S) = struct
   *)
   let make_former state former =
     let former =
-      make_former_ ~ctx:state.abbrev_ctx former state.current_level
+      make state (Ambivalent.make (Structure (Abbreviations_.make former)))
     in
-    set_region state former;
-    (* Caml.Format.printf "New former:\n";
-    pp_type former;
-    pp_type_explicit former; *)
+    Log.debug (fun m -> m "New former:\n %a" pp_type former);
     former
 
 
-  let unify state t1 t2 =
-    (* Caml.Format.printf "Unify: %d %d\n" (U.Type.id t1) (U.Type.id t2); *)
-    A.unify
-      ~ctx:state.abbrev_ctx
-      ~metadata:(fun () -> { level = state.current_level; is_generic = false })
-      t1
-      t2
+  let unify state ~ctx t1 t2 =
+    Log.debug (fun m -> m "Unify: %d %d.\n" (U.Type.id t1) (U.Type.id t2));
+    U.unify ~expansive:{ make = make state } ~ctx t1 t2
+
+
+  let flexize state src dst =
+    Log.debug (fun m ->
+        m "Flexize: %d -> %d.\n" (U.Type.id src) (U.Type.id dst));
+    set_structure src Flexible_var;
+    unify state ~ctx:(Equations.empty, Abbreviations.empty) src dst
 
 
   (* [enter ()] creates a new stack frame and enter it. *)
 
   let enter state =
     state.current_level <- state.current_level + 1;
+    Log.debug (fun m -> m "Entering level: %d.\n" state.current_level);
     Vec.push (Hash_set.create (module U.Type)) state.regions
 
 
@@ -357,10 +393,7 @@ module Make (Former : Type_former.S) = struct
 
   (* [young_region state] returns the "young" region in [state] *)
 
-  let young_region state =
-    (* Stdio.print_string "young_region"; *)
-    Vec.get_exn state.regions state.current_level
-
+  let young_region state = Vec.get_exn state.regions state.current_level
 
   (* [is_young state type_] determines whether [type_] is in the young region. 
      Optimized for many executions for a given state. *)
@@ -410,7 +443,45 @@ module Make (Former : Type_former.S) = struct
      nodes once (defining a partial order).    
   *)
 
+  let update_scopes state =
+    Log.debug (fun m -> m "Updating scopes.\n");
+    (* [is_young state type_] determines whether [type_] is in the young region. *)
+    let is_young = is_young state in
+    let young_region = young_region state |> Hash_set.to_array in
+    (* Order the young region in highest to lowest scopes. *)
+    Array.sort young_region ~compare:(fun t1 t2 ->
+        -Int.compare (scope t1) (scope t2));
+    Log.debug (fun m ->
+        let young_region =
+          young_region
+          |> Array.to_list
+          |> List.map ~f:(fun t -> U.Type.id t |> Int.to_string)
+          |> String.concat
+        in
+        m "Young region (ordered by scope): %s\n" young_region);
+    (* Hash set records whether we've visited a given 
+       graphic type node. Prevents cyclic execution of [loop]. *)
+    let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
+    let rec loop type_ scope =
+      if not (Hash_set.mem visited type_)
+      then (
+        Log.debug (fun m -> m "Visiting %d.\n" (U.Type.id type_));
+        Hash_set.add visited type_;
+        Log.debug (fun m -> m "Updating scope to %d.\n" scope);
+        update_scope type_ scope;
+        if is_young type_
+        then
+          U.Type.get_structure type_
+          |> Structure.iter ~f:(fun type_ -> loop type_ scope))
+    in
+    Array.iter ~f:(fun type_ -> loop type_ (scope type_)) young_region;
+    Log.debug (fun m -> m "Finished updating scopes.")
+
+
+  exception Scope_escape of U.Type.t
+
   let update_levels state =
+    Log.debug (fun m -> m "Updating levels.\n");
     (* We note that levels only decrease (since we take the minimum when merging),
        hence we process nodes in level order. 
        
@@ -419,47 +490,44 @@ module Make (Former : Type_former.S) = struct
        
        To implement this, we convert the young region into a sorted array
        which we iterate over to begin the traversal. *)
+    (* [is_young state type_] determines whether [type_] is in the young region. *)
     let is_young = is_young state in
     let young_region = young_region state |> Hash_set.to_array in
     Array.sort young_region ~compare:(fun t1 t2 ->
-        Int.compare (get_level t1) (get_level t2));
-    (* Caml.Format.printf "Array order:\n"; *)
-    (* Caml.Format.printf
-      "%s\n"
-      (Array.to_list young_region
-      |> List.map ~f:(fun t -> Int.to_string (U.Type.id t))
-      |> String.concat ~sep:","); *)
+        Int.compare (level t1) (level t2));
+    Log.debug (fun m ->
+        let young_region =
+          young_region
+          |> Array.to_list
+          |> List.map ~f:(fun t -> U.Type.id t |> Int.to_string)
+          |> String.concat
+        in
+        m "Young region (ordered by level): %s\n" young_region);
     (* Hash set records whether we've visited a given 
        graphic type node. Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
-    let rec loop type_ level =
+    let rec loop type_ level' =
       if not (Hash_set.mem visited type_)
       then (
+        Log.debug (fun m -> m "Visiting %d.\n" (U.Type.id type_));
         (* Mark as visited first. This is required with graphic types
            containing cycles. Allows us to reduce # of occurs checks. *)
         Hash_set.add visited type_;
         (* Regardless of whether a node is young or old, 
           we update it's level. *)
-        update_level type_ level;
+        update_level type_ level';
+        Log.debug (fun m -> m "Updating level w/ %d.\n" level');
         (* If a node is old, then we stop traversing (hence the [is_young] check). *)
         if is_young type_
         then (
-          (* Visit non-productive view first. We note that there is no need to 
-             fold over the view, computing the maximum level of children, since:   
-             If the view is non-empty => contains a reference back to [type_] in the view, hence 
-             maximum level is [level].
-          *)
-          A.Non_productive_view.iter
-            (get_non_productive_view type_)
-            ~f:(fun type_ -> loop type_ level);
-          match U.Type.get_structure type_ with
-          | U.Type.Flexible_var | U.Type.Rigid_var _ ->
+          match structure type_ with
+          | Flexible_var | Rigid_var _ ->
             (* In the variable case, we cannot traverse any further
               and no updates need be performed (since the level update)
               is performed above. 
             *)
             ()
-          | U.Type.Former productive_view ->
+          | Structure former ->
             (* If the node is a type former, then we need to traverse it's 
               children and determine it's correct level.
               
@@ -472,20 +540,30 @@ module Make (Former : Type_former.S) = struct
             *)
             update_level
               type_
-              (A.Productive_view.fold
-                 productive_view
+              (Abbreviations_.fold
+                 former
                  ~init:outermost_level
                  ~f:(fun type_ acc ->
-                   loop type_ level;
-                   max (get_level type_) acc))))
+                   loop type_ level';
+                   max (level type_) acc)));
+        (* Perform scope check *)
+        if level type_ < scope type_
+        then (
+          Log.debug (fun m ->
+              m
+                "Scope escape: id=%d, level=%d, scope=%d\n"
+                (U.Type.id type_)
+                (level type_)
+                (scope type_));
+          raise (Scope_escape type_)))
     in
-    Array.iter ~f:(fun type_ -> loop type_ (get_level type_)) young_region
+    Array.iter ~f:(fun type_ -> loop type_ (level type_)) young_region
 
 
-  exception Rigid_variable_escape of U.Rigid_var.t
-  exception Cannot_flexize of U.Rigid_var.t
+  exception Rigid_variable_escape of Rigid_var.t
+  exception Cannot_flexize of Rigid_var.t
 
-  (* [generalize state ~rigid_vars] generalizes variables in the current
+  (* [generalize state] generalizes variables in the current
      region according to the new levels propagated by [update_levels].
      
      If a node has a level < !current_level, then it belongs in an 
@@ -500,34 +578,24 @@ module Make (Former : Type_former.S) = struct
      The process of flexization, the conversion of rigid variables to
      generic flexible variables also occurs here.
   *)
-  let generalize state ~rigid_vars =
-    (* Create a mapping between rigid variables and flexible variables for flexization. *)
-    let rigid_vars =
-      Hashtbl.of_alist_exn
-        (module U.Rigid_var)
-        (List.map rigid_vars ~f:(fun rigid_var ->
-             rigid_var, make_flexible_var state))
-    in
+  let generalize state =
     (* Get the young region, since we will be performing several traversals
        of it. *)
     let region = young_region state in
-    (* Iterate through the young region, performing flexization. *)
-    Hash_set.iter region ~f:(fun type_ ->
-        match U.Type.get_structure type_ with
-        | U.Type.Rigid_var rigid_var ->
-          (match Hashtbl.find rigid_vars rigid_var with
-          | Some dst -> U.Type.flexize ~src:type_ ~dst
-          | None -> raise (Cannot_flexize rigid_var))
-        | _ -> ());
     (* Iterate through the young region, generalizing variables 
-       (or updating their region).  *)
+       (or updating their region), adding rigid variables to flexization queue.  *)
     Hash_set.iter region ~f:(fun type_ ->
-        (* assert (not (is_rigid type_)); *)
-        if get_level type_ < state.current_level
+        if level type_ < state.current_level
         then set_region state type_
-        else
-          (* Caml.Format.printf "Generalizing %d\n" (U.Type.id type_); *)
-          generalize_type type_);
+        else generalize_type type_;
+        match structure type_ with
+        | Rigid_var rigid_var ->
+          let rigid_vars =
+            Hashtbl.find_or_add state.rigid_vars rigid_var ~default:(fun () ->
+                Hash_set.create (module U.Type))
+          in
+          Hash_set.add rigid_vars type_
+        | _ -> ());
     (* Iterate through the young region, computing the list
        of generalizable variables. *)
     let generalizable =
@@ -536,15 +604,14 @@ module Make (Former : Type_former.S) = struct
       |> Hash_set.filter ~f:(fun type_ ->
              is_generic_at type_ state.current_level
              &&
-             match U.Type.get_structure type_ with
-             | U.Type.Flexible_var -> true
-             | U.Type.Rigid_var _ -> assert false
-             | U.Type.Former _ -> false)
+             match structure type_ with
+             | Flexible_var -> true
+             | _ -> false)
       |> Hash_set.to_list
     in
     (* Clear the young region now *)
     Hash_set.clear region;
-    Hashtbl.to_alist rigid_vars, generalizable
+    generalizable
 
 
   (* [exit state ~rigid_vars ~types] performs generalization
@@ -553,21 +620,29 @@ module Make (Former : Type_former.S) = struct
      Ensures [rigid_vars] do not escape. 
   *)
   let exit state ~rigid_vars ~types =
-    (* pp_state state "Before exit"; *)
+    Log.debug (fun m -> m "Exiting level: %d\n" state.current_level);
+    Log.debug (fun m -> m "State before exit:\n%a" pp_state state);
     (* Detect cycles in roots. *)
     List.iter ~f:U.occurs_check types;
+    (* Now update the lazily updated scopes of every node in the young region *)
+    update_scopes state;
     (* Now update the lazily updated levels of every node in the young
        region. *)
     update_levels state;
     (* Generalize variables. *)
-    let rigid_vars, generalizable = generalize state ~rigid_vars in
-    (* Check that rigid variables have no escaped. *)
-    (match
-       List.find rigid_vars ~f:(fun (_, var) ->
-           get_level var < state.current_level)
-     with
-    | None -> ()
-    | Some (rigid_var, _) -> raise (Rigid_variable_escape rigid_var));
+    let generalizable = generalize state in
+    (* Flexize the variable *)
+    let rigid_vars =
+      List.map rigid_vars ~f:(fun rigid_var ->
+          match Hashtbl.find state.rigid_vars rigid_var with
+          | Some rigid_vars ->
+            let var = make_flexible_var state in
+            Hash_set.iter rigid_vars ~f:(fun x -> flexize state x var);
+            Hashtbl.remove state.rigid_vars rigid_var;
+            generalize_type var;
+            var
+          | None -> raise (Rigid_variable_escape rigid_var))
+    in
     (* Helper function for constructing a new type scheme *)
     let make_scheme =
       let level = state.current_level in
@@ -575,8 +650,8 @@ module Make (Former : Type_former.S) = struct
     in
     (* Exit the current region *)
     state.current_level <- state.current_level - 1;
-    (* pp_state state "After exit"; *)
-    generalizable, List.map ~f:make_scheme types
+    Log.debug (fun m -> m "State after exit:\n%a" pp_state state);
+    rigid_vars @ generalizable, List.map ~f:make_scheme types
 
 
   type variables = U.Type.t list
@@ -608,19 +683,16 @@ module Make (Former : Type_former.S) = struct
            If [Var], add to the relevant quantifier list,
            otherwise recurse.  
         *)
-        match U.Type.get_structure type_ with
-        | U.Type.Flexible_var -> variables := type_ :: !variables
-        | U.Type.Rigid_var _ ->
-          (* Rigid variables cannot occur as generalized variables in type schemes *)
-          assert false
-        | U.Type.Former productive_view ->
-          A.Productive_view.repr productive_view |> Former.iter ~f:loop)
+        match structure type_ with
+        | Flexible_var -> variables := type_ :: !variables
+        | Rigid_var _ -> ()
+        | Structure former -> Abbreviations_.iter ~f:loop former)
     in
     loop root;
     !variables
 
 
-  let mono_scheme type_ = { root = type_; level = get_level type_ + 1 }
+  let mono_scheme type_ = { root = type_; level = level type_ + 1 }
 
   (* When instantiating a scheme [scheme], we must traverse it's body, 
      creating new (copied) variables for each generic variable, returning 
@@ -629,7 +701,7 @@ module Make (Former : Type_former.S) = struct
      This is equivalent to the theortical notion of a "substitution". 
   *)
 
-  let instantiate state { root; level } =
+  let instantiate state { root; level = level' } =
     (* Caml.Format.printf "Instantiating: %d\n" (U.Type.id root); *)
     (* The [copied] hash table stores a mapping from graphic type nodes 
        to their related copied forms. This ensures only 1 copy per 
@@ -657,26 +729,20 @@ module Make (Former : Type_former.S) = struct
         (* Caml.Format.printf "%d is generic\n" (U.Type.id type_); *)
         try Hashtbl.find_exn copied type_ with
         | Not_found_s _ ->
+          (* We now update the structure according to the original 
+             structure of [typ].  *)
           let new_type =
-            match U.Type.get_structure type_ with
-            | U.Type.Rigid_var _ ->
-              (* Rigid variables cannot be generic. If they are, then flexization
-                has failed! *)
-              assert false
-            | U.Type.Flexible_var ->
-              (* The condition [get_level typ = level] now asserts
-                  [is_generic_at typ level], hence we need to instantiate
-                  the variable, adding it to the instance variables. 
-              *)
+            match structure type_ with
+            | Flexible_var ->
               let new_type = make_flexible_var state in
-              if get_level type_ = level
+              if level type_ = level'
               then instance_variables := new_type :: !instance_variables;
               new_type
-            | U.Type.Former productive_view ->
-              let former =
-                A.Productive_view.repr productive_view |> Former.map ~f:copy
-              in
-              make_former state former
+            | Rigid_var rigid_var -> make_rigid_var state rigid_var
+            | Structure former ->
+              make_former
+                state
+                (Abbreviations_.map ~f:copy former |> Abbreviations_.repr)
           in
           (* Set the mapping from the original node to the copied 
              node. *)
@@ -690,76 +756,14 @@ module Make (Former : Type_former.S) = struct
     !instance_variables, root
 
 
-  (* [fold_acyclic type_ ~var ~form] will perform a bottom-up fold
-     over the (assumed) acyclic graph defined by the type [type_]. *)
+  type 'a repr =
+    | Flexible_var
+    | Rigid_var of Rigid_var.t
+    | Former of 'a Former.t
 
-  let fold_acyclic
-      (type a)
-      type_
-      ~(flexible_var : U.Type.t -> a)
-      ~(rigid_var : U.Rigid_var.t -> U.Type.t -> a)
-      ~(former : a Former.t -> a)
-      : a
-    =
-    (* Hash table records whether node has been visited, and 
-     it's computed value. *)
-    let visited : (U.Type.t, a) Hashtbl.t = Hashtbl.create (module U.Type) in
-    (* Recursive loop, folding over the graph *)
-    let rec loop type_ =
-      try Hashtbl.find_exn visited type_ with
-      | Not_found_s _ ->
-        let result =
-          match U.Type.get_structure type_ with
-          | Flexible_var -> flexible_var type_
-          | Rigid_var a -> rigid_var a type_
-          | Former productive_view ->
-            former (A.Productive_view.repr productive_view |> Former.map ~f:loop)
-        in
-        (* We assume we can set [type_] in [visited] *after* traversing
-         it's children, since the graph is acyclic. *)
-        Hashtbl.set visited ~key:type_ ~data:result;
-        result
-    in
-    loop type_
-
-
-  let fold_cyclic
-      (type a)
-      type_
-      ~(flexible_var : U.Type.t -> a)
-      ~(rigid_var : U.Rigid_var.t -> U.Type.t -> a)
-      ~(former : a Former.t -> a)
-      ~(mu : U.Type.t -> a -> a)
-      : a
-    =
-    (* Hash table records the variables that are grey ([false])
-      or black ([true]). *)
-    let table = Hashtbl.create (module U.Type) in
-    (* Recursive loop that traverses the graph. *)
-    let rec loop t =
-      match U.Type.get_structure t with
-      | Flexible_var ->
-        Hashtbl.set table ~key:t ~data:true;
-        flexible_var t
-      | Rigid_var a -> 
-        Hashtbl.set table ~key:t ~data:true;
-        rigid_var a t
-      | Former productive_view ->
-        if Hashtbl.mem table t
-        then (
-          (* Mark this node as black *)
-          Hashtbl.set table ~key:t ~data:true;
-          flexible_var t)
-        else (
-          (* Mark this node as grey. *)
-          Hashtbl.set table ~key:t ~data:false;
-          (* Visit children *)
-          let result =
-            former (A.Productive_view.repr productive_view |> Former.map ~f:loop)
-          in
-          let status = Hashtbl.find_exn table t in
-          Hashtbl.remove table t;
-          if status then mu t result else result)
-    in
-    loop type_
+  let repr structure' =
+    match Ambivalent.desc Structure.(structure'.structure) with
+    | Flexible_var -> Flexible_var
+    | Rigid_var rigid_var -> Rigid_var rigid_var
+    | Structure former -> Former (Abbreviations_.repr former)
 end

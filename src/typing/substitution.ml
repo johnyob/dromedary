@@ -28,6 +28,11 @@ let of_alist alist =
 
 
 let to_alist t = Map.to_alist t
+
+let of_map t = t
+
+let to_map t = t
+
 (* 
 let of_type_vars vars =
   of_alist (List.map ~f:(fun var -> var, Constraint.fresh ()) vars) *)

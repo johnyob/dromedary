@@ -20,7 +20,7 @@ module Type_former = struct
       | Int
     [@@deriving sexp_of]
 
-    let id t = 
+    let id t =
       match t with
       | Arrow _ -> 0
       | Int -> 1
@@ -62,22 +62,10 @@ module Type_former = struct
 
   include T
   include Type_former.Make (T)
-
-  module Ctx = struct
-    type 'a t = unit [@@deriving sexp_of]
-  end
-
-  let iter2_exn ~ctx:_ = iter2_exn
-end
-
-module Metadata = struct
-  type 'a t = unit [@@deriving sexp_of]
-
-  let merge t1 _ = t1
 end
 
 module Unifier = struct
-  include Unifier (Type_former) (Metadata)
+  include Unifier (Structure.First_order (Structure.Of_former (Type_former)))
 
   module Type = struct
     include Type
@@ -89,8 +77,11 @@ module Unifier = struct
   end
 end
 
-
-let unify = Unifier.unify ~ctx:()
+let unify =
+  Unifier.unify
+  ~expansive:()  
+  ~ctx:()
+      
 
 module Type = struct
   type t =
@@ -108,12 +99,13 @@ module Type = struct
     let rec loop t =
       match t with
       | Ttyp_var x ->
-        Hashtbl.find_or_add table x ~default:(Unifier.Type.make_flexible_var)
-      | Ttyp_int -> Unifier.Type.make_former Int ()
+        Hashtbl.find_or_add table x ~default:(fun () ->
+            Unifier.Type.make Var)
+      | Ttyp_int -> Unifier.Type.make (Structure Int)
       | Ttyp_arrow (t1, t2) ->
         let t1 = loop t1 in
         let t2 = loop t2 in
-        Unifier.Type.make_former (Arrow (t1, t2)) ()
+        Unifier.Type.make (Structure (Arrow (t1, t2)))
     in
     loop t
 end
@@ -145,11 +137,11 @@ let decode_acyclic t =
   let open Type in
   Unifier.fold_acyclic
     t
-    ~flexible_var:(fun var -> Ttyp_var (Unifier.Type.id var))
-    ~rigid_var:(fun _var _ -> assert false)
-    ~former:(function
-      | Arrow (t1, t2) -> Ttyp_arrow (t1, t2)
-      | Int -> Ttyp_int)
+    ~f:(fun type_ structure ->
+      match structure with
+      | Var -> Ttyp_var (Unifier.Type.id type_)
+      | Structure (Arrow (t1, t2)) -> Ttyp_arrow (t1, t2)
+      | Structure (Int) -> Ttyp_int)
 
 
 let assume_unifiable t1 t2 =

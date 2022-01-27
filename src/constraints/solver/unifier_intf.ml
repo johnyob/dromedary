@@ -23,138 +23,51 @@
 
 open! Import
 
-(** For abstraction purposes, we wrap all data not related to unification in an 
-    abstract "metadata" type. 
-    
-    A concrete example of this metadata would be the level used in 
-    generalization. See {!generalization.mli}. 
-      
-    This abstraction forms a commutative monoid. 
-*)
-
-module Metadata = struct
-  module type S = sig
-    (** [t] is the abstract type of the metadata associated with each types. *)
-
-    type t [@@deriving sexp_of]
-
-    (** [merge] is performed when unifying two types. 
-      We assume that [merge] is associative and commutative. *)
-    val merge : t -> t -> t
-  end
-
-  module type S1 = sig
-    (** [t] is the abstract type of the metadata associated with each types. *)
-
-    type 'a t [@@deriving sexp_of]
-
-    (** [merge] is performed when unifying two types. 
-        We assume that [merge] is associative and commutative. *)
-    val merge : 'a t -> 'a t -> 'a t
-  end
-end
-
-module type Ctx = sig
-  type 'a t [@@deriving sexp_of]
-end
-
-module type Former = sig
-  type 'a t [@@deriving sexp_of]
-
-  module Ctx : Ctx
-
-  val map : 'a t -> f:('a -> 'b) -> 'b t
-  val fold : 'a t -> f:('a -> 'b -> 'b) -> init:'b -> 'b
-  val iter : 'a t -> f:('a -> unit) -> unit
-
-  exception Iter2
-
-  val iter2_exn : ctx:'a Ctx.t -> 'a t -> 'a t -> f:('a -> 'a -> unit) -> unit
-end
-
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
-  (** The type ['a former] is the type formers (with children of type ['a]), 
-      given by the functor argument [Former]. *)
-  type 'a former
+  (** The type ['a structure] is the unification structures (with children of type ['a]), 
+      given by the functor argument [Structure]. *)
+  type 'a structure
 
-  (** The type ['a ctx] is the arbitrary context used by formers. *)
-  type 'a ctx
+  (** The type [ctx] is the arbitrary unification context determined by
+      the structure's context, given by [Structure]  *)
+  type ctx
 
-  (** [metadata] is the type of metadata, given by the functor argument
-      [Metadata]. *)
-  type 'a metadata
-
-  module Rigid_var : sig
-    type t [@@deriving sexp_of, compare]
-
-    val id : t -> int
-    val hash : t -> int
-    val make : unit -> t
-  end
-
+  type 'a expansive
 
   module Type : sig
     (** [t] represents a type. See "graphical types". *)
     type t [@@deriving sexp_of, compare]
 
-    type structure =
-      | Flexible_var
-      | Rigid_var of Rigid_var.t
-      | Former of t former
-
-    type nonrec metadata = t metadata
-
     val to_dot : t -> string
+
+    (** Each graphical type node consists of:
+        - a unique identifier [id] (used to define a total ordering).
+        - a mutable [structure], which contains the node structure. *)
 
     (** [id t] returns the unique identifier of the type [t]. *)
     val id : t -> int
 
     (** [get_structure t] returns the structure of [t]. *)
-    val get_structure : t -> structure
+    val get_structure : t -> t structure
 
     (** [set_structure t structure] sets the structure of [t] to [structure]. *)
-    val set_structure : t -> structure -> unit
-
-    (** [get_metadata t] returns the metadata of [t]. *)
-    val get_metadata : t -> metadata
-
-    (** [set_metadata t metadata] sets the metadata of [t] to [metadata]. *)
-    val set_metadata : t -> metadata -> unit
+    val set_structure : t -> t structure -> unit
 
     (** [hash t] computes the hash of the graphical type [t]. 
      Based on it's integer field: id. *)
     val hash : t -> int
 
-    (** [make_var metadata] returns a fresh flexible variable with metadata [metadata]. *)
-    val make_flexible_var : metadata -> t
-
-    val make_rigid_var : Rigid_var.t -> metadata -> t
-
-    (** [make_former former metadata] returns a fresh type former
-        with metadata [metadata]. *)
-    val make_former : t former -> metadata -> t
-
-    exception Cannot_flexize of t
-
-    (** [flexize ~src ~dst] performs flexization on [src], "linking" it to [dst].
-        Raises [Cannot_flexize] if [src] is not a rigid variable. *)
-    val flexize : src:t -> dst:t -> unit
+    (** [make structure] creates a new unification type w/ structure [structure]. *)
+    val make : t structure -> t
   end
 
   (** [unify ~ctx t1 t2] equates the graphical type nodes [t1] and [t2], 
       and forms a multi-equation node.
       
-      Identifiers are merged arbitrarily.
-
-      Formers are unified recursively, using [iter2]. 
-      
-      Metadata are merged using [Metadata.merge].
-
       [Unify (t1, t2)] is raised if the two node cannot
-      be unified. This occurs with rigid variables or incompatable
-      formers. 
+      be unified. 
 
       No occurs check is implemented (this is separate from 
       unification). See {!occurs_check}. 
@@ -162,7 +75,7 @@ module type S = sig
 
   exception Unify of Type.t * Type.t
 
-  val unify : ctx:Type.t ctx -> Type.t -> Type.t -> unit
+  val unify : expansive:Type.t expansive -> ctx:ctx -> Type.t -> Type.t -> unit
 
   (** [occurs_check t] detects whether there is a cycle in 
       the graphical type [t]. 
@@ -174,35 +87,29 @@ module type S = sig
 
   val occurs_check : Type.t -> unit
 
-  (* (** [fold_acyclic type_ ~var ~former] will perform a bottom-up fold
+  (** [fold_acyclic type_ ~f] will perform a bottom-up fold
       over the (assumed) acyclic graph defined by the type [type_]. *)
-  val fold_acyclic
-    :  Type.t
-    -> var:(Type.t -> 'a)
-    -> former:('a former -> 'a)
-    -> 'a
+  val fold_acyclic : Type.t -> f:(Type.t -> 'a structure -> 'a) -> 'a
 
-  (** [fold_cyclic type_ ~var ~former ~mu] will perform a fold over
+  (** [fold_cyclic type_ ~f ~var ~mu] will perform a fold over
       the (potentially) cyclic graph defined by the type [type_]. *)
   val fold_cyclic
     :  Type.t
+    -> f:(Type.t -> 'a structure -> 'a)
     -> var:(Type.t -> 'a)
-    -> former:('a former -> 'a)
     -> mu:(Type.t -> 'a -> 'a)
-    -> 'a *)
+    -> 'a 
 end
 
 (** The interface of {unifier.ml}. *)
 
 module type Intf = sig
-  module Metadata = Metadata
-  module type Former = Former
   module type S = S
 
   (** The functor [Make]. *)
-  module Make (Former : Former) (Metadata : Metadata.S1) :
+  module Make (Structure : Structure.S) :
     S
-      with type 'a former := 'a Former.t
-       and type 'a ctx := 'a Former.Ctx.t
-       and type 'a metadata := 'a Metadata.t
+      with type 'a structure = 'a Structure.t
+       and type ctx = Structure.ctx
+       and type 'a expansive = 'a Structure.expansive
 end

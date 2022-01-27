@@ -58,7 +58,7 @@ type pattern =
       (** [c]. e.g. [1, true, ()]. *)
   | Ppat_tuple of pattern list 
       (** (P1, ..., Pn). Invariant n >= 2. *)
-  | Ppat_construct of string * pattern option 
+  | Ppat_construct of string * (string list * pattern) option 
       (** [C <P>]. *)
   | Ppat_constraint of pattern * core_type 
       (** [(P : T)]. *)

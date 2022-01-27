@@ -15,6 +15,7 @@
    Pottier's paper ??. *)
 
 open! Import
+open Structure
 
 module Make (Algebra : Algebra) = struct
   open Algebra
@@ -28,6 +29,10 @@ module Make (Algebra : Algebra) = struct
   module G = Generalization.Make (Type_former)
   module U = G.Unifier
 
+  (* Abbreviation exports *)
+
+  module Abbrev_type = G.Abbrev_type
+  module Abbrev = G.Abbrev
   module Abbreviations = G.Abbreviations
 
   (* Applicative structure used for elaboration. *)
@@ -42,7 +47,7 @@ module Make (Algebra : Algebra) = struct
     let list : type a. a t list -> a list t = fun ts () -> List.map ts ~f:run
 
     let list_append : type a. a list t -> a list t -> a list t =
-      fun ts1 ts2 () -> ts1 () @ ts2 ()
+     fun ts1 ts2 () -> ts1 () @ ts2 ()
   end
 
   (* Type reconstruction requires the notion of "decoding" the efficient graphical types
@@ -57,28 +62,34 @@ module Make (Algebra : Algebra) = struct
     (* [decode_variable var] decodes [var] into a [Type_var] using it's unique identifier. *)
     let decode_variable var =
       assert (
-        match U.Type.get_structure var with
-        | U.Type.Flexible_var -> true
+        match G.repr (U.Type.get_structure var) with
+        | G.Flexible_var -> true
         | _ -> false);
       Type_var.of_int (U.Type.id var)
 
-    let decode_rigid_variable rigid_var = 
-      Type_var.of_int (U.Rigid_var.id rigid_var)
+
+    let decode_rigid_variable (rigid_var : Rigid_var.t) =
+      Type_var.of_int (rigid_var :> int)
+
 
     (* [decode_type_acyclic type_] decodes type [type_] (known to have no cycles) into a [Type]. *)
     let decode_type_acyclic : t =
-      G.fold_acyclic
-        ~flexible_var:(fun v -> Type.var (decode_variable v))
-        ~rigid_var:(fun v _ -> Type.var (decode_rigid_variable v))
-        ~former:Type.former
+      U.fold_acyclic ~f:(fun type_ structure ->
+          match G.repr structure with
+          | G.Flexible_var -> Type.var (decode_variable type_)
+          | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
+          | G.Former former -> Type.former former)
 
 
     (* [decode_type_cyclic type_] decodes type [type_] (may contain cycles) into a [Type]. *)
     let decode_type_cyclic : t =
-      G.fold_cyclic
-        ~flexible_var:(fun v -> Type.var (decode_variable v))
-        ~rigid_var:(fun v _ -> Type.var (decode_rigid_variable v))
-        ~former:Type.former
+      U.fold_cyclic
+        ~f:(fun type_ structure ->
+          match G.repr structure with
+          | G.Flexible_var -> Type.var (decode_variable type_)
+          | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
+          | G.Former former -> Type.former former)
+        ~var:(fun type_ -> Type.var (decode_variable type_))
         ~mu:(fun v t -> Type.mu (decode_variable v) t)
 
 
@@ -87,8 +98,6 @@ module Make (Algebra : Algebra) = struct
       ( List.map (G.variables scheme) ~f:decode_variable
       , decode_type_acyclic (G.root scheme) )
   end
-
-
 
   (* State.
       
@@ -101,8 +110,8 @@ module Make (Algebra : Algebra) = struct
     ; constraint_var_env : (int, type_) Hashtbl.t
     }
 
-  and type_ = 
-    | Rigid_var of U.Rigid_var.t
+  and type_ =
+    | Rigid_var of Rigid_var.t
     | Type of U.Type.t
 
   (* [make_state ()] returns a fresh solver state. *)
@@ -114,22 +123,6 @@ module Make (Algebra : Algebra) = struct
 
   let enter state = G.enter state.generalization_state
 
-  (* [unify type1 type2] unifies [type1] and [type2], raising [Unify] is the 
-     types cannot be unified. 
-     
-     The decoded types are now supplied in the exception [Unify]. 
-  *)
-
-  exception Unify of Type.t * Type.t
-
-  let unify state type1 type2 =
-    try G.unify state.generalization_state type1 type2 with
-    | U.Unify (type1, type2) ->
-      raise
-        (Unify
-           (Decoder.decode_type_cyclic type1, Decoder.decode_type_cyclic type2))
-
-
   (* [exit state ~rigid_vars ~types] generalizes the types [types], returning
      the generalized variables and schemes. 
      
@@ -139,30 +132,42 @@ module Make (Algebra : Algebra) = struct
   exception Cycle of Type.t
   exception Rigid_variable_escape of Type_var.t
   exception Cannot_flexize of Type_var.t
+  exception Scope_escape of Type.t
 
   let exit state ~rigid_vars ~types =
     try G.exit state.generalization_state ~rigid_vars ~types with
     | U.Cycle type_ -> raise (Cycle (Decoder.decode_type_cyclic type_))
+    | G.Scope_escape type_ ->
+      raise (Scope_escape (Decoder.decode_type_cyclic type_))
     | G.Rigid_variable_escape rigid_var ->
       raise (Rigid_variable_escape (Decoder.decode_rigid_variable rigid_var))
     | G.Cannot_flexize rigid_var ->
       raise (Cannot_flexize (Decoder.decode_rigid_variable rigid_var))
-      
 
 
   (* [find state var] returns the corresponding graphical type of [var],
      mapped to by [state.constraint_var_env]. 
      
      Raises [Unbound_constraint_variable] if [var] is not in 
-     [state.constraint_var_env]. 
-  *)
+     [state.constraint_var_env]. *)
   exception Unbound_constraint_variable of C.variable
 
   let find state (var : C.variable) =
     match Hashtbl.find state.constraint_var_env (var :> int) with
     | None -> raise (Unbound_constraint_variable var)
-    | Some (Rigid_var rigid_var) -> G.make_rigid_var state.generalization_state rigid_var
+    | Some (Rigid_var rigid_var) ->
+      G.make_rigid_var state.generalization_state rigid_var
     | Some (Type type_) -> type_
+
+
+  let find_rigid state (var : C.variable) =
+    match Hashtbl.find state.constraint_var_env (var :> int) with
+    | None -> raise (Unbound_constraint_variable var)
+    | Some (Rigid_var rigid_var) -> Some rigid_var
+    | Some (Type type_) ->
+      (match G.repr (U.Type.get_structure type_) with
+      | G.Rigid_var rigid_var -> Some rigid_var
+      | _ -> None)
 
 
   (* [bind state var type_] binds [type_] to the constraint variable [var] in 
@@ -173,9 +178,8 @@ module Make (Algebra : Algebra) = struct
 
   (* [bind_flexible state (var, former_opt)] binds the flexible binding 
      (var, former_opt) in the environment. 
-     
-     Returning the graphical type mapped in the environment. 
-  *)
+       
+     Returning the graphical type mapped in the environment. *)
   let bind_flexible state (var, former_opt) =
     let type_ =
       match former_opt with
@@ -192,7 +196,7 @@ module Make (Algebra : Algebra) = struct
   (* [bind_rigid state var] binds the rigid variable [var] in the environment. 
      Returning the graphical type mapped in the environment. *)
   let bind_rigid state var =
-    let rigid_var = U.Rigid_var.make () in
+    let rigid_var = Rigid_var.make () in
     bind state var (Rigid_var rigid_var);
     rigid_var
 
@@ -222,10 +226,22 @@ module Make (Algebra : Algebra) = struct
     end
 
     type t =
-      (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
+      { term_var_env :
+          (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
+      ; equations : G.Equations.t
+      ; abbrevs : Abbreviations.t
+      }
 
-    let empty = Map.empty (module Term_var_comparator)
-    let extend t var scheme = Map.set t ~key:var ~data:scheme
+    let empty abbrevs =
+      { term_var_env = Map.empty (module Term_var_comparator)
+      ; equations = G.Equations.empty
+      ; abbrevs
+      }
+
+
+    let extend t var scheme =
+      { t with term_var_env = Map.set t.term_var_env ~key:var ~data:scheme }
+
 
     let extend_types t var_type_alist =
       List.fold_left var_type_alist ~init:t ~f:(fun t (var, type_) ->
@@ -240,10 +256,74 @@ module Make (Algebra : Algebra) = struct
     exception Unbound_term_variable of Term_var.t
 
     let find t var =
-      match Map.find t var with
+      match Map.find t.term_var_env var with
       | Some scheme -> scheme
       | None -> raise (Unbound_term_variable var)
+
+
+    let equations t = t.equations
+
+    let abbrevs t = t.abbrevs
+
+    let add_equation state t (rigid_type1, rigid_type2) =
+      { t with
+        equations =
+          G.Equations.add
+            state.generalization_state
+            t.equations
+            rigid_type1
+            rigid_type2
+      }
+
+
+    let add_equations state t equations =
+      List.fold_left equations ~init:t ~f:(fun t equation ->
+          add_equation state t equation)
   end
+
+  exception Invalid_rigid_type
+
+  let rec type_to_rigid_type state type_ : G.Rigid_type.t =
+    match type_ with
+    | C.Type.Var x ->
+      (match find_rigid state x with
+      | Some rigid_var -> G.Rigid_type.make_var rigid_var
+      | None -> raise Invalid_rigid_type)
+    | C.Type.Former former ->
+      G.Rigid_type.make_former
+        (Type_former.map former ~f:(type_to_rigid_type state))
+
+
+  exception Non_rigid_equations
+
+  let add_equations ~state ~env equations =
+    let equations =
+      try
+        List.map equations ~f:(fun (t1, t2) ->
+            type_to_rigid_type state t1, type_to_rigid_type state t2)
+      with
+      | Invalid_rigid_type -> raise Non_rigid_equations
+    in
+    Env.add_equations state env equations
+
+
+  (* [unify type1 type2] unifies [type1] and [type2], raising [Unify] is the 
+     types cannot be unified. 
+     
+     The decoded types are now supplied in the exception [Unify]. 
+  *)
+
+  exception Unify of Type.t * Type.t
+
+  let unify ~state ~env type1 type2 =
+    try
+      G.unify state.generalization_state ~ctx:(Env.equations env, Env.abbrevs env) type1 type2
+    with
+    | U.Unify (type1, type2) ->
+      raise
+        (Unify
+           (Decoder.decode_type_cyclic type1, Decoder.decode_type_cyclic type2))
+
 
   type 'a let_rec_poly_binding =
     | Polymorphic of
@@ -273,9 +353,11 @@ module Make (Algebra : Algebra) = struct
         let value = solve ~state ~env cst in
         map value ~f
       | Conj (cst1, cst2) ->
-        both (solve ~state ~env cst1) (solve ~state ~env cst2)
+        let value1 = solve ~state ~env cst1 in
+        let value2 = solve ~state ~env cst2 in
+        both value1 value2
       | Eq (a, a') ->
-        unify state (find state a) (find state a');
+        unify ~state ~env (find state a) (find state a');
         return ()
       | Exist (bindings, cst) ->
         ignore (List.map ~f:(bind_flexible state) bindings : U.Type.t list);
@@ -298,7 +380,7 @@ module Make (Algebra : Algebra) = struct
         let instance_variables, type_ =
           G.instantiate state.generalization_state scheme
         in
-        unify state (find state a) type_;
+        unify ~state ~env (find state a) type_;
         fun () -> List.map ~f:Decoder.decode_type_acyclic instance_variables
       | Let (let_bindings, cst) ->
         let term_let_bindings, env =
@@ -320,7 +402,32 @@ module Make (Algebra : Algebra) = struct
               solve ~state ~env in_)
         in
         both value (list case_values)
-      | Decode a -> fun () -> Decoder.decode_type_acyclic (find state a)
+      | Decode a ->
+        let var = find state a in
+        fun () -> Decoder.decode_type_acyclic var
+      | Implication (equations, t) ->
+        (* Enter a new scope (region) *)
+        enter state;
+        (* Add equations *)
+        let env = add_equations ~env ~state equations in
+        (* Solve [t] w/ new equations *)
+        let value = solve ~state ~env t in
+        (* Exit region *)
+        ignore
+          (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
+        value
+      | Def_poly (flexible_vars, bindings, in_) ->
+        (* Compute the type schemes for the polymorphic bindings *)
+        enter state;
+        let _flexible_vars = List.map ~f:(bind_flexible state) flexible_vars in
+        let types = List.map ~f:(fun (_, a) -> find state a) bindings in
+        let _generalizable, schemes = exit state ~rigid_vars:[] ~types in
+        (* Extend the environment *)
+        let env =
+          List.fold2_exn bindings schemes ~init:env ~f:(fun env (x, _) scheme ->
+              Env.extend env x scheme)
+        in
+        solve ~state ~env in_
 
 
   and solve_let_binding
@@ -553,25 +660,34 @@ module Make (Algebra : Algebra) = struct
     [ `Unify of Type.t * Type.t
     | `Cycle of Type.t
     | `Unbound_term_variable of Term_var.t
-    | `Unbound_constraint_variable of C.variable
+    | `Unbound_constraint_variable of Constraint.variable
     | `Rigid_variable_escape of Type_var.t
     | `Cannot_flexize of Type_var.t
+    | `Scope_escape of Type.t
+    | `Non_rigid_equations
+    | `Inconsistent_equations
     ]
 
-  let solve ~ctx cst =
+  let solve ?debug:(debug_flag = false) ~abbrevs cst =
     (* Wrap exceptions raised by solving in a [Result] type. *)
+    Logs.set_reporter reporter;
+    Logs.Src.set_level src Logs.(if debug_flag then Some Debug else Some Info);
     try
-      Ok (Elaborate.run (solve ~state:(make_state ctx) ~env:Env.empty cst))
+      Ok (Elaborate.run (solve ~state:(make_state ()) ~env:(Env.empty abbrevs) cst))
     with
     | Unify (t1, t2) -> Error (`Unify (t1, t2))
     | Cycle t -> Error (`Cycle t)
     | Rigid_variable_escape a -> Error (`Rigid_variable_escape a)
     | Cannot_flexize a -> Error (`Cannot_flexize a)
+    | Scope_escape t -> Error (`Scope_escape t)
     | Env.Unbound_term_variable x -> Error (`Unbound_term_variable x)
     | Unbound_constraint_variable a -> Error (`Unbound_constraint_variable a)
+    | Non_rigid_equations -> Error `Non_rigid_equations
+    | G.Equations.Inconsistent -> Error `Inconsistent_equations
 end
 
 module Private = struct
+  module Structure = Structure
   module Generalization = Generalization.Make
   module Unifier = Unifier.Make
   module Union_find = Union_find

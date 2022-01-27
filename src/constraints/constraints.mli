@@ -28,7 +28,6 @@ module Make (Algebra : Algebra) : sig
   (** [variable] is the for the constraint variables *)
   type variable = private int
 
-
   (** A constraint of type ['a Constraint.t] represents a constraint of
     type ['a]. 
     
@@ -122,49 +121,27 @@ module Make (Algebra : Algebra) : sig
   include Applicative.S with type 'a t := 'a t
   include Applicative.Let_syntax with type 'a t := 'a t
 
-  (** 
-   
-  *)
+  module Abbrev_type : sig
+    type t [@@deriving sexp_of, compare]
 
-  (* TODO: Create a public interface *)
+    type structure =
+      | Var
+      | Structure of t Type_former.t
+
+    val make : structure -> t
+  end
+
+  module Abbrev : sig
+    type t
+
+    val make : Abbrev_type.t Type_former.t -> Abbrev_type.t -> t
+  end
 
   module Abbreviations : sig
-    module Abbrev_type : sig
-      (** [t] represents a graphical encoding of an abbreviational type *)
-      type t [@@deriving sexp_of, compare]
+    type t
 
-      type structure =
-        | Var
-        | Former of t Type_former.t
-
-      (** [make_var ()] returns a fresh abbreviation type variable. *)
-      val make_var : unit -> t
-
-      (** [make_former former] returns a fresh abbreviation former for [former]. *)
-      val make_former : t Type_former.t -> t
-    end
-
-    module Abbreviation : sig
-      type t
-
-      val make
-        :  former:_ Type_former.t
-        -> rank:int
-        -> decomposable_positions:int list
-        -> productivity:
-             [ `Non_productive of int
-             | `Productive of Abbrev_type.t Type_former.t
-             ]
-        -> type_:Abbrev_type.t list * Abbrev_type.t Type_former.t
-        -> t
-    end
-
-    module Ctx : sig
-      type t
-
-      val empty : t
-      val add : t -> abbrev:Abbreviation.t -> t
-    end
+    val empty : t
+    val add : t -> abbrev:Abbrev.t -> t
   end
 
   module Solver : sig
@@ -179,14 +156,25 @@ module Make (Algebra : Algebra) : sig
       | `Unbound_constraint_variable of variable
       | `Rigid_variable_escape of Type_var.t
       | `Cannot_flexize of Type_var.t
+      | `Scope_escape of Type.t
+      | `Non_rigid_equations
+      | `Inconsistent_equations
       ]
 
-    val solve : ctx:Abbreviations.Ctx.t -> 'a t -> ('a, [> error ]) Result.t
+    val solve
+      :  ?debug:bool
+      -> abbrevs:Abbreviations.t
+      -> 'a t
+      -> ('a, [> error ]) Result.t
   end
 
   (** [solve t] solves the constraint [t], returning it's value 
       or an error. *)
-  val solve : ctx:Abbreviations.Ctx.t -> 'a t -> ('a, [> Solver.error ]) Result.t
+  val solve
+    :  ?debug:bool
+    -> abbrevs:Abbreviations.t
+    -> 'a t
+    -> ('a, [> Solver.error ]) Result.t
 
   (** [&~] is an infix alias for [both]. *)
   val ( &~ ) : 'a t -> 'b t -> ('a * 'b) t
@@ -230,6 +218,12 @@ module Make (Algebra : Algebra) : sig
   (** [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
   val def : bindings:def_binding list -> in_:'a t -> 'a t
 
+  val def_poly
+    :  flexible_vars:Shallow_type.binding list
+    -> bindings:binding list
+    -> in_:'a t
+    -> 'a t
+
   (** ([ |., @=>, @~> ]) are combinators designed for the infix construction
       of let and let rec bindings. *)
 
@@ -247,7 +241,7 @@ module Make (Algebra : Algebra) : sig
     :  variable list * Shallow_type.binding list * 'a t
     -> binding
     -> 'a let_rec_binding
-  
+
   val ( #~> )
     :  variable list * Shallow_type.binding list * 'a t
     -> binding
@@ -265,6 +259,8 @@ module Make (Algebra : Algebra) : sig
     :  bindings:'a let_rec_binding list
     -> in_:'b t
     -> ('a term_let_rec_binding list * 'b) t
+
+  val ( #=> ) : (Type.t * Type.t) list -> 'a t -> 'a t
 end
 
 module Private : sig

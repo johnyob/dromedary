@@ -32,7 +32,7 @@ type pattern =
   | Ppat_alias of pattern * string
   | Ppat_const of constant
   | Ppat_tuple of pattern list
-  | Ppat_construct of string * pattern option
+  | Ppat_construct of string * (string list * pattern) option
   | Ppat_constraint of pattern * core_type
 [@@deriving sexp_of]
 
@@ -146,7 +146,7 @@ let rec pp_pattern_mach ~indent ppf pat =
     Format.fprintf ppf "%sConstructor: %s@." indent constr;
     (match pat with
     | None -> ()
-    | Some pat -> pp_pattern_mach ~indent ppf pat)
+    | Some (_, pat) -> pp_pattern_mach ~indent ppf pat)
   | Ppat_constraint (pat, core_type) ->
     print "Constraint";
     pp_pattern_mach ~indent ppf pat;
@@ -372,7 +372,7 @@ let rec pp_pattern ppf pattern =
       "@[%s%a@]"
       constr
       (fun ppf -> option ~first:"@;" ~pp:pp_pattern ppf)
-      pat
+      Option.(pat >>| snd)
   | Ppat_constraint (pat, core_type) ->
     Format.fprintf ppf "@[(%a@;:@;%a)@]" pp_pattern pat pp_core_type core_type
 

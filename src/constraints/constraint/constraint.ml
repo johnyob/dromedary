@@ -117,6 +117,7 @@ module Make (Algebra : Algebra) = struct
     | Instance : Term_var.t * variable -> Types.Type.t list t (** [x <= ɑ] *)
     | Def : binding list * 'a t -> 'a t
         (** [def x1 : t1 and ... and xn : tn in C] *)
+    | Def_poly : Shallow_type.binding list * binding list * 'a t -> 'a t
     | Let : 'a let_binding list * 'b t -> ('a term_let_binding list * 'b) t
         (** [let Γ in C] *)
     | Let_rec :
@@ -126,6 +127,7 @@ module Make (Algebra : Algebra) = struct
     | Match : 'a t * 'b case list -> ('a * 'b list) t
         (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
     | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
+    | Implication : (Type.t * Type.t) list * 'a t -> 'a t
 
   and binding = Term_var.t * variable
   and def_binding = binding
@@ -169,6 +171,11 @@ module Make (Algebra : Algebra) = struct
     | Forall (vars, t) -> [%sexp Forall (vars : variable list), (t : t)]
     | Instance (x, a) -> [%sexp Instance (x : Term_var.t), (a : variable)]
     | Def (bindings, t) -> [%sexp Def (bindings : binding list), (t : t)]
+    | Def_poly (flexible_vars, bindings, t) ->
+      [%sexp
+        Def_poly (flexible_vars : Shallow_type.binding list)
+        , (bindings : binding list)
+        , (t : t)]
     | Let (let_bindings, t) ->
       [%sexp Let (let_bindings : let_binding list), (t : t)]
     | Let_rec (let_rec_bindings, t) ->
@@ -176,6 +183,8 @@ module Make (Algebra : Algebra) = struct
     | Map (t, _f) -> [%sexp Map (t : t)]
     | Match (t, cases) -> [%sexp Match (t : t), (cases : case list)]
     | Decode a -> [%sexp Decode (a : variable)]
+    | Implication (equations, t) ->
+      [%sexp Implication (equations : (Type.t * Type.t) list), (t : t)]
 
 
   and sexp_of_binding = [%sexp_of: Term_var.t * variable]
@@ -290,16 +299,21 @@ module Make (Algebra : Algebra) = struct
 
   (* [forall vars t]  binds [vars] as universally quantifier variables in [t]. *)
   let forall vars t =
-    match t with
-    | Forall (vars', t) -> Forall (vars @ vars', t)
-    | t -> Forall (vars, t)
+    match vars with
+    | [] -> t
+    | vars ->
+      (match t with
+      | Forall (vars', t) -> Forall (vars @ vars', t)
+      | t -> Forall (vars, t))
 
 
   (* [x #= a] yields the binding that binds [x] to [a]. *)
   let ( #= ) x a : binding = x, a
 
+
   (* [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
   let def ~bindings ~in_ = Def (bindings, in_)
+  let def_poly ~flexible_vars ~bindings ~in_ = Def_poly (flexible_vars, bindings, in_)
 
   (* [rvs, fvs @. in_ @=> bindings] returns the let binding, that binds 
      the rigid vars [rvs] and flexible vars [fvs] w/ the constraint [in_]
@@ -332,4 +346,9 @@ module Make (Algebra : Algebra) = struct
   (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
      constraint [in_]. *)
   let let_rec ~bindings ~in_ = Let_rec (bindings, in_)
+
+  let ( #=> ) equations t =
+    match equations with
+    | [] -> t
+    | equations -> Implication (equations, t)
 end

@@ -14,25 +14,90 @@
 (* This module implements the interfaces for generalization. *)
 
 open! Import
+open Structure
 
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
   (** The type ['a former] is the type formers (with children of type ['a]), 
       given by the functor argument [Former]. *)
-
   type 'a former
 
-  (** Generalization requires additional metadata stored in "tag". *)
+  (** The generalization module maintains several bits of mutable
+      state related to it's implemented of efficient level-based
+      generalization.
+    
+      We encapsulate this in the abstract type [state].  
+  *)
 
-  module Tag : sig
-    type t [@@deriving sexp_of]
+  type state
+
+  (** [make_state ()] creates a new empty state. *)
+  val make_state : unit -> state
+
+  (** [Rigid_type] and [Equations] are external interfaces for [Ambivalent.Rigid_type]
+      and [Equations.Ctx]. We do this to avoid exposing the notion of a scope. *)
+
+  module Rigid_type : sig
+    type t
+
+    val make_var : Rigid_var.t -> t
+    val make_former : t former -> t
   end
 
-  module Abbreviations :
-    Abbreviations.S with type 'a former := 'a former and type metadata := Tag.t
+  module Abbrev_type : sig
+    type t [@@deriving sexp_of, compare]
 
-  module Unifier = Abbreviations.Unifier
+    type structure =
+      | Var
+      | Structure of t former
+
+    val make : structure -> t
+  end
+
+  module Abbrev : sig
+    type t 
+
+    val make : Abbrev_type.t former -> Abbrev_type.t -> t
+  end
+
+  module Abbreviations : sig
+    type t
+
+    val empty : t
+    val add : t -> abbrev:Abbrev.t -> t
+  end
+
+  module Equations : sig
+    type t
+
+    val empty : t
+
+    exception Inconsistent
+
+    val add : state -> t -> Rigid_type.t -> Rigid_type.t -> t
+  end
+
+  module Unifier : Unifier.S
+  open Unifier
+
+  val unify : state -> ctx:Equations.t * Abbreviations.t -> Type.t -> Type.t -> unit
+
+  (** [make_rigid_var state rigid_var] creates rigid unification variable. *)
+  val make_rigid_var : state -> Rigid_var.t -> Type.t
+
+  (** [make_flexible_var state] creates a flexible unification variable. *)
+  val make_flexible_var : state -> Type.t
+
+  (** [make_former former] creates a unification type w/ former [former]. *)
+  val make_former : state -> Type.t former -> Type.t
+
+  type 'a repr =
+    | Flexible_var
+    | Rigid_var of Rigid_var.t
+    | Former of 'a former
+
+  val repr : 'a Unifier.structure -> 'a repr
 
   (** The type [scheme] defines the abstract notion of a scheme in 
       "graphic" types.
@@ -49,49 +114,24 @@ module type S = sig
   (** The notion of "bound" variables for a scheme is shared between
       instantiation and computing the set of generic variables,
       given a scheme. 
-  *)
+*)
 
-  type variables = Unifier.Type.t list
+  type variables = Type.t list
 
   (** [root scheme] returns the root node, or quantifier "body" of the
       scheme [scheme]. *)
-  val root : scheme -> Unifier.Type.t
+  val root : scheme -> Type.t
 
   (** [variables scheme] computes the bound variables of a scheme [scheme]. *)
   val variables : scheme -> variables
 
   (** [mono_scheme] creates a scheme with no generic variables. *)
-  val mono_scheme : Unifier.Type.t -> scheme
-
-  (** The generalization module maintains several bits of mutable
-      state related to it's implemented of efficient level-based
-      generalization.
-    
-      We encapsulate this in the abstract type [state].  
-  *)
-
-  type state
-
-  (** [make_state ()] creates a new empty state. *)
-  val make_state : Abbreviations.Ctx.t -> state
+  val mono_scheme : Type.t -> scheme
 
   (** [enter state] creates a new "stack frame" in the constraint solver
      and enters it.  *)
 
   val enter : state -> unit
-
-  (** [make_flexible_var] creates a fresh unification variable. *)
-
-  val make_flexible_var : state -> Unifier.Type.t
-
-  (** [make_rigid_var] creates a fresh rigid variable. *)
-  val make_rigid_var : state -> Unifier.Rigid_var.t -> Unifier.Type.t
-
-  (** [make_former] creates a fresh unification type node 
-      w/ the structure provided by the former. *)
-
-  val make_former : state -> Unifier.Type.t former -> Unifier.Type.t
-  val unify : state -> Unifier.Type.t -> Unifier.Type.t -> unit
 
   (** [instantiate scheme] instantates the scheme [scheme]. It does so, by
       taking fresh copies of the generic variables, without necessarily
@@ -100,39 +140,18 @@ module type S = sig
       This is designed for efficient sharing of nodes within the
       "graphic type". 
   *)
-  val instantiate : state -> scheme -> variables * Unifier.Type.t
+  val instantiate : state -> scheme -> variables * Type.t
 
-  exception Rigid_variable_escape of Unifier.Rigid_var.t
-  exception Cannot_flexize of Unifier.Rigid_var.t
+  exception Cannot_flexize of Rigid_var.t
+  exception Rigid_variable_escape of Rigid_var.t
+  exception Scope_escape of Type.t
 
   val exit
     :  state
-    -> rigid_vars:Unifier.Rigid_var.t list
-    -> types:Unifier.Type.t list
+    -> rigid_vars:Rigid_var.t list
+    -> types:Type.t list
     -> variables * scheme list
 
-  (** [fold_acyclic type_ ~var ~former] will perform a bottom-up fold
-      over the (assumed) acyclic graph defined by the type [type_].  
-  *)
-
-  val fold_acyclic
-    :  Unifier.Type.t
-    -> flexible_var:(Unifier.Type.t -> 'a)
-    -> rigid_var:(Unifier.Rigid_var.t -> Unifier.Type.t -> 'a)
-    -> former:('a former -> 'a)
-    -> 'a
-
-  (** [fold_cyclic type_ ~var ~former ~mu] will perform a fold over
-      the (potentially) cyclic graph defined by the type [type_].  
-  *)
-
-  val fold_cyclic
-    :  Unifier.Type.t
-    -> flexible_var:(Unifier.Type.t -> 'a)
-    -> rigid_var:(Unifier.Rigid_var.t -> Unifier.Type.t -> 'a)
-    -> former:('a former -> 'a)
-    -> mu:(Unifier.Type.t -> 'a -> 'a)
-    -> 'a
 end
 
 (** The interface of {generalization.ml}. *)

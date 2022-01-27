@@ -20,43 +20,27 @@ module Make (Algebra : Algebra) : sig
   module Type_former := Types.Former
   module Constraint := Constraint.Make(Algebra)
 
+  module Abbrev_type : sig
+    type t [@@deriving sexp_of, compare]
+
+    type structure =
+      | Var
+      | Structure of t Type_former.t
+
+    val make : structure -> t
+  end
+
+  module Abbrev : sig
+    type t 
+
+    val make : Abbrev_type.t Type_former.t -> Abbrev_type.t -> t
+  end
+
   module Abbreviations : sig
-    module Abbrev_type : sig
-      (** [t] represents a graphical encoding of an abbreviational type *)
-      type t [@@deriving sexp_of, compare]
+    type t
 
-      type structure =
-        | Var
-        | Former of t Type_former.t
-
-      (** [make_var ()] returns a fresh abbreviation type variable. *)
-      val make_var : unit -> t
-
-      (** [make_former former] returns a fresh abbreviation former for [former]. *)
-      val make_former : t Type_former.t -> t
-    end
-
-    module Abbreviation : sig
-      type t
-
-      val make
-        :  former:_ Type_former.t
-        -> rank:int
-        -> decomposable_positions:int list
-        -> productivity:
-             [ `Non_productive of int
-             | `Productive of Abbrev_type.t Type_former.t
-             ]
-        -> type_:Abbrev_type.t list * Abbrev_type.t Type_former.t
-        -> t
-    end
-
-    module Ctx : sig
-      type t
-
-      val empty : t
-      val add : t -> abbrev:Abbreviation.t -> t
-    end
+    val empty : t
+    val add : t -> abbrev:Abbrev.t -> t
   end
 
   (** [solve t] solves [t] and computes it's value. *)
@@ -68,24 +52,26 @@ module Make (Algebra : Algebra) : sig
     | `Unbound_constraint_variable of Constraint.variable
     | `Rigid_variable_escape of Type_var.t
     | `Cannot_flexize of Type_var.t
+    | `Scope_escape of Type.t
+    | `Non_rigid_equations
+    | `Inconsistent_equations
     ]
 
-  val solve
-    :  ctx:Abbreviations.Ctx.t
-    -> 'a Constraint.t
-    -> ('a, [> error ]) Result.t
+  val solve : ?debug:bool -> abbrevs:Abbreviations.t -> 'a Constraint.t -> ('a, [> error ]) Result.t
 end
 
 (** [Private] submodule for [expect] tests. *)
 module Private : sig
+  module Structure = Structure
+
   module Generalization (Type_former : Type_former.S) :
     Generalization.S with type 'a former := 'a Type_former.t
 
-  module Unifier (Former : Unifier.Former) (Metadata : Unifier.Metadata.S1) :
+  module Unifier (Structure : Structure.S) :
     Unifier.S
-      with type 'a former := 'a Former.t
-       and type 'a ctx := 'a Former.Ctx.t
-       and type 'a metadata := 'a Metadata.t
+      with type 'a structure = 'a Structure.t
+       and type ctx = Structure.ctx
+       and type 'a expansive = 'a Structure.expansive
 
   module Union_find : module type of Union_find
 end
