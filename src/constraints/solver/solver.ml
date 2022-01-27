@@ -160,14 +160,14 @@ module Make (Algebra : Algebra) = struct
     | Some (Type type_) -> type_
 
 
-  let find_rigid state (var : C.variable) =
+  (* let find_rigid state (var : C.variable) =
     match Hashtbl.find state.constraint_var_env (var :> int) with
     | None -> raise (Unbound_constraint_variable var)
     | Some (Rigid_var rigid_var) -> Some rigid_var
     | Some (Type type_) ->
       (match G.repr (U.Type.get_structure type_) with
       | G.Rigid_var rigid_var -> Some rigid_var
-      | _ -> None)
+      | _ -> None) *)
 
 
   (* [bind state var type_] binds [type_] to the constraint variable [var] in 
@@ -262,7 +262,6 @@ module Make (Algebra : Algebra) = struct
 
 
     let equations t = t.equations
-
     let abbrevs t = t.abbrevs
 
     let add_equation state t (rigid_type1, rigid_type2) =
@@ -282,16 +281,35 @@ module Make (Algebra : Algebra) = struct
   end
 
   exception Invalid_rigid_type
+  (* 
+  let find_rigid state (var : C.variable) =
+    match Hashtbl.find state.constraint_var_env (var :> int) with
+    | None -> raise (Unbound_constraint_variable var)
+    | Some (Rigid_var rigid_var) -> Some rigid_var
+    | Some (Type type_) ->
+      (match G.repr (U.Type.get_structure type_) with
+      | G.Rigid_var rigid_var -> Some rigid_var
+      | _ -> None) *)
 
-  let rec type_to_rigid_type state type_ : G.Rigid_type.t =
+
+  let rec utype_to_rigid_type state type_ : G.Rigid_type.t = 
+    match G.repr (U.Type.get_structure type_) with
+    | G.Rigid_var rigid_var -> G.Rigid_type.make_var rigid_var
+    | G.Former former ->
+      G.Rigid_type.make_former
+        (Type_former.map former ~f:(utype_to_rigid_type state))
+    | _ -> raise Invalid_rigid_type
+
+  let rec ctype_to_rigid_type state type_ : G.Rigid_type.t =
     match type_ with
     | C.Type.Var x ->
-      (match find_rigid state x with
-      | Some rigid_var -> G.Rigid_type.make_var rigid_var
-      | None -> raise Invalid_rigid_type)
+      (match Hashtbl.find state.constraint_var_env (x :> int) with
+      | None -> raise (Unbound_constraint_variable x)
+      | Some (Rigid_var rigid_var) -> G.Rigid_type.make_var rigid_var
+      | Some (Type type_) -> utype_to_rigid_type state type_)
     | C.Type.Former former ->
       G.Rigid_type.make_former
-        (Type_former.map former ~f:(type_to_rigid_type state))
+        (Type_former.map former ~f:(ctype_to_rigid_type state))
 
 
   exception Non_rigid_equations
@@ -300,7 +318,7 @@ module Make (Algebra : Algebra) = struct
     let equations =
       try
         List.map equations ~f:(fun (t1, t2) ->
-            type_to_rigid_type state t1, type_to_rigid_type state t2)
+            ctype_to_rigid_type state t1, ctype_to_rigid_type state t2)
       with
       | Invalid_rigid_type -> raise Non_rigid_equations
     in
@@ -317,7 +335,11 @@ module Make (Algebra : Algebra) = struct
 
   let unify ~state ~env type1 type2 =
     try
-      G.unify state.generalization_state ~ctx:(Env.equations env, Env.abbrevs env) type1 type2
+      G.unify
+        state.generalization_state
+        ~ctx:(Env.equations env, Env.abbrevs env)
+        type1
+        type2
     with
     | U.Unify (type1, type2) ->
       raise
@@ -363,6 +385,7 @@ module Make (Algebra : Algebra) = struct
         ignore (List.map ~f:(bind_flexible state) bindings : U.Type.t list);
         solve ~state ~env cst
       | Forall (vars, cst) ->
+        Log.debug (fun m -> m "Solving [Forall].");
         (* Enter a new region *)
         enter state;
         (* Introduce the rigid variables *)
@@ -406,6 +429,7 @@ module Make (Algebra : Algebra) = struct
         let var = find state a in
         fun () -> Decoder.decode_type_acyclic var
       | Implication (equations, t) ->
+        Log.debug (fun m -> m "Solving [Implication].");
         (* Enter a new scope (region) *)
         enter state;
         (* Add equations *)
@@ -417,6 +441,7 @@ module Make (Algebra : Algebra) = struct
           (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
         value
       | Def_poly (flexible_vars, bindings, in_) ->
+        Log.debug (fun m -> m "Solving [Def_poly].");
         (* Compute the type schemes for the polymorphic bindings *)
         enter state;
         let _flexible_vars = List.map ~f:(bind_flexible state) flexible_vars in
@@ -673,7 +698,9 @@ module Make (Algebra : Algebra) = struct
     Logs.set_reporter reporter;
     Logs.Src.set_level src Logs.(if debug_flag then Some Debug else Some Info);
     try
-      Ok (Elaborate.run (solve ~state:(make_state ()) ~env:(Env.empty abbrevs) cst))
+      Ok
+        (Elaborate.run
+           (solve ~state:(make_state ()) ~env:(Env.empty abbrevs) cst))
     with
     | Unify (t1, t2) -> Error (`Unify (t1, t2))
     | Cycle t -> Error (`Cycle t)
