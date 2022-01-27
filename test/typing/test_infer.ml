@@ -1661,48 +1661,39 @@ let%expect_test "solve" =
       ((Implication (((Var 349) (Var 350)))) ((Instance x) 350))))
     Constraint is true. |}]
 
-(* 
+
 let%expect_test "abbrev - morel" =
-  let abbrev_ctx =
+  let abbrevs =
     let open Types.Algebra.Type_former in
     let abbrev_k =
-      let a = Abbreviations.Type.make_var () in
-      let pair = Tuple [ a; a ] in
-      Abbreviations.Abbreviation.(
+      let a = Abbrev_type.(make Var) in
+      let pair = Abbrev_type.(make (Structure (Tuple [ a; a ]))) in
+      Abbrev.(
         make
-          ~former:(Constr ([], "K"))
-          ~rank:1
-          ~decomposable_positions:[ 0 ]
-          ~productivity:(Productive pair)
-          ~type_:([ a ], pair))
+          (Constr ([ a ], "K"))
+          pair)
     in
     let abbrev_f =
-      let a = Abbreviations.Type.make_var () in
-      let arr = Arrow (a, a) in
-      Abbreviations.Abbreviation.(
+      let a = Abbrev_type.(make Var) in
+      let arr = Abbrev_type.(make (Structure (Arrow (a, a)))) in
+      Abbrev.(
         make
-          ~former:(Constr ([], "F"))
-          ~rank:1
-          ~productivity:(Productive arr)
-          ~decomposable_positions:[ 0 ]
-          ~type_:([ a ], arr))
+          (Constr ([ a ], "F"))
+          arr)
     in
     let abbrev_g =
-      let a = Abbreviations.Type.make_var () in
-      let k = Abbreviations.Type.make_former (Constr ([ a ], "K")) in
-      let f = Constr ([ k ], "F") in
-      Abbreviations.Abbreviation.(
+      let a = Abbrev_type.(make Var) in
+      let k = Abbrev_type.(make (Structure (Constr ([ a ], "K")))) in
+      let f = Abbrev_type.(make (Structure (Constr ([ k ], "F")))) in
+      Abbrev.(
         make
-          ~former:(Constr ([], "G"))
-          ~rank:2
-          ~decomposable_positions:[ 0 ]
-          ~productivity:(Productive (Arrow (k, k)))
-          ~type_:([ a ], f))
+          (Constr ([ a ], "G"))
+          f)
     in
-    Abbreviations.Ctx.empty
-    |> Abbreviations.Ctx.add ~abbrev:abbrev_k
-    |> Abbreviations.Ctx.add ~abbrev:abbrev_f
-    |> Abbreviations.Ctx.add ~abbrev:abbrev_g
+    Abbreviations.empty
+    |> Abbreviations.add ~abbrev:abbrev_k
+    |> Abbreviations.add ~abbrev:abbrev_f
+    |> Abbreviations.add ~abbrev:abbrev_g
   in
   let exp =
     Pexp_let
@@ -1722,7 +1713,7 @@ let%expect_test "abbrev - morel" =
                   (Ppat_var "x", Ptyp_constr ([ Ptyp_var "a" ], "K"))
               , Pexp_app (Pexp_var "f", Pexp_var "x") ) ) )
   in
-  print_infer_result ~abbrev_ctx ~env:Env.empty exp;
+  print_infer_result ~abbrevs ~env:Env.empty exp;
   [%expect{|
     Variables:
     Expression:
@@ -1736,20 +1727,14 @@ let%expect_test "abbrev - morel" =
           └──Value bindings:
              └──Value binding:
                 └──Pattern:
-                   └──Type expr: Arrow
-                      └──Type expr: Constructor: K
-                         └──Type expr: Constructor: int
-                      └──Type expr: Constructor: K
-                         └──Type expr: Constructor: int
+                   └──Type expr: Constructor: G
+                      └──Type expr: Constructor: int
                    └──Desc: Variable: f
                 └──Abstraction:
                    └──Variables:
                    └──Expression:
-                      └──Type expr: Arrow
-                         └──Type expr: Constructor: K
-                            └──Type expr: Constructor: int
-                         └──Type expr: Constructor: K
-                            └──Type expr: Constructor: int
+                      └──Type expr: Constructor: G
+                         └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: K
@@ -1776,15 +1761,12 @@ let%expect_test "abbrev - morel" =
                       └──Type expr: Constructor: int
                    └──Desc: Application
                       └──Expression:
-                         └──Type expr: Arrow
-                            └──Type expr: Constructor: K
-                               └──Type expr: Constructor: int
-                            └──Type expr: Constructor: K
-                               └──Type expr: Constructor: int
+                         └──Type expr: Constructor: G
+                            └──Type expr: Constructor: int
                          └──Desc: Variable
                             └──Variable: f
                       └──Expression:
                          └──Type expr: Constructor: K
                             └──Type expr: Constructor: int
                          └──Desc: Variable
-                            └──Variable: x |}] *)
+                            └──Variable: x |}]

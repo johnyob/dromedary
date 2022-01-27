@@ -170,7 +170,7 @@ struct
       | Not_found_s _ ->
         let new_type =
           match Abbrev_type.structure type_ with
-          | Var -> assert false
+          | Var -> expansive.make_var ()
           | Structure structure ->
             expansive.make_structure (Structure.map ~f:copy structure)
         in
