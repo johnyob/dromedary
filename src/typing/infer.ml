@@ -266,10 +266,10 @@ let is_cases_generalized ~env cases : (bool, _) Result.t =
 let rec find_annotation exp =
   let open Option.Let_syntax in
   match exp with
-  | Pexp_constraint (exp, type_) -> return (exp, type_)
-  | Pexp_fun (Ppat_constraint (pat, type1), exp) ->
-    let%bind exp, type2 = find_annotation exp in
-    return (Pexp_fun (pat, exp), Ptyp_arrow (type1, type2))
+  | Pexp_constraint (_, type_) -> return (exp, type_)
+  | Pexp_fun (Ppat_constraint (_, type1), exp') ->
+    let%bind exp, type2 = find_annotation exp' in
+    return (exp, Ptyp_arrow (type1, type2))
   | _ -> None
 
 
@@ -776,6 +776,13 @@ module Expression = struct
           (let%map exp1 = exp1
            and exp2 = exp2 in
            Texp_app (exp1, exp2))
+      | Pexp_constraint (Pexp_match (match_exp, cases), exp_type') ->
+        let annotate_case case =
+          { case with pc_rhs = Pexp_constraint (case.pc_rhs, exp_type') }
+        in
+        infer_exp_desc
+          (Pexp_match (match_exp, List.map ~f:annotate_case cases))
+          exp_type
       | Pexp_constraint (exp, exp_type') ->
         let%bind exp_type' = convert_core_type exp_type' in
         let@ exp_type1 = of_type exp_type' in
