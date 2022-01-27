@@ -693,7 +693,7 @@ let%expect_test "annotation - succ" =
 
 let%expect_test "annotation - succ" =
   let exp =
-    (* exists 'a -> fun (x : 'a) -> x + 1 *)
+    (* forall 'a -> fun (x : 'a) -> x + 1 *)
     Pexp_forall
       ( [ "a" ]
       , Pexp_fun
@@ -1530,7 +1530,8 @@ let%expect_test "let rec - polymorphic recursion" =
       , Pexp_var "id" )
   in
   print_infer_result ~env exp;
-  [%expect {|
+  [%expect
+    {|
     Variables: α374
     Expression:
     └──Expression:

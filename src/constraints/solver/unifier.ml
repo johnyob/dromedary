@@ -35,30 +35,30 @@ module Make (Structure : Structure.S) = struct
 
   module Type = struct
     (* A graphical type consists of a [Union_find] node,
-       allowing reasoning w/ multi-equations of nodes. *)
+     allowing reasoning w/ multi-equations of nodes. *)
 
     type t = desc Union_find.t [@@deriving sexp_of]
 
     (* Graphical type node descriptors contain information related to the 
-       node that dominates the multi-equation.
+      node that dominates the multi-equation.
 
-       Each node contains a global unique identifier [id]. 
-       This is allocated on [fresh]. On [union], an arbitrary 
-       identifier is used from the 2 arguments. 
-       
-       We use this identifier [id] for a total ordering on nodes, often 
-       used for efficient datastructures such as [Hashtbl] or [Hash_set]. 
+      Each node contains a global unique identifier [id]. 
+      This is allocated on [fresh]. On [union], an arbitrary 
+      identifier is used from the 2 arguments. 
+      
+      We use this identifier [id] for a total ordering on nodes, often 
+      used for efficient datastructures such as [Hashtbl] or [Hash_set]. 
 
-       Each descriptor stores the node structure [structure].
-       It is either a variable or a type former (with graph type node 
-       children). 
-       
-       Each node also maintains some mutable metadata [metadata], whose
-       purpose is not related to unification. 
-       
-       Note: the only operation performed by the unifier wrt metadata is
-       the merging of metadata on unification. No further traversals / updates
-       are implemented here. 
+      Each descriptor stores the node structure [structure].
+      It is either a variable or a type former (with graph type node 
+      children). 
+      
+      Each node also maintains some mutable metadata [metadata], whose
+      purpose is not related to unification. 
+      
+      Note: the only operation performed by the unifier wrt metadata is
+      the merging of metadata on unification. No further traversals / updates
+      are implemented here. 
     *)
     and desc =
       { id : int
@@ -66,17 +66,22 @@ module Make (Structure : Structure.S) = struct
       }
     [@@deriving sexp_of]
 
+    let desc t = Union_find.find t
+
     (* [id t] returns the unique identifier of the type [t]. *)
-    let id t = (Union_find.find t).id
+    let id t = (desc t).id
 
     (* [get_structure t] returns the structure of [t]. *)
-    let get_structure t = (Union_find.find t).structure
+    let get_structure t = (desc t).structure
 
     (* [set_structure t structure] sets the structure of [t] to [structure]. *)
-    let set_structure t structure = (Union_find.find t).structure <- structure
+    let set_structure t structure =
+      let desc = desc t in
+      Union_find.set t { desc with structure }
+
 
     (* [compare t1 t2] computes the ordering of [t1, t2],
-       based on their unique identifiers. *)
+     based on their unique identifiers. *)
 
     let compare t1 t2 = Int.compare (id t1) (id t2)
 
@@ -93,7 +98,7 @@ module Make (Structure : Structure.S) = struct
 
 
     module To_dot = struct
-      type state =
+      type 'a state =
         { mutable id : int
         ; buffer : Buffer.t
         }
@@ -147,7 +152,6 @@ module Make (Structure : Structure.S) = struct
       let contents = Buffer.contents state.buffer in
       [%string "digraph {\n %{contents}}"]
   end
-
   open Type
 
   (* [unify_exn] unifies two graphical types. No exception handling is 
@@ -159,13 +163,16 @@ module Make (Structure : Structure.S) = struct
 
      See {!unify}. 
   *)
-  let rec unify_exn ~expansive ~ctx t1 t2 = Union_find.union ~f:(unify_desc ~expansive ~ctx) t1 t2
+  let rec unify_exn ~expansive ~ctx t1 t2 =
+    Union_find.union ~f:(unify_desc ~expansive ~ctx) t1 t2
+
 
   (* [unify_desc desc1 desc2] unifies the descriptors of the graph types
      (of multi-equations). *)
   and unify_desc ~expansive ~ctx desc1 desc2 =
     { id = desc1.id
-    ; structure = unify_structure ~expansive ~ctx desc1.structure desc2.structure
+    ; structure =
+        unify_structure ~expansive ~ctx desc1.structure desc2.structure
     }
 
 
@@ -186,7 +193,7 @@ module Make (Structure : Structure.S) = struct
 
   exception Cycle of Type.t
 
-  (* [occurs_check t] detects whether there is a cycle in 
+  (* [occurs_check ~ctx t] detects whether there is a cycle in 
      the graphical type [t]. 
       
      If a cycle is detected, [Cycle t] is raised. 

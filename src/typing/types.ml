@@ -51,7 +51,6 @@ module Algebra = struct
         | Tuple _ -> 1
         | Constr (_, constr) -> 2 + String.hash constr
 
-
       module Traverse (F : Applicative.S) = struct
         module Intf = struct
           module type S = sig end

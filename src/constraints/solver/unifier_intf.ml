@@ -56,14 +56,14 @@ module type S = sig
     val set_structure : t -> t structure -> unit
 
     (** [hash t] computes the hash of the graphical type [t]. 
-        Based on it's integer field: id. *)
+     Based on it's integer field: id. *)
     val hash : t -> int
 
     (** [make structure] creates a new unification type w/ structure [structure]. *)
     val make : t structure -> t
   end
 
-  (** [unify t1 t2] equates the graphical type nodes [t1] and [t2], 
+  (** [unify ~ctx t1 t2] equates the graphical type nodes [t1] and [t2], 
       and forms a multi-equation node.
       
       [Unify (t1, t2)] is raised if the two node cannot
@@ -98,7 +98,7 @@ module type S = sig
     -> f:(Type.t -> 'a structure -> 'a)
     -> var:(Type.t -> 'a)
     -> mu:(Type.t -> 'a -> 'a)
-    -> 'a
+    -> 'a 
 end
 
 (** The interface of {unifier.ml}. *)

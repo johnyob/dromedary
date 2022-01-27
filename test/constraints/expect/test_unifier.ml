@@ -39,12 +39,7 @@ module Type_former = struct
 
   include T
   include Type_former.Make (T)
-end
 
-module Metadata = struct
-  type t = unit [@@deriving sexp_of]
-
-  let merge t1 _ = t1
 end
 
 module Unifier =

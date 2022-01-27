@@ -299,7 +299,6 @@ module Make (Former : Type_former.S) = struct
     pp_current_level ppf state;
     pp_regions ppf state
 
-
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
 
   let set_region state type_ =
@@ -328,6 +327,7 @@ module Make (Former : Type_former.S) = struct
     Log.debug (fun m ->
         m "New rigid variable: %d.\n %a" (rigid_var :> int) pp_type var);
     var
+
 
 
   (* [make_former] creates a fresh unification type node 
@@ -406,6 +406,7 @@ module Make (Former : Type_former.S) = struct
     in
     fun type_ ->
       let result = Hash_set.mem young_region (U.Type.id type_) in
+      (* Caml.Format.printf "is young? %d = %b\n" (U.Type.id type_) result; *)
       result
 
 
@@ -573,6 +574,9 @@ module Make (Former : Type_former.S) = struct
      
      Once generalized, we compute the list of generalizable
      variables. 
+
+     The process of flexization, the conversion of rigid variables to
+     generic flexible variables also occurs here.
   *)
   let generalize state =
     (* Get the young region, since we will be performing several traversals
@@ -653,6 +657,12 @@ module Make (Former : Type_former.S) = struct
   type variables = U.Type.t list
 
   let root { root; _ } = root
+
+  (* Usage of abbreviations in type schemes, etc. Abbreviations are dropped in type schemes. 
+
+     This is because the representative is used to avoid additional expansions, and abbreviations
+     are typically local.
+  *)
 
   let variables { root; level } =
     (* Hash set records whether we've visited a given 

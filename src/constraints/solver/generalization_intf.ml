@@ -151,6 +151,7 @@ module type S = sig
     -> rigid_vars:Rigid_var.t list
     -> types:Type.t list
     -> variables * scheme list
+
 end
 
 (** The interface of {generalization.ml}. *)

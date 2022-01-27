@@ -147,6 +147,8 @@ module Make (Algebra : Algebra) : sig
   module Solver : sig
     module Type := Types.Type
 
+    
+
     type error =
       [ `Unify of Type.t * Type.t
       | `Cycle of Type.t
