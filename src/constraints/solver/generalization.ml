@@ -90,7 +90,8 @@ module Make (Former : Type_former.S) = struct
 
   let outermost_level = 0
 
-  module Ambivalent = Ambivalent (Structure.Of_former (Former))
+  module Abbreviations_ = Abbreviations (Of_former (Former)) (Former)
+  module Ambivalent = Ambivalent (Abbreviations_)
 
   module Structure = struct
     type 'a t =
@@ -116,17 +117,27 @@ module Make (Former : Type_former.S) = struct
     exception Cannot_merge = Ambivalent.Cannot_merge
 
     type 'a expansive = { make : 'a Ambivalent.t -> 'a }
-    type ctx = Ambivalent.Equations.Ctx.t
+    type ctx = Ambivalent.Equations.Ctx.t * Abbreviations_.Ctx.t
 
-    let merge ~expansive ~ctx ~equate t1 t2 =
+    let make_expansive expansive : _ Ambivalent.expansive =
+      { make = (fun structure -> expansive.make structure)
+      ; sexpansive =
+          { make_var = (fun () -> expansive.make Ambivalent.(make Flexible_var))
+          ; make_structure =
+              (fun structure ->
+                expansive.make
+                  Ambivalent.(make (Structure (Abbreviations_.make structure))))
+          ; sexpansive = ()
+          }
+      }
+
+
+    let merge ~expansive ~ctx:(ectx, actx) ~equate t1 t2 =
       (* assert (not (t1.is_generic || t2.is_generic)); *)
       t1.structure
         <- Ambivalent.merge
-             ~expansive:
-               { make = (fun structure -> expansive.make structure)
-               ; sexpansive = ()
-               }
-             ~ctx:(ctx, ())
+             ~expansive:(make_expansive expansive)
+             ~ctx:(ectx, (actx, ()))
              ~equate
              t1.structure
              t2.structure;
@@ -212,8 +223,14 @@ module Make (Former : Type_former.S) = struct
     type t = Ambivalent.Rigid_type.t
 
     let make_var rigid_var = Ambivalent.Rigid_type.Rigid_var rigid_var
-    let make_former former = Ambivalent.Rigid_type.Structure former
+
+    let make_former former =
+      Ambivalent.Rigid_type.Structure (Abbreviations_.make former)
   end
+
+  module Abbrev_type = Abbreviations_.Abbrev_type
+  module Abbrev = Abbreviations_.Abbrev
+  module Abbreviations = Abbreviations_.Ctx
 
   module Equations = struct
     type t = Ambivalent.Equations.Ctx.t
@@ -222,10 +239,24 @@ module Make (Former : Type_former.S) = struct
 
     exception Inconsistent = Ambivalent.Equations.Ctx.Inconsistent
 
+    let expansive : Rigid_type.t Abbreviations_.expansive =
+      { make_var = (fun () -> assert false)
+      ; make_structure = (fun _ -> assert false)
+      ; sexpansive = ()
+      }
+
+
+    (* [type ('a list) elem = 'a] 
+      
+       a = c elem
+       => c = a list
+       => 
+    *)
+
     let add state t rigid_type1 rigid_type2 =
       Ambivalent.Equations.Ctx.add
-        ~expansive:()
-        ~ctx:()
+        ~expansive
+        ~ctx:(Abbreviations.empty, ())
         t
         rigid_type1
         rigid_type2
@@ -234,7 +265,7 @@ module Make (Former : Type_former.S) = struct
 
   let pp_type_explicit ppf type_ =
     let rec pp_type_explicit type_ =
-      U.Type.get_structure type_ |> Structure.sexp_of_t pp_type_explicit
+      U.Type.get_structure type_ |>  Structure.sexp_of_t pp_type_explicit
     in
     Format.fprintf ppf "%s\n" (Sexp.to_string_hum (pp_type_explicit type_))
 
@@ -305,7 +336,9 @@ module Make (Former : Type_former.S) = struct
      It initialize the level to the current level. 
   *)
   let make_former state former =
-    let former = make state (Ambivalent.make (Structure former)) in
+    let former =
+      make state (Ambivalent.make (Structure (Abbreviations_.make former)))
+    in
     Log.debug (fun m -> m "New former:\n %a" pp_type former);
     former
 
@@ -319,7 +352,7 @@ module Make (Former : Type_former.S) = struct
     Log.debug (fun m ->
         m "Flexize: %d -> %d.\n" (U.Type.id src) (U.Type.id dst));
     set_structure src Flexible_var;
-    unify state ~ctx:Equations.empty src dst
+    unify state ~ctx:(Equations.empty, Abbreviations.empty) src dst
 
 
   (* [enter ()] creates a new stack frame and enter it. *)
@@ -506,7 +539,10 @@ module Make (Former : Type_former.S) = struct
             *)
             update_level
               type_
-              (Former.fold former ~init:outermost_level ~f:(fun type_ acc ->
+              (Abbreviations_.fold
+                 former
+                 ~init:outermost_level
+                 ~f:(fun type_ acc ->
                    loop type_ level';
                    max (level type_) acc)));
         (* Perform scope check *)
@@ -640,7 +676,7 @@ module Make (Former : Type_former.S) = struct
         match structure type_ with
         | Flexible_var -> variables := type_ :: !variables
         | Rigid_var _ -> ()
-        | Structure former -> Former.iter ~f:loop former)
+        | Structure former -> Abbreviations_.iter ~f:loop former)
     in
     loop root;
     !variables
@@ -693,7 +729,10 @@ module Make (Former : Type_former.S) = struct
               then instance_variables := new_type :: !instance_variables;
               new_type
             | Rigid_var rigid_var -> make_rigid_var state rigid_var
-            | Structure former -> make_former state (Former.map ~f:copy former)
+            | Structure former ->
+              make_former
+                state
+                (Abbreviations_.map ~f:copy former |> Abbreviations_.repr)
           in
           (* Set the mapping from the original node to the copied 
              node. *)
@@ -716,5 +755,5 @@ module Make (Former : Type_former.S) = struct
     match Ambivalent.desc Structure.(structure'.structure) with
     | Flexible_var -> Flexible_var
     | Rigid_var rigid_var -> Rigid_var rigid_var
-    | Structure former -> Former former
+    | Structure former -> Former (Abbreviations_.repr former)
 end

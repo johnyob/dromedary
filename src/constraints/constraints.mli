@@ -36,10 +36,15 @@ module Make (Algebra : Algebra) : sig
   *)
 
   type 'a t
+
   and binding = Term_var.t * variable
+
   and def_binding = binding
+
   and 'a let_binding
+
   and 'a let_rec_binding
+
   and 'a case
 
   val sexp_of_t : 'a t -> Sexp.t
@@ -116,6 +121,29 @@ module Make (Algebra : Algebra) : sig
   include Applicative.S with type 'a t := 'a t
   include Applicative.Let_syntax with type 'a t := 'a t
 
+  module Abbrev_type : sig
+    type t [@@deriving sexp_of, compare]
+
+    type structure =
+      | Var
+      | Structure of t Type_former.t
+
+    val make : structure -> t
+  end
+
+  module Abbrev : sig
+    type t
+
+    val make : Abbrev_type.t Type_former.t -> Abbrev_type.t -> t
+  end
+
+  module Abbreviations : sig
+    type t
+
+    val empty : t
+    val add : t -> abbrev:Abbrev.t -> t
+  end
+
   module Solver : sig
     module Type := Types.Type
 
@@ -131,12 +159,20 @@ module Make (Algebra : Algebra) : sig
       | `Inconsistent_equations
       ]
 
-    val solve : ?debug:bool -> 'a t -> ('a, [> error ]) Result.t
+    val solve
+      :  ?debug:bool
+      -> abbrevs:Abbreviations.t
+      -> 'a t
+      -> ('a, [> error ]) Result.t
   end
 
   (** [solve t] solves the constraint [t], returning it's value 
       or an error. *)
-  val solve : ?debug:bool -> 'a t -> ('a, [> Solver.error ]) Result.t
+  val solve
+    :  ?debug:bool
+    -> abbrevs:Abbreviations.t
+    -> 'a t
+    -> ('a, [> Solver.error ]) Result.t
 
   (** [&~] is an infix alias for [both]. *)
   val ( &~ ) : 'a t -> 'b t -> ('a * 'b) t
@@ -153,8 +189,11 @@ module Make (Algebra : Algebra) : sig
   val ( =~- ) : variable -> Type.t -> unit t
 
   type 'a bound = Type_var.t list * 'a
+
   and term_binding = Term_var.t * Types.scheme
+
   and 'a term_let_binding = term_binding list * 'a bound
+
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   (** [inst x a] is the constraint that instantiates [x] to [a].
@@ -177,7 +216,11 @@ module Make (Algebra : Algebra) : sig
   (** [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
   val def : bindings:def_binding list -> in_:'a t -> 'a t
 
-  val def_poly : flexible_vars:Shallow_type.binding list -> bindings:binding list -> in_:'a t -> 'a t
+  val def_poly
+    :  flexible_vars:Shallow_type.binding list
+    -> bindings:binding list
+    -> in_:'a t
+    -> 'a t
 
   (** ([ |., @=>, @~> ]) are combinators designed for the infix construction
       of let and let rec bindings. *)

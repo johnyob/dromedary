@@ -20,6 +20,29 @@ module Make (Algebra : Algebra) : sig
   module Type_former := Types.Former
   module Constraint := Constraint.Make(Algebra)
 
+  module Abbrev_type : sig
+    type t [@@deriving sexp_of, compare]
+
+    type structure =
+      | Var
+      | Structure of t Type_former.t
+
+    val make : structure -> t
+  end
+
+  module Abbrev : sig
+    type t 
+
+    val make : Abbrev_type.t Type_former.t -> Abbrev_type.t -> t
+  end
+
+  module Abbreviations : sig
+    type t
+
+    val empty : t
+    val add : t -> abbrev:Abbrev.t -> t
+  end
+
   (** [solve t] solves [t] and computes it's value. *)
 
   type error =
@@ -34,7 +57,7 @@ module Make (Algebra : Algebra) : sig
     | `Inconsistent_equations
     ]
 
-  val solve : ?debug:bool -> 'a Constraint.t -> ('a, [> error ]) Result.t
+  val solve : ?debug:bool -> abbrevs:Abbreviations.t -> 'a Constraint.t -> ('a, [> error ]) Result.t
 end
 
 (** [Private] submodule for [expect] tests. *)

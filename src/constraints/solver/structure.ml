@@ -119,6 +119,10 @@ struct
 
     let make abbrev_structure abbrev_type =
       let id = Id.id abbrev_structure in
+      Structure.iter abbrev_structure ~f:(fun t ->
+          match Abbrev_type.structure t with
+          | Var -> ()
+          | _ -> assert false);
       { id; abbrev = abbrev_structure, abbrev_type }
 
 
@@ -143,6 +147,8 @@ struct
 
   include Structure
 
+  type ctx = Ctx.t * Structure.ctx
+
   let actx = fst
   let sctx = snd
   let make t = t
@@ -164,7 +170,7 @@ struct
       | Not_found_s _ ->
         let new_type =
           match Abbrev_type.structure type_ with
-          | Var -> expansive.make_var ()
+          | Var -> assert false
           | Structure structure ->
             expansive.make_structure (Structure.map ~f:copy structure)
         in
@@ -174,6 +180,9 @@ struct
     let abbrev_structure = Structure.map ~f:copy abbrev_structure in
     let abbrev_type = copy abbrev_type in
     abbrev_structure, abbrev_type
+
+
+  let repr t = t
 
   let merge ~expansive ~ctx ~equate t1 t2 =
     let ( =- ) =

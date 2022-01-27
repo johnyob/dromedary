@@ -29,6 +29,12 @@ module Make (Algebra : Algebra) = struct
   module G = Generalization.Make (Type_former)
   module U = G.Unifier
 
+  (* Abbreviation exports *)
+
+  module Abbrev_type = G.Abbrev_type
+  module Abbrev = G.Abbrev
+  module Abbreviations = G.Abbreviations
+
   (* Applicative structure used for elaboration. *)
 
   module Elaborate = struct
@@ -223,11 +229,13 @@ module Make (Algebra : Algebra) = struct
       { term_var_env :
           (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
       ; equations : G.Equations.t
+      ; abbrevs : Abbreviations.t
       }
 
-    let empty =
+    let empty abbrevs =
       { term_var_env = Map.empty (module Term_var_comparator)
       ; equations = G.Equations.empty
+      ; abbrevs
       }
 
 
@@ -254,6 +262,8 @@ module Make (Algebra : Algebra) = struct
 
 
     let equations t = t.equations
+
+    let abbrevs t = t.abbrevs
 
     let add_equation state t (rigid_type1, rigid_type2) =
       { t with
@@ -307,7 +317,7 @@ module Make (Algebra : Algebra) = struct
 
   let unify ~state ~env type1 type2 =
     try
-      G.unify state.generalization_state ~ctx:(Env.equations env) type1 type2
+      G.unify state.generalization_state ~ctx:(Env.equations env, Env.abbrevs env) type1 type2
     with
     | U.Unify (type1, type2) ->
       raise
@@ -658,12 +668,12 @@ module Make (Algebra : Algebra) = struct
     | `Inconsistent_equations
     ]
 
-  let solve ?debug:(debug_flag = false) cst =
+  let solve ?debug:(debug_flag = false) ~abbrevs cst =
     (* Wrap exceptions raised by solving in a [Result] type. *)
     Logs.set_reporter reporter;
     Logs.Src.set_level src Logs.(if debug_flag then Some Debug else Some Info);
     try
-      Ok (Elaborate.run (solve ~state:(make_state ()) ~env:Env.empty cst))
+      Ok (Elaborate.run (solve ~state:(make_state ()) ~env:(Env.empty abbrevs) cst))
     with
     | Unify (t1, t2) -> Error (`Unify (t1, t2))
     | Cycle t -> Error (`Cycle t)

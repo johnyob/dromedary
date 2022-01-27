@@ -39,10 +39,33 @@ module type S = sig
       and [Equations.Ctx]. We do this to avoid exposing the notion of a scope. *)
 
   module Rigid_type : sig
-    type t 
+    type t
 
     val make_var : Rigid_var.t -> t
     val make_former : t former -> t
+  end
+
+  module Abbrev_type : sig
+    type t [@@deriving sexp_of, compare]
+
+    type structure =
+      | Var
+      | Structure of t former
+
+    val make : structure -> t
+  end
+
+  module Abbrev : sig
+    type t 
+
+    val make : Abbrev_type.t former -> Abbrev_type.t -> t
+  end
+
+  module Abbreviations : sig
+    type t
+
+    val empty : t
+    val add : t -> abbrev:Abbrev.t -> t
   end
 
   module Equations : sig
@@ -55,10 +78,10 @@ module type S = sig
     val add : state -> t -> Rigid_type.t -> Rigid_type.t -> t
   end
 
-  module Unifier : Unifier.S 
+  module Unifier : Unifier.S
   open Unifier
 
-  val unify : state -> ctx:Equations.t -> Type.t -> Type.t -> unit
+  val unify : state -> ctx:Equations.t * Abbreviations.t -> Type.t -> Type.t -> unit
 
   (** [make_rigid_var state rigid_var] creates rigid unification variable. *)
   val make_rigid_var : state -> Rigid_var.t -> Type.t
@@ -69,7 +92,7 @@ module type S = sig
   (** [make_former former] creates a unification type w/ former [former]. *)
   val make_former : state -> Type.t former -> Type.t
 
-  type 'a repr = 
+  type 'a repr =
     | Flexible_var
     | Rigid_var of Rigid_var.t
     | Former of 'a former

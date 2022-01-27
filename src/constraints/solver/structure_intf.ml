@@ -125,6 +125,8 @@ module type Intf = sig
 
     val make : 'a S.t -> 'a t
 
+    val repr : 'a t -> 'a S.t
+
     type 'a expansive =
       { make_structure : 'a S.t -> 'a
       ; make_var : unit -> 'a
@@ -134,7 +136,7 @@ module type Intf = sig
     include
       S
         with type 'a t := 'a t
-         and type ctx := Ctx.t * S.ctx
+         and type ctx = Ctx.t * S.ctx
          and type 'a expansive := 'a expansive
   end
 

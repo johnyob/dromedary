@@ -3,6 +3,7 @@ open Parsetree
 open Ast_types
 open Types
 module Constraint = Typing.Import.Constraint
+open Constraint
 
 let print_constraint_result ~env exp =
   let t = Infer.Expression.infer exp |> Computation.Expression.run ~env in
@@ -14,15 +15,15 @@ let print_constraint_result ~env exp =
   output |> Sexp.to_string_hum |> print_endline
 
 
-let print_solve_result cst =
+let print_solve_result ?(abbrevs = Abbreviations.empty) cst =
   Constraint.sexp_of_t cst |> Sexp.to_string_hum |> print_endline;
-  match Infer.solve cst with
+  match Infer.solve ~abbrevs cst with
   | Ok _ -> Format.fprintf Format.std_formatter "Constraint is true.\n"
   | Error err -> Sexp.to_string_hum err |> print_endline
 
 
-let print_infer_result ~env exp =
-  let texp = Infer.infer ~env exp in
+let print_infer_result ~env ?(abbrevs = Abbreviations.empty) exp =
+  let texp = Infer.infer ~env ~abbrevs exp in
   match texp with
   | Ok (variables, texp) ->
     let ppf = Format.std_formatter in

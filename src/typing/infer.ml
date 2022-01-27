@@ -1049,8 +1049,8 @@ let let_0 ~in_ =
   | _ -> assert false
 
 
-let solve cst =
-  solve cst
+let solve ~abbrevs cst =
+  solve ~abbrevs cst
   |> Result.map_error ~f:(function
          | `Unify (type_expr1, type_expr2) ->
            [%message
@@ -1081,10 +1081,10 @@ let solve cst =
          | `Non_rigid_equations -> [%message "Non rigid equations"])
 
 
-let infer exp ~env:env' =
+let infer exp ~env:env' ~abbrevs =
   let open Result.Let_syntax in
   let%bind exp =
     let exp = Expression.infer exp in
     Computation.Expression.(run ~env:env' (exp >>| fun in_ -> let_0 ~in_))
   in
-  solve exp
+  solve ~abbrevs exp
