@@ -15,9 +15,9 @@ let print_constraint_result ~env exp =
   output |> Sexp.to_string_hum |> print_endline
 
 
-let print_solve_result ?(abbrevs = Abbreviations.empty) cst =
+let print_solve_result ?(debug = false) ?(abbrevs = Abbreviations.empty) cst =
   Constraint.sexp_of_t cst |> Sexp.to_string_hum |> print_endline;
-  match Infer.solve ~abbrevs cst with
+  match Infer.solve ~debug ~abbrevs cst with
   | Ok _ -> Format.fprintf Format.std_formatter "Constraint is true.\n"
   | Error err -> Sexp.to_string_hum err |> print_endline
 
@@ -1609,6 +1609,570 @@ let add_eq env =
     }
 
 
+let%expect_test "ambiv-f" =
+  let env = add_eq Env.empty in
+  let exp =
+    Pexp_let
+      ( Nonrecursive
+      , [ { pvb_forall_vars = [ "a" ]
+          ; pvb_pat = Ppat_var "f"
+          ; pvb_expr =
+              Pexp_fun
+                ( Ppat_constraint
+                    ( Ppat_var "x"
+                    , Ptyp_constr
+                        ([ Ptyp_var "a"; Ptyp_constr ([], "int") ], "eq") )
+                , Pexp_match
+                    ( Pexp_var "x"
+                    , [ { pc_lhs = Ppat_construct ("Refl", None)
+                        ; pc_rhs = Pexp_const (Const_int 1)
+                        }
+                      ] ) )
+          }
+        ]
+      , Pexp_const Const_unit )
+  in
+  (* print_constraint_result ~env exp; *)
+  print_infer_result ~env exp;
+  [%expect
+    {|
+    Variables:
+    Expression:
+    └──Expression:
+       └──Type expr: Constructor: unit
+       └──Desc: Let
+          └──Value bindings:
+             └──Value binding:
+                └──Pattern:
+                   └──Type expr: Arrow
+                      └──Type expr: Constructor: eq
+                         └──Type expr: Variable: α388
+                         └──Type expr: Constructor: int
+                      └──Type expr: Constructor: int
+                   └──Desc: Variable: f
+                └──Abstraction:
+                   └──Variables: α388
+                   └──Expression:
+                      └──Type expr: Arrow
+                         └──Type expr: Constructor: eq
+                            └──Type expr: Variable: α388
+                            └──Type expr: Constructor: int
+                         └──Type expr: Constructor: int
+                      └──Desc: Function
+                         └──Pattern:
+                            └──Type expr: Constructor: eq
+                               └──Type expr: Variable: α388
+                               └──Type expr: Constructor: int
+                            └──Desc: Variable: x
+                         └──Expression:
+                            └──Type expr: Constructor: int
+                            └──Desc: Match
+                               └──Expression:
+                                  └──Type expr: Constructor: eq
+                                     └──Type expr: Variable: α388
+                                     └──Type expr: Constructor: int
+                                  └──Desc: Variable
+                                     └──Variable: x
+                               └──Type expr: Constructor: eq
+                                  └──Type expr: Variable: α388
+                                  └──Type expr: Constructor: int
+                               └──Cases:
+                                  └──Case:
+                                     └──Pattern:
+                                        └──Type expr: Constructor: eq
+                                           └──Type expr: Variable: α388
+                                           └──Type expr: Constructor: int
+                                        └──Desc: Construct
+                                           └──Constructor description:
+                                              └──Name: Refl
+                                              └──Constructor type:
+                                                 └──Type expr: Constructor: eq
+                                                    └──Type expr: Variable: α388
+                                                    └──Type expr: Constructor: int
+                                     └──Expression:
+                                        └──Type expr: Constructor: int
+                                        └──Desc: Constant: 1
+          └──Expression:
+             └──Type expr: Constructor: unit
+             └──Desc: Constant: () |}]
+
+let%expect_test "ambiv-f1" =
+  let env = add_eq Env.empty in
+  let exp =
+    Pexp_let
+      ( Nonrecursive
+      , [ { pvb_forall_vars = [ "a" ]
+          ; pvb_pat = Ppat_var "f1"
+          ; pvb_expr =
+              Pexp_fun
+                ( Ppat_constraint
+                    ( Ppat_var "x"
+                    , Ptyp_constr
+                        ([ Ptyp_var "a"; Ptyp_constr ([], "int") ], "eq") )
+                , Pexp_match
+                    ( Pexp_var "x"
+                    , [ { pc_lhs = Ppat_construct ("Refl", None)
+                        ; pc_rhs = Pexp_const (Const_bool true)
+                        }
+                      ] ) )
+          }
+        ]
+      , Pexp_const Const_unit )
+  in
+  (* print_constraint_result ~env exp; *)
+  print_infer_result ~env exp;
+  [%expect
+    {|
+    Variables:
+    Expression:
+    └──Expression:
+       └──Type expr: Constructor: unit
+       └──Desc: Let
+          └──Value bindings:
+             └──Value binding:
+                └──Pattern:
+                   └──Type expr: Arrow
+                      └──Type expr: Constructor: eq
+                         └──Type expr: Variable: α408
+                         └──Type expr: Constructor: int
+                      └──Type expr: Constructor: bool
+                   └──Desc: Variable: f1
+                └──Abstraction:
+                   └──Variables: α408
+                   └──Expression:
+                      └──Type expr: Arrow
+                         └──Type expr: Constructor: eq
+                            └──Type expr: Variable: α408
+                            └──Type expr: Constructor: int
+                         └──Type expr: Constructor: bool
+                      └──Desc: Function
+                         └──Pattern:
+                            └──Type expr: Constructor: eq
+                               └──Type expr: Variable: α408
+                               └──Type expr: Constructor: int
+                            └──Desc: Variable: x
+                         └──Expression:
+                            └──Type expr: Constructor: bool
+                            └──Desc: Match
+                               └──Expression:
+                                  └──Type expr: Constructor: eq
+                                     └──Type expr: Variable: α408
+                                     └──Type expr: Constructor: int
+                                  └──Desc: Variable
+                                     └──Variable: x
+                               └──Type expr: Constructor: eq
+                                  └──Type expr: Variable: α408
+                                  └──Type expr: Constructor: int
+                               └──Cases:
+                                  └──Case:
+                                     └──Pattern:
+                                        └──Type expr: Constructor: eq
+                                           └──Type expr: Variable: α408
+                                           └──Type expr: Constructor: int
+                                        └──Desc: Construct
+                                           └──Constructor description:
+                                              └──Name: Refl
+                                              └──Constructor type:
+                                                 └──Type expr: Constructor: eq
+                                                    └──Type expr: Variable: α408
+                                                    └──Type expr: Constructor: int
+                                     └──Expression:
+                                        └──Type expr: Constructor: bool
+                                        └──Desc: Constant: true
+          └──Expression:
+             └──Type expr: Constructor: unit
+             └──Desc: Constant: () |}]
+
+let%expect_test "ambiv-f2" =
+  let env = add_eq Env.empty in
+  let exp =
+    Pexp_let
+      ( Nonrecursive
+      , [ { pvb_forall_vars = [ "a" ]
+          ; pvb_pat = Ppat_var "f2"
+          ; pvb_expr =
+              Pexp_fun
+                ( Ppat_constraint
+                    ( Ppat_var "x"
+                    , Ptyp_constr
+                        ([ Ptyp_var "a"; Ptyp_constr ([], "int") ], "eq") )
+                , Pexp_fun
+                    ( Ppat_constraint (Ppat_var "y", Ptyp_var "a")
+                    , Pexp_match
+                        ( Pexp_var "x"
+                        , [ { pc_lhs = Ppat_construct ("Refl", None)
+                            ; pc_rhs =
+                                Pexp_app
+                                  ( Pexp_app (Pexp_prim Prim_eq, Pexp_var "y")
+                                  , Pexp_const (Const_int 0) )
+                            }
+                          ] ) ) )
+          }
+        ]
+      , Pexp_const Const_unit )
+  in
+  (* print_constraint_result ~env exp; *)
+  print_infer_result ~env exp;
+  [%expect
+    {|
+    Variables:
+    Expression:
+    └──Expression:
+       └──Type expr: Constructor: unit
+       └──Desc: Let
+          └──Value bindings:
+             └──Value binding:
+                └──Pattern:
+                   └──Type expr: Arrow
+                      └──Type expr: Constructor: eq
+                         └──Type expr: Variable: α421
+                         └──Type expr: Constructor: int
+                      └──Type expr: Arrow
+                         └──Type expr: Variable: α421
+                         └──Type expr: Constructor: bool
+                   └──Desc: Variable: f2
+                └──Abstraction:
+                   └──Variables: α421
+                   └──Expression:
+                      └──Type expr: Arrow
+                         └──Type expr: Constructor: eq
+                            └──Type expr: Variable: α421
+                            └──Type expr: Constructor: int
+                         └──Type expr: Arrow
+                            └──Type expr: Variable: α421
+                            └──Type expr: Constructor: bool
+                      └──Desc: Function
+                         └──Pattern:
+                            └──Type expr: Constructor: eq
+                               └──Type expr: Variable: α421
+                               └──Type expr: Constructor: int
+                            └──Desc: Variable: x
+                         └──Expression:
+                            └──Type expr: Arrow
+                               └──Type expr: Variable: α421
+                               └──Type expr: Constructor: bool
+                            └──Desc: Function
+                               └──Pattern:
+                                  └──Type expr: Variable: α421
+                                  └──Desc: Variable: y
+                               └──Expression:
+                                  └──Type expr: Constructor: bool
+                                  └──Desc: Match
+                                     └──Expression:
+                                        └──Type expr: Constructor: eq
+                                           └──Type expr: Variable: α421
+                                           └──Type expr: Constructor: int
+                                        └──Desc: Variable
+                                           └──Variable: x
+                                     └──Type expr: Constructor: eq
+                                        └──Type expr: Variable: α421
+                                        └──Type expr: Constructor: int
+                                     └──Cases:
+                                        └──Case:
+                                           └──Pattern:
+                                              └──Type expr: Constructor: eq
+                                                 └──Type expr: Variable: α421
+                                                 └──Type expr: Constructor: int
+                                              └──Desc: Construct
+                                                 └──Constructor description:
+                                                    └──Name: Refl
+                                                    └──Constructor type:
+                                                       └──Type expr: Constructor: eq
+                                                          └──Type expr: Variable: α421
+                                                          └──Type expr: Constructor: int
+                                           └──Expression:
+                                              └──Type expr: Constructor: bool
+                                              └──Desc: Application
+                                                 └──Expression:
+                                                    └──Type expr: Arrow
+                                                       └──Type expr: Constructor: int
+                                                       └──Type expr: Constructor: bool
+                                                    └──Desc: Application
+                                                       └──Expression:
+                                                          └──Type expr: Arrow
+                                                             └──Type expr: Variable: α421
+                                                             └──Type expr: Arrow
+                                                                └──Type expr: Constructor: int
+                                                                └──Type expr: Constructor: bool
+                                                          └──Desc: Primitive: (=)
+                                                       └──Expression:
+                                                          └──Type expr: Variable: α421
+                                                          └──Desc: Variable
+                                                             └──Variable: y
+                                                 └──Expression:
+                                                    └──Type expr: Constructor: int
+                                                    └──Desc: Constant: 0
+          └──Expression:
+             └──Type expr: Constructor: unit
+             └──Desc: Constant: () |}]
+
+let%expect_test "ambiv-g" =
+  let env = add_eq Env.empty in
+  let exp =
+    Pexp_let
+      ( Nonrecursive
+      , [ { pvb_forall_vars = [ "a" ]
+          ; pvb_pat = Ppat_var "g"
+          ; pvb_expr =
+              Pexp_fun
+                ( Ppat_constraint
+                    ( Ppat_var "x"
+                    , Ptyp_constr
+                        ([ Ptyp_var "a"; Ptyp_constr ([], "int") ], "eq") )
+                , Pexp_fun
+                    ( Ppat_constraint (Ppat_var "y", Ptyp_var "a")
+                    , Pexp_constraint
+                        ( Pexp_match
+                            ( Pexp_var "x"
+                            , [ { pc_lhs = Ppat_construct ("Refl", None)
+                                ; pc_rhs =
+                                    Pexp_ifthenelse
+                                      ( Pexp_app
+                                          ( Pexp_app
+                                              (Pexp_prim Prim_eq, Pexp_var "y")
+                                          , Pexp_const (Const_int 0) )
+                                      , Pexp_var "y"
+                                      , Pexp_const (Const_int 0) )
+                                }
+                              ] )
+                        , Ptyp_var "a" ) ) )
+          }
+        ]
+      , Pexp_const Const_unit )
+  in
+  (* print_constraint_result ~env exp; *)
+  print_infer_result ~env exp;
+  [%expect
+    {|
+      Variables:
+      Expression:
+      └──Expression:
+         └──Type expr: Constructor: unit
+         └──Desc: Let
+            └──Value bindings:
+               └──Value binding:
+                  └──Pattern:
+                     └──Type expr: Arrow
+                        └──Type expr: Constructor: eq
+                           └──Type expr: Variable: α487
+                           └──Type expr: Constructor: int
+                        └──Type expr: Arrow
+                           └──Type expr: Variable: α487
+                           └──Type expr: Variable: α487
+                     └──Desc: Variable: g
+                  └──Abstraction:
+                     └──Variables: α487
+                     └──Expression:
+                        └──Type expr: Arrow
+                           └──Type expr: Constructor: eq
+                              └──Type expr: Variable: α487
+                              └──Type expr: Constructor: int
+                           └──Type expr: Arrow
+                              └──Type expr: Variable: α487
+                              └──Type expr: Variable: α487
+                        └──Desc: Function
+                           └──Pattern:
+                              └──Type expr: Constructor: eq
+                                 └──Type expr: Variable: α487
+                                 └──Type expr: Constructor: int
+                              └──Desc: Variable: x
+                           └──Expression:
+                              └──Type expr: Arrow
+                                 └──Type expr: Variable: α487
+                                 └──Type expr: Variable: α487
+                              └──Desc: Function
+                                 └──Pattern:
+                                    └──Type expr: Variable: α487
+                                    └──Desc: Variable: y
+                                 └──Expression:
+                                    └──Type expr: Variable: α487
+                                    └──Desc: Match
+                                       └──Expression:
+                                          └──Type expr: Constructor: eq
+                                             └──Type expr: Variable: α487
+                                             └──Type expr: Constructor: int
+                                          └──Desc: Variable
+                                             └──Variable: x
+                                       └──Type expr: Constructor: eq
+                                          └──Type expr: Variable: α487
+                                          └──Type expr: Constructor: int
+                                       └──Cases:
+                                          └──Case:
+                                             └──Pattern:
+                                                └──Type expr: Constructor: eq
+                                                   └──Type expr: Variable: α487
+                                                   └──Type expr: Constructor: int
+                                                └──Desc: Construct
+                                                   └──Constructor description:
+                                                      └──Name: Refl
+                                                      └──Constructor type:
+                                                         └──Type expr: Constructor: eq
+                                                            └──Type expr: Variable: α487
+                                                            └──Type expr: Constructor: int
+                                             └──Expression:
+                                                └──Type expr: Variable: α487
+                                                └──Desc: If
+                                                   └──Expression:
+                                                      └──Type expr: Constructor: bool
+                                                      └──Desc: Application
+                                                         └──Expression:
+                                                            └──Type expr: Arrow
+                                                               └──Type expr: Constructor: int
+                                                               └──Type expr: Constructor: bool
+                                                            └──Desc: Application
+                                                               └──Expression:
+                                                                  └──Type expr: Arrow
+                                                                     └──Type expr: Variable: α487
+                                                                     └──Type expr: Arrow
+                                                                        └──Type expr: Constructor: int
+                                                                        └──Type expr: Constructor: bool
+                                                                  └──Desc: Primitive: (=)
+                                                               └──Expression:
+                                                                  └──Type expr: Variable: α487
+                                                                  └──Desc: Variable
+                                                                     └──Variable: y
+                                                         └──Expression:
+                                                            └──Type expr: Constructor: int
+                                                            └──Desc: Constant: 0
+                                                   └──Expression:
+                                                      └──Type expr: Variable: α487
+                                                      └──Desc: Variable
+                                                         └──Variable: y
+                                                   └──Expression:
+                                                      └──Type expr: Variable: α487
+                                                      └──Desc: Constant: 0
+            └──Expression:
+               └──Type expr: Constructor: unit
+               └──Desc: Constant: () |}]
+
+let%expect_test "ambiv-p" =
+  let env = add_eq Env.empty in
+  let exp =
+    Pexp_let
+      ( Nonrecursive
+      , [ { pvb_forall_vars = [ "a" ]
+          ; pvb_pat = Ppat_var "f"
+          ; pvb_expr =
+              Pexp_fun
+                ( Ppat_constraint
+                    ( Ppat_var "x"
+                    , Ptyp_constr
+                        ([ Ptyp_var "a"; Ptyp_constr ([], "int") ], "eq") )
+                , Pexp_let
+                    ( Nonrecursive
+                    , [ { pvb_forall_vars = []
+                        ; pvb_pat = Ppat_var "y"
+                        ; pvb_expr =
+                            Pexp_match
+                              ( Pexp_var "x"
+                              , [ { pc_lhs = Ppat_construct ("Refl", None)
+                                  ; pc_rhs = Pexp_const (Const_int 1)
+                                  }
+                                ] )
+                        }
+                      ]
+                    , Pexp_app
+                        ( Pexp_app (Pexp_prim Prim_mul, Pexp_var "y")
+                        , Pexp_const (Const_int 2) ) ) )
+          }
+        ]
+      , Pexp_const Const_unit )
+  in
+  (* print_constraint_result ~env exp; *)
+  print_infer_result ~env exp;
+  [%expect {|
+    Variables:
+    Expression:
+    └──Expression:
+       └──Type expr: Constructor: unit
+       └──Desc: Let
+          └──Value bindings:
+             └──Value binding:
+                └──Pattern:
+                   └──Type expr: Arrow
+                      └──Type expr: Constructor: eq
+                         └──Type expr: Variable: α503
+                         └──Type expr: Constructor: int
+                      └──Type expr: Constructor: int
+                   └──Desc: Variable: f
+                └──Abstraction:
+                   └──Variables: α503
+                   └──Expression:
+                      └──Type expr: Arrow
+                         └──Type expr: Constructor: eq
+                            └──Type expr: Variable: α503
+                            └──Type expr: Constructor: int
+                         └──Type expr: Constructor: int
+                      └──Desc: Function
+                         └──Pattern:
+                            └──Type expr: Constructor: eq
+                               └──Type expr: Variable: α503
+                               └──Type expr: Constructor: int
+                            └──Desc: Variable: x
+                         └──Expression:
+                            └──Type expr: Constructor: int
+                            └──Desc: Let
+                               └──Value bindings:
+                                  └──Value binding:
+                                     └──Pattern:
+                                        └──Type expr: Constructor: int
+                                        └──Desc: Variable: y
+                                     └──Abstraction:
+                                        └──Variables:
+                                        └──Expression:
+                                           └──Type expr: Constructor: int
+                                           └──Desc: Match
+                                              └──Expression:
+                                                 └──Type expr: Constructor: eq
+                                                    └──Type expr: Variable: α503
+                                                    └──Type expr: Constructor: int
+                                                 └──Desc: Variable
+                                                    └──Variable: x
+                                              └──Type expr: Constructor: eq
+                                                 └──Type expr: Variable: α503
+                                                 └──Type expr: Constructor: int
+                                              └──Cases:
+                                                 └──Case:
+                                                    └──Pattern:
+                                                       └──Type expr: Constructor: eq
+                                                          └──Type expr: Variable: α503
+                                                          └──Type expr: Constructor: int
+                                                       └──Desc: Construct
+                                                          └──Constructor description:
+                                                             └──Name: Refl
+                                                             └──Constructor type:
+                                                                └──Type expr: Constructor: eq
+                                                                   └──Type expr: Variable: α503
+                                                                   └──Type expr: Constructor: int
+                                                    └──Expression:
+                                                       └──Type expr: Constructor: int
+                                                       └──Desc: Constant: 1
+                               └──Expression:
+                                  └──Type expr: Constructor: int
+                                  └──Desc: Application
+                                     └──Expression:
+                                        └──Type expr: Arrow
+                                           └──Type expr: Constructor: int
+                                           └──Type expr: Constructor: int
+                                        └──Desc: Application
+                                           └──Expression:
+                                              └──Type expr: Arrow
+                                                 └──Type expr: Constructor: int
+                                                 └──Type expr: Arrow
+                                                    └──Type expr: Constructor: int
+                                                    └──Type expr: Constructor: int
+                                              └──Desc: Primitive: (*)
+                                           └──Expression:
+                                              └──Type expr: Constructor: int
+                                              └──Desc: Variable
+                                                 └──Variable: y
+                                     └──Expression:
+                                        └──Type expr: Constructor: int
+                                        └──Desc: Constant: 2
+          └──Expression:
+             └──Type expr: Constructor: unit
+             └──Desc: Constant: () |}]
+
 let%expect_test "coerce" =
   (* let (type a b) coerce eq (x : a) = match (eq : (a, b) eq) with Refl -> (x : b) in () *)
   let env = add_eq Env.empty in
@@ -1651,72 +2215,72 @@ let%expect_test "coerce" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: α392
-                         └──Type expr: Variable: α385
+                         └──Type expr: Variable: α538
+                         └──Type expr: Variable: α552
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: α392
+                            └──Type expr: Variable: α538
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: α385
+                            └──Type expr: Variable: α552
                    └──Desc: Variable: coerce
                 └──Abstraction:
-                   └──Variables: α392,α385
+                   └──Variables: α538,α552
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: α392
-                            └──Type expr: Variable: α385
+                            └──Type expr: Variable: α538
+                            └──Type expr: Variable: α552
                          └──Type expr: Arrow
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: α392
+                               └──Type expr: Variable: α538
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: α385
+                               └──Type expr: Variable: α552
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: α392
-                               └──Type expr: Variable: α385
+                               └──Type expr: Variable: α538
+                               └──Type expr: Variable: α552
                             └──Desc: Variable: eq
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: α392
+                                  └──Type expr: Variable: α538
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: α385
+                                  └──Type expr: Variable: α552
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: α392
+                                     └──Type expr: Variable: α538
                                   └──Desc: Variable: x
                                └──Expression:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: α385
+                                     └──Type expr: Variable: α552
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: eq
-                                           └──Type expr: Variable: α392
-                                           └──Type expr: Variable: α385
+                                           └──Type expr: Variable: α538
+                                           └──Type expr: Variable: α552
                                         └──Desc: Variable
                                            └──Variable: eq
                                      └──Type expr: Constructor: eq
-                                        └──Type expr: Variable: α392
-                                        └──Type expr: Variable: α385
+                                        └──Type expr: Variable: α538
+                                        └──Type expr: Variable: α552
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: eq
-                                                 └──Type expr: Variable: α392
-                                                 └──Type expr: Variable: α385
+                                                 └──Type expr: Variable: α538
+                                                 └──Type expr: Variable: α552
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Refl
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: eq
-                                                          └──Type expr: Variable: α392
-                                                          └──Type expr: Variable: α385
+                                                          └──Type expr: Variable: α538
+                                                          └──Type expr: Variable: α552
                                            └──Expression:
                                               └──Type expr: Constructor: t
-                                                 └──Type expr: Variable: α385
+                                                 └──Type expr: Variable: α552
                                               └──Desc: Variable
                                                  └──Variable: x
           └──Expression:
@@ -1738,9 +2302,52 @@ let%expect_test "solve" =
   print_solve_result cst;
   [%expect
     {|
-    ((Forall (364 365))
-     ((Def_poly ()) ((x 364))
-      ((Implication (((Var 364) (Var 365)))) ((Instance x) 365))))
+    ((Forall (481 482))
+     ((Def_poly ()) ((x 481))
+      ((Implication (((Var 481) (Var 482)))) ((Instance x) 482))))
+    Constraint is true. |}]
+
+let%expect_test "solve-1" =
+  let open Constraint in
+  let open Algebra.Type_former in
+  let cst =
+    let a1 = fresh () in
+    let a2 = fresh () in
+    let a3 = fresh () in
+    forall
+      [ a1 ]
+      (def_poly
+         ~flexible_vars:
+           [ a2, Some (Constr ([], "int"))
+           ; a3, Some (Constr ([ a1; a2 ], "eq"))
+           ]
+         ~bindings:[ "x" #= a3 ]
+         ~in_:
+           (let a4 = fresh () in
+            let a5 = fresh () in
+            let a6 = fresh () in
+            let a7 = fresh () in
+            exists
+              [ a4, None ]
+              (inst "x" a4
+              &~ exists
+                   [ a5, None
+                   ; a6, Some (Constr ([], "int"))
+                   ; a7, Some (Constr ([ a5; a6 ], "eq"))
+                   ]
+                   (a4 =~ a7 &~ [ Var a5, Var a6 ] #=> (return ())))))
+  in
+  print_solve_result cst;
+  [%expect
+    {|
+    ((Forall (483))
+     ((Def_poly ((484 ((Constr () int))) (485 ((Constr (483 484) eq)))))
+      ((x 485))
+      ((Exist ((486 ())))
+       ((Conj ((Instance x) 486))
+        ((Exist ((487 ()) (488 ((Constr () int))) (489 ((Constr (487 488) eq)))))
+         ((Conj ((Eq 486) 489))
+          ((Implication (((Var 487) (Var 488)))) (Map True))))))))
     Constraint is true. |}]
 
 let%expect_test "abbrev - morel" =

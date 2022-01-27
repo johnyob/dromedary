@@ -360,6 +360,7 @@ module Make (Former : Type_former.S) = struct
   let enter state =
     state.current_level <- state.current_level + 1;
     Log.debug (fun m -> m "Entering level: %d.\n" state.current_level);
+    Log.debug (fun m -> m "State:\n%a" pp_state state);
     Vec.push (Hash_set.create (module U.Type)) state.regions
 
 
