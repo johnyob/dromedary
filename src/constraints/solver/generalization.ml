@@ -265,7 +265,7 @@ module Make (Former : Type_former.S) = struct
 
   let pp_type_explicit ppf type_ =
     let rec pp_type_explicit type_ =
-      U.Type.get_structure type_ |>  Structure.sexp_of_t pp_type_explicit
+      U.Type.get_structure type_ |> Structure.sexp_of_t pp_type_explicit
     in
     Format.fprintf ppf "%s\n" (Sexp.to_string_hum (pp_type_explicit type_))
 
@@ -299,6 +299,7 @@ module Make (Former : Type_former.S) = struct
     pp_current_level ppf state;
     pp_regions ppf state
 
+
   (* [set_region type_] adds [type_] to it's region (defined by [type_]'s level). *)
 
   let set_region state type_ =
@@ -327,7 +328,6 @@ module Make (Former : Type_former.S) = struct
     Log.debug (fun m ->
         m "New rigid variable: %d.\n %a" (rigid_var :> int) pp_type var);
     var
-
 
 
   (* [make_former] creates a fresh unification type node 
@@ -521,7 +521,7 @@ module Make (Former : Type_former.S) = struct
         (* If a node is old, then we stop traversing (hence the [is_young] check). *)
         if is_young type_
         then (
-          match structure type_ with
+          (match structure type_ with
           | Flexible_var | Rigid_var _ ->
             (* In the variable case, we cannot traverse any further
               and no updates need be performed (since the level update)
@@ -539,24 +539,26 @@ module Make (Former : Type_former.S) = struct
               Thus we take the [max] of children with [outermost_level]
               being our unit element. 
             *)
-            update_level
+            (* update_level
               type_
               (Abbreviations_.fold
                  former
                  ~init:outermost_level
                  ~f:(fun type_ acc ->
                    loop type_ level';
-                   max (level type_) acc)));
-        (* Perform scope check *)
-        if level type_ < scope type_
-        then (
-          Log.debug (fun m ->
-              m
-                "Scope escape: id=%d, level=%d, scope=%d\n"
-                (U.Type.id type_)
-                (level type_)
-                (scope type_));
-          raise (Scope_escape type_)))
+                   max (level type_) acc))); *)
+            (* Modified to prevent formers not being generalized (required for ambivalence) *)
+            Abbreviations_.iter former ~f:(fun type_ -> loop type_ level'));
+          (* Perform scope check *)
+          if level type_ < scope type_
+          then (
+            Log.debug (fun m ->
+                m
+                  "Scope escape: id=%d, level=%d, scope=%d\n"
+                  (U.Type.id type_)
+                  (level type_)
+                  (scope type_));
+            raise (Scope_escape type_))))
     in
     Array.iter ~f:(fun type_ -> loop type_ (level type_)) young_region
 
@@ -610,8 +612,6 @@ module Make (Former : Type_former.S) = struct
              | _ -> false)
       |> Hash_set.to_list
     in
-    (* Clear the young region now *)
-    Hash_set.clear region;
     generalizable
 
 
@@ -635,15 +635,17 @@ module Make (Former : Type_former.S) = struct
     (* Flexize the variable *)
     let rigid_vars =
       List.map rigid_vars ~f:(fun rigid_var ->
-          match Hashtbl.find state.rigid_vars rigid_var with
+          let var = make_flexible_var state in
+          (match Hashtbl.find state.rigid_vars rigid_var with
           | Some rigid_vars ->
-            let var = make_flexible_var state in
             Hash_set.iter rigid_vars ~f:(fun x -> flexize state x var);
-            Hashtbl.remove state.rigid_vars rigid_var;
-            generalize_type var;
-            var
-          | None -> raise (Rigid_variable_escape rigid_var))
+            Hashtbl.remove state.rigid_vars rigid_var
+          | None -> ());
+          generalize_type var;
+          var)
     in
+    (* Clear the young region now *)
+    Hash_set.clear (young_region state);
     (* Helper function for constructing a new type scheme *)
     let make_scheme =
       let level = state.current_level in

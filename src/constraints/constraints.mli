@@ -235,6 +235,7 @@ module Make (Algebra : Algebra) : sig
   val ( @=> )
     :  variable list * Shallow_type.binding list * 'a t
     -> binding list
+    -> (Type.t * Type.t) list
     -> 'a let_binding
 
   val ( @~> )

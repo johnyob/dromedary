@@ -169,7 +169,6 @@ module Make (Algebra : Algebra) = struct
       | G.Rigid_var rigid_var -> Some rigid_var
       | _ -> None) *)
 
-
   (* [bind state var type_] binds [type_] to the constraint variable [var] in 
      the environment. *)
   let bind state (var : C.variable) type_ =
@@ -291,14 +290,14 @@ module Make (Algebra : Algebra) = struct
       | G.Rigid_var rigid_var -> Some rigid_var
       | _ -> None) *)
 
-
-  let rec utype_to_rigid_type state type_ : G.Rigid_type.t = 
+  let rec utype_to_rigid_type state type_ : G.Rigid_type.t =
     match G.repr (U.Type.get_structure type_) with
     | G.Rigid_var rigid_var -> G.Rigid_type.make_var rigid_var
     | G.Former former ->
       G.Rigid_type.make_former
         (Type_former.map former ~f:(utype_to_rigid_type state))
     | _ -> raise Invalid_rigid_type
+
 
   let rec ctype_to_rigid_type state type_ : G.Rigid_type.t =
     match type_ with
@@ -379,9 +378,11 @@ module Make (Algebra : Algebra) = struct
         let value2 = solve ~state ~env cst2 in
         both value1 value2
       | Eq (a, a') ->
+        Log.debug (fun m -> m "Solving [Eq].");
         unify ~state ~env (find state a) (find state a');
         return ()
       | Exist (bindings, cst) ->
+        Log.debug (fun m -> m "Solving [Exist].");
         ignore (List.map ~f:(bind_flexible state) bindings : U.Type.t list);
         solve ~state ~env cst
       | Forall (vars, cst) ->
@@ -396,9 +397,11 @@ module Make (Algebra : Algebra) = struct
         ignore (exit state ~rigid_vars ~types:[] : G.variables * G.scheme list);
         value
       | Def (bindings, in_) ->
+        Log.debug (fun m -> m "Solving [Def].");
         let env = Env.extend_bindings state env bindings in
         solve ~state ~env in_
       | Instance (x, a) ->
+        Log.debug (fun m -> m "Solving [Instance].");
         let scheme = Env.find env x in
         let instance_variables, type_ =
           G.instantiate state.generalization_state scheme
@@ -406,12 +409,18 @@ module Make (Algebra : Algebra) = struct
         unify ~state ~env (find state a) type_;
         fun () -> List.map ~f:Decoder.decode_type_acyclic instance_variables
       | Let (let_bindings, cst) ->
-        let term_let_bindings, env =
+        Log.debug (fun m -> m "Solving [Let]");
+        let term_let_bindings, env, equations =
           solve_let_bindings ~state ~env let_bindings
         in
+        enter state;
+        let env = Env.add_equations state env equations in
         let value = solve ~state ~env cst in
+        ignore
+          (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
         both term_let_bindings value
       | Let_rec (let_rec_bindings, cst) ->
+        Log.debug (fun m -> m "Solving [Let_rec]");
         let term_let_rec_bindings, env =
           solve_let_rec_bindings ~state ~env let_rec_bindings
         in
@@ -460,9 +469,13 @@ module Make (Algebra : Algebra) = struct
         state:state
         -> env:Env.t
         -> a Constraint.let_binding
-        -> a Constraint.term_let_binding Elaborate.t * Env.t
+        -> a Constraint.term_let_binding Elaborate.t
+           * Env.t
+           * (G.Rigid_type.t * G.Rigid_type.t) list
     =
-   fun ~state ~env (Let_binding { rigid_vars; flexible_vars; bindings; in_ }) ->
+   fun ~state
+       ~env
+       (Let_binding { rigid_vars; flexible_vars; bindings; in_; equations }) ->
     (* Enter a new region *)
     G.enter state.generalization_state;
     (* Initialize fresh flexible and rigid variables *)
@@ -472,6 +485,14 @@ module Make (Algebra : Algebra) = struct
     let types = List.map bindings ~f:(fun (_, a) -> find state a) in
     (* Solve the constraint of the let binding *)
     let value = solve ~state ~env in_ in
+    (* Convert equations to rigid equations. *)
+    let equations =
+      try
+        List.map equations ~f:(fun (t1, t2) ->
+            ctype_to_rigid_type state t1, ctype_to_rigid_type state t2)
+      with
+      | Invalid_rigid_type -> raise Non_rigid_equations
+    in
     (* Generalize and exit *)
     let generalizable, schemes = exit state ~rigid_vars ~types in
     (* Extend environment *)
@@ -486,7 +507,8 @@ module Make (Algebra : Algebra) = struct
     ( (fun () ->
         ( List.map ~f:(fun (var, sch) -> var, Decoder.decode_scheme sch) bindings
         , (List.map ~f:Decoder.decode_variable generalizable, value ()) ))
-    , env )
+    , env
+    , equations )
 
 
   and solve_let_bindings
@@ -494,20 +516,22 @@ module Make (Algebra : Algebra) = struct
         state:state
         -> env:Env.t
         -> a Constraint.let_binding list
-        -> a Constraint.term_let_binding list Elaborate.t * Env.t
+        -> a Constraint.term_let_binding list Elaborate.t
+           * Env.t
+           * (G.Rigid_type.t * G.Rigid_type.t) list
     =
    fun ~state ~env let_bindings ->
-    let term_let_bindings, env =
+    let term_let_bindings, env, equations =
       List.fold_right
         let_bindings
-        ~f:(fun let_binding (term_let_bindings, env) ->
-          let term_let_binding, env =
+        ~f:(fun let_binding (term_let_bindings, env, equations) ->
+          let term_let_binding, env, equations' =
             solve_let_binding ~state ~env let_binding
           in
-          term_let_binding :: term_let_bindings, env)
-        ~init:([], env)
+          term_let_binding :: term_let_bindings, env, equations' @ equations)
+        ~init:([], env, [])
     in
-    Elaborate.list term_let_bindings, env
+    Elaborate.list term_let_bindings, env, equations
 
 
   and solve_let_rec_poly_bindings
@@ -524,6 +548,7 @@ module Make (Algebra : Algebra) = struct
     let open Constraint in
     (* Usage of continuation k is for an arbitrary context, used for the monomorphic bindings *)
     fun ~state ~env let_rec_poly_bindings ~k ->
+      Log.debug (fun m -> m "Computing polymorphic bindings of [Let_rec_poly]");
       (* Compute the type schemes for the polymorphic bindings *)
       let schemes =
         List.map
@@ -558,8 +583,11 @@ module Make (Algebra : Algebra) = struct
           ~f:(fun (env, bindings) (Polymorphic { binding = x, _; _ }) scheme ->
             Env.extend env x scheme, (x, scheme) :: bindings)
       in
+      Log.debug (fun m -> m "Solving [Let_rec_mono] bindings");
       let term_let_mono_bindings, env = k ~state ~env in
       (* We now assert the constraints in the polymorphic bindings *)
+      Log.debug (fun m ->
+          m "Checking [Let_rec_poly] bindings are correctly annotated.");
       let values =
         List.map
           let_rec_poly_bindings

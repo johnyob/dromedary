@@ -148,6 +148,7 @@ module Make (Algebra : Algebra) : sig
         ; flexible_vars : Shallow_type.binding list
         ; bindings : binding list
         ; in_ : 'a t
+        ; equations : (Type.t * Type.t) list
         }
 
   and 'a let_rec_binding =
@@ -234,6 +235,7 @@ module Make (Algebra : Algebra) : sig
   val ( @=> )
     :  variable list * Shallow_type.binding list * 'a t
     -> binding list
+    -> (Type.t * Type.t) list
     -> 'a let_binding
 
   val ( @~> )
