@@ -138,6 +138,7 @@ module Make (Algebra : Algebra) = struct
         ; flexible_vars : Shallow_type.binding list
         ; bindings : binding list
         ; in_ : 'a t
+        ; equations : (Type.t * Type.t) list
         }
 
   and 'a let_rec_binding =
@@ -190,12 +191,13 @@ module Make (Algebra : Algebra) = struct
   and sexp_of_binding = [%sexp_of: Term_var.t * variable]
 
   and sexp_of_let_binding : type a. a let_binding -> Sexp.t =
-   fun (Let_binding { rigid_vars; flexible_vars; bindings; in_ }) ->
+   fun (Let_binding { rigid_vars; flexible_vars; bindings; in_; equations }) ->
     [%sexp
       Let_binding (rigid_vars : variable list)
       , (flexible_vars : Shallow_type.binding list)
       , (bindings : binding list)
-      , (in_ : t)]
+      , (in_ : t)
+      , (equations : (Type.t * Type.t) list)]
 
 
   and sexp_of_let_rec_binding : type a. a let_rec_binding -> Sexp.t =
@@ -324,8 +326,8 @@ module Make (Algebra : Algebra) = struct
   *)
   let ( @. ) (rigid_vars, flexible_vars) in_ = rigid_vars, flexible_vars, in_
 
-  let ( @=> ) (rigid_vars, flexible_vars, in_) bindings =
-    Let_binding { rigid_vars; flexible_vars; bindings; in_ }
+  let ( @=> ) (rigid_vars, flexible_vars, in_) bindings equations =
+    Let_binding { rigid_vars; flexible_vars; bindings; in_; equations }
 
 
   (* [let_ ~bindings ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
