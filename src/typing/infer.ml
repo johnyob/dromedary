@@ -266,10 +266,10 @@ let is_cases_generalized ~env cases : (bool, _) Result.t =
 let rec find_annotation exp =
   let open Option.Let_syntax in
   match exp with
-  | Pexp_constraint (_, type_) -> return (exp, type_)
+  | Pexp_constraint (_, type_) -> return type_
   | Pexp_fun (Ppat_constraint (_, type1), exp') ->
-    let%bind exp, type2 = find_annotation exp' in
-    return (exp, Ptyp_arrow (type1, type2))
+    let%bind type2 = find_annotation exp' in
+    return (Ptyp_arrow (type1, type2))
   | _ -> None
 
 
@@ -285,8 +285,8 @@ let rec annotation_of_value_binding
       ; pvb_expr = Pexp_constraint (value_binding.pvb_expr, type_)
       }
   | _ ->
-    let%map exp, core_type = find_annotation exp in
-    { value_binding with pvb_expr = exp }, core_type
+    let%map core_type = find_annotation exp in
+    value_binding, core_type
 
 
 let annotation_of_rec_value_binding value_binding
@@ -472,17 +472,21 @@ module Pattern = struct
            and arg_pat = arg_pat in
            Tpat_construct (constr_desc, arg_pat))
       | Ppat_constraint (pat, pat_type') ->
-        annotation (fun () ->
-            let@ pat_type' =
-              let open Binder.Let_syntax in
-              let& pat_type' = convert_core_type pat_type' in
-              of_type pat_type'
-            in
-            let%bind pat_desc = infer_pat_desc pat pat_type' in
-            return
-              (let%map () = pat_type =~ pat_type'
-               and pat_desc = pat_desc in
-               pat_desc))
+        let@ pat_type1 =
+          let open Binder.Let_syntax in
+          let& pat_type' = convert_core_type pat_type' in
+          of_type pat_type'
+        in
+        let@ pat_type2 =
+          let open Binder.Let_syntax in
+          let& pat_type' = convert_core_type pat_type' in
+          of_type pat_type'
+        in
+        let%bind pat_desc = infer_pat_desc pat pat_type2 in
+        return
+          (let%map () = pat_type =~ pat_type1
+           and pat_desc = pat_desc in
+           pat_desc)
     and infer_pats pats
         : (variable list * Typedtree.pattern list Constraint.t) Binder.t
       =
@@ -659,12 +663,11 @@ module Expression = struct
 
 
   let infer_pat pat pat_type
-      : (binding list
+      : (Shallow_type.binding list
+        * binding list
         * Typedtree.pattern Constraint.t
         * (Constraint.Type.t * Constraint.Type.t) list
-        * Substitution.t
-        * Shallow_type.binding list
-        * binding list)
+        * Substitution.t)
       Binder.t
     =
     let open Binder.Let_syntax in
@@ -675,29 +678,13 @@ module Expression = struct
         , existential_bindings
         , local_constraint
         , term_bindings
-        , substitution
-        , poly_flexible_vars
-        , poly_term_bindings )
+        , substitution )
       =
       Fragment.to_bindings fragment
     in
-    (* List.iter existential_bindings ~f:(fun (var, binding) ->
-        Format.printf "Variable: %d@." (var :> int);
-        Format.printf
-          "Binding: %s@."
-          ([%sexp (binding : Shallow_type.t option)] |> Sexp.to_string_hum));
-    List.iter term_bindings ~f:(fun (term_var, var) ->
-        Format.printf "Term Variable: %s@." term_var;
-        Format.printf "Bound Variable: %d@." (var :> int)); *)
     let%bind () = forall_vars universal_bindings in
-    let%bind () = exists_bindings existential_bindings in
     return
-      ( term_bindings
-      , pat
-      , local_constraint
-      , substitution
-      , poly_flexible_vars
-      , poly_term_bindings )
+      (existential_bindings, term_bindings, pat, local_constraint, substitution)
 
 
   let make_exp_desc_forall vars var exp_desc exp_type =
@@ -706,7 +693,9 @@ module Expression = struct
     let%map term_let_bindings, _ =
       let_
         ~bindings:
-          [ ((vars, [ var, None ]) @. exp_desc) @=> [ internal_name #= var ] ]
+          [ (((vars, [ var, None ]) @. exp_desc) @=> [ internal_name #= var ])
+              []
+          ]
         ~in_:(inst internal_name exp_type)
     in
     match term_let_bindings with
@@ -744,28 +733,25 @@ module Expression = struct
       | Pexp_fun (pat, exp) ->
         let@ var1 = exists () in
         let@ var2 = exists () in
-        let@ ( bindings
-             , pat
-             , local_constraint
-             , substitution
-             , poly_flexible_vars
-             , poly_bindings )
+        let@ existential_bindings, bindings, pat, local_constraint, substitution
           =
           infer_pat pat var1
         in
         let%bind exp = extend_substitution ~substitution (infer_exp exp var2) in
         return
           (let%map () = exp_type =~= var1 @-> var2
-           and pat = pat
-           and exp =
-             local_constraint
-             #=> (def
-                    ~bindings
-                    ~in_:
-                      (def_poly
-                         ~flexible_vars:poly_flexible_vars
-                         ~bindings:poly_bindings
-                         ~in_:exp))
+           and pats, exp =
+             let_
+               ~bindings:
+                 [ ((([], existential_bindings) @. pat) @=> bindings)
+                     local_constraint
+                 ]
+               ~in_:exp
+           in
+           let pat =
+             match pats with
+             | [ (_, (_, pat)) ] -> pat
+             | _ -> assert false
            in
            Texp_fun (pat, exp))
       | Pexp_app (exp1, exp2) ->
@@ -912,12 +898,11 @@ module Expression = struct
       let open Computation.Let_syntax in
       let%bind cases =
         List.map cases ~f:(fun { pc_lhs; pc_rhs } ->
-            let@ ( bindings
+            let@ ( existential_bindings
+                 , bindings
                  , pat
                  , local_constraint
-                 , substitution
-                 , poly_flexible_vars
-                 , poly_bindings )
+                 , substitution )
               =
               infer_pat pc_lhs lhs_type
             in
@@ -925,18 +910,20 @@ module Expression = struct
               extend_substitution ~substitution (infer_exp pc_rhs rhs_type)
             in
             return
-              (let%map tc_lhs = pat
-               and tc_rhs =
-                 local_constraint
-                 #=> (def
-                        ~bindings
-                        ~in_:
-                          (def_poly
-                             ~flexible_vars:poly_flexible_vars
-                             ~bindings:poly_bindings
-                             ~in_:exp))
+              (let%map pats, exp =
+                 let_
+                   ~bindings:
+                     [ ((([], existential_bindings) @. pat) @=> bindings)
+                         local_constraint
+                     ]
+                   ~in_:exp
                in
-               { tc_lhs; tc_rhs }))
+               let pat =
+                 match pats with
+                 | [ (_, (_, pat)) ] -> pat
+                 | _ -> assert false
+               in
+               { tc_lhs = pat; tc_rhs = exp }))
         |> all
       in
       return (Constraint.all cases)
@@ -977,28 +964,18 @@ module Expression = struct
               , existential_bindings
               , local_constraint
               , bindings
-              , _substitution
-              , poly_flexible_vars
-              , poly_bindings )
+              , _substitution )
             =
             Fragment.to_bindings fragment
           in
+          (* Temporary: TODO: Figure out how to merge universals w/ new lets. *)
+          assert (List.is_empty universal_bindings);
           let%bind exp = infer_exp exp var in
-          if not
-               (List.is_empty universal_bindings
-               && List.is_empty local_constraint)
-          then
-            fail
-              [%message
-                "Let binding contains local constraints or existential \
-                 variables."]
-          else
-            return
-              ((( forall_vars
-                , ((var, None) :: existential_bindings) @ poly_flexible_vars )
-               @. (pat &~ exp))
-              @=> bindings
-              @ poly_bindings))
+          return
+            ((((forall_vars, (var, None) :: existential_bindings)
+              @. (pat &~ exp))
+             @=> bindings)
+               local_constraint))
         ~message:(fun var ->
           [%message
             "Duplicate variable in universal quantifier (let)"
@@ -1050,7 +1027,7 @@ module Expression = struct
 end
 
 let let_0 ~in_ =
-  let_ ~bindings:[ (([], []) @. in_) @=> [] ] ~in_:(return ())
+  let_ ~bindings:[ ((([], []) @. in_) @=> []) [] ] ~in_:(return ())
   >>| function
   | [ ([], (vars, t)) ], _ -> vars, t
   | _ -> assert false

@@ -197,9 +197,6 @@ module Fragment = struct
     ; local_constraint : (Type.t * Type.t) list
     ; substitution :
         (String.t, Constraint.variable, String.comparator_witness) Map.t
-    ; poly_flexible_vars : Shallow_type.binding list
-    ; poly_term_bindings :
-        (String.t, Constraint.variable, String.comparator_witness) Map.t
     }
 
   let empty =
@@ -208,8 +205,6 @@ module Fragment = struct
     ; term_bindings = Map.empty (module String)
     ; local_constraint = []
     ; substitution = Map.empty (module String)
-    ; poly_flexible_vars = []
-    ; poly_term_bindings = Map.empty (module String)
     }
 
 
@@ -236,21 +231,12 @@ module Fragment = struct
           t2.substitution
           ~combine:(fun ~key _ _ -> raise (Duplicate_type_var key))
       in
-      let poly_flexible_vars = t1.poly_flexible_vars @ t2.poly_flexible_vars in
-      let poly_term_bindings = 
-        Map.merge_skewed
-          t1.poly_term_bindings
-          t2.poly_term_bindings
-          ~combine:(fun ~key _ _ -> raise (Duplicate_term_var key))
-      in
       Ok
         { universal_variables
         ; existential_bindings
         ; term_bindings
         ; local_constraint
         ; substitution
-        ; poly_flexible_vars
-        ; poly_term_bindings
         }
     with
     | Duplicate_term_var term_var -> Error (`Duplicate_term_var term_var)
@@ -270,9 +256,7 @@ module Fragment = struct
     , t.existential_bindings
     , t.local_constraint
     , t.term_bindings |> Map.to_alist |> List.map ~f:(fun (x, a) -> x #= a)
-    , Substitution.of_map t.substitution
-    , t.poly_flexible_vars
-    , t.poly_term_bindings |> Map.to_alist |> List.map ~f:(fun (x, a) -> x #= a) )
+    , Substitution.of_map t.substitution )
 end
 
 module Pattern = struct
@@ -317,17 +301,6 @@ module Pattern = struct
   let extend_substitution t ~substitution input =
     t (Input.extend_substitution input ~substitution)
 
-
-  let annotation f : _ t = 
-    fun input ->
-      match (f () : _ t) input with
-      | Ok (fragment, x) ->
-        let fragment = { fragment with term_bindings = Map.empty (module String) } in
-        let (fragment', _) = f () input |> Result.ok |> Option.value_exn in
-        let fragment = { fragment with poly_flexible_vars = fragment'.existential_bindings; poly_term_bindings = fragment'.term_bindings } in
-        Ok (fragment, x)
-
-      | Error error -> Error error
 
   let write fragment : unit t = fun _input -> Ok (fragment, ())
   let extend x a = write (Fragment.of_term_binding x a)
