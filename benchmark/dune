@@ -1,0 +1,4 @@
+(executable
+ (public_name dromedary)
+ (name benchmark)
+ (libraries core core_bench core_unix.command_unix dromedary))
