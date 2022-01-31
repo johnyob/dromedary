@@ -18,7 +18,6 @@ open Types
 (** Abstract syntax tree after typing *)
 
 type 'a instance = 'a * type_expr list [@@deriving sexp_of]
-
 and 'a abstraction = string list * 'a [@@deriving sexp_of]
 
 type pattern =
@@ -56,6 +55,10 @@ and expression_desc =
   | Texp_tuple of expression list
   | Texp_match of expression * type_expr * case list
   | Texp_ifthenelse of expression * expression * expression
+  | Texp_try of expression * case list
+  | Texp_sequence of expression * expression
+  | Texp_while of expression * expression
+  | Texp_for of string * expression * expression * direction_flag * expression
 [@@deriving sexp_of]
 
 and value_binding =
@@ -169,6 +172,30 @@ and pp_expression_desc_mach ~indent ppf exp_desc =
     pp_expression_mach ~indent ppf exp1;
     pp_expression_mach ~indent ppf exp2;
     pp_expression_mach ~indent ppf exp3
+  | Texp_try (exp, cases) ->
+    print "Try";
+    pp_expression_mach ~indent ppf exp;
+    Format.fprintf ppf "%sCases:@." indent;
+    List.iter ~f:(pp_case_mach ~indent:(indent_space ^ indent) ppf) cases
+  | Texp_sequence (exp1, exp2) ->
+    print "Sequence";
+    pp_expression_mach ~indent ppf exp1;
+    pp_expression_mach ~indent ppf exp2
+  | Texp_while (exp1, exp2) ->
+    print "While";
+    pp_expression_mach ~indent ppf exp1;
+    pp_expression_mach ~indent ppf exp2
+  | Texp_for (index, exp1, exp2, direction_flag, exp3) ->
+    print "For";
+    Format.fprintf ppf "%sIndex: %s@." indent index;
+    pp_expression_mach ~indent ppf exp1;
+    Format.fprintf
+      ppf
+      "%sDirection: %s@."
+      indent
+      (string_of_direction_flag direction_flag);
+    pp_expression_mach ~indent ppf exp2;
+    pp_expression_mach ~indent ppf exp3
 
 
 and pp_value_bindings_mach ~indent ppf value_bindings =
@@ -185,7 +212,11 @@ and pp_label_exp_mach ~indent ppf (label_desc, exp) =
 and pp_abstraction_mach ~indent ~pp ppf (variables, t) =
   Format.fprintf ppf "%sAbstraction:@." indent;
   let indent = indent_space ^ indent in
-  Format.fprintf ppf "%sVariables: %s@." indent (String.concat ~sep:"," variables);
+  Format.fprintf
+    ppf
+    "%sVariables: %s@."
+    indent
+    (String.concat ~sep:"," variables);
   pp ~indent ppf t
 
 
