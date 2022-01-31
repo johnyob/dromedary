@@ -481,12 +481,12 @@ module Make (Algebra : Algebra) = struct
     =
    fun ~state
        ~env
-       (Let_binding { rigid_vars; flexible_vars; bindings; in_; equations }) ->
+       (Let_binding { rigid_vars; flexible_vars; is_non_expansive; bindings; in_; equations }) ->
     (* Enter a new region *)
-    G.enter state.generalization_state;
+    if is_non_expansive then G.enter state.generalization_state;
     (* Initialize fresh flexible and rigid variables *)
     let _flexible_vars = List.map ~f:(bind_flexible state) flexible_vars
-    and rigid_vars = List.map ~f:(bind_rigid state) rigid_vars in
+    and rigid_vars = if is_non_expansive then List.map ~f:(bind_rigid state) rigid_vars else [] in
     (* Convert the constraint types into graphic types *)
     let types = List.map bindings ~f:(fun (_, a) -> find state a) in
     (* Solve the constraint of the let binding *)
@@ -500,7 +500,9 @@ module Make (Algebra : Algebra) = struct
       | Invalid_rigid_type -> raise Non_rigid_equations
     in
     (* Generalize and exit *)
-    let generalizable, schemes = exit state ~rigid_vars ~types in
+    let generalizable, schemes = 
+      if is_non_expansive then exit state ~rigid_vars ~types else [], List.map types ~f:G.mono_scheme
+    in
     (* Extend environment *)
     let env, bindings =
       List.zip_exn bindings schemes

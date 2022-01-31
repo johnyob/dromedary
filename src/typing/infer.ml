@@ -311,6 +311,20 @@ let annotation_of_rec_value_binding value_binding
     | _ -> fail `Invalid_recursive_binding)
 
 
+(** {4: Value restriction} *)
+
+let rec is_non_expansive exp = 
+  match exp with
+  | Pexp_var _ | Pexp_const _ | Pexp_prim _ | Pexp_fun _ -> true
+  | Pexp_construct (_, Some exp) -> is_non_expansive exp
+  | Pexp_construct (_, None) -> true
+  | Pexp_forall (_, exp) | Pexp_exists (_, exp) | Pexp_constraint (exp, _) | Pexp_let (Recursive, _, exp)   -> is_non_expansive exp
+  | Pexp_record label_exps -> List.for_all label_exps ~f:(fun (_, exp) -> is_non_expansive exp)
+  | Pexp_tuple exps -> List.for_all exps ~f:is_non_expansive
+  | Pexp_sequence (exp1, exp2) -> is_non_expansive exp1 && is_non_expansive exp2
+  | Pexp_let _ | Pexp_match _ | Pexp_ifthenelse _ | Pexp_app _ | Pexp_while _ | Pexp_for _ | Pexp_try _ | Pexp_field _ -> false
+
+
 module Pattern = struct
   module Computation = Computation.Pattern
   open Computation.Binder
@@ -684,22 +698,6 @@ module Expression = struct
       (existential_bindings, term_bindings, pat, local_constraint, substitution)
 
 
-  let make_exp_desc_forall vars var exp_desc exp_type =
-    let open Constraint.Let_syntax in
-    let internal_name = "@dromedary.internal.pexp_forall" in
-    let%map term_let_bindings, _ =
-      let_
-        ~bindings:
-          [ (((vars, [ var, None ]) @. exp_desc) @=> [ internal_name #= var ])
-              []
-          ]
-        ~in_:(inst internal_name exp_type)
-    in
-    match term_let_bindings with
-    | [ (_, (_, exp_desc)) ] -> exp_desc
-    | _ -> assert false
-
-
   let infer_primitive prim prim_type : unit Constraint.t Computation.t =
     let open Computation.Let_syntax in
     match prim with
@@ -719,6 +717,46 @@ module Expression = struct
       let var = Type.var var in
       return (prim_type =~- ref_ var @--> var @--> unit_)
 
+
+  let bind_pat pat pat_type ~in_ : (Typedtree.pattern * _) Constraint.t Binder.t
+    =
+    let open Binder.Let_syntax in
+    let%bind existential_bindings, bindings, pat, local_constraint, substitution
+      =
+      infer_pat pat pat_type
+    in
+    let& in_ = extend_substitution ~substitution in_ in
+    return
+      (let%map pats, in_ =
+         let_
+           ~bindings:
+             [ ((([], existential_bindings) @. pat) @=> (true, bindings))
+                 local_constraint
+             ]
+           ~in_
+       in
+       let pat =
+         match pats with
+         | [ (_, (_, pat)) ] -> pat
+         | _ -> assert false
+       in
+       pat, in_)
+
+
+  let make_exp_desc_forall vars var exp_desc exp_type =
+    let open Constraint.Let_syntax in
+    let internal_name = "@dromedary.internal.pexp_forall" in
+    let%map term_let_bindings, _ =
+      let_
+        ~bindings:
+          [ (((vars, [ var, None ]) @. exp_desc) @=> (true, [ internal_name #= var ]))
+              []
+          ]
+        ~in_:(inst internal_name exp_type)
+    in
+    match term_let_bindings with
+    | [ (_, (_, exp_desc)) ] -> exp_desc
+    | _ -> assert false
 
   let infer_exp exp exp_type : Typedtree.expression Constraint.t Computation.t =
     let rec infer_exp exp exp_type
@@ -751,26 +789,10 @@ module Expression = struct
       | Pexp_fun (pat, exp) ->
         let@ var1 = exists () in
         let@ var2 = exists () in
-        let@ existential_bindings, bindings, pat, local_constraint, substitution
-          =
-          infer_pat pat var1
-        in
-        let%bind exp = extend_substitution ~substitution (infer_exp exp var2) in
+        let@ pat_exp = bind_pat pat var1 ~in_:(infer_exp exp var2) in
         return
           (let%map () = exp_type =~= var1 @-> var2
-           and pats, exp =
-             let_
-               ~bindings:
-                 [ ((([], existential_bindings) @. pat) @=> bindings)
-                     local_constraint
-                 ]
-               ~in_:exp
-           in
-           let pat =
-             match pats with
-             | [ (_, (_, pat)) ] -> pat
-             | _ -> assert false
-           in
+           and pat, exp = pat_exp in
            Texp_fun (pat, exp))
       | Pexp_app (exp1, exp2) ->
         let@ var = exists () in
@@ -957,31 +979,11 @@ module Expression = struct
       let open Computation.Let_syntax in
       let%bind cases =
         List.map cases ~f:(fun { pc_lhs; pc_rhs } ->
-            let@ ( existential_bindings
-                 , bindings
-                 , pat
-                 , local_constraint
-                 , substitution )
-              =
-              infer_pat pc_lhs lhs_type
-            in
-            let%bind exp =
-              extend_substitution ~substitution (infer_exp pc_rhs rhs_type)
+            let@ pat_exp =
+              bind_pat pc_lhs lhs_type ~in_:(infer_exp pc_rhs rhs_type)
             in
             return
-              (let%map pats, exp =
-                 let_
-                   ~bindings:
-                     [ ((([], existential_bindings) @. pat) @=> bindings)
-                         local_constraint
-                     ]
-                   ~in_:exp
-               in
-               let pat =
-                 match pats with
-                 | [ (_, (_, pat)) ] -> pat
-                 | _ -> assert false
-               in
+              (let%map pat, exp = pat_exp in
                { tc_lhs = pat; tc_rhs = exp }))
         |> all
       in
@@ -1029,11 +1031,12 @@ module Expression = struct
           in
           (* Temporary: TODO: Figure out how to merge universals w/ new lets. *)
           assert (List.is_empty universal_bindings);
+          let is_non_expansive = is_non_expansive exp in
           let%bind exp = infer_exp exp var in
           return
             ((((forall_vars, (var, None) :: existential_bindings)
               @. (pat &~ exp))
-             @=> bindings)
+             @=> (is_non_expansive, bindings))
                local_constraint))
         ~message:(fun var ->
           [%message
@@ -1086,7 +1089,7 @@ module Expression = struct
 end
 
 let let_0 ~in_ =
-  let_ ~bindings:[ ((([], []) @. in_) @=> []) [] ] ~in_:(return ())
+  let_ ~bindings:[ ((([], []) @. in_) @=> (true, [])) [] ] ~in_:(return ())
   >>| function
   | [ ([], (vars, t)) ], _ -> vars, t
   | _ -> assert false

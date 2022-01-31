@@ -36,15 +36,10 @@ module Make (Algebra : Algebra) : sig
   *)
 
   type 'a t
-
   and binding = Term_var.t * variable
-
   and def_binding = binding
-
   and 'a let_binding
-
   and 'a let_rec_binding
-
   and 'a case
 
   val sexp_of_t : 'a t -> Sexp.t
@@ -147,8 +142,6 @@ module Make (Algebra : Algebra) : sig
   module Solver : sig
     module Type := Types.Type
 
-    
-
     type error =
       [ `Unify of Type.t * Type.t
       | `Cycle of Type.t
@@ -191,11 +184,8 @@ module Make (Algebra : Algebra) : sig
   val ( =~- ) : variable -> Type.t -> unit t
 
   type 'a bound = Type_var.t list * 'a
-
   and term_binding = Term_var.t * Types.scheme
-
   and 'a term_let_binding = term_binding list * 'a bound
-
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   (** [inst x a] is the constraint that instantiates [x] to [a].
@@ -234,7 +224,7 @@ module Make (Algebra : Algebra) : sig
 
   val ( @=> )
     :  variable list * Shallow_type.binding list * 'a t
-    -> binding list
+    -> bool * binding list
     -> (Type.t * Type.t) list
     -> 'a let_binding
 
@@ -248,7 +238,7 @@ module Make (Algebra : Algebra) : sig
     -> binding
     -> 'a let_rec_binding
 
-  (** [let_ ~bindings ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
+  (** [let_ ~binding ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
   val let_
     :  bindings:'a let_binding list
     -> in_:'b t
