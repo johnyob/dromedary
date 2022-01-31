@@ -35,6 +35,9 @@ type primitive =
   | Prim_div
   | Prim_mul
   | Prim_eq
+  | Prim_ref
+  | Prim_deref
+  | Prim_assign
 [@@deriving sexp_of]
 
 let string_of_primitive primitive =
@@ -44,6 +47,9 @@ let string_of_primitive primitive =
   | Prim_div -> "(/)"
   | Prim_mul -> "(*)"
   | Prim_eq -> "(=)"
+  | Prim_ref -> "ref"
+  | Prim_deref -> "(!)"
+  | Prim_assign -> "(:=)"
 
 
 type rec_flag =
