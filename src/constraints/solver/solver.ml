@@ -60,7 +60,7 @@ module Make (Algebra : Algebra) = struct
     type t = U.Type.t -> Type.t
 
     (* [decode_variable var] decodes [var] into a [Type_var] using it's unique identifier. *)
-    let decode_variable var =
+    let[@landmark] decode_variable var =
       assert (
         match G.repr (U.Type.get_structure var) with
         | G.Flexible_var -> true
@@ -68,33 +68,38 @@ module Make (Algebra : Algebra) = struct
       Type_var.of_int (U.Type.id var)
 
 
-    let decode_rigid_variable (rigid_var : Rigid_var.t) =
+    let[@landmark] decode_rigid_variable (rigid_var : Rigid_var.t) =
       Type_var.of_int (rigid_var :> int)
 
 
     (* [decode_type_acyclic type_] decodes type [type_] (known to have no cycles) into a [Type]. *)
     let decode_type_acyclic : t =
-      U.fold_acyclic ~f:(fun type_ structure ->
-          match G.repr structure with
-          | G.Flexible_var -> Type.var (decode_variable type_)
-          | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
-          | G.Former former -> Type.former former)
+     fun x ->
+      (U.fold_acyclic
+         ~f:(fun type_ structure ->
+           match G.repr structure with
+           | G.Flexible_var -> Type.var (decode_variable type_)
+           | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
+           | G.Former former -> Type.former former)
+         x [@landmark "decode_type_acyclic"])
 
 
     (* [decode_type_cyclic type_] decodes type [type_] (may contain cycles) into a [Type]. *)
     let decode_type_cyclic : t =
-      U.fold_cyclic
-        ~f:(fun type_ structure ->
-          match G.repr structure with
-          | G.Flexible_var -> Type.var (decode_variable type_)
-          | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
-          | G.Former former -> Type.former former)
-        ~var:(fun type_ -> Type.var (decode_variable type_))
-        ~mu:(fun v t -> Type.mu (decode_variable v) t)
+     fun x ->
+      (U.fold_cyclic
+         ~f:(fun type_ structure ->
+           match G.repr structure with
+           | G.Flexible_var -> Type.var (decode_variable type_)
+           | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
+           | G.Former former -> Type.former former)
+         ~var:(fun type_ -> Type.var (decode_variable type_))
+         ~mu:(fun v t -> Type.mu (decode_variable v) t)
+         x [@landmark "decode_type_cyclic"])
 
 
     (* [decode_scheme scheme] decodes the graphical scheme [scheme] into a [Type.scheme]. *)
-    let decode_scheme scheme =
+    let[@landmark] decode_scheme scheme =
       ( List.map (G.variables scheme) ~f:decode_variable
       , decode_type_acyclic (G.root scheme) )
   end
@@ -121,7 +126,7 @@ module Make (Algebra : Algebra) = struct
     }
 
 
-  let enter state = G.enter state.generalization_state
+  let[@landmark] enter state = G.enter state.generalization_state
 
   (* [exit state ~rigid_vars ~types] generalizes the types [types], returning
      the generalized variables and schemes. 
@@ -134,7 +139,7 @@ module Make (Algebra : Algebra) = struct
   exception Cannot_flexize of Type_var.t
   exception Scope_escape of Type.t
 
-  let exit state ~rigid_vars ~types =
+  let[@landmark] exit state ~rigid_vars ~types =
     try G.exit state.generalization_state ~rigid_vars ~types with
     | U.Cycle type_ -> raise (Cycle (Decoder.decode_type_cyclic type_))
     | G.Scope_escape type_ ->
@@ -152,7 +157,7 @@ module Make (Algebra : Algebra) = struct
      [state.constraint_var_env]. *)
   exception Unbound_constraint_variable of C.variable
 
-  let find state (var : C.variable) =
+  let[@landmark] find state (var : C.variable) =
     match Hashtbl.find state.constraint_var_env (var :> int) with
     | None -> raise (Unbound_constraint_variable var)
     | Some (Rigid_var rigid_var) ->
@@ -171,7 +176,7 @@ module Make (Algebra : Algebra) = struct
 
   (* [bind state var type_] binds [type_] to the constraint variable [var] in 
      the environment. *)
-  let bind state (var : C.variable) type_ =
+  let[@landmark] bind state (var : C.variable) type_ =
     Hashtbl.set state.constraint_var_env ~key:(var :> int) ~data:type_
 
 
@@ -179,14 +184,15 @@ module Make (Algebra : Algebra) = struct
      (var, former_opt) in the environment. 
        
      Returning the graphical type mapped in the environment. *)
-  let bind_flexible state (var, former_opt) =
+  let[@landmark] bind_flexible state (var, former_opt) =
     let type_ =
       match former_opt with
-      | None -> G.make_flexible_var state.generalization_state
+      | None -> G.make_flexible_var state.generalization_state [@landmark "make_flexible_var"]
       | Some former ->
         G.make_former
           state.generalization_state
           (Type_former.map former ~f:(find state))
+          [@landmark "make_former"]
     in
     bind state var (Type type_);
     type_
@@ -194,7 +200,7 @@ module Make (Algebra : Algebra) = struct
 
   (* [bind_rigid state var] binds the rigid variable [var] in the environment. 
      Returning the graphical type mapped in the environment. *)
-  let bind_rigid state var =
+  let[@landmark] bind_rigid state var =
     let rigid_var = Rigid_var.make () in
     bind state var (Rigid_var rigid_var);
     rigid_var
@@ -238,23 +244,23 @@ module Make (Algebra : Algebra) = struct
       }
 
 
-    let extend t var scheme =
+    let[@landmark] extend t var scheme =
       { t with term_var_env = Map.set t.term_var_env ~key:var ~data:scheme }
 
 
-    let extend_types t var_type_alist =
+    let[@landmark] extend_types t var_type_alist =
       List.fold_left var_type_alist ~init:t ~f:(fun t (var, type_) ->
           let scheme = G.mono_scheme type_ in
           extend t var scheme)
 
 
-    let extend_bindings state t bindings =
+    let[@landmark] extend_bindings state t bindings =
       extend_types t (List.map bindings ~f:(fun (x, a) -> x, find state a))
 
 
     exception Unbound_term_variable of Term_var.t
 
-    let find t var =
+    let[@landmark] find t var =
       match Map.find t.term_var_env var with
       | Some scheme -> scheme
       | None -> raise (Unbound_term_variable var)
@@ -263,7 +269,7 @@ module Make (Algebra : Algebra) = struct
     let equations t = t.equations
     let abbrevs t = t.abbrevs
 
-    let add_equation state t (rigid_type1, rigid_type2) =
+    let[@landmark] add_equation state t (rigid_type1, rigid_type2) =
       { t with
         equations =
           G.Equations.add
@@ -274,7 +280,7 @@ module Make (Algebra : Algebra) = struct
       }
 
 
-    let add_equations state t equations =
+    let[@landmark] add_equations state t equations =
       List.fold_left equations ~init:t ~f:(fun t equation ->
           add_equation state t equation)
   end
@@ -313,7 +319,7 @@ module Make (Algebra : Algebra) = struct
 
   exception Non_rigid_equations
 
-  let add_equations ~state ~env equations =
+  let[@landmark] add_equations ~state ~env equations =
     let equations =
       try
         List.map equations ~f:(fun (t1, t2) ->
@@ -338,7 +344,7 @@ module Make (Algebra : Algebra) = struct
         state.generalization_state
         ~ctx:(Env.equations env, Env.abbrevs env)
         type1
-        type2
+        type2 [@landmark "unify"]
     with
     | U.Unify (type1, type2) ->
       raise
@@ -404,7 +410,7 @@ module Make (Algebra : Algebra) = struct
         Log.debug (fun m -> m "Solving [Instance].");
         let scheme = Env.find env x in
         let instance_variables, type_ =
-          G.instantiate state.generalization_state scheme
+          G.instantiate state.generalization_state scheme [@landmark "instantiate"]
         in
         unify ~state ~env (find state a) type_;
         fun () -> List.map ~f:Decoder.decode_type_acyclic instance_variables
@@ -464,7 +470,7 @@ module Make (Algebra : Algebra) = struct
         solve ~state ~env in_
 
 
-  and solve_let_binding
+  and[@landmark] solve_let_binding
       : type a.
         state:state
         -> env:Env.t
@@ -727,8 +733,10 @@ module Make (Algebra : Algebra) = struct
     Logs.Src.set_level src Logs.(if debug_flag then Some Debug else Some Info);
     try
       Ok
-        (Elaborate.run
-           (solve ~state:(make_state ()) ~env:(Env.empty abbrevs) cst))
+        (let[@landmark] solved =
+           solve ~state:(make_state ()) ~env:(Env.empty abbrevs) cst
+         in
+         (Elaborate.run solved [@landmark "elaborate"]))
     with
     | Unify (t1, t2) -> Error (`Unify (t1, t2))
     | Cycle t -> Error (`Cycle t)

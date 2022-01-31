@@ -1,4 +1,4 @@
 (executable
- (public_name dromedary)
+ (public_name main)
  (name main)
  (libraries dromedary))

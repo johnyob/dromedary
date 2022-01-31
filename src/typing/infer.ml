@@ -1068,7 +1068,7 @@ let solve ?(debug = false) ~abbrevs cst =
 let infer ?(debug = false) exp ~env:env' ~abbrevs =
   let open Result.Let_syntax in
   let%bind exp =
-    let exp = Expression.infer exp in
+    let[@landmark] exp = Expression.infer exp in
     Computation.Expression.(run ~env:env' (exp >>| fun in_ -> let_0 ~in_))
   in
   solve ~debug ~abbrevs exp

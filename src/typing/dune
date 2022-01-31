@@ -2,4 +2,5 @@
  (public_name dromedary.typing)
  (name typing)
  (preprocess (pps ppx_jane ppx_deriving.eq))
+ (instrumentation (backend landmarks))
  (libraries base dromedary.parsing dromedary.constraints dromedary.util))

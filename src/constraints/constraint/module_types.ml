@@ -46,14 +46,14 @@ module Type_former = struct
       include Applicative.Make (T)
     end
 
-    let map t ~f =
+    let[@landmark] map t ~f =
       let module Traverse = T.Traverse (Ident) in
       Traverse.traverse t ~f
 
 
-    let iter t ~f = ignore (map t ~f : unit t)
+    let[@landmark] iter t ~f = ignore (map t ~f : unit t)
 
-    let fold (type a b) (t : a t) ~(f : a -> b -> b) ~(init : b) : b =
+    let[@landmark] fold (type a b) (t : a t) ~(f : a -> b -> b) ~(init : b) : b =
       let module Traverse =
         T.Traverse (Endo_const (struct
           type t = b
@@ -62,14 +62,14 @@ module Type_former = struct
       (Traverse.traverse t ~f) init
 
 
-    let map2 t1 t2 ~f =
+    let[@landmark] map2 t1 t2 ~f =
       let module Traverse = T.Traverse (Ident) in
       Traverse.traverse2 t1 t2 ~f
 
 
     exception Iter2
 
-    let iter2_exn t1 t2 ~f =
+    let[@landmark] iter2_exn t1 t2 ~f =
       match map2 t1 t2 ~f with
       | `Ok _ -> ()
       | `Unequal_structure -> raise Iter2
@@ -77,7 +77,7 @@ module Type_former = struct
 
     exception Fold2
 
-    let fold2_exn
+    let[@landmark] fold2_exn
         (type a b c)
         (t1 : a t)
         (t2 : b t)

@@ -2,4 +2,5 @@
  (public_name dromedary.constraints.constraint)
  (name dromedary_constraints_constraint)
  (preprocess (pps ppx_jane))
+ (instrumentation (backend landmarks))
  (libraries base))

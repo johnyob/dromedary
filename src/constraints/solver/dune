@@ -3,4 +3,5 @@
  (name dromedary_constraints_solver)
  (preprocess
   (pps ppx_jane ppx_deriving.eq))
+ (instrumentation (backend landmarks))
  (libraries base dromedary.constraints.constraint vec dromedary.util logs))
