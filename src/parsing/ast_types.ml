@@ -55,3 +55,13 @@ let string_of_rec_flag rec_flag =
   match rec_flag with
   | Nonrecursive -> "Nonrecursive"
   | Recursive -> "Recursive"
+
+type direction_flag = 
+  | Upto
+  | Downto
+[@@deriving sexp_of]
+
+let string_of_direction_flag direction_flag = 
+  match direction_flag with
+  | Upto -> "to"
+  | Downto -> "downto"
