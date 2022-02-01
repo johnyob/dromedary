@@ -1462,7 +1462,7 @@ let%expect_test "f-pottier elaboration 1" =
   print_infer_result ~env:Env.empty exp;
   [%expect
     {|
-    Variables:
+    Variables: α354
     Expression:
     └──Expression:
        └──Type expr: Constructor: unit
@@ -1473,7 +1473,7 @@ let%expect_test "f-pottier elaboration 1" =
                    └──Type expr: Constructor: unit
                    └──Desc: Variable: u
                 └──Abstraction:
-                   └──Variables: α354
+                   └──Variables:
                    └──Expression:
                       └──Type expr: Constructor: unit
                       └──Desc: Application
@@ -1537,28 +1537,28 @@ let%expect_test "let rec - polymorphic recursion" =
   print_infer_result ~env exp;
   [%expect
     {|
-    Variables: α385
+    Variables: α384
     Expression:
     └──Expression:
        └──Type expr: Arrow
-          └──Type expr: Variable: α385
-          └──Type expr: Variable: α385
+          └──Type expr: Variable: α384
+          └──Type expr: Variable: α384
        └──Desc: Let rec
           └──Value bindings:
              └──Value binding:
                 └──Variable: id
                 └──Abstraction:
-                   └──Variables: α359
+                   └──Variables: α357
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: α372
-                         └──Type expr: Variable: α372
+                         └──Type expr: Variable: α375
+                         └──Type expr: Variable: α375
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: α372
+                            └──Type expr: Variable: α375
                             └──Desc: Variable: x
                          └──Expression:
-                            └──Type expr: Variable: α372
+                            └──Type expr: Variable: α375
                             └──Desc: Variable
                                └──Variable: x
              └──Value binding:
@@ -1589,11 +1589,11 @@ let%expect_test "let rec - polymorphic recursion" =
                                      └──Variable: x
           └──Expression:
              └──Type expr: Arrow
-                └──Type expr: Variable: α385
-                └──Type expr: Variable: α385
+                └──Type expr: Variable: α384
+                └──Type expr: Variable: α384
              └──Desc: Variable
                 └──Variable: id
-                └──Type expr: Variable: α385 |}]
+                └──Type expr: Variable: α384 |}]
 
 let add_eq env =
   let name = "eq" in
@@ -1651,22 +1651,22 @@ let%expect_test "ambiv-f" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: α393
+                         └──Type expr: Variable: α395
                          └──Type expr: Constructor: int
                       └──Type expr: Constructor: int
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: α393
+                   └──Variables: α395
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: α393
+                            └──Type expr: Variable: α395
                             └──Type expr: Constructor: int
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: α393
+                               └──Type expr: Variable: α395
                                └──Type expr: Constructor: int
                             └──Desc: Variable: x
                          └──Expression:
@@ -1674,25 +1674,25 @@ let%expect_test "ambiv-f" =
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: eq
-                                     └──Type expr: Variable: α393
+                                     └──Type expr: Variable: α395
                                      └──Type expr: Constructor: int
                                   └──Desc: Variable
                                      └──Variable: x
                                └──Type expr: Constructor: eq
-                                  └──Type expr: Variable: α393
+                                  └──Type expr: Variable: α395
                                   └──Type expr: Constructor: int
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: eq
-                                           └──Type expr: Variable: α393
+                                           └──Type expr: Variable: α395
                                            └──Type expr: Constructor: int
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Refl
                                               └──Constructor type:
                                                  └──Type expr: Constructor: eq
-                                                    └──Type expr: Variable: α393
+                                                    └──Type expr: Variable: α395
                                                     └──Type expr: Constructor: int
                                      └──Expression:
                                         └──Type expr: Constructor: int
@@ -1738,22 +1738,22 @@ let%expect_test "ambiv-f1" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: α414
+                         └──Type expr: Variable: α416
                          └──Type expr: Constructor: int
                       └──Type expr: Constructor: bool
                    └──Desc: Variable: f1
                 └──Abstraction:
-                   └──Variables: α414
+                   └──Variables: α416
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: α414
+                            └──Type expr: Variable: α416
                             └──Type expr: Constructor: int
                          └──Type expr: Constructor: bool
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: α414
+                               └──Type expr: Variable: α416
                                └──Type expr: Constructor: int
                             └──Desc: Variable: x
                          └──Expression:
@@ -1761,25 +1761,25 @@ let%expect_test "ambiv-f1" =
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: eq
-                                     └──Type expr: Variable: α414
+                                     └──Type expr: Variable: α416
                                      └──Type expr: Constructor: int
                                   └──Desc: Variable
                                      └──Variable: x
                                └──Type expr: Constructor: eq
-                                  └──Type expr: Variable: α414
+                                  └──Type expr: Variable: α416
                                   └──Type expr: Constructor: int
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: eq
-                                           └──Type expr: Variable: α414
+                                           └──Type expr: Variable: α416
                                            └──Type expr: Constructor: int
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Refl
                                               └──Constructor type:
                                                  └──Type expr: Constructor: eq
-                                                    └──Type expr: Variable: α414
+                                                    └──Type expr: Variable: α416
                                                     └──Type expr: Constructor: int
                                      └──Expression:
                                         └──Type expr: Constructor: bool
@@ -1830,60 +1830,60 @@ let%expect_test "ambiv-f2" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: α438
+                         └──Type expr: Variable: α442
                          └──Type expr: Constructor: int
                       └──Type expr: Arrow
-                         └──Type expr: Variable: α438
+                         └──Type expr: Variable: α442
                          └──Type expr: Constructor: bool
                    └──Desc: Variable: f2
                 └──Abstraction:
-                   └──Variables: α438
+                   └──Variables: α442
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: α438
+                            └──Type expr: Variable: α442
                             └──Type expr: Constructor: int
                          └──Type expr: Arrow
-                            └──Type expr: Variable: α438
+                            └──Type expr: Variable: α442
                             └──Type expr: Constructor: bool
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: α438
+                               └──Type expr: Variable: α442
                                └──Type expr: Constructor: int
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: α438
+                               └──Type expr: Variable: α442
                                └──Type expr: Constructor: bool
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: α438
+                                  └──Type expr: Variable: α442
                                   └──Desc: Variable: y
                                └──Expression:
                                   └──Type expr: Constructor: bool
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: eq
-                                           └──Type expr: Variable: α438
+                                           └──Type expr: Variable: α442
                                            └──Type expr: Constructor: int
                                         └──Desc: Variable
                                            └──Variable: x
                                      └──Type expr: Constructor: eq
-                                        └──Type expr: Variable: α438
+                                        └──Type expr: Variable: α442
                                         └──Type expr: Constructor: int
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: eq
-                                                 └──Type expr: Variable: α438
+                                                 └──Type expr: Variable: α442
                                                  └──Type expr: Constructor: int
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Refl
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: eq
-                                                          └──Type expr: Variable: α438
+                                                          └──Type expr: Variable: α442
                                                           └──Type expr: Constructor: int
                                            └──Expression:
                                               └──Type expr: Constructor: bool
@@ -1895,13 +1895,13 @@ let%expect_test "ambiv-f2" =
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
-                                                             └──Type expr: Variable: α438
+                                                             └──Type expr: Variable: α442
                                                              └──Type expr: Arrow
                                                                 └──Type expr: Constructor: int
                                                                 └──Type expr: Constructor: bool
                                                           └──Desc: Primitive: (=)
                                                        └──Expression:
-                                                          └──Type expr: Variable: α438
+                                                          └──Type expr: Variable: α442
                                                           └──Desc: Variable
                                                              └──Variable: y
                                                  └──Expression:
@@ -1959,63 +1959,63 @@ let%expect_test "ambiv-g" =
                   └──Pattern:
                      └──Type expr: Arrow
                         └──Type expr: Constructor: eq
-                           └──Type expr: Variable: α492
+                           └──Type expr: Variable: α504
                            └──Type expr: Constructor: int
                         └──Type expr: Arrow
-                           └──Type expr: Variable: α492
-                           └──Type expr: Variable: α492
+                           └──Type expr: Variable: α504
+                           └──Type expr: Variable: α504
                      └──Desc: Variable: g
                   └──Abstraction:
-                     └──Variables: α492
+                     └──Variables: α504
                      └──Expression:
                         └──Type expr: Arrow
                            └──Type expr: Constructor: eq
-                              └──Type expr: Variable: α492
+                              └──Type expr: Variable: α504
                               └──Type expr: Constructor: int
                            └──Type expr: Arrow
-                              └──Type expr: Variable: α492
-                              └──Type expr: Variable: α492
+                              └──Type expr: Variable: α504
+                              └──Type expr: Variable: α504
                         └──Desc: Function
                            └──Pattern:
                               └──Type expr: Constructor: eq
-                                 └──Type expr: Variable: α492
+                                 └──Type expr: Variable: α504
                                  └──Type expr: Constructor: int
                               └──Desc: Variable: x
                            └──Expression:
                               └──Type expr: Arrow
-                                 └──Type expr: Variable: α492
-                                 └──Type expr: Variable: α492
+                                 └──Type expr: Variable: α504
+                                 └──Type expr: Variable: α504
                               └──Desc: Function
                                  └──Pattern:
-                                    └──Type expr: Variable: α492
+                                    └──Type expr: Variable: α504
                                     └──Desc: Variable: y
                                  └──Expression:
-                                    └──Type expr: Variable: α492
+                                    └──Type expr: Variable: α504
                                     └──Desc: Match
                                        └──Expression:
                                           └──Type expr: Constructor: eq
-                                             └──Type expr: Variable: α492
+                                             └──Type expr: Variable: α504
                                              └──Type expr: Constructor: int
                                           └──Desc: Variable
                                              └──Variable: x
                                        └──Type expr: Constructor: eq
-                                          └──Type expr: Variable: α492
+                                          └──Type expr: Variable: α504
                                           └──Type expr: Constructor: int
                                        └──Cases:
                                           └──Case:
                                              └──Pattern:
                                                 └──Type expr: Constructor: eq
-                                                   └──Type expr: Variable: α492
+                                                   └──Type expr: Variable: α504
                                                    └──Type expr: Constructor: int
                                                 └──Desc: Construct
                                                    └──Constructor description:
                                                       └──Name: Refl
                                                       └──Constructor type:
                                                          └──Type expr: Constructor: eq
-                                                            └──Type expr: Variable: α492
+                                                            └──Type expr: Variable: α504
                                                             └──Type expr: Constructor: int
                                              └──Expression:
-                                                └──Type expr: Variable: α492
+                                                └──Type expr: Variable: α504
                                                 └──Desc: If
                                                    └──Expression:
                                                       └──Type expr: Constructor: bool
@@ -2027,24 +2027,24 @@ let%expect_test "ambiv-g" =
                                                             └──Desc: Application
                                                                └──Expression:
                                                                   └──Type expr: Arrow
-                                                                     └──Type expr: Variable: α492
+                                                                     └──Type expr: Variable: α504
                                                                      └──Type expr: Arrow
                                                                         └──Type expr: Constructor: int
                                                                         └──Type expr: Constructor: bool
                                                                   └──Desc: Primitive: (=)
                                                                └──Expression:
-                                                                  └──Type expr: Variable: α492
+                                                                  └──Type expr: Variable: α504
                                                                   └──Desc: Variable
                                                                      └──Variable: y
                                                          └──Expression:
                                                             └──Type expr: Constructor: int
                                                             └──Desc: Constant: 0
                                                    └──Expression:
-                                                      └──Type expr: Variable: α492
+                                                      └──Type expr: Variable: α504
                                                       └──Desc: Variable
                                                          └──Variable: y
                                                    └──Expression:
-                                                      └──Type expr: Variable: α492
+                                                      └──Type expr: Variable: α504
                                                       └──Desc: Constant: 0
             └──Expression:
                └──Type expr: Constructor: unit
@@ -2097,22 +2097,22 @@ let%expect_test "ambiv-p" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: α518
+                         └──Type expr: Variable: α517
                          └──Type expr: Constructor: int
                       └──Type expr: Constructor: int
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: α518
+                   └──Variables: α517
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: α518
+                            └──Type expr: Variable: α517
                             └──Type expr: Constructor: int
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: α518
+                               └──Type expr: Variable: α517
                                └──Type expr: Constructor: int
                             └──Desc: Variable: x
                          └──Expression:
@@ -2130,25 +2130,25 @@ let%expect_test "ambiv-p" =
                                            └──Desc: Match
                                               └──Expression:
                                                  └──Type expr: Constructor: eq
-                                                    └──Type expr: Variable: α518
+                                                    └──Type expr: Variable: α517
                                                     └──Type expr: Constructor: int
                                                  └──Desc: Variable
                                                     └──Variable: x
                                               └──Type expr: Constructor: eq
-                                                 └──Type expr: Variable: α518
+                                                 └──Type expr: Variable: α517
                                                  └──Type expr: Constructor: int
                                               └──Cases:
                                                  └──Case:
                                                     └──Pattern:
                                                        └──Type expr: Constructor: eq
-                                                          └──Type expr: Variable: α518
+                                                          └──Type expr: Variable: α517
                                                           └──Type expr: Constructor: int
                                                        └──Desc: Construct
                                                           └──Constructor description:
                                                              └──Name: Refl
                                                              └──Constructor type:
                                                                 └──Type expr: Constructor: eq
-                                                                   └──Type expr: Variable: α518
+                                                                   └──Type expr: Variable: α517
                                                                    └──Type expr: Constructor: int
                                                     └──Expression:
                                                        └──Type expr: Constructor: int
@@ -2222,37 +2222,37 @@ let%expect_test "coerce" =
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
                          └──Type expr: Variable: α556
-                         └──Type expr: Variable: α548
+                         └──Type expr: Variable: α565
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
                             └──Type expr: Variable: α556
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: α548
+                            └──Type expr: Variable: α565
                    └──Desc: Variable: coerce
                 └──Abstraction:
-                   └──Variables: α556,α548
+                   └──Variables: α556,α565
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
                             └──Type expr: Variable: α556
-                            └──Type expr: Variable: α548
+                            └──Type expr: Variable: α565
                          └──Type expr: Arrow
                             └──Type expr: Constructor: t
                                └──Type expr: Variable: α556
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: α548
+                               └──Type expr: Variable: α565
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
                                └──Type expr: Variable: α556
-                               └──Type expr: Variable: α548
+                               └──Type expr: Variable: α565
                             └──Desc: Variable: eq
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: t
                                   └──Type expr: Variable: α556
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: α548
+                                  └──Type expr: Variable: α565
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: t
@@ -2260,33 +2260,33 @@ let%expect_test "coerce" =
                                   └──Desc: Variable: x
                                └──Expression:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: α548
+                                     └──Type expr: Variable: α565
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: eq
                                            └──Type expr: Variable: α556
-                                           └──Type expr: Variable: α548
+                                           └──Type expr: Variable: α565
                                         └──Desc: Variable
                                            └──Variable: eq
                                      └──Type expr: Constructor: eq
                                         └──Type expr: Variable: α556
-                                        └──Type expr: Variable: α548
+                                        └──Type expr: Variable: α565
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: eq
                                                  └──Type expr: Variable: α556
-                                                 └──Type expr: Variable: α548
+                                                 └──Type expr: Variable: α565
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Refl
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: eq
                                                           └──Type expr: Variable: α556
-                                                          └──Type expr: Variable: α548
+                                                          └──Type expr: Variable: α565
                                            └──Expression:
                                               └──Type expr: Constructor: t
-                                                 └──Type expr: Variable: α548
+                                                 └──Type expr: Variable: α565
                                               └──Desc: Variable
                                                  └──Variable: x
           └──Expression:
@@ -2702,32 +2702,32 @@ let%expect_test "term - eval" =
                   └──Pattern:
                      └──Type expr: Arrow
                         └──Type expr: Tuple
+                           └──Type expr: Variable: α627
                            └──Type expr: Variable: α629
-                           └──Type expr: Variable: α631
-                        └──Type expr: Variable: α629
+                        └──Type expr: Variable: α627
                      └──Desc: Variable: fst
                   └──Abstraction:
-                     └──Variables: α629,α631
+                     └──Variables: α627,α629
                      └──Expression:
                         └──Type expr: Arrow
                            └──Type expr: Tuple
+                              └──Type expr: Variable: α627
                               └──Type expr: Variable: α629
-                              └──Type expr: Variable: α631
-                           └──Type expr: Variable: α629
+                           └──Type expr: Variable: α627
                         └──Desc: Function
                            └──Pattern:
                               └──Type expr: Tuple
+                                 └──Type expr: Variable: α627
                                  └──Type expr: Variable: α629
-                                 └──Type expr: Variable: α631
                               └──Desc: Tuple
                                  └──Pattern:
-                                    └──Type expr: Variable: α629
+                                    └──Type expr: Variable: α627
                                     └──Desc: Variable: x
                                  └──Pattern:
-                                    └──Type expr: Variable: α631
+                                    └──Type expr: Variable: α629
                                     └──Desc: Any
                            └──Expression:
-                              └──Type expr: Variable: α629
+                              └──Type expr: Variable: α627
                               └──Desc: Variable
                                  └──Variable: x
             └──Expression:
@@ -2738,32 +2738,32 @@ let%expect_test "term - eval" =
                         └──Pattern:
                            └──Type expr: Arrow
                               └──Type expr: Tuple
-                                 └──Type expr: Variable: α639
-                                 └──Type expr: Variable: α636
-                              └──Type expr: Variable: α636
+                                 └──Type expr: Variable: α637
+                                 └──Type expr: Variable: α634
+                              └──Type expr: Variable: α634
                            └──Desc: Variable: snd
                         └──Abstraction:
-                           └──Variables: α636,α639
+                           └──Variables: α634,α637
                            └──Expression:
                               └──Type expr: Arrow
                                  └──Type expr: Tuple
-                                    └──Type expr: Variable: α639
-                                    └──Type expr: Variable: α636
-                                 └──Type expr: Variable: α636
+                                    └──Type expr: Variable: α637
+                                    └──Type expr: Variable: α634
+                                 └──Type expr: Variable: α634
                               └──Desc: Function
                                  └──Pattern:
                                     └──Type expr: Tuple
-                                       └──Type expr: Variable: α639
-                                       └──Type expr: Variable: α636
+                                       └──Type expr: Variable: α637
+                                       └──Type expr: Variable: α634
                                     └──Desc: Tuple
                                        └──Pattern:
-                                          └──Type expr: Variable: α639
+                                          └──Type expr: Variable: α637
                                           └──Desc: Any
                                        └──Pattern:
-                                          └──Type expr: Variable: α636
+                                          └──Type expr: Variable: α634
                                           └──Desc: Variable: x
                                  └──Expression:
-                                    └──Type expr: Variable: α636
+                                    └──Type expr: Variable: α634
                                     └──Desc: Variable
                                        └──Variable: x
                   └──Expression:
@@ -2773,32 +2773,32 @@ let%expect_test "term - eval" =
                            └──Value binding:
                               └──Variable: eval
                               └──Abstraction:
-                                 └──Variables: α643
+                                 └──Variables: α639
                                  └──Expression:
                                     └──Type expr: Arrow
                                        └──Type expr: Constructor: term
-                                          └──Type expr: Variable: α648
-                                       └──Type expr: Variable: α648
+                                          └──Type expr: Variable: α728
+                                       └──Type expr: Variable: α728
                                     └──Desc: Function
                                        └──Pattern:
                                           └──Type expr: Constructor: term
-                                             └──Type expr: Variable: α648
+                                             └──Type expr: Variable: α728
                                           └──Desc: Variable: t
                                        └──Expression:
-                                          └──Type expr: Variable: α648
+                                          └──Type expr: Variable: α728
                                           └──Desc: Match
                                              └──Expression:
                                                 └──Type expr: Constructor: term
-                                                   └──Type expr: Variable: α648
+                                                   └──Type expr: Variable: α728
                                                 └──Desc: Variable
                                                    └──Variable: t
                                              └──Type expr: Constructor: term
-                                                └──Type expr: Variable: α648
+                                                └──Type expr: Variable: α728
                                              └──Cases:
                                                 └──Case:
                                                    └──Pattern:
                                                       └──Type expr: Constructor: term
-                                                         └──Type expr: Variable: α648
+                                                         └──Type expr: Variable: α728
                                                       └──Desc: Construct
                                                          └──Constructor description:
                                                             └──Name: Int
@@ -2806,18 +2806,18 @@ let%expect_test "term - eval" =
                                                                └──Type expr: Constructor: int
                                                             └──Constructor type:
                                                                └──Type expr: Constructor: term
-                                                                  └──Type expr: Variable: α648
+                                                                  └──Type expr: Variable: α728
                                                          └──Pattern:
                                                             └──Type expr: Constructor: int
                                                             └──Desc: Variable: x
                                                    └──Expression:
-                                                      └──Type expr: Variable: α648
+                                                      └──Type expr: Variable: α728
                                                       └──Desc: Variable
                                                          └──Variable: x
                                                 └──Case:
                                                    └──Pattern:
                                                       └──Type expr: Constructor: term
-                                                         └──Type expr: Variable: α648
+                                                         └──Type expr: Variable: α728
                                                       └──Desc: Construct
                                                          └──Constructor description:
                                                             └──Name: Bool
@@ -2825,18 +2825,18 @@ let%expect_test "term - eval" =
                                                                └──Type expr: Constructor: bool
                                                             └──Constructor type:
                                                                └──Type expr: Constructor: term
-                                                                  └──Type expr: Variable: α648
+                                                                  └──Type expr: Variable: α728
                                                          └──Pattern:
                                                             └──Type expr: Constructor: bool
                                                             └──Desc: Variable: x
                                                    └──Expression:
-                                                      └──Type expr: Variable: α648
+                                                      └──Type expr: Variable: α728
                                                       └──Desc: Variable
                                                          └──Variable: x
                                                 └──Case:
                                                    └──Pattern:
                                                       └──Type expr: Constructor: term
-                                                         └──Type expr: Variable: α648
+                                                         └──Type expr: Variable: α728
                                                       └──Desc: Construct
                                                          └──Constructor description:
                                                             └──Name: Succ
@@ -2845,25 +2845,25 @@ let%expect_test "term - eval" =
                                                                   └──Type expr: Constructor: int
                                                             └──Constructor type:
                                                                └──Type expr: Constructor: term
-                                                                  └──Type expr: Variable: α648
+                                                                  └──Type expr: Variable: α728
                                                          └──Pattern:
                                                             └──Type expr: Constructor: term
                                                                └──Type expr: Constructor: int
                                                             └──Desc: Variable: t
                                                    └──Expression:
-                                                      └──Type expr: Variable: α648
+                                                      └──Type expr: Variable: α728
                                                       └──Desc: Application
                                                          └──Expression:
                                                             └──Type expr: Arrow
                                                                └──Type expr: Constructor: int
-                                                               └──Type expr: Variable: α648
+                                                               └──Type expr: Variable: α728
                                                             └──Desc: Application
                                                                └──Expression:
                                                                   └──Type expr: Arrow
                                                                      └──Type expr: Constructor: int
                                                                      └──Type expr: Arrow
                                                                         └──Type expr: Constructor: int
-                                                                        └──Type expr: Variable: α648
+                                                                        └──Type expr: Variable: α728
                                                                   └──Desc: Primitive: (+)
                                                                └──Expression:
                                                                   └──Type expr: Constructor: int
@@ -2887,7 +2887,7 @@ let%expect_test "term - eval" =
                                                 └──Case:
                                                    └──Pattern:
                                                       └──Type expr: Constructor: term
-                                                         └──Type expr: Variable: α648
+                                                         └──Type expr: Variable: α728
                                                       └──Desc: Construct
                                                          └──Constructor description:
                                                             └──Name: If
@@ -2896,20 +2896,20 @@ let%expect_test "term - eval" =
                                                                   └──Type expr: Constructor: term
                                                                      └──Type expr: Constructor: bool
                                                                   └──Type expr: Constructor: term
-                                                                     └──Type expr: Variable: α648
+                                                                     └──Type expr: Variable: α728
                                                                   └──Type expr: Constructor: term
-                                                                     └──Type expr: Variable: α648
+                                                                     └──Type expr: Variable: α728
                                                             └──Constructor type:
                                                                └──Type expr: Constructor: term
-                                                                  └──Type expr: Variable: α648
+                                                                  └──Type expr: Variable: α728
                                                          └──Pattern:
                                                             └──Type expr: Tuple
                                                                └──Type expr: Constructor: term
                                                                   └──Type expr: Constructor: bool
                                                                └──Type expr: Constructor: term
-                                                                  └──Type expr: Variable: α648
+                                                                  └──Type expr: Variable: α728
                                                                └──Type expr: Constructor: term
-                                                                  └──Type expr: Variable: α648
+                                                                  └──Type expr: Variable: α728
                                                             └──Desc: Tuple
                                                                └──Pattern:
                                                                   └──Type expr: Constructor: term
@@ -2917,14 +2917,14 @@ let%expect_test "term - eval" =
                                                                   └──Desc: Variable: t1
                                                                └──Pattern:
                                                                   └──Type expr: Constructor: term
-                                                                     └──Type expr: Variable: α648
+                                                                     └──Type expr: Variable: α728
                                                                   └──Desc: Variable: t2
                                                                └──Pattern:
                                                                   └──Type expr: Constructor: term
-                                                                     └──Type expr: Variable: α648
+                                                                     └──Type expr: Variable: α728
                                                                   └──Desc: Variable: t3
                                                    └──Expression:
-                                                      └──Type expr: Variable: α648
+                                                      └──Type expr: Variable: α728
                                                       └──Desc: If
                                                          └──Expression:
                                                             └──Type expr: Constructor: bool
@@ -2943,71 +2943,87 @@ let%expect_test "term - eval" =
                                                                   └──Desc: Variable
                                                                      └──Variable: t1
                                                          └──Expression:
-                                                            └──Type expr: Variable: α648
+                                                            └──Type expr: Variable: α728
                                                             └──Desc: Application
                                                                └──Expression:
                                                                   └──Type expr: Arrow
                                                                      └──Type expr: Constructor: term
-                                                                        └──Type expr: Variable: α648
-                                                                     └──Type expr: Variable: α648
+                                                                        └──Type expr: Variable: α728
+                                                                     └──Type expr: Variable: α728
                                                                   └──Desc: Variable
                                                                      └──Variable: eval
-                                                                     └──Type expr: Variable: α648
+                                                                     └──Type expr: Variable: α728
                                                                └──Expression:
                                                                   └──Type expr: Constructor: term
-                                                                     └──Type expr: Variable: α648
+                                                                     └──Type expr: Variable: α728
                                                                   └──Desc: Variable
                                                                      └──Variable: t2
                                                          └──Expression:
-                                                            └──Type expr: Variable: α648
+                                                            └──Type expr: Variable: α728
                                                             └──Desc: Application
                                                                └──Expression:
                                                                   └──Type expr: Arrow
                                                                      └──Type expr: Constructor: term
-                                                                        └──Type expr: Variable: α648
-                                                                     └──Type expr: Variable: α648
+                                                                        └──Type expr: Variable: α728
+                                                                     └──Type expr: Variable: α728
                                                                   └──Desc: Variable
                                                                      └──Variable: eval
-                                                                     └──Type expr: Variable: α648
+                                                                     └──Type expr: Variable: α728
                                                                └──Expression:
                                                                   └──Type expr: Constructor: term
-                                                                     └──Type expr: Variable: α648
+                                                                     └──Type expr: Variable: α728
                                                                   └──Desc: Variable
                                                                      └──Variable: t3
                                                 └──Case:
                                                    └──Pattern:
                                                       └──Type expr: Constructor: term
-                                                         └──Type expr: Variable: α648
+                                                         └──Type expr: Variable: α728
                                                       └──Desc: Construct
                                                          └──Constructor description:
                                                             └──Name: Pair
                                                             └──Constructor argument type:
                                                                └──Type expr: Tuple
                                                                   └──Type expr: Constructor: term
-                                                                     └──Type expr: Variable: α732
+                                                                     └──Type expr: Variable: α740
                                                                   └──Type expr: Constructor: term
-                                                                     └──Type expr: Variable: α743
+                                                                     └──Type expr: Variable: α732
                                                             └──Constructor type:
                                                                └──Type expr: Constructor: term
-                                                                  └──Type expr: Variable: α648
+                                                                  └──Type expr: Variable: α728
                                                          └──Pattern:
                                                             └──Type expr: Tuple
                                                                └──Type expr: Constructor: term
-                                                                  └──Type expr: Variable: α732
+                                                                  └──Type expr: Variable: α740
                                                                └──Type expr: Constructor: term
-                                                                  └──Type expr: Variable: α743
+                                                                  └──Type expr: Variable: α732
                                                             └──Desc: Tuple
                                                                └──Pattern:
                                                                   └──Type expr: Constructor: term
-                                                                     └──Type expr: Variable: α732
+                                                                     └──Type expr: Variable: α740
                                                                   └──Desc: Variable: t1
                                                                └──Pattern:
                                                                   └──Type expr: Constructor: term
-                                                                     └──Type expr: Variable: α743
+                                                                     └──Type expr: Variable: α732
                                                                   └──Desc: Variable: t2
                                                    └──Expression:
-                                                      └──Type expr: Variable: α648
+                                                      └──Type expr: Variable: α728
                                                       └──Desc: Tuple
+                                                         └──Expression:
+                                                            └──Type expr: Variable: α740
+                                                            └──Desc: Application
+                                                               └──Expression:
+                                                                  └──Type expr: Arrow
+                                                                     └──Type expr: Constructor: term
+                                                                        └──Type expr: Variable: α740
+                                                                     └──Type expr: Variable: α740
+                                                                  └──Desc: Variable
+                                                                     └──Variable: eval
+                                                                     └──Type expr: Variable: α740
+                                                               └──Expression:
+                                                                  └──Type expr: Constructor: term
+                                                                     └──Type expr: Variable: α740
+                                                                  └──Desc: Variable
+                                                                     └──Variable: t1
                                                          └──Expression:
                                                             └──Type expr: Variable: α732
                                                             └──Desc: Application
@@ -3023,141 +3039,125 @@ let%expect_test "term - eval" =
                                                                   └──Type expr: Constructor: term
                                                                      └──Type expr: Variable: α732
                                                                   └──Desc: Variable
-                                                                     └──Variable: t1
-                                                         └──Expression:
-                                                            └──Type expr: Variable: α743
-                                                            └──Desc: Application
-                                                               └──Expression:
-                                                                  └──Type expr: Arrow
-                                                                     └──Type expr: Constructor: term
-                                                                        └──Type expr: Variable: α743
-                                                                     └──Type expr: Variable: α743
-                                                                  └──Desc: Variable
-                                                                     └──Variable: eval
-                                                                     └──Type expr: Variable: α743
-                                                               └──Expression:
-                                                                  └──Type expr: Constructor: term
-                                                                     └──Type expr: Variable: α743
-                                                                  └──Desc: Variable
                                                                      └──Variable: t2
                                                 └──Case:
                                                    └──Pattern:
                                                       └──Type expr: Constructor: term
-                                                         └──Type expr: Variable: α648
+                                                         └──Type expr: Variable: α728
                                                       └──Desc: Construct
                                                          └──Constructor description:
                                                             └──Name: Fst
                                                             └──Constructor argument type:
                                                                └──Type expr: Constructor: term
                                                                   └──Type expr: Tuple
-                                                                     └──Type expr: Variable: α765
-                                                                     └──Type expr: Variable: α775
+                                                                     └──Type expr: Variable: α763
+                                                                     └──Type expr: Variable: α764
                                                             └──Constructor type:
                                                                └──Type expr: Constructor: term
-                                                                  └──Type expr: Variable: α648
+                                                                  └──Type expr: Variable: α728
                                                          └──Pattern:
                                                             └──Type expr: Constructor: term
                                                                └──Type expr: Tuple
-                                                                  └──Type expr: Variable: α765
-                                                                  └──Type expr: Variable: α775
+                                                                  └──Type expr: Variable: α763
+                                                                  └──Type expr: Variable: α764
                                                             └──Desc: Variable: t
                                                    └──Expression:
-                                                      └──Type expr: Variable: α648
+                                                      └──Type expr: Variable: α728
                                                       └──Desc: Application
                                                          └──Expression:
                                                             └──Type expr: Arrow
                                                                └──Type expr: Tuple
-                                                                  └──Type expr: Variable: α648
-                                                                  └──Type expr: Variable: α775
-                                                               └──Type expr: Variable: α648
+                                                                  └──Type expr: Variable: α728
+                                                                  └──Type expr: Variable: α764
+                                                               └──Type expr: Variable: α728
                                                             └──Desc: Variable
                                                                └──Variable: fst
-                                                               └──Type expr: Variable: α775
-                                                               └──Type expr: Variable: α648
+                                                               └──Type expr: Variable: α764
+                                                               └──Type expr: Variable: α728
                                                          └──Expression:
                                                             └──Type expr: Tuple
-                                                               └──Type expr: Variable: α648
-                                                               └──Type expr: Variable: α775
+                                                               └──Type expr: Variable: α728
+                                                               └──Type expr: Variable: α764
                                                             └──Desc: Application
                                                                └──Expression:
                                                                   └──Type expr: Arrow
                                                                      └──Type expr: Constructor: term
                                                                         └──Type expr: Tuple
-                                                                           └──Type expr: Variable: α648
-                                                                           └──Type expr: Variable: α775
+                                                                           └──Type expr: Variable: α728
+                                                                           └──Type expr: Variable: α764
                                                                      └──Type expr: Tuple
-                                                                        └──Type expr: Variable: α648
-                                                                        └──Type expr: Variable: α775
+                                                                        └──Type expr: Variable: α728
+                                                                        └──Type expr: Variable: α764
                                                                   └──Desc: Variable
                                                                      └──Variable: eval
                                                                      └──Type expr: Tuple
-                                                                        └──Type expr: Variable: α648
-                                                                        └──Type expr: Variable: α775
+                                                                        └──Type expr: Variable: α728
+                                                                        └──Type expr: Variable: α764
                                                                └──Expression:
                                                                   └──Type expr: Constructor: term
                                                                      └──Type expr: Tuple
-                                                                        └──Type expr: Variable: α648
-                                                                        └──Type expr: Variable: α775
+                                                                        └──Type expr: Variable: α728
+                                                                        └──Type expr: Variable: α764
                                                                   └──Desc: Variable
                                                                      └──Variable: t
                                                 └──Case:
                                                    └──Pattern:
                                                       └──Type expr: Constructor: term
-                                                         └──Type expr: Variable: α648
+                                                         └──Type expr: Variable: α728
                                                       └──Desc: Construct
                                                          └──Constructor description:
                                                             └──Name: Snd
                                                             └──Constructor argument type:
                                                                └──Type expr: Constructor: term
                                                                   └──Type expr: Tuple
-                                                                     └──Type expr: Variable: α799
-                                                                     └──Type expr: Variable: α791
+                                                                     └──Type expr: Variable: α797
+                                                                     └──Type expr: Variable: α789
                                                             └──Constructor type:
                                                                └──Type expr: Constructor: term
-                                                                  └──Type expr: Variable: α648
+                                                                  └──Type expr: Variable: α728
                                                          └──Pattern:
                                                             └──Type expr: Constructor: term
                                                                └──Type expr: Tuple
-                                                                  └──Type expr: Variable: α799
-                                                                  └──Type expr: Variable: α791
+                                                                  └──Type expr: Variable: α797
+                                                                  └──Type expr: Variable: α789
                                                             └──Desc: Variable: t
                                                    └──Expression:
-                                                      └──Type expr: Variable: α648
+                                                      └──Type expr: Variable: α728
                                                       └──Desc: Application
                                                          └──Expression:
                                                             └──Type expr: Arrow
                                                                └──Type expr: Tuple
-                                                                  └──Type expr: Variable: α799
-                                                                  └──Type expr: Variable: α648
-                                                               └──Type expr: Variable: α648
+                                                                  └──Type expr: Variable: α797
+                                                                  └──Type expr: Variable: α728
+                                                               └──Type expr: Variable: α728
                                                             └──Desc: Variable
                                                                └──Variable: snd
-                                                               └──Type expr: Variable: α648
-                                                               └──Type expr: Variable: α799
+                                                               └──Type expr: Variable: α728
+                                                               └──Type expr: Variable: α797
                                                          └──Expression:
                                                             └──Type expr: Tuple
-                                                               └──Type expr: Variable: α799
-                                                               └──Type expr: Variable: α648
+                                                               └──Type expr: Variable: α797
+                                                               └──Type expr: Variable: α728
                                                             └──Desc: Application
                                                                └──Expression:
                                                                   └──Type expr: Arrow
                                                                      └──Type expr: Constructor: term
                                                                         └──Type expr: Tuple
-                                                                           └──Type expr: Variable: α799
-                                                                           └──Type expr: Variable: α648
+                                                                           └──Type expr: Variable: α797
+                                                                           └──Type expr: Variable: α728
                                                                      └──Type expr: Tuple
-                                                                        └──Type expr: Variable: α799
-                                                                        └──Type expr: Variable: α648
+                                                                        └──Type expr: Variable: α797
+                                                                        └──Type expr: Variable: α728
                                                                   └──Desc: Variable
                                                                      └──Variable: eval
                                                                      └──Type expr: Tuple
-                                                                        └──Type expr: Variable: α799
-                                                                        └──Type expr: Variable: α648
+                                                                        └──Type expr: Variable: α797
+                                                                        └──Type expr: Variable: α728
                                                                └──Expression:
                                                                   └──Type expr: Constructor: term
                                                                      └──Type expr: Tuple
-                                                                        └──Type expr: Variable: α799
-                                                                        └──Type expr: Variable: α648
+                                                                        └──Type expr: Variable: α797
+                                                                        └──Type expr: Variable: α728
                                                                   └──Desc: Variable
                                                                      └──Variable: t
                         └──Expression:
