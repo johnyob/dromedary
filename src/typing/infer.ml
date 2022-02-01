@@ -45,6 +45,10 @@ let bool = Type_former.Constr ([], "bool")
 let bool_ = Type.former bool
 let unit = Type_former.Constr ([], "unit")
 let unit_ = Type.former unit
+let exn = Type_former.Constr ([], "exn")
+let exn_ = Type.former exn
+let ref x = Type_former.Constr ([ x ], "ref")
+let ref_ x = Type.former (ref x)
 
 (* [convert_core_type core_type] converts core type [core_type] to [Type.t]. *)
 let rec convert_core_type ~substitution core_type : (Type.t, _) Result.t =
@@ -89,13 +93,6 @@ let infer_constant const : Type.t =
   | Const_int _ -> int_
   | Const_bool _ -> bool_
   | Const_unit -> unit_
-
-
-(* [infer_primitive prim] returns the type of [prim]. *)
-let infer_primitive prim : Type.t =
-  match prim with
-  | Prim_add | Prim_sub | Prim_div | Prim_mul -> int_ @--> int_ @--> int_
-  | Prim_eq -> int_ @--> int_ @--> bool_
 
 
 let make_constr_desc constr_name constr_arg constr_type
@@ -312,6 +309,20 @@ let annotation_of_rec_value_binding value_binding
         (`Unannotated
           (value_binding.pvb_forall_vars, term_var, value_binding.pvb_expr))
     | _ -> fail `Invalid_recursive_binding)
+
+
+(** {4: Value restriction} *)
+
+let rec is_non_expansive exp = 
+  match exp with
+  | Pexp_var _ | Pexp_const _ | Pexp_prim _ | Pexp_fun _ -> true
+  | Pexp_construct (_, Some exp) -> is_non_expansive exp
+  | Pexp_construct (_, None) -> true
+  | Pexp_forall (_, exp) | Pexp_exists (_, exp) | Pexp_constraint (exp, _) | Pexp_let (Recursive, _, exp)   -> is_non_expansive exp
+  | Pexp_record label_exps -> List.for_all label_exps ~f:(fun (_, exp) -> is_non_expansive exp)
+  | Pexp_tuple exps -> List.for_all exps ~f:is_non_expansive
+  | Pexp_sequence (exp1, exp2) -> is_non_expansive exp1 && is_non_expansive exp2
+  | Pexp_let _ | Pexp_match _ | Pexp_ifthenelse _ | Pexp_app _ | Pexp_while _ | Pexp_for _ | Pexp_try _ | Pexp_field _ -> false
 
 
 module Pattern = struct
@@ -687,13 +698,58 @@ module Expression = struct
       (existential_bindings, term_bindings, pat, local_constraint, substitution)
 
 
+  let infer_primitive prim prim_type : unit Constraint.t Computation.t =
+    let open Computation.Let_syntax in
+    match prim with
+    | Prim_add | Prim_sub | Prim_div | Prim_mul ->
+      return (prim_type =~- int_ @--> int_ @--> int_)
+    | Prim_eq -> return (prim_type =~- int_ @--> int_ @--> bool_)
+    | Prim_ref ->
+      let@ var = exists () in
+      let var = Type.var var in
+      return (prim_type =~- var @--> ref_ var)
+    | Prim_deref ->
+      let@ var = exists () in
+      let var = Type.var var in
+      return (prim_type =~- ref_ var @--> var)
+    | Prim_assign ->
+      let@ var = exists () in
+      let var = Type.var var in
+      return (prim_type =~- ref_ var @--> var @--> unit_)
+
+
+  let bind_pat pat pat_type ~in_ : (Typedtree.pattern * _) Constraint.t Binder.t
+    =
+    let open Binder.Let_syntax in
+    let%bind existential_bindings, bindings, pat, local_constraint, substitution
+      =
+      infer_pat pat pat_type
+    in
+    let& in_ = extend_substitution ~substitution in_ in
+    return
+      (let%map pats, in_ =
+         let_
+           ~bindings:
+             [ ((([], existential_bindings) @. pat) @=> (true, bindings))
+                 local_constraint
+             ]
+           ~in_
+       in
+       let pat =
+         match pats with
+         | [ (_, (_, pat)) ] -> pat
+         | _ -> assert false
+       in
+       pat, in_)
+
+
   let make_exp_desc_forall vars var exp_desc exp_type =
     let open Constraint.Let_syntax in
     let internal_name = "@dromedary.internal.pexp_forall" in
     let%map term_let_bindings, _ =
       let_
         ~bindings:
-          [ (((vars, [ var, None ]) @. exp_desc) @=> [ internal_name #= var ])
+          [ (((vars, [ var, None ]) @. exp_desc) @=> (true, [ internal_name #= var ]))
               []
           ]
         ~in_:(inst internal_name exp_type)
@@ -701,7 +757,6 @@ module Expression = struct
     match term_let_bindings with
     | [ (_, (_, exp_desc)) ] -> exp_desc
     | _ -> assert false
-
 
   let infer_exp exp exp_type : Typedtree.expression Constraint.t Computation.t =
     let rec infer_exp exp exp_type
@@ -723,8 +778,9 @@ module Expression = struct
           (let%map instances = inst x exp_type in
            Texp_var (x, instances))
       | Pexp_prim prim ->
+        let%bind constraint_ = infer_primitive prim exp_type in
         return
-          (let%map () = exp_type =~- infer_primitive prim in
+          (let%map () = constraint_ in
            Texp_prim prim)
       | Pexp_const const ->
         return
@@ -733,26 +789,10 @@ module Expression = struct
       | Pexp_fun (pat, exp) ->
         let@ var1 = exists () in
         let@ var2 = exists () in
-        let@ existential_bindings, bindings, pat, local_constraint, substitution
-          =
-          infer_pat pat var1
-        in
-        let%bind exp = extend_substitution ~substitution (infer_exp exp var2) in
+        let@ pat_exp = bind_pat pat var1 ~in_:(infer_exp exp var2) in
         return
           (let%map () = exp_type =~= var1 @-> var2
-           and pats, exp =
-             let_
-               ~bindings:
-                 [ ((([], existential_bindings) @. pat) @=> bindings)
-                     local_constraint
-                 ]
-               ~in_:exp
-           in
-           let pat =
-             match pats with
-             | [ (_, (_, pat)) ] -> pat
-             | _ -> assert false
-           in
+           and pat, exp = pat_exp in
            Texp_fun (pat, exp))
       | Pexp_app (exp1, exp2) ->
         let@ var = exists () in
@@ -877,6 +917,47 @@ module Expression = struct
              let_rec ~bindings:let_bindings ~in_:exp
            in
            Texp_let_rec (List.map ~f:to_rec_value_binding let_bindings, exp))
+      | Pexp_try (exp, cases) ->
+        let%bind exp = infer_exp exp exp_type in
+        let@ exn = of_type exn_ in
+        let%bind cases = infer_cases cases exn exp_type in
+        return
+          (let%map exp = exp
+           and cases = cases in
+           Texp_try (exp, cases))
+      | Pexp_sequence (exp1, exp2) ->
+        let%bind exp1 = lift (infer_exp exp1) unit in
+        let%bind exp2 = infer_exp exp2 exp_type in
+        return
+          (let%map exp1 = exp1
+           and exp2 = exp2 in
+           Texp_sequence (exp1, exp2))
+      | Pexp_while (exp1, exp2) ->
+        let%bind exp1 = lift (infer_exp exp1) bool in
+        let%bind exp2 = lift (infer_exp exp2) unit in
+        return
+          (let%map () = exp_type =~= unit
+           and exp1 = exp1
+           and exp2 = exp2 in
+           Texp_while (exp1, exp2))
+      | Pexp_for (pat, exp1, exp2, direction_flag, exp3) ->
+        let%bind index =
+          match pat with
+          | Ppat_any -> return "_for"
+          | Ppat_var x -> return x
+          | _ ->
+            fail [%message "Invalid for loop index" (pat : Parsetree.pattern)]
+        in
+        let%bind exp1 = lift (infer_exp exp1) int in
+        let%bind exp2 = lift (infer_exp exp2) int in
+        let%bind exp3 = lift (infer_exp exp3) unit in
+        let@ int = of_type int_ in
+        return
+          (let%map () = exp_type =~= unit
+           and exp1 = exp1
+           and exp2 = exp2
+           and exp3 = def ~bindings:[ index #= int ] ~in_:exp3 in
+           Texp_for (index, exp1, exp2, direction_flag, exp3))
     and infer_exps exps
         : (variable list * Typedtree.expression list Constraint.t) Binder.t
       =
@@ -898,31 +979,11 @@ module Expression = struct
       let open Computation.Let_syntax in
       let%bind cases =
         List.map cases ~f:(fun { pc_lhs; pc_rhs } ->
-            let@ ( existential_bindings
-                 , bindings
-                 , pat
-                 , local_constraint
-                 , substitution )
-              =
-              infer_pat pc_lhs lhs_type
-            in
-            let%bind exp =
-              extend_substitution ~substitution (infer_exp pc_rhs rhs_type)
+            let@ pat_exp =
+              bind_pat pc_lhs lhs_type ~in_:(infer_exp pc_rhs rhs_type)
             in
             return
-              (let%map pats, exp =
-                 let_
-                   ~bindings:
-                     [ ((([], existential_bindings) @. pat) @=> bindings)
-                         local_constraint
-                     ]
-                   ~in_:exp
-               in
-               let pat =
-                 match pats with
-                 | [ (_, (_, pat)) ] -> pat
-                 | _ -> assert false
-               in
+              (let%map pat, exp = pat_exp in
                { tc_lhs = pat; tc_rhs = exp }))
         |> all
       in
@@ -970,11 +1031,12 @@ module Expression = struct
           in
           (* Temporary: TODO: Figure out how to merge universals w/ new lets. *)
           assert (List.is_empty universal_bindings);
+          let is_non_expansive = is_non_expansive exp in
           let%bind exp = infer_exp exp var in
           return
             ((((forall_vars, (var, None) :: existential_bindings)
               @. (pat &~ exp))
-             @=> bindings)
+             @=> (is_non_expansive, bindings))
                local_constraint))
         ~message:(fun var ->
           [%message
@@ -1027,7 +1089,7 @@ module Expression = struct
 end
 
 let let_0 ~in_ =
-  let_ ~bindings:[ ((([], []) @. in_) @=> []) [] ] ~in_:(return ())
+  let_ ~bindings:[ ((([], []) @. in_) @=> (true, [])) [] ] ~in_:(return ())
   >>| function
   | [ ([], (vars, t)) ], _ -> vars, t
   | _ -> assert false

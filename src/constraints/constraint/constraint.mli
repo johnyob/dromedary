@@ -146,6 +146,7 @@ module Make (Algebra : Algebra) : sig
     | Let_binding of
         { rigid_vars : variable list
         ; flexible_vars : Shallow_type.binding list
+        ; is_non_expansive : bool
         ; bindings : binding list
         ; in_ : 'a t
         ; equations : (Type.t * Type.t) list
@@ -234,7 +235,7 @@ module Make (Algebra : Algebra) : sig
 
   val ( @=> )
     :  variable list * Shallow_type.binding list * 'a t
-    -> binding list
+    -> bool * binding list
     -> (Type.t * Type.t) list
     -> 'a let_binding
 
@@ -248,7 +249,7 @@ module Make (Algebra : Algebra) : sig
     -> binding
     -> 'a let_rec_binding
 
-  (** [let_ ~bindings ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
+  (** [let_ ~binding ~in_] binds the let binding [binding] in the constraint [in_]. *)
   val let_
     :  bindings:'a let_binding list
     -> in_:'b t

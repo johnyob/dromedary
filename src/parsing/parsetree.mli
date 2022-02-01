@@ -106,6 +106,15 @@ type expression =
       (** Match (or "case") expressions [match E with (P1 -> E1 | ... | Pn -> En)]. *)
   | Pexp_ifthenelse of expression * expression * expression
       (** If (or ternary) expressions [if E then E1 else E2]. *)
+  | Pexp_try of expression * case list
+      (** try E0 with P1 -> E1 | ... | Pn -> En *)
+  | Pexp_sequence of expression * expression
+      (** E1; E2 *)
+  | Pexp_while of expression * expression
+      (** while E1 do E2 done *)
+  | Pexp_for of pattern * expression * expression * direction_flag * expression
+      (** for i = E1 to E2 do E3 done
+          for i = E2 downto E2 do E3 done *)
 [@@deriving sexp_of]
 
 (** [P = E] *)

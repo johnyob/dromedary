@@ -52,6 +52,10 @@ type expression =
   | Pexp_tuple of expression list
   | Pexp_match of expression * case list
   | Pexp_ifthenelse of expression * expression * expression
+  | Pexp_try of expression * case list
+  | Pexp_sequence of expression * expression
+  | Pexp_while of expression * expression
+  | Pexp_for of pattern * expression * expression * direction_flag * expression
 [@@deriving sexp_of]
 
 (** [P = E] *)
@@ -210,6 +214,30 @@ let rec pp_expression_mach ~indent ppf exp =
   | Pexp_ifthenelse (exp1, exp2, exp3) ->
     print "If";
     pp_expression_mach ~indent ppf exp1;
+    pp_expression_mach ~indent ppf exp2;
+    pp_expression_mach ~indent ppf exp3
+  | Pexp_try (exp, cases) ->
+    print "Try";
+    pp_expression_mach ~indent ppf exp;
+    Format.fprintf ppf "%sCases:@." indent;
+    List.iter ~f:(pp_case_mach ~indent:(indent_space ^ indent) ppf) cases
+  | Pexp_sequence (exp1, exp2) ->
+    print "Sequence";
+    pp_expression_mach ~indent ppf exp1;
+    pp_expression_mach ~indent ppf exp2
+  | Pexp_while (exp1, exp2) ->
+    print "While";
+    pp_expression_mach ~indent ppf exp1;
+    pp_expression_mach ~indent ppf exp2
+  | Pexp_for (pat, exp1, exp2, direction_flag, exp3) ->
+    print "For";
+    pp_pattern_mach ~indent ppf pat;
+    pp_expression_mach ~indent ppf exp1;
+    Format.fprintf
+      ppf
+      "%sDirection: %s@."
+      indent
+      (string_of_direction_flag direction_flag);
     pp_expression_mach ~indent ppf exp2;
     pp_expression_mach ~indent ppf exp3
 
@@ -484,6 +512,46 @@ let rec pp_expression ppf exp =
       "@[(@[if@ %a@]@;@[then@ %a@]@;@[else@ %a@])@]"
       pp_expression
       exp1
+      pp_expression
+      exp2
+      pp_expression
+      exp3
+  | Pexp_try (exp, cases) ->
+    Format.fprintf
+      ppf
+      "@[<hv>@[@[try@ %a@]@ with@]@ (%a)@]"
+      pp_expression
+      exp
+      (fun ppf -> list ~sep:"@;|@;" ~pp:pp_case ppf)
+      cases
+  | Pexp_sequence _ ->
+    let rec loop exp =
+      match exp with
+      | Pexp_sequence (exp1, exp2) -> exp1 :: loop exp2
+      | _ -> [ exp ]
+    in
+    Format.fprintf
+      ppf
+      "@[<hv>%a@]"
+      (fun ppf -> list ~sep:";@;" ~pp:pp_expression ppf)
+      (loop exp)
+  | Pexp_while (exp1, exp2) ->
+    Format.fprintf
+      ppf
+      "@[<2>while@;%a@;do@;%a@;done@]"
+      pp_expression
+      exp1
+      pp_expression
+      exp2
+  | Pexp_for (pat, exp1, exp2, direction_flag, exp3) ->
+    Format.fprintf
+      ppf
+      "@[<hv0>@[<hv2>@[<2>for %a =@;%a@;%s@;%a@;do@]@;%a@]@;done@]"
+      pp_pattern
+      pat
+      pp_expression
+      exp1
+      (string_of_direction_flag direction_flag)
       pp_expression
       exp2
       pp_expression
