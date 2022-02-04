@@ -29,9 +29,11 @@ module Make (Structure : Structure.S) = struct
      the notion provides useful insight. 
   *)
 
-  type 'a structure = 'a Structure.t
-  type ctx = Structure.ctx
-  type 'a expansive = 'a Structure.expansive
+  type 'a metadata = 'a Structure.Metadata.t [@@deriving sexp_of]
+  type 'a structure = 'a Structure.Descriptor.t [@@deriving sexp_of]
+
+  type ctx = Structure.Descriptor.ctx
+  type 'a expansive = 'a Structure.Descriptor.expansive
 
   module Type = struct
     (* A graphical type consists of a [Union_find] node,
@@ -62,7 +64,8 @@ module Make (Structure : Structure.S) = struct
     *)
     and desc =
       { id : int
-      ; mutable structure : t Structure.t
+      ; mutable metadata : t metadata
+      ; mutable structure : t structure
       }
     [@@deriving sexp_of]
 
@@ -94,7 +97,7 @@ module Make (Structure : Structure.S) = struct
        metadata [metadata]. *)
     let make =
       let id = ref 0 in
-      fun structure -> Union_find.make { id = post_incr id; structure }
+      fun structure metadata -> Union_find.make { id = post_incr id; metadata; structure }
 
 
     module To_dot = struct
@@ -109,7 +112,7 @@ module Make (Structure : Structure.S) = struct
 
 
       let structure_to_string structure : string =
-        Structure.sexp_of_t (fun _ -> Atom "") structure |> Sexp.to_string_hum
+        Structure.Descriptor.sexp_of_t (fun _ -> Atom "") structure |> Sexp.to_string_hum
 
 
       let register state t : string =
@@ -137,7 +140,7 @@ module Make (Structure : Structure.S) = struct
             let me = register state t in
             Hashtbl.set table ~key:(id t) ~data:me;
             get_structure t
-            |> Structure.iter ~f:(fun t ->
+            |> Structure.Descriptor.iter ~f:(fun t ->
                    let from = loop t in
                    arrow state ~from ~to_:me);
             me
@@ -170,16 +173,17 @@ module Make (Structure : Structure.S) = struct
   (* [unify_desc desc1 desc2] unifies the descriptors of the graph types
      (of multi-equations). *)
   and unify_desc ~expansive ~ctx desc1 desc2 =
+    let structure = unify_structure ~expansive ~ctx (desc1.structure, desc1.metadata) (desc2.structure, desc2.metadata) in
     { id = desc1.id
-    ; structure =
-        unify_structure ~expansive ~ctx desc1.structure desc2.structure
+    ; structure 
+    ; metadata = Structure.Metadata.merge desc1.metadata desc2.metadata
     }
 
 
   (* [unify_structure structure1 structure2] unifies two graph type node
      structures. We handle rigid variables here. *)
   and unify_structure ~expansive =
-    let merge = Structure.merge ~expansive in
+    let merge = Structure.Descriptor.merge ~expansive in
     fun ~ctx structure1 structure2 ->
       merge ~ctx ~equate:(unify_exn ~expansive ~ctx) structure1 structure2
 
@@ -188,7 +192,7 @@ module Make (Structure : Structure.S) = struct
 
   let unify ~expansive ~ctx t1 t2 =
     try unify_exn ~expansive ~ctx t1 t2 with
-    | Structure.Cannot_merge -> raise (Unify (t1, t2))
+    | Structure.Descriptor.Cannot_merge -> raise (Unify (t1, t2))
 
 
   exception Cycle of Type.t
@@ -216,7 +220,7 @@ module Make (Structure : Structure.S) = struct
       | Not_found_s _ ->
         Hashtbl.set table ~key:type_ ~data:false;
         (* Visit children *)
-        Structure.iter ~f:loop (get_structure type_);
+        Structure.Descriptor.iter ~f:loop (get_structure type_);
         (* Mark this variable as black. *)
         Hashtbl.set table ~key:type_ ~data:true
     in
@@ -226,7 +230,7 @@ module Make (Structure : Structure.S) = struct
   (* [fold_acyclic type_ ~var ~form] will perform a bottom-up fold
      over the (assumed) acyclic graph defined by the type [type_]. *)
 
-  let fold_acyclic (type a) type_ ~(f : Type.t -> a Structure.t -> a) : a =
+  let fold_acyclic (type a) type_ ~(f : Type.t -> a Structure.Descriptor.t -> a) : a =
     (* Hash table records whether node has been visited, and 
       it's computed value. *)
     let visited : (Type.t, a) Hashtbl.t = Hashtbl.create (module Type) in
@@ -234,7 +238,7 @@ module Make (Structure : Structure.S) = struct
     let rec loop type_ =
       try Hashtbl.find_exn visited type_ with
       | Not_found_s _ ->
-        let result = f type_ (get_structure type_ |> Structure.map ~f:loop) in
+        let result = f type_ (get_structure type_ |> Structure.Descriptor.map ~f:loop) in
         (* We assume we can set [type_] in [visited] *after* traversing
           it's children, since the graph is acyclic. *)
         Hashtbl.set visited ~key:type_ ~data:result;
@@ -246,7 +250,7 @@ module Make (Structure : Structure.S) = struct
   let fold_cyclic
       (type a)
       type_
-      ~(f : Type.t -> a Structure.t -> a)
+      ~(f : Type.t -> a Structure.Descriptor.t -> a)
       ~(var : Type.t -> a)
       ~(mu : Type.t -> a -> a)
       : a
@@ -265,7 +269,7 @@ module Make (Structure : Structure.S) = struct
         (* Mark this node as grey. *)
         Hashtbl.set table ~key:type_ ~data:false;
         (* Visit children *)
-        let result = f type_ (get_structure type_ |> Structure.map ~f:loop) in
+        let result = f type_ (get_structure type_ |> Structure.Descriptor.map ~f:loop) in
         let status = Hashtbl.find_exn table type_ in
         Hashtbl.remove table type_;
         if status then mu type_ result else result)

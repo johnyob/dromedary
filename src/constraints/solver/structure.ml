@@ -31,59 +31,76 @@ module Rigid_var = struct
 end
 
 module Of_former (Former : Type_former.S) = struct
-  include Former
+  module Metadata = struct
+    type 'a t = unit [@@deriving sexp_of]
 
-  type ctx = unit
-  type 'a expansive = unit
+    let empty () = ()
+    let merge () () = ()
+  end
 
-  exception Cannot_merge
+  module Descriptor = struct
+    include Former
 
-  let merge ~expansive:() ~ctx:() ~equate t1 t2 =
-    (try Former.iter2_exn t1 t2 ~f:equate with
-    | Former.Iter2 -> raise Cannot_merge);
-    t1
+    type ctx = unit
+    type 'a expansive = unit
+
+    exception Cannot_merge
+
+    let merge ~expansive:() ~ctx:() ~equate (t1, ()) (t2, ()) =
+      (try Former.iter2_exn t1 t2 ~f:equate with
+      | Former.Iter2 -> raise Cannot_merge);
+      t1
+  end
 end
 
 module First_order (Structure : S) = struct
-  type 'a t =
-    | Var
-    | Structure of 'a Structure.t
-  [@@deriving sexp_of]
+  open Structure
+  module Metadata = Metadata
 
-  let iter t ~f =
-    match t with
-    | Var -> ()
-    | Structure structure -> Structure.iter structure ~f
+  module Descriptor = struct
+    type 'a t =
+      | Var
+      | Structure of 'a Descriptor.t
+    [@@deriving sexp_of]
 
-
-  let map t ~f =
-    match t with
-    | Var -> Var
-    | Structure structure -> Structure (Structure.map structure ~f)
+    let iter t ~f =
+      match t with
+      | Var -> ()
+      | Structure structure -> Descriptor.iter structure ~f
 
 
-  let fold t ~f ~init =
-    match t with
-    | Var -> init
-    | Structure structure -> Structure.fold structure ~f ~init
+    let map t ~f =
+      match t with
+      | Var -> Var
+      | Structure structure -> Structure (Descriptor.map structure ~f)
 
 
-  type 'a expansive = 'a Structure.expansive
-  type ctx = Structure.ctx
+    let fold t ~f ~init =
+      match t with
+      | Var -> init
+      | Structure structure -> Descriptor.fold structure ~f ~init
 
-  exception Cannot_merge
 
-  let merge ~expansive ~ctx ~equate t1 t2 =
-    match t1, t2 with
-    | Var, structure | structure, Var -> structure
-    | Structure structure1, Structure structure2 ->
-      (try
-         Structure
-           (Structure.merge ~expansive ~ctx ~equate structure1 structure2)
-       with
-      | Structure.Cannot_merge -> raise Cannot_merge)
+    type 'a expansive = 'a Descriptor.expansive
+    type ctx = Descriptor.ctx
+
+    exception Cannot_merge = Descriptor.Cannot_merge
+
+    let merge ~expansive ~ctx ~equate (desc1, metadata1) (desc2, metadata2) =
+      match desc1, desc2 with
+      | Var, desc | desc, Var -> desc
+      | Structure desc1, Structure desc2 ->
+        Structure
+          (Descriptor.merge
+             ~expansive
+             ~ctx
+             ~equate
+             (desc1, metadata1)
+             (desc2, metadata2))
+  end
 end
 
+(* 
 module Abbreviations
     (Structure : S)
     (Id : Identifiable with type 'a t := 'a Structure.t) =
@@ -219,13 +236,15 @@ struct
       t2' =~ t1;
       t2)
     else raise Cannot_merge
-end
+end *)
 
 module Ambivalent (Structure : S) = struct
+  open Structure
+
   module Rigid_type = struct
     type t =
       | Rigid_var of Rigid_var.t
-      | Structure of t Structure.t
+      | Structure of t Descriptor.t
   end
 
   module Equations = struct
@@ -245,198 +264,202 @@ module Ambivalent (Structure : S) = struct
 
       let empty = Map.empty (module Rigid_var)
 
-      exception Inconsistent
+      exception Inconsistent = Descriptor.Cannot_merge
 
-      let rec add_equation ~expansive ~ctx t rigid_var type1 scope =
+      let rec add_equation ~metadata ~expansive ~ctx t rigid_var type1 scope =
         match Map.find !t rigid_var with
-        | Some (type2, _) -> add_equations ~expansive ~ctx t type1 type2 scope
+        | Some (type2, _) ->
+          add_equations ~metadata ~expansive ~ctx t type1 type2 scope
         | None -> t := Map.set !t ~key:rigid_var ~data:(type1, scope)
 
 
-      and add_equations ~expansive ~ctx t type1 type2 scope =
+      and add_equations ~metadata ~expansive ~ctx t type1 type2 scope =
         let open Rigid_type in
+        let add_equations type1 type2 =
+          add_equations ~metadata ~expansive ~ctx t type1 type2 scope
+        in
+        let add_equation rigid_var type_ =
+          add_equation ~metadata ~expansive ~ctx t rigid_var type_ scope
+        in
         match type1, type2 with
-        | Rigid_var rigid_var, type2 ->
-          add_equation ~expansive ~ctx t rigid_var type2 scope
-        | type1, Rigid_var rigid_var ->
-          add_equation ~expansive ~ctx t rigid_var type1 scope
+        | Rigid_var rigid_var, type2 -> add_equation rigid_var type2
+        | type1, Rigid_var rigid_var -> add_equation rigid_var type1
         | Structure structure1, Structure structure2 ->
           ignore
-            (Structure.merge
+            (Descriptor.merge
                ~expansive
                ~ctx
-               ~equate:(fun type1' type2' ->
-                 add_equations ~expansive ~ctx t type1' type2' scope)
-               structure1
-               structure2
-              : _ Structure.t)
+               ~equate:add_equations
+               (structure1, metadata)
+               (structure2, metadata)
+              : _ Descriptor.t)
 
 
       let add ~expansive ~ctx t type1 type2 scope =
-        try
-          let t = ref t in
-          add_equations ~expansive ~ctx t type1 type2 scope;
-          !t
-        with
-        | Structure.Cannot_merge -> raise Inconsistent
+        let t = ref t in
+        let metadata : Rigid_type.t Metadata.t = Metadata.empty () in
+        add_equations ~metadata ~expansive ~ctx t type1 type2 scope;
+        !t
 
 
       let get_equation t rigid_var = Map.find t rigid_var
     end
   end
 
-  type 'a t =
-    { mutable desc : 'a desc
-    ; mutable scope : Equations.Scope.t
-    }
-  [@@deriving sexp_of]
+  module Metadata = struct
+    type 'a t =
+      { mutable scope : Equations.Scope.t
+      ; super_ : 'a Metadata.t
+      }
+    [@@deriving sexp_of]
 
-  and 'a desc =
-    | Flexible_var
-    | Rigid_var of Rigid_var.t
-    | Structure of 'a Structure.t
-
-  let make desc = { desc; scope = Equations.Scope.outermost_scope }
-  let desc t = t.desc
-  let set_desc t desc' = t.desc <- desc'
-  let scope t = t.scope
-  let update_scope t scope = if t.scope < scope then t.scope <- scope
-
-  let iter t ~f =
-    match t.desc with
-    | Flexible_var | Rigid_var _ -> ()
-    | Structure structure -> Structure.iter structure ~f
+    let empty () =
+      { scope = Equations.Scope.outermost_scope; super_ = Metadata.empty () }
 
 
-  let fold t ~f ~init =
-    match t.desc with
-    | Flexible_var | Rigid_var _ -> init
-    | Structure structure -> Structure.fold structure ~f ~init
+    let merge t1 t2 =
+      { scope = Equations.Scope.max t1.scope t2.scope
+      ; super_ = Metadata.merge t1.super_ t2.super_
+      }
 
 
-  let map t ~f =
-    let map_desc t ~f =
+    let scope t = t.scope
+    let update_scope t scope = if t.scope < scope then t.scope <- scope
+    let super_ t = t.super_
+  end
+
+  module Descriptor = struct
+    type 'a t =
+      | Rigid_var of Rigid_var.t
+      | Structure of 'a Descriptor.t
+    [@@deriving sexp_of]
+
+    let iter t ~f =
       match t with
-      | Flexible_var -> Flexible_var
+      | Rigid_var _ -> ()
+      | Structure structure -> Descriptor.iter structure ~f
+
+
+    let fold t ~f ~init =
+      match t with
+      | Rigid_var _ -> init
+      | Structure structure -> Descriptor.fold structure ~f ~init
+
+
+    let map t ~f =
+      match t with
       | Rigid_var rigid_var -> Rigid_var rigid_var
-      | Structure structure -> Structure (Structure.map structure ~f)
-    in
-    { t with desc = map_desc t.desc ~f }
+      | Structure structure -> Structure (Descriptor.map structure ~f)
 
 
-  type ctx = Equations.Ctx.t * Structure.ctx
+    type ctx = Equations.Ctx.t * Descriptor.ctx
 
-  type 'a expansive =
-    { make : 'a t -> 'a
-    ; sexpansive : 'a Structure.expansive
-    }
+    type 'a expansive =
+      { make : 'a t -> 'a
+      ; super_ : 'a Descriptor.expansive
+      }
 
-  let ectx = fst
-  let sctx = snd
+    let ectx = fst
+    let sctx = snd
 
-  exception Cannot_expand
+    exception Cannot_expand
 
-  let convert_rigid_type ~expansive rigid_type =
-    let rec loop rigid_type =
-      let open Rigid_type in
-      expansive.make
-        (match rigid_type with
-        | Rigid_var rigid_var -> make (Rigid_var rigid_var)
-        | Structure structure ->
-          let structure = Structure.map structure ~f:loop in
-          make (Structure structure))
-    in
-    loop rigid_type
+    let convert_rigid_type ~expansive rigid_type =
+      let rec loop rigid_type =
+        let open Rigid_type in
+        expansive.make
+          (match rigid_type with
+          | Rigid_var rigid_var -> Rigid_var rigid_var
+          | Structure structure ->
+            let structure = Descriptor.map structure ~f:loop in
+            Structure structure)
+      in
+      loop rigid_type
 
 
-  (* [expand ~expansive ~ctx rigid_var] returns a ['a Structure.t, scope] determined by [ctx].
+    (* [expand ~expansive ~ctx rigid_var] returns a ['a Structure.t, scope] determined by [ctx].
      Otherwise, raises Cannot_expansive *)
-  let expand ~expansive ~ctx rigid_var =
-    let rec loop rigid_var scope =
-      let open Rigid_type in
-      match Equations.Ctx.get_equation (ectx ctx) rigid_var with
-      | Some (Rigid_var rigid_var, scope') ->
-        loop rigid_var (Equations.Scope.max scope scope')
-      | Some (Structure structure, scope') ->
-        (* Convert [structure] using [term]. *)
-        let structure =
-          Structure.map structure ~f:(convert_rigid_type ~expansive)
-        in
-        structure, Equations.Scope.max scope scope'
-      | None -> raise Cannot_expand
-    in
-    loop rigid_var Equations.Scope.outermost_scope
+    let expand ~expansive ~ctx rigid_var =
+      let rec loop rigid_var scope =
+        let open Rigid_type in
+        match Equations.Ctx.get_equation (ectx ctx) rigid_var with
+        | Some (Rigid_var rigid_var, scope') ->
+          loop rigid_var (Equations.Scope.max scope scope')
+        | Some (Structure structure, scope') ->
+          (* Convert [structure] using [term]. *)
+          let structure =
+            Descriptor.map structure ~f:(convert_rigid_type ~expansive)
+          in
+          structure, Equations.Scope.max scope scope'
+        | None -> raise Cannot_expand
+      in
+      loop rigid_var Equations.Scope.outermost_scope
 
 
-  (* [is_equivalent] *)
-  let is_equivalent ~ctx rigid_var1 rigid_var2 =
-    let rec loop rigid_var1 rigid_var2 scope =
-      let open Rigid_type in
-      if rigid_var1 = rigid_var2
-      then true, scope
-      else (
-        match Equations.Ctx.get_equation (ectx ctx) rigid_var1 with
-        | Some (Rigid_var rigid_var2', scope') ->
-          if rigid_var2 = rigid_var2'
-          then true, max scope scope'
-          else loop rigid_var2' rigid_var2 (Equations.Scope.max scope scope')
-        | _ -> false, Equations.Scope.outermost_scope)
-    in
-    let first, scope1 =
-      loop rigid_var1 rigid_var2 Equations.Scope.outermost_scope
-    in
-    if first
-    then true, scope1
-    else loop rigid_var2 rigid_var1 Equations.Scope.outermost_scope
+    (* [is_equivalent] *)
+    let is_equivalent ~ctx rigid_var1 rigid_var2 =
+      let rec loop rigid_var1 rigid_var2 scope =
+        let open Rigid_type in
+        if rigid_var1 = rigid_var2
+        then true, scope
+        else (
+          match Equations.Ctx.get_equation (ectx ctx) rigid_var1 with
+          | Some (Rigid_var rigid_var2', scope') ->
+            if rigid_var2 = rigid_var2'
+            then true, max scope scope'
+            else loop rigid_var2' rigid_var2 (Equations.Scope.max scope scope')
+          | _ -> false, Equations.Scope.outermost_scope)
+      in
+      let first, scope1 =
+        loop rigid_var1 rigid_var2 Equations.Scope.outermost_scope
+      in
+      if first
+      then true, scope1
+      else loop rigid_var2 rigid_var1 Equations.Scope.outermost_scope
 
 
-  exception Cannot_merge = Structure.Cannot_merge
+    exception Cannot_merge = Descriptor.Cannot_merge
 
-  let merge_desc ~expansive ~ctx ~equate t1 t2 =
-    match t1, t2 with
-    | Flexible_var, desc | desc, Flexible_var ->
-      desc, Equations.Scope.outermost_scope
-    | Structure structure1, Structure structure2 ->
-      ( Structure
-          (Structure.merge
-             ~expansive:expansive.sexpansive
+    let merge ~expansive ~ctx ~equate (t1, metadata1) (t2, metadata2) =
+      match t1, t2 with
+      | Structure structure1, Structure structure2 ->
+        Structure
+          (Descriptor.merge
+             ~expansive:expansive.super_
              ~ctx:(sctx ctx)
              ~equate
-             structure1
-             structure2)
-      , Equations.Scope.outermost_scope )
-    | Rigid_var rigid_var, Structure structure
-    | Structure structure, Rigid_var rigid_var ->
-      (* Expand rigid variable to structure under [ectx ctx]. *)
-      let structure', scope =
-        try expand ~expansive ~ctx rigid_var with
-        | Cannot_expand -> raise Cannot_merge
-      in
-      (* Equate the 2 structures. *)
-      ignore
-        (Structure.merge
-           ~expansive:expansive.sexpansive
-           ~ctx:(sctx ctx)
-           ~equate
-           structure
-           structure'
-          : _ Structure.t);
-      (* Descriptor remains as [Rigid_var] *)
-      Rigid_var rigid_var, scope
-    | Rigid_var rigid_var1, Rigid_var rigid_var2 ->
-      (* Determine whether [rigid_var1], [rigid_var2] are equivalent under
+             (structure1, Metadata.super_ metadata1)
+             (structure2, Metadata.super_ metadata2))
+      | Rigid_var rigid_var, Structure structure
+      | Structure structure, Rigid_var rigid_var ->
+        (* Expand rigid variable to structure under [ectx ctx]. *)
+        let structure', scope =
+          try expand ~expansive ~ctx rigid_var with
+          | Cannot_expand -> raise Cannot_merge
+        in
+        (* Equate the 2 structures. *)
+        ignore
+          (Descriptor.merge
+             ~expansive:expansive.super_
+             ~ctx:(sctx ctx)
+             ~equate
+             (structure, Metadata.super_ metadata1)
+             (structure', Metadata.super_ metadata2)
+            : _ Descriptor.t);
+        (* Pick an arbitrary metadata to update the scope *)
+        Metadata.update_scope metadata1 scope;
+        (* Descriptor remains as [Rigid_var] *)
+        Rigid_var rigid_var
+      | Rigid_var rigid_var1, Rigid_var rigid_var2 ->
+        (* Determine whether [rigid_var1], [rigid_var2] are equivalent under
          [ectx ctx]. *)
-      let is_equiv, scope = is_equivalent ~ctx rigid_var1 rigid_var2 in
-      if not is_equiv then raise Cannot_merge;
-      (* Return arbitrary rigid variable *)
-      Rigid_var rigid_var1, scope
-
-
-  let merge ~expansive ~ctx ~equate t1 t2 =
-    let desc, scope = merge_desc ~expansive ~equate ~ctx t1.desc t2.desc in
-    { desc
-    ; scope = Equations.Scope.max t1.scope (Equations.Scope.max t2.scope scope)
-    }
+        let is_equiv, scope = is_equivalent ~ctx rigid_var1 rigid_var2 in
+        if not is_equiv then raise Cannot_merge;
+        (* Pick an arbitrary metadata to update the scope *)
+        Metadata.update_scope metadata1 scope;
+        (* Return arbitrary rigid variable *)
+        Rigid_var rigid_var1
+  end
 
   (* let merge_scoped scoped1 scoped2 ~f =
     let t1, scope1 = scoped1 in
