@@ -110,6 +110,7 @@ module Make (Algebra : Algebra) = struct
   (* ['a t] is a constraint with value type ['a]. *)
   type _ t =
     | True : unit t (** [true] *)
+    | Return : 'a -> 'a t
     | Conj : 'a t * 'b t -> ('a * 'b) t (** [C₁ && C₂] *)
     | Eq : variable * variable -> unit t (** [ɑ₁ = ɑ₂] *)
     | Exist : Shallow_type.binding list * 'a t -> 'a t (** [exists Θ. C] *)
@@ -165,6 +166,7 @@ module Make (Algebra : Algebra) = struct
   let rec sexp_of_t : type a. a t -> Sexp.t =
    fun t ->
     match t with
+    | Return _ -> [%sexp Return]
     | True -> [%sexp True]
     | Conj (t1, t2) -> [%sexp Conj (t1 : t), (t2 : t)]
     | Eq (a1, a2) -> [%sexp Eq (a1 : variable), (a2 : variable)]
@@ -239,7 +241,7 @@ module Make (Algebra : Algebra) = struct
   include Applicative.Make (struct
     type nonrec 'a t = 'a t
 
-    let return x = Map (True, fun () -> x)
+    let return x = Return x
     let map = `Custom (fun t ~f -> Map (t, f))
     let apply t1 t2 = Map (Conj (t1, t2), fun (f, x) -> f x)
   end)

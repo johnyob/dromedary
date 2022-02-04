@@ -375,6 +375,7 @@ module Make (Algebra : Algebra) = struct
     let open Elaborate in
     fun ~state ~env cst ->
       match cst with
+      | Return x -> return x
       | True -> return ()
       | Map (cst, f) ->
         let value = solve ~state ~env cst in

@@ -110,6 +110,8 @@ module Make (Algebra : Algebra) : sig
   type _ t =
     | True : unit t 
       (** [true] *)
+    | Return : 'a -> 'a t
+      (** [return a] *)
     | Conj : 'a t * 'b t -> ('a * 'b) t 
       (** [C₁ && C₂] *)
     | Eq : variable * variable -> unit t 
