@@ -17,16 +17,23 @@ open! Import
 
 module type S = sig
   (** A structure defines the "structure" of the unification type.
-      Namely, the unification type is given by the fixed point of the 
-      functor ['a structure].
-      
-      Some examples of structures include:
-      - First order terms
-      - Rigid first terms
-      - Rows
-      - Ambivalence
+
+      We define a structure as a pair [(desc, metadata)], consistings of a descriptor
+      ['a desc] and some metadata ['a metadata]. We explicitly split these for composability 
+      reasons. 
   *)
-  type 'a t [@@deriving sexp_of]
+  
+  (** ['a desc] represents the "descriptor" (or the syntactic structure) of the structure *)
+  type 'a desc
+
+  (** ['a metadata] represents the metadata of the structure. *)
+  type 'a metadata
+
+  type 'a t =
+    { desc : 'a desc
+    ; metadata : 'a metadata
+    }
+  [@@deriving sexp_of]
 
   val map : 'a t -> f:('a -> 'b) -> 'b t
   val iter : 'a t -> f:('a -> unit) -> unit
@@ -124,7 +131,6 @@ module type Intf = sig
     type 'a t
 
     val make : 'a S.t -> 'a t
-
     val repr : 'a t -> 'a S.t
 
     type 'a expansive =
