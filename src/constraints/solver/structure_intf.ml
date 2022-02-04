@@ -190,13 +190,15 @@ module type Intf = sig
     end
   end
 
-  (* module Abbreviations (S : S) (Id : Identifiable with type 'a t := 'a S.t) : sig
+  module Abbreviations
+      (S : S)
+      (Id : Identifiable with type 'a t := 'a S.Descriptor.t) : sig
     module Abbrev_type : sig
       type t [@@deriving sexp_of, compare]
 
       type structure =
         | Var
-        | Structure of t S.t
+        | Structure of t S.Descriptor.t
 
       val make : structure -> t
     end
@@ -204,7 +206,7 @@ module type Intf = sig
     module Abbrev : sig
       type t
 
-      val make : Abbrev_type.t S.t -> Abbrev_type.t -> t
+      val make : Abbrev_type.t S.Descriptor.t -> Abbrev_type.t -> t
     end
 
     module Ctx : sig
@@ -214,21 +216,26 @@ module type Intf = sig
       val add : t -> abbrev:Abbrev.t -> t
     end
 
-    type 'a t
+    module Metadata : Metadata with type 'a t = 'a S.Metadata.t
 
-    val make : 'a S.t -> 'a t
-    val repr : 'a t -> 'a S.t
+    module Descriptor : sig
+      type 'a t
 
-    type 'a expansive =
-      { make_structure : 'a S.t -> 'a
-      ; make_var : unit -> 'a
-      ; sexpansive : 'a S.expansive
-      }
+      val make : 'a S.Descriptor.t -> 'a t
+      val repr : 'a t -> 'a S.Descriptor.t
 
-    include
-      S
-        with type 'a t := 'a t
-         and type ctx = Ctx.t * S.ctx
-         and type 'a expansive := 'a expansive
-  end *)
+      type 'a expansive =
+        { make_structure : 'a S.Descriptor.t -> 'a
+        ; make_var : unit -> 'a
+        ; super_: 'a S.Descriptor.expansive
+        }
+
+      include
+        Descriptor
+          with type 'a t := 'a t
+           and type 'a metadata := 'a Metadata.t
+           and type ctx = Ctx.t * S.Descriptor.ctx
+           and type 'a expansive := 'a expansive
+    end
+  end
 end
