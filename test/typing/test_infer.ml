@@ -2352,8 +2352,7 @@ let%expect_test "solve-1" =
       ((Exist ((486 ())))
        ((Conj ((Instance x) 486))
         ((Exist ((487 ()) (488 ((Constr () int))) (489 ((Constr (487 488) eq)))))
-         ((Conj ((Eq 486) 489))
-          ((Implication (((Var 487) (Var 488)))) (Map True))))))))
+         ((Conj ((Eq 486) 489)) ((Implication (((Var 487) (Var 488)))) Return)))))))
     Constraint is true. |}]
 
 let%expect_test "abbrev - morel" =
