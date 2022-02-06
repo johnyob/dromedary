@@ -115,8 +115,8 @@ module type Intf = sig
   (** The functor [Make]. *)
   module Make (Structure : Structure.S) :
     S
-      with type 'a structure = 'a Structure.Descriptor.t
+      with type 'a structure = 'a Structure.t
        and type 'a metadata = 'a Structure.Metadata.t
-       and type ctx = Structure.Descriptor.ctx
-       and type 'a expansive = 'a Structure.Descriptor.expansive
+       and type ctx = Structure.ctx
+       and type 'a expansive = 'a Structure.expansive
 end

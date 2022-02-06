@@ -28,9 +28,17 @@ module type Metadata = sig
   val merge : 'a t -> 'a t -> 'a t
 end
 
-module type Descriptor = sig
+module type S = sig
+  (** A structure defines the "structure" of the unification type.
+
+      We define a structure as a pair [(desc, metadata)], consistings of a descriptor
+      ['a desc] and some metadata ['a metadata]. 
+      
+      We explicitly split these for composability reasons. 
+  *)
+  module Metadata : Metadata
+
   type 'a t [@@deriving sexp_of]
-  type 'a metadata
 
   val map : 'a t -> f:('a -> 'b) -> 'b t
   val iter : 'a t -> f:('a -> unit) -> unit
@@ -61,22 +69,9 @@ module type Descriptor = sig
     :  expansive:'a expansive
     -> ctx:ctx
     -> equate:('a -> 'a -> unit)
-    -> 'a t * 'a metadata
-    -> 'a t * 'a metadata
+    -> 'a t * 'a Metadata.t
+    -> 'a t * 'a Metadata.t
     -> 'a t
-end
-
-module type S = sig
-  (** A structure defines the "structure" of the unification type.
-
-      We define a structure as a pair [(desc, metadata)], consistings of a descriptor
-      ['a desc] and some metadata ['a metadata]. 
-      
-      We explicitly split these for composability reasons. 
-  *)
-  module Metadata : Metadata
-
-  module Descriptor : Descriptor with type 'a metadata := 'a Metadata.t
 end
 
 module type Intf = sig
@@ -90,44 +85,38 @@ module type Intf = sig
   end
 
   module Of_former (Former : Type_former.S) : sig
-    module Metadata : Metadata with type 'a t = unit
-
-    module Descriptor :
-      Descriptor
-        with type 'a t = 'a Former.t
-         and type 'a metadata := 'a Metadata.t
+    include
+      S
+        with type 'a Metadata.t = unit
+         and type 'a t = 'a Former.t
          and type 'a expansive = unit
          and type ctx = unit
   end
 
   module First_order (S : S) : sig
-    module Metadata : Metadata with type 'a t = 'a S.Metadata.t
+    type 'a t =
+      | Var
+      | Structure of 'a S.t
+    [@@deriving sexp_of]
 
-    module Descriptor : sig
-      type 'a t =
-        | Var
-        | Structure of 'a S.Descriptor.t
-      [@@deriving sexp_of]
-
-      include
-        Descriptor
-          with type 'a t := 'a t
-           and type 'a metadata := 'a Metadata.t
-           and type ctx = S.Descriptor.ctx
-           and type 'a expansive = 'a S.Descriptor.expansive
-    end
+    include
+      S
+        with type 'a Metadata.t = 'a S.Metadata.t
+         and type 'a t := 'a t
+         and type ctx = S.ctx
+         and type 'a expansive = 'a S.expansive
   end
 
   module Scoped_abbreviations
       (S : S)
-      (Id : Identifiable with type 'a t := 'a S.Descriptor.t) : sig
+      (Id : Identifiable with type 'a t := 'a S.t) : sig
     module Abbrev : sig
       module Type : sig
         type t [@@deriving sexp_of, compare]
 
         type structure =
           | Var
-          | Structure of t S.Descriptor.t
+          | Structure of t S.t
 
         val make : structure -> t
       end
@@ -142,12 +131,7 @@ module type Intf = sig
         type t
 
         val empty : t
-
-        val add
-          :  t
-          -> abbrev:Type.t S.Descriptor.t * Type.t
-          -> scope:Scope.t
-          -> t
+        val add : t -> abbrev:Type.t S.t * Type.t -> scope:Scope.t -> t
       end
     end
 
@@ -166,24 +150,22 @@ module type Intf = sig
       include Metadata with type 'a t := 'a t
     end
 
-    module Descriptor : sig
-      type 'a t [@@deriving sexp_of]
+    type 'a t [@@deriving sexp_of]
 
-      val make : 'a S.Descriptor.t -> 'a t
-      val repr : 'a t -> 'a S.Descriptor.t
+    val make : 'a S.t -> 'a t
+    val repr : 'a t -> 'a S.t
 
-      type 'a expansive =
-        { make_structure : 'a S.Descriptor.t -> 'a
-        ; make_var : unit -> 'a
-        ; super_ : 'a S.Descriptor.expansive
-        }
+    type 'a expansive =
+      { make_structure : 'a S.t -> 'a
+      ; make_var : unit -> 'a
+      ; super_ : 'a S.expansive
+      }
 
-      include
-        Descriptor
-          with type 'a t := 'a t
-           and type 'a metadata := 'a Metadata.t
-           and type ctx = Abbrev.Ctx.t * S.Descriptor.ctx
-           and type 'a expansive := 'a expansive
-    end
+    include
+      S
+        with module Metadata := Metadata
+         and type 'a t := 'a t
+         and type ctx = Abbrev.Ctx.t * S.ctx
+         and type 'a expansive := 'a expansive
   end
 end
