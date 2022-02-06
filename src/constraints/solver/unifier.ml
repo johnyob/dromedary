@@ -83,6 +83,12 @@ module Make (Structure : Structure.S) = struct
       Union_find.set t { desc with structure }
 
 
+    let get_metadata t = (desc t).metadata
+
+    let set_metadata t metadata = 
+      let desc = desc t in
+      Union_find.set t { desc with metadata }
+
     (* [compare t1 t2] computes the ordering of [t1, t2],
      based on their unique identifiers. *)
 

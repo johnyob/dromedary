@@ -57,6 +57,10 @@ module type S = sig
     (** [set_structure t structure] sets the structure of [t] to [structure]. *)
     val set_structure : t -> t structure -> unit
 
+    val get_metadata : t -> t metadata
+
+    val set_metadata : t -> t metadata -> unit
+
     (** [hash t] computes the hash of the graphical type [t]. 
      Based on it's integer field: id. *)
     val hash : t -> int

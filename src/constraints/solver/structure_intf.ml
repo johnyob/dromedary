@@ -118,40 +118,35 @@ module type Intf = sig
     end
   end
 
-  module Ambivalent (S : S) : sig
-    module Rigid_type : sig
-      type t =
-        | Rigid_var of Rigid_var.t
-        | Structure of t S.Descriptor.t
-    end
+  module Scoped_abbreviations
+      (S : S)
+      (Id : Identifiable with type 'a t := 'a S.Descriptor.t) : sig
+    module Abbrev : sig
+      module Type : sig
+        type t [@@deriving sexp_of, compare]
 
-    module Equations : sig
+        type structure =
+          | Var
+          | Structure of t S.Descriptor.t
+
+        val make : structure -> t
+      end
+
       module Scope : sig
-        (** [t] represents the "scope" of the equation. It is used to track 
-            consistency in level-based generalization *)
-        type t = int
+        type t = int [@@deriving sexp_of]
 
         val outermost_scope : t
       end
 
       module Ctx : sig
-        (** [t] represents the equational scope used for Ambivalence *)
         type t
 
-        (** [empty] is the empty equational context. *)
         val empty : t
 
-        exception Inconsistent
-
-        (** [add t type1 type2 scope] adds the equation [type1 = type2] 
-            in the scope [scope]. *)
         val add
-          :  expansive:Rigid_type.t S.Descriptor.expansive
-          -> ctx:S.Descriptor.ctx
-          -> t
-          -> Rigid_type.t
-          -> Rigid_type.t
-          -> Scope.t
+          :  t
+          -> abbrev:Type.t S.Descriptor.t * Type.t
+          -> scope:Scope.t
           -> t
       end
     end
@@ -160,10 +155,10 @@ module type Intf = sig
       type 'a t [@@deriving sexp_of]
 
       (** [scope t] *)
-      val scope : 'a t -> Equations.Scope.t
+      val scope : 'a t -> Abbrev.Scope.t
 
       (** [update_scope t scope] updates the scope of [t] according to [scope]. *)
-      val update_scope : 'a t -> Equations.Scope.t -> unit
+      val update_scope : 'a t -> Abbrev.Scope.t -> unit
 
       (** [super_ t] returns the parent metadata. *)
       val super_ : 'a t -> 'a S.Metadata.t
@@ -172,54 +167,7 @@ module type Intf = sig
     end
 
     module Descriptor : sig
-      type 'a t =
-        | Rigid_var of Rigid_var.t
-        | Structure of 'a S.Descriptor.t
-
-      type 'a expansive =
-        { make : 'a t -> 'a
-        ; super_ : 'a S.Descriptor.expansive
-        }
-
-      include
-        Descriptor
-          with type 'a t := 'a t
-           and type 'a metadata := 'a Metadata.t
-           and type ctx = Equations.Ctx.t * S.Descriptor.ctx
-           and type 'a expansive := 'a expansive
-    end
-  end
-
-  module Abbreviations
-      (S : S)
-      (Id : Identifiable with type 'a t := 'a S.Descriptor.t) : sig
-    module Abbrev_type : sig
-      type t [@@deriving sexp_of, compare]
-
-      type structure =
-        | Var
-        | Structure of t S.Descriptor.t
-
-      val make : structure -> t
-    end
-
-    module Abbrev : sig
-      type t
-
-      val make : Abbrev_type.t S.Descriptor.t -> Abbrev_type.t -> t
-    end
-
-    module Ctx : sig
-      type t
-
-      val empty : t
-      val add : t -> abbrev:Abbrev.t -> t
-    end
-
-    module Metadata : Metadata with type 'a t = 'a S.Metadata.t
-
-    module Descriptor : sig
-      type 'a t
+      type 'a t [@@deriving sexp_of]
 
       val make : 'a S.Descriptor.t -> 'a t
       val repr : 'a t -> 'a S.Descriptor.t
@@ -227,14 +175,14 @@ module type Intf = sig
       type 'a expansive =
         { make_structure : 'a S.Descriptor.t -> 'a
         ; make_var : unit -> 'a
-        ; super_: 'a S.Descriptor.expansive
+        ; super_ : 'a S.Descriptor.expansive
         }
 
       include
         Descriptor
           with type 'a t := 'a t
            and type 'a metadata := 'a Metadata.t
-           and type ctx = Ctx.t * S.Descriptor.ctx
+           and type ctx = Abbrev.Ctx.t * S.Descriptor.ctx
            and type 'a expansive := 'a expansive
     end
   end

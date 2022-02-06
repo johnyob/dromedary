@@ -100,75 +100,92 @@ module First_order (Structure : S) = struct
   end
 end
 
-module Abbreviations
+module Scoped_abbreviations
     (Structure : S)
     (Id : Identifiable with type 'a t := 'a Structure.Descriptor.t) =
 struct
   open Structure
 
-  module Abbrev_type = struct
-    type t = desc ref [@@deriving sexp_of]
-
-    and desc =
-      { id : int
-      ; structure : structure
-      }
-
-    and structure =
-      | Var
-      | Structure of t Descriptor.t
-
-    let make =
-      let id = ref 0 in
-      fun structure -> ref { id = post_incr id; structure }
-
-
-    let structure t = !t.structure
-    let id t = !t.id
-    let compare t1 t2 = Int.compare (id t1) (id t2)
-    let hash = id
-  end
-
   module Abbrev = struct
+    module Type = struct
+      type t = desc ref [@@deriving sexp_of]
+
+      and desc =
+        { id : int
+        ; structure : structure
+        }
+
+      and structure =
+        | Var
+        | Structure of t Descriptor.t
+
+      let make =
+        let id = ref 0 in
+        fun structure -> ref { id = post_incr id; structure }
+
+
+      let structure t = !t.structure
+      let id t = !t.id
+      let compare t1 t2 = Int.compare (id t1) (id t2)
+      let hash = id
+    end
+
+    module Scope = struct
+      type t = int [@@deriving sexp_of]
+
+      let outermost_scope = 0
+      let max = max
+    end
+
     type t =
-      { id : int
-      ; abbrev : Abbrev_type.t Descriptor.t * Abbrev_type.t
+      { structure : Type.t Descriptor.t
+      ; type_ : Type.t
+      ; scope : Scope.t
+      }
+    [@@deriving sexp_of]
+
+    let expand { structure; type_; _ } = structure, type_
+    let scope t = t.scope
+
+    module Ctx = struct
+      type nonrec t = (Int.t, t, Int.comparator_witness) Map.t
+
+      let empty : t = Map.empty (module Int)
+
+      let add (t : t) ~abbrev:(structure, type_) ~scope : t =
+        Map.set t ~key:(Id.id structure) ~data:{ structure; type_; scope }
+
+
+      let find t structure = Map.find t (Id.id structure)
+    end
+  end
+
+  module Metadata = struct
+    type 'a t =
+      { mutable scope : Abbrev.Scope.t
+      ; super_ : 'a Metadata.t
+      }
+    [@@deriving sexp_of]
+
+    let empty () =
+      { scope = Abbrev.Scope.outermost_scope; super_ = Metadata.empty () }
+
+
+    let merge t1 t2 =
+      { scope = Abbrev.Scope.max t1.scope t2.scope
+      ; super_ = Metadata.merge t1.super_ t2.super_
       }
 
-    let make abbrev_structure abbrev_type =
-      let id = Id.id abbrev_structure in
-      Descriptor.iter abbrev_structure ~f:(fun t ->
-          match Abbrev_type.structure t with
-          | Var -> ()
-          | _ -> assert false);
-      { id; abbrev = abbrev_structure, abbrev_type }
 
-
-    let id t = t.id
-    let abbrev t = t.abbrev
+    let scope t = t.scope
+    let update_scope t scope = if t.scope < scope then t.scope <- scope
+    let super_ t = t.super_
   end
-
-  module Ctx = struct
-    type t = (Int.t, Abbrev.t, Int.comparator_witness) Map.t
-
-    let empty : t = Map.empty (module Int)
-    let add (t : t) ~abbrev = Map.set t ~key:(Abbrev.id abbrev) ~data:abbrev
-    let has_abbrev (t : t) id = Map.mem t id
-
-    exception Not_found
-
-    let find_abbrev (t : t) id =
-      match Map.find t id with
-      | Some abbrev -> abbrev
-      | None -> raise Not_found
-  end
-
-  module Metadata = Metadata
 
   module Descriptor = struct
     include Descriptor
 
-    type ctx = Ctx.t * Descriptor.ctx
+    type ctx = Abbrev.Ctx.t * Descriptor.ctx
 
     let actx = fst
     let sctx = snd
@@ -181,16 +198,16 @@ struct
       }
 
     let convert_abbrev ~expansive abbrev =
-      let abbrev_structure, abbrev_type = Abbrev.abbrev abbrev in
-      let copied : (Abbrev_type.t, _) Hashtbl.t =
-        Hashtbl.create (module Abbrev_type)
+      let abbrev_structure, abbrev_type = Abbrev.expand abbrev in
+      let copied : (Abbrev.Type.t, _) Hashtbl.t =
+        Hashtbl.create (module Abbrev.Type)
       in
       (* Assume [abbrev_type] is acyclic *)
       let rec copy type_ =
         try Hashtbl.find_exn copied type_ with
         | Not_found_s _ ->
           let new_type =
-            match Abbrev_type.structure type_ with
+            match Abbrev.Type.structure type_ with
             | Var -> expansive.make_var ()
             | Structure structure ->
               expansive.make_structure (Descriptor.map ~f:copy structure)
@@ -205,44 +222,54 @@ struct
 
     let repr t = t
 
-    let merge ~expansive ~ctx ~equate (t1, metadata1) (t2, metadata2) =
-      let ( =- ) t1 t2 =
-        Descriptor.merge ~expansive:expansive.super_ ~ctx:(sctx ctx) ~equate (t1, metadata1) (t2, metadata2)
+    let merge ~expansive ~(ctx : ctx) ~equate (t1, metadata1) (t2, metadata2) =
+      let ( === ) t1 t2 = Id.id t1 = Id.id t2 in
+      let ( =~ ) t1 t2 =
+        Descriptor.merge
+          ~expansive:expansive.super_
+          ~ctx:(sctx ctx)
+          ~equate
+          (t1, Metadata.super_ metadata1)
+          (t2, Metadata.super_ metadata2)
       in
-      let ( =~ ) a t =
+      let ( =~- ) a t =
         let a' = expansive.make_structure t in
         equate a a'
       in
-      let expand t =
-        (* Determine abbreviation of [t] *)
-        let abbrev = Ctx.find_abbrev (actx ctx) (Id.id t) in
+      let expand_with_abbrev t ~abbrev =
         (* Expand the abbreviation of [t] *)
         let abbrev_structure, abbrev_type = convert_abbrev ~expansive abbrev in
         (* Equate the variables and children of [t]. *)
-        ignore (t =- abbrev_structure : _ Descriptor.t);
+        ignore (t =~ abbrev_structure : _ Descriptor.t);
         abbrev_type
       in
-      (* TODO: Perhaps remove [has_abbrev] and use match on options instead. *)
-      if Id.id t1 = Id.id t2
-      then t1 =- t2
-      else if Ctx.has_abbrev (actx ctx) (Id.id t1)
-      then (
-        (* Expand [t1] to [t1'], and merge [t1'] and [t2] *)
-        let t1' = expand t1 in
-        (* Merge [t1'] and [t2]. *)
-        t1' =~ t2;
-        (* If the above merge is successful, then return [t1]. *)
-        t1)
-      else if Ctx.has_abbrev (actx ctx) (Id.id t2)
-      then (
-        let t2' = expand t2 in
-        (* Merge [t1] and [t2']. *)
-        t2' =~ t1;
-        t2)
-      else raise Cannot_merge
+      if t1 === t2
+      then t1 =~ t2
+      else (
+        match Abbrev.Ctx.find (actx ctx) t1 with
+        | None ->
+          (match Abbrev.Ctx.find (actx ctx) t2 with
+          | None -> raise Cannot_merge
+          | Some abbrev ->
+            (* Expand [t2] to [t2'], and merge [t2'] and [t1]. *)
+            let t2' = expand_with_abbrev t2 ~abbrev in
+            (* Merge [t2'] and [t1]. *)
+            t2' =~- t1;
+            (* Update scope *)
+            Metadata.update_scope metadata1 (Abbrev.scope abbrev);
+            t1)
+        | Some abbrev ->
+          (* Expand [t2] to [t2'], and merge [t2'] and [t1]. *)
+          let t1' = expand_with_abbrev t1 ~abbrev in
+          (* Merge [t2'] and [t1]. *)
+          t1' =~- t2;
+          (* Update scope *)
+          Metadata.update_scope metadata2 (Abbrev.scope abbrev);
+          t2)
   end
 end
 
+(* 
 module Ambivalent (Structure : S) = struct
   open Structure
 
@@ -626,5 +653,5 @@ module Ambivalent (Structure : S) = struct
           | Cannot_expand -> raise Cannot_merge);
           loop ()
       in
-      loop ()) *)
-end
+      loop ()) *) *)
+(* end *)
