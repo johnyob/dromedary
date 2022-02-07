@@ -48,30 +48,22 @@ module type S = sig
   module Abbrev_type : sig
     type t [@@deriving sexp_of, compare]
 
-    type structure =
-      | Var
-      | Structure of t former
-
-    val make : structure -> t
+    val make_var : unit -> t
+    val make_former : t former -> t
   end
 
-  module Abbrev : sig
-    type t 
+  type ctx
 
-    val make : Abbrev_type.t former -> Abbrev_type.t -> t
-  end
+  val empty_ctx : ctx
 
   module Abbreviations : sig
-    type t
+    type t = ctx
 
-    val empty : t
-    val add : t -> abbrev:Abbrev.t -> t
+    val add : t -> abbrev:Abbrev_type.t former * Abbrev_type.t -> t
   end
 
   module Equations : sig
-    type t
-
-    val empty : t
+    type t = ctx
 
     exception Inconsistent
 
@@ -79,9 +71,10 @@ module type S = sig
   end
 
   module Unifier : Unifier.S
-  open Unifier
 
-  val unify : state -> ctx:Equations.t * Abbreviations.t -> Type.t -> Type.t -> unit
+  val unify : state -> ctx:ctx -> Unifier.Type.t -> Unifier.Type.t -> unit
+
+  open Unifier
 
   (** [make_rigid_var state rigid_var] creates rigid unification variable. *)
   val make_rigid_var : state -> Rigid_var.t -> Type.t
@@ -151,7 +144,6 @@ module type S = sig
     -> rigid_vars:Rigid_var.t list
     -> types:Type.t list
     -> variables * scheme list
-
 end
 
 (** The interface of {generalization.ml}. *)

@@ -29,7 +29,8 @@ module Make (Structure : Structure.S) = struct
      the notion provides useful insight. 
   *)
 
-  type 'a structure = 'a Structure.t
+  type 'a metadata = 'a Structure.Metadata.t [@@deriving sexp_of]
+  type 'a structure = 'a Structure.t [@@deriving sexp_of]
   type ctx = Structure.ctx
   type 'a expansive = 'a Structure.expansive
 
@@ -62,7 +63,8 @@ module Make (Structure : Structure.S) = struct
     *)
     and desc =
       { id : int
-      ; mutable structure : t Structure.t
+      ; mutable metadata : t metadata
+      ; mutable structure : t structure
       }
     [@@deriving sexp_of]
 
@@ -80,6 +82,13 @@ module Make (Structure : Structure.S) = struct
       Union_find.set t { desc with structure }
 
 
+    let get_metadata t = (desc t).metadata
+
+    let set_metadata t metadata =
+      let desc = desc t in
+      Union_find.set t { desc with metadata }
+
+
     (* [compare t1 t2] computes the ordering of [t1, t2],
      based on their unique identifiers. *)
 
@@ -94,7 +103,8 @@ module Make (Structure : Structure.S) = struct
        metadata [metadata]. *)
     let make =
       let id = ref 0 in
-      fun structure -> Union_find.make { id = post_incr id; structure }
+      fun structure metadata ->
+        Union_find.make { id = post_incr id; metadata; structure }
 
 
     module To_dot = struct
@@ -109,7 +119,8 @@ module Make (Structure : Structure.S) = struct
 
 
       let structure_to_string structure : string =
-        Structure.sexp_of_t (fun _ -> Atom "") structure |> Sexp.to_string_hum
+        Structure.sexp_of_t (fun _ -> Atom "") structure
+        |> Sexp.to_string_hum
 
 
       let register state t : string =
@@ -152,6 +163,7 @@ module Make (Structure : Structure.S) = struct
       let contents = Buffer.contents state.buffer in
       [%string "digraph {\n %{contents}}"]
   end
+
   open Type
 
   (* [unify_exn] unifies two graphical types. No exception handling is 
@@ -170,10 +182,15 @@ module Make (Structure : Structure.S) = struct
   (* [unify_desc desc1 desc2] unifies the descriptors of the graph types
      (of multi-equations). *)
   and unify_desc ~expansive ~ctx desc1 desc2 =
-    { id = desc1.id
-    ; structure =
-        unify_structure ~expansive ~ctx desc1.structure desc2.structure
-    }
+    let structure =
+      unify_structure
+        ~expansive
+        ~ctx
+        (desc1.structure, desc1.metadata)
+        (desc2.structure, desc2.metadata)
+    in
+    let metadata = Structure.Metadata.merge desc1.metadata desc2.metadata in
+    { id = desc1.id; structure; metadata }
 
 
   (* [unify_structure structure1 structure2] unifies two graph type node
@@ -226,7 +243,9 @@ module Make (Structure : Structure.S) = struct
   (* [fold_acyclic type_ ~var ~form] will perform a bottom-up fold
      over the (assumed) acyclic graph defined by the type [type_]. *)
 
-  let fold_acyclic (type a) type_ ~(f : Type.t -> a Structure.t -> a) : a =
+  let fold_acyclic (type a) type_ ~(f : Type.t -> a Structure.t -> a)
+      : a
+    =
     (* Hash table records whether node has been visited, and 
       it's computed value. *)
     let visited : (Type.t, a) Hashtbl.t = Hashtbl.create (module Type) in
@@ -234,7 +253,9 @@ module Make (Structure : Structure.S) = struct
     let rec loop type_ =
       try Hashtbl.find_exn visited type_ with
       | Not_found_s _ ->
-        let result = f type_ (get_structure type_ |> Structure.map ~f:loop) in
+        let result =
+          f type_ (get_structure type_ |> Structure.map ~f:loop)
+        in
         (* We assume we can set [type_] in [visited] *after* traversing
           it's children, since the graph is acyclic. *)
         Hashtbl.set visited ~key:type_ ~data:result;
@@ -265,7 +286,9 @@ module Make (Structure : Structure.S) = struct
         (* Mark this node as grey. *)
         Hashtbl.set table ~key:type_ ~data:false;
         (* Visit children *)
-        let result = f type_ (get_structure type_ |> Structure.map ~f:loop) in
+        let result =
+          f type_ (get_structure type_ |> Structure.map ~f:loop)
+        in
         let status = Hashtbl.find_exn table type_ in
         Hashtbl.remove table type_;
         if status then mu type_ result else result)

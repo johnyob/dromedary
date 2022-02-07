@@ -26,6 +26,8 @@ open! Import
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
+  type 'a metadata
+
   (** The type ['a structure] is the unification structures (with children of type ['a]), 
       given by the functor argument [Structure]. *)
   type 'a structure
@@ -55,12 +57,16 @@ module type S = sig
     (** [set_structure t structure] sets the structure of [t] to [structure]. *)
     val set_structure : t -> t structure -> unit
 
+    val get_metadata : t -> t metadata
+
+    val set_metadata : t -> t metadata -> unit
+
     (** [hash t] computes the hash of the graphical type [t]. 
      Based on it's integer field: id. *)
     val hash : t -> int
 
     (** [make structure] creates a new unification type w/ structure [structure]. *)
-    val make : t structure -> t
+    val make : t structure -> t metadata -> t
   end
 
   (** [unify ~ctx t1 t2] equates the graphical type nodes [t1] and [t2], 
@@ -98,7 +104,7 @@ module type S = sig
     -> f:(Type.t -> 'a structure -> 'a)
     -> var:(Type.t -> 'a)
     -> mu:(Type.t -> 'a -> 'a)
-    -> 'a 
+    -> 'a
 end
 
 (** The interface of {unifier.ml}. *)
@@ -110,6 +116,7 @@ module type Intf = sig
   module Make (Structure : Structure.S) :
     S
       with type 'a structure = 'a Structure.t
+       and type 'a metadata = 'a Structure.Metadata.t
        and type ctx = Structure.ctx
        and type 'a expansive = 'a Structure.expansive
 end

@@ -32,8 +32,10 @@ module Make (Algebra : Algebra) = struct
   (* Abbreviation exports *)
 
   module Abbrev_type = G.Abbrev_type
-  module Abbrev = G.Abbrev
-  module Abbreviations = G.Abbreviations
+  module Abbreviations = struct 
+    include G.Abbreviations
+    let empty = G.empty_ctx
+  end
 
   (* Applicative structure used for elaboration. *)
 
@@ -233,14 +235,12 @@ module Make (Algebra : Algebra) = struct
     type t =
       { term_var_env :
           (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
-      ; equations : G.Equations.t
-      ; abbrevs : Abbreviations.t
+      ; ctx : G.ctx
       }
 
     let empty abbrevs =
       { term_var_env = Map.empty (module Term_var_comparator)
-      ; equations = G.Equations.empty
-      ; abbrevs
+      ; ctx = abbrevs
       }
 
 
@@ -266,15 +266,14 @@ module Make (Algebra : Algebra) = struct
       | None -> raise (Unbound_term_variable var)
 
 
-    let equations t = t.equations
-    let abbrevs t = t.abbrevs
+    let ctx t = t.ctx
 
     let[@landmark] add_equation state t (rigid_type1, rigid_type2) =
       { t with
-        equations =
+        ctx =
           G.Equations.add
             state.generalization_state
-            t.equations
+            t.ctx
             rigid_type1
             rigid_type2
       }
@@ -342,7 +341,7 @@ module Make (Algebra : Algebra) = struct
     try
       G.unify
         state.generalization_state
-        ~ctx:(Env.equations env, Env.abbrevs env)
+        ~ctx:(Env.ctx env)
         type1
         type2 [@landmark "unify"]
     with

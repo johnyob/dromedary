@@ -23,24 +23,16 @@ module Make (Algebra : Algebra) : sig
   module Abbrev_type : sig
     type t [@@deriving sexp_of, compare]
 
-    type structure =
-      | Var
-      | Structure of t Type_former.t
-
-    val make : structure -> t
+    val make_var : unit -> t
+    val make_former : t Type_former.t -> t
   end
 
-  module Abbrev : sig
-    type t 
-
-    val make : Abbrev_type.t Type_former.t -> Abbrev_type.t -> t
-  end
 
   module Abbreviations : sig
     type t
 
     val empty : t
-    val add : t -> abbrev:Abbrev.t -> t
+    val add : t -> abbrev:(Abbrev_type.t Type_former.t * Abbrev_type.t) -> t
   end
 
   (** [solve t] solves [t] and computes it's value. *)
@@ -70,6 +62,7 @@ module Private : sig
   module Unifier (Structure : Structure.S) :
     Unifier.S
       with type 'a structure = 'a Structure.t
+       and type 'a metadata = 'a Structure.Metadata.t
        and type ctx = Structure.ctx
        and type 'a expansive = 'a Structure.expansive
 
