@@ -48,7 +48,7 @@ module Unifier =
 module Type = Unifier.Type
 
 let unify = Unifier.unify ~expansive:() ~ctx:()
-let make_flexible_var () = Unifier.Type.make Var
+let make_flexible_var () = Unifier.Type.make Var ()
 
 let make_rigid_var =
   let next_rigid = ref (-1) in
@@ -59,10 +59,10 @@ let make_rigid_var =
           , "rigid"
             ^
             (Int.incr next_rigid;
-             Int.to_string !next_rigid) )))
+             Int.to_string !next_rigid) ))) ()
 
 
-let ( @ ) f ts = Unifier.Type.make (Structure (Constr (ts, f)))
+let ( @ ) f ts = Unifier.Type.make (Structure (Constr (ts, f))) ()
 
 let print_type t =
   let content = Type.to_dot t in

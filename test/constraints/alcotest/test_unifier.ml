@@ -100,12 +100,12 @@ module Type = struct
       match t with
       | Ttyp_var x ->
         Hashtbl.find_or_add table x ~default:(fun () ->
-            Unifier.Type.make Var)
-      | Ttyp_int -> Unifier.Type.make (Structure Int)
+            Unifier.Type.make Var ())
+      | Ttyp_int -> Unifier.Type.make (Structure Int) ()
       | Ttyp_arrow (t1, t2) ->
         let t1 = loop t1 in
         let t2 = loop t2 in
-        Unifier.Type.make (Structure (Arrow (t1, t2)))
+        Unifier.Type.make (Structure (Arrow (t1, t2))) () 
     in
     loop t
 end
