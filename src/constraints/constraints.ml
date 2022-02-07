@@ -18,7 +18,6 @@ module Make (Algebra : Algebra) = struct
   include Private.Constraint.Make (Algebra)
   module Solver = Private.Solver.Make (Algebra)
   module Abbrev_type = Solver.Abbrev_type
-  module Abbrev = Solver.Abbrev
   module Abbreviations = Solver.Abbreviations
 
   let solve = Solver.solve

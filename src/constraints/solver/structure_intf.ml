@@ -97,7 +97,6 @@ module type Intf = sig
     type 'a t =
       | Var
       | Structure of 'a S.t
-    [@@deriving sexp_of]
 
     include
       S
@@ -118,6 +117,8 @@ module type Intf = sig
           | Var
           | Structure of t S.t
 
+        val structure : t -> structure
+        
         val make : structure -> t
       end
 
@@ -127,10 +128,19 @@ module type Intf = sig
         val outermost_scope : t
       end
 
+      type t = 
+        { structure : Type.t S.t
+        ; type_ : Type.t
+        ; scope : Scope.t
+        }
+      [@@deriving sexp_of]
+
       module Ctx : sig
+        type abbrev := t
         type t
 
         val empty : t
+        val find : t -> _ S.t -> abbrev option
         val add : t -> abbrev:Type.t S.t * Type.t -> scope:Scope.t -> t
       end
     end
@@ -150,7 +160,7 @@ module type Intf = sig
       include Metadata with type 'a t := 'a t
     end
 
-    type 'a t [@@deriving sexp_of]
+    type 'a t
 
     val make : 'a S.t -> 'a t
     val repr : 'a t -> 'a S.t
@@ -167,5 +177,23 @@ module type Intf = sig
          and type 'a t := 'a t
          and type ctx = Abbrev.Ctx.t * S.ctx
          and type 'a expansive := 'a expansive
+  end
+
+  module Rigid_structure (S : S) : sig
+    type 'a t =
+      | Rigid_var of Rigid_var.t
+      | Structure of 'a S.t
+
+    include
+      S
+        with type 'a Metadata.t = 'a S.Metadata.t
+         and type 'a t := 'a t
+         and type ctx = S.ctx
+         and type 'a expansive = 'a S.expansive
+  end
+
+  module Rigid_identifiable (S : S) (Id : Identifiable with type 'a t = 'a S.t) : sig
+    module Rigid_structure := Rigid_structure(S)
+    include Identifiable with type 'a t = 'a Rigid_structure.t
   end
 end
