@@ -60,11 +60,10 @@ module Private : sig
     Generalization.S with type 'a former := 'a Type_former.t
 
   module Unifier (Structure : Structure.S) :
-    Unifier.S
+    Unifier.S  
       with type 'a structure = 'a Structure.t
-       and type 'a metadata = 'a Structure.Metadata.t
-       and type ctx = Structure.ctx
-       and type 'a expansive = 'a Structure.expansive
+      and type 'a metadata = 'a Structure.Metadata.t
+      and type 'a ctx = 'a Structure.ctx
 
   module Union_find : module type of Union_find
 end

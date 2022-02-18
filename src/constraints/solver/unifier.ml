@@ -19,7 +19,7 @@ open! Import
 
 include Unifier_intf
 
-module Make (Structure : Structure.S) = struct
+module Make (Structure : Structure_intf.S) = struct
   (* Unification involves unification types, using the union-find 
      data structure. 
      
@@ -31,8 +31,7 @@ module Make (Structure : Structure.S) = struct
 
   type 'a metadata = 'a Structure.Metadata.t [@@deriving sexp_of]
   type 'a structure = 'a Structure.t [@@deriving sexp_of]
-  type ctx = Structure.ctx
-  type 'a expansive = 'a Structure.expansive
+  type 'a ctx = 'a Structure.ctx
 
   module Type = struct
     (* A graphical type consists of a [Union_find] node,
@@ -175,16 +174,15 @@ module Make (Structure : Structure.S) = struct
 
      See {!unify}. 
   *)
-  let rec unify_exn ~expansive ~ctx t1 t2 =
-    Union_find.union ~f:(unify_desc ~expansive ~ctx) t1 t2
+  let rec unify_exn ~ctx t1 t2 =
+    Union_find.union ~f:(unify_desc ~ctx) t1 t2
 
 
   (* [unify_desc desc1 desc2] unifies the descriptors of the graph types
      (of multi-equations). *)
-  and unify_desc ~expansive ~ctx desc1 desc2 =
+  and unify_desc  ~ctx desc1 desc2 =
     let structure =
       unify_structure
-        ~expansive
         ~ctx
         (desc1.structure, desc1.metadata)
         (desc2.structure, desc2.metadata)
@@ -195,16 +193,15 @@ module Make (Structure : Structure.S) = struct
 
   (* [unify_structure structure1 structure2] unifies two graph type node
      structures. We handle rigid variables here. *)
-  and unify_structure ~expansive =
-    let merge = Structure.merge ~expansive in
+  and unify_structure =
     fun ~ctx structure1 structure2 ->
-      merge ~ctx ~equate:(unify_exn ~expansive ~ctx) structure1 structure2
+      Structure.merge ~ctx ~equate:(unify_exn ~ctx) structure1 structure2
 
 
   exception Unify of Type.t * Type.t
 
-  let unify ~expansive ~ctx t1 t2 =
-    try unify_exn ~expansive ~ctx t1 t2 with
+  let unify ~ctx t1 t2 =
+    try unify_exn ~ctx t1 t2 with
     | Structure.Cannot_merge -> raise (Unify (t1, t2))
 
 

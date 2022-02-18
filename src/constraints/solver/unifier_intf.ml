@@ -34,9 +34,7 @@ module type S = sig
 
   (** The type [ctx] is the arbitrary unification context determined by
       the structure's context, given by [Structure]  *)
-  type ctx
-
-  type 'a expansive
+  type 'a ctx
 
   module Type : sig
     (** [t] represents a type. See "graphical types". *)
@@ -81,7 +79,7 @@ module type S = sig
 
   exception Unify of Type.t * Type.t
 
-  val unify : expansive:Type.t expansive -> ctx:ctx -> Type.t -> Type.t -> unit
+  val unify : ctx:Type.t ctx -> Type.t -> Type.t -> unit
 
   (** [occurs_check t] detects whether there is a cycle in 
       the graphical type [t]. 
@@ -113,10 +111,9 @@ module type Intf = sig
   module type S = S
 
   (** The functor [Make]. *)
-  module Make (Structure : Structure.S) :
+  module Make (Structure : Structure_intf.S) :
     S
       with type 'a structure = 'a Structure.t
        and type 'a metadata = 'a Structure.Metadata.t
-       and type ctx = Structure.ctx
-       and type 'a expansive = 'a Structure.expansive
+       and type 'a ctx = 'a Structure.ctx
 end

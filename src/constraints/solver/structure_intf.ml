@@ -54,20 +54,15 @@ module type S = sig
 
       In some cases, logical consistency of 2 descriptor requires a context. 
       (e.g. Abbreviations, and Ambivalence), thus [merge] requires a
-      context [ctx]. 
-      
-      In some cases, consistency may also a notion of "expansiveness", the ability
-      to create new terms during [merge]. This is defined in the context ['a expansive]
+      context ['a ctx]. 
   *)
 
-  type 'a expansive
-  type ctx
+  type 'a ctx
 
   exception Cannot_merge
 
   val merge
-    :  expansive:'a expansive
-    -> ctx:ctx
+    :  ctx:'a ctx
     -> equate:('a -> 'a -> unit)
     -> 'a t * 'a Metadata.t
     -> 'a t * 'a Metadata.t
@@ -89,8 +84,7 @@ module type Intf = sig
       S
         with type 'a Metadata.t = unit
          and type 'a t = 'a Former.t
-         and type 'a expansive = unit
-         and type ctx = unit
+         and type 'a ctx = unit
   end
 
   module First_order (S : S) : sig
@@ -102,8 +96,7 @@ module type Intf = sig
       S
         with type 'a Metadata.t = 'a S.Metadata.t
          and type 'a t := 'a t
-         and type ctx = S.ctx
-         and type 'a expansive = 'a S.expansive
+         and type 'a ctx = 'a S.ctx
   end
 
   module Scoped_abbreviations
@@ -118,7 +111,6 @@ module type Intf = sig
           | Structure of t S.t
 
         val structure : t -> structure
-        
         val make : structure -> t
       end
 
@@ -128,7 +120,7 @@ module type Intf = sig
         val outermost_scope : t
       end
 
-      type t = 
+      type t =
         { structure : Type.t S.t
         ; type_ : Type.t
         ; scope : Scope.t
@@ -165,18 +157,18 @@ module type Intf = sig
     val make : 'a S.t -> 'a t
     val repr : 'a t -> 'a S.t
 
-    type 'a expansive =
-      { make_structure : 'a S.t -> 'a
+    type 'a ctx =
+      { abbrev_ctx : Abbrev.Ctx.t
+      ; make_structure : 'a S.t -> 'a
       ; make_var : unit -> 'a
-      ; super_ : 'a S.expansive
+      ; super_ : 'a S.ctx
       }
 
     include
       S
         with module Metadata := Metadata
          and type 'a t := 'a t
-         and type ctx = Abbrev.Ctx.t * S.ctx
-         and type 'a expansive := 'a expansive
+         and type 'a ctx := 'a ctx
   end
 
   module Rigid_structure (S : S) : sig
@@ -188,12 +180,123 @@ module type Intf = sig
       S
         with type 'a Metadata.t = 'a S.Metadata.t
          and type 'a t := 'a t
-         and type ctx = S.ctx
-         and type 'a expansive = 'a S.expansive
+         and type 'a ctx = 'a S.ctx
   end
 
   module Rigid_identifiable (S : S) (Id : Identifiable with type 'a t = 'a S.t) : sig
     module Rigid_structure := Rigid_structure(S)
     include Identifiable with type 'a t = 'a Rigid_structure.t
+  end
+
+  module Ambivalent (S : S) : sig
+    module Rigid_type : sig
+      type t [@@deriving sexp_of]
+
+      val make_var : unit -> t
+      val make_rigid_var : Rigid_var.t -> t
+      val make_structure : t S.t -> t
+    end
+
+    module Equations : sig
+      module Scope : sig
+        (** [t] represents the "scope" of the equation. It is used to track 
+            consistency in level-based generalization *)
+        type t = int
+
+        val outermost_scope : t
+      end
+
+      module Ctx : sig
+        (** [t] represents the equational scope used for Ambivalence *)
+        type t
+
+        (** [empty] is the empty equational context. *)
+        val empty : t
+
+        exception Inconsistent
+
+        (** [add t type1 type2 scope] adds the equation [type1 = type2] 
+            in the scope [scope]. *)
+        val add
+          :  ctx:Rigid_type.t S.ctx
+          -> t
+          -> Rigid_type.t
+          -> Rigid_type.t
+          -> Scope.t
+          -> t
+      end
+    end
+
+    module Metadata : sig
+      type 'a t [@@deriving sexp_of]
+
+      (** [scope t] *)
+      val scope : 'a t -> Equations.Scope.t
+
+      (** [update_scope t scope] updates the scope of [t] according to [scope]. *)
+      val update_scope : 'a t -> Equations.Scope.t -> unit
+
+      (** [super_ t] returns the parent metadata. *)
+      val super_ : 'a t -> 'a S.Metadata.t
+
+      include Metadata with type 'a t := 'a t
+    end
+
+    type 'a t =
+      | Rigid_var of Rigid_var.t
+      | Structure of 'a S.t
+
+    type 'a ctx =
+      { equations_ctx : Equations.Ctx.t 
+      ; make : 'a t -> 'a
+      ; super_ : 'a S.ctx
+      }
+
+    include
+      S
+        with module Metadata := Metadata
+         and type 'a t := 'a t
+         and type 'a ctx := 'a ctx
+  end
+
+  module Abbreviations (S : S) (Id : Identifiable with type 'a t := 'a S.t) : sig
+    module Abbrev : sig
+      module Type : sig
+        type t [@@deriving sexp_of, compare]
+
+        val make_var : unit -> t
+        val make_structure : t S.t -> t
+      end
+
+      type t
+
+      val make : Type.t S.t -> Type.t -> t
+
+      module Ctx : sig
+        type abbrev := t
+        type t
+
+        val empty : t
+        val add : t -> abbrev:abbrev -> t
+      end
+    end
+
+    type 'a t
+
+    val make : 'a S.t -> 'a t
+    val repr : 'a t -> 'a S.t
+
+    type 'a ctx =
+      { abbrev_ctx : Abbrev.Ctx.t
+      ; make_structure : 'a S.t -> 'a
+      ; make_var : unit -> 'a
+      ; super_ : 'a S.ctx
+      }
+
+    include
+      S
+        with type 'a Metadata.t = 'a S.Metadata.t
+         and type 'a t := 'a t
+         and type 'a ctx := 'a ctx
   end
 end
