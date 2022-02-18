@@ -139,10 +139,9 @@ module Make (Former : Type_former.S) = struct
       let super_ t = t.super_
     end
 
-    let merge ~expansive ~ctx ~equate (t1, metadata1) (t2, metadata2) =
+    let merge ~ctx ~equate (t1, metadata1) (t2, metadata2) =
       Metadata.update_level metadata1 (metadata2 : _ Metadata.t).level;
       merge
-        ~expansive
         ~ctx
         ~equate
         (t1, Metadata.super_ metadata1)
@@ -227,6 +226,7 @@ module Make (Former : Type_former.S) = struct
   end
 
   type ctx = Scoped_abbreviations.Abbrev.Ctx.t
+
   let empty_ctx = Scoped_abbreviations.Abbrev.Ctx.empty
 
   module Abbrev_type = struct
@@ -370,14 +370,14 @@ module Make (Former : Type_former.S) = struct
   let unify state ~ctx t1 t2 =
     Log.debug (fun m -> m "Unify: %d %d.\n" (U.Type.id t1) (U.Type.id t2));
     U.unify
-      ~expansive:
-        { make_structure =
+      ~ctx:
+        { abbrev_ctx = ctx
+        ; make_structure =
             (fun structure ->
               make state (Structure (Scoped_abbreviations.make structure)))
         ; make_var = (fun () -> make_flexible_var state)
         ; super_ = ()
         }
-      ~ctx:(ctx, ())
       t1
       t2
 
