@@ -91,61 +91,59 @@ module Make (Former : Type_former.S) = struct
   let outermost_level = 0
 
   module Structure = struct
-    module Former_structure = Of_former (Former)
-    module Rigid_structure = Rigid_structure (Former_structure)
+    module Abbreviations = Abbreviations (Of_former (Former)) (Former)
+    module Ambivalent = Ambivalent (Abbreviations)
+    module First_order = First_order (Ambivalent)
 
-    module Scoped_abbreviations =
-      Scoped_abbreviations
-        (Rigid_structure)
-        (Rigid_identifiable (Former_structure) (Former))
+    type 'a t =
+      { mutable level : int
+      ; mutable is_generic : bool
+      ; mutable repr : 'a First_order.t
+      }
+    [@@deriving sexp_of]
 
-    module Structure = First_order (Scoped_abbreviations)
-    include Structure
+    let map t ~f = { t with repr = First_order.map t.repr ~f }
+    let iter t ~f = First_order.iter t.repr ~f
+    let fold t ~f ~init = First_order.fold t.repr ~f ~init
 
-    module Metadata = struct
-      type 'a t =
-        { mutable level : int
-        ; mutable is_generic : bool
-        ; super_ : 'a Structure.Metadata.t
-        }
-      [@@deriving sexp_of]
+    type 'a ctx =
+      { equations_ctx : Ambivalent.Equations.Ctx.t
+      ; abbrev_ctx : Abbreviations.Abbrev.Ctx.t
+      ; make : 'a First_order.t -> 'a
+      }
 
-      let empty () =
-        { level = outermost_level
-        ; is_generic = false
-        ; super_ = Structure.Metadata.empty ()
-        }
+    exception Cannot_merge = First_order.Cannot_merge
 
-
-      let merge t1 t2 =
-        (* assert (not (t1.is_generic || t2.is_generic)); *)
-        { level = min t1.level t2.level
-        ; is_generic = false
-        ; super_ = Structure.Metadata.merge t1.super_ t2.super_
-        }
+    let make_former former : _ First_order.t =
+      Structure (Ambivalent.make (Structure (Abbreviations.make former)))
 
 
-      let scope t = Scoped_abbreviations.Metadata.scope t.super_
-
-      let update_scope t scope =
-        Scoped_abbreviations.Metadata.update_scope t.super_ scope
+    let make_rigid_var rigid_var : _ First_order.t =
+      Structure (Ambivalent.make (Rigid_var rigid_var))
 
 
-      let level t = t.level
-      let update_level t level = if level < t.level then t.level <- level
-      let is_generic t = t.is_generic
-      let is_generic_at t level = t.is_generic && t.level = level
-      let generalize t = t.is_generic <- true
-      let super_ t = t.super_
-    end
+    let to_abbrev_ctx ctx : _ Abbreviations.ctx =
+      { abbrev_ctx = ctx.abbrev_ctx
+      ; make_structure = (fun structure -> ctx.make (make_former structure))
+      ; make_var = (fun () -> ctx.make Var)
+      ; super_ = ()
+      }
 
-    let merge ~ctx ~equate (t1, metadata1) (t2, metadata2) =
-      Metadata.update_level metadata1 (metadata2 : _ Metadata.t).level;
-      merge
-        ~ctx
-        ~equate
-        (t1, Metadata.super_ metadata1)
-        (t2, Metadata.super_ metadata2)
+
+    let to_ambiv_ctx ctx : _ Ambivalent.ctx =
+      { equations_ctx = ctx.equations_ctx
+      ; make = (fun structure -> ctx.make (Structure structure))
+      ; super_ = to_abbrev_ctx ctx
+      }
+
+
+    let merge ~ctx ~equate t1 t2 =
+      let level = min t1.level t2.level in
+      let is_generic = false in
+      let repr =
+        First_order.merge ~ctx:(to_ambiv_ctx ctx) ~equate t1.repr t2.repr
+      in
+      { level; is_generic; repr }
   end
 
   module Unifier = Unifier.Make (Structure)
@@ -154,23 +152,27 @@ module Make (Former : Type_former.S) = struct
   (* [U] and [A] are aliases, used for a short prefix below. *)
   module U = Unifier
 
-  let level type_ = U.Type.get_metadata type_ |> Metadata.level
-  let scope type_ = U.Type.get_metadata type_ |> Metadata.scope
-  let is_generic type_ = U.Type.get_metadata type_ |> Metadata.is_generic
+  let repr type_ = (U.Type.structure type_).repr
 
-  let is_generic_at type_ level =
-    Metadata.is_generic_at (U.Type.get_metadata type_) level
+  let set_repr type_ repr =
+    let structure = U.Type.structure type_ in
+    structure.repr <- repr
 
 
-  let generalize_type type_ = U.Type.get_metadata type_ |> Metadata.generalize
+  let level type_ = (U.Type.structure type_).level
+  let is_generic type_ = (U.Type.structure type_).is_generic
 
   let update_level type_ level =
-    Metadata.update_level (U.Type.get_metadata type_) level
+    let structure = U.Type.structure type_ in
+    if level < structure.level then structure.level <- level
 
 
-  let update_scope type_ scope =
-    Metadata.update_scope (U.Type.get_metadata type_) scope
+  let is_generic_at type_ level =
+    let structure = U.Type.structure type_ in
+    structure.is_generic && structure.level = level
 
+
+  let generalize_type type_ = (U.Type.structure type_).is_generic <- true
 
   (* Generalization regions
   
@@ -217,72 +219,19 @@ module Make (Former : Type_former.S) = struct
 
 
   module Rigid_type = struct
-    open Scoped_abbreviations.Abbrev
+    include Ambivalent.Rigid_type
 
-    type t = Type.t
-
-    let make_var rigid_var = Type.make (Structure (Rigid_var rigid_var))
-    let make_former former = Type.make (Structure (Structure former))
+    let make_former former = make_structure (Abbreviations.make former)
   end
 
-  type ctx = Scoped_abbreviations.Abbrev.Ctx.t
-
-  let empty_ctx = Scoped_abbreviations.Abbrev.Ctx.empty
-
-  module Abbrev_type = struct
-    include Scoped_abbreviations.Abbrev.Type
-
-    let make_var () = make Var
-    let make_former former = make (Structure (Structure former))
-  end
-
-  module Abbreviations = struct
-    include Scoped_abbreviations.Abbrev.Ctx
-
-    let add t ~abbrev:(abbrev_former, abbrev_type) =
-      add
-        t
-        ~abbrev:(Structure abbrev_former, abbrev_type)
-        ~scope:Scoped_abbreviations.Abbrev.Scope.outermost_scope
-  end
-
-  module Equations = struct
-    open Scoped_abbreviations.Abbrev
-    include Ctx
-
-    exception Inconsistent
-
-    let rec add_equation t (rigid_var : Rigid_var.t) type1 scope =
-      let rigid_var : _ Rigid_structure.t = Rigid_var rigid_var in
-      match find !t rigid_var with
-      | Some { type_ = type2; _ } -> add_equations t type1 type2 scope
-      | None -> t := add !t ~abbrev:(rigid_var, type1) ~scope
-
-
-    and add_equations t type1 type2 scope =
-      match Type.structure type1, Type.structure type2 with
-      | Var, _ | _, Var -> assert false
-      | Structure (Rigid_var rigid_var), _ ->
-        add_equation t rigid_var type2 scope
-      | _, Structure (Rigid_var rigid_var) ->
-        add_equation t rigid_var type1 scope
-      | Structure (Structure former1), Structure (Structure former2) ->
-        Former.iter2_exn former1 former2 ~f:(fun t1 t2 ->
-            add_equations t t1 t2 scope)
-
-
-    let add state t type1 type2 =
-      try
-        let t = ref t in
-        add_equations t type1 type2 state.current_level;
-        !t
-      with
-      | Former.Iter2 -> raise Inconsistent
-  end
+  type ctx =
+    { abbrev_ctx : Abbreviations.Abbrev.Ctx.t
+    ; equations_ctx : Ambivalent.Equations.Ctx.t
+    }
 
   let pp_type_explicit ppf type_ =
     let rec pp_type_explicit type_ =
-      U.Type.get_structure type_ |> Structure.sexp_of_t pp_type_explicit
+      U.Type.structure type_ |> Structure.sexp_of_t pp_type_explicit
     in
     Format.fprintf ppf "%s\n" (Sexp.to_string_hum (pp_type_explicit type_))
 
@@ -290,11 +239,10 @@ module Make (Former : Type_former.S) = struct
   let pp_type ppf type_ =
     Format.fprintf
       ppf
-      "id = %d, level = %d is_generic = %b, scope = %d\n"
+      "id = %d, level = %d is_generic = %b\n"
       (U.Type.id type_)
       (level type_)
       (is_generic type_)
-      (scope type_)
 
 
   let pp_region ppf i region =
@@ -326,11 +274,7 @@ module Make (Former : Type_former.S) = struct
   let make state structure =
     let new_type =
       U.Type.make
-        structure
-        { level = state.current_level
-        ; is_generic = false
-        ; super_ = Structure.Metadata.empty ()
-        }
+        { level = state.current_level; is_generic = false; repr = structure }
     in
     set_region state new_type;
     new_type
@@ -346,9 +290,7 @@ module Make (Former : Type_former.S) = struct
 
 
   let make_rigid_var state rigid_var =
-    let var =
-      make state (Structure (Scoped_abbreviations.make (Rigid_var rigid_var)))
-    in
+    let var = make state (make_rigid_var rigid_var) in
     Log.debug (fun m ->
         m "New rigid variable: %d.\n %a" (rigid_var :> int) pp_type var);
     var
@@ -360,9 +302,7 @@ module Make (Former : Type_former.S) = struct
      It initialize the level to the current level. 
   *)
   let make_former state former =
-    let former =
-      make state (Structure (Scoped_abbreviations.make (Structure former)))
-    in
+    let former = make state (make_former former) in
     Log.debug (fun m -> m "New former:\n %a" pp_type former);
     former
 
@@ -371,12 +311,9 @@ module Make (Former : Type_former.S) = struct
     Log.debug (fun m -> m "Unify: %d %d.\n" (U.Type.id t1) (U.Type.id t2));
     U.unify
       ~ctx:
-        { abbrev_ctx = ctx
-        ; make_structure =
-            (fun structure ->
-              make state (Structure (Scoped_abbreviations.make structure)))
-        ; make_var = (fun () -> make_flexible_var state)
-        ; super_ = ()
+        { abbrev_ctx = ctx.abbrev_ctx
+        ; equations_ctx = ctx.equations_ctx
+        ; make = make state
         }
       t1
       t2
@@ -385,8 +322,15 @@ module Make (Former : Type_former.S) = struct
   let flexize state src dst =
     Log.debug (fun m ->
         m "Flexize: %d -> %d.\n" (U.Type.id src) (U.Type.id dst));
-    U.Type.set_structure src Var;
-    unify state ~ctx:empty_ctx src dst
+    set_repr src Var;
+    unify
+      state
+      ~ctx:
+        { equations_ctx = Ambivalent.Equations.Ctx.empty
+        ; abbrev_ctx = Abbreviations.Abbrev.Ctx.empty
+        }
+      src
+      dst
 
 
   (* [enter ()] creates a new stack frame and enter it. *)
@@ -483,6 +427,16 @@ module Make (Former : Type_former.S) = struct
     (* [is_young state type_] determines whether [type_] is in the young region. *)
     let is_young = is_young state in
     let young_region = young_region state |> Hash_set.to_array in
+    let scope t =
+      match repr t with
+      | Var -> 0
+      | Structure structure -> Ambivalent.scope structure
+    in
+    let update_scope t scope =
+      match repr t with
+      | Var -> ()
+      | Structure structure -> Ambivalent.update_scope structure scope
+    in
     (* Order the young region in highest to lowest scopes. *)
     Array.sort young_region ~compare:(fun t1 t2 ->
         -Int.compare (scope t1) (scope t2));
@@ -506,7 +460,7 @@ module Make (Former : Type_former.S) = struct
         update_scope type_ scope;
         if is_young type_
         then
-          U.Type.get_structure type_
+          U.Type.structure type_
           |> Structure.iter ~f:(fun type_ -> loop type_ scope))
     in
     Array.iter ~f:(fun type_ -> loop type_ (scope type_)) young_region;
@@ -566,18 +520,22 @@ module Make (Former : Type_former.S) = struct
             being our unit element. 
           *)
           (* Modified to prevent formers not being generalized (required for ambivalence) *)
-          U.Type.get_structure type_
+          U.Type.structure type_
           |> Structure.iter ~f:(fun type_ -> loop type_ level');
         (* Perform scope check *)
-        if level type_ < scope type_
-        then (
-          Log.debug (fun m ->
-              m
-                "Scope escape: id=%d, level=%d, scope=%d\n"
-                (U.Type.id type_)
-                (level type_)
-                (scope type_));
-          raise (Scope_escape type_)))
+        match repr type_ with
+        | Var -> ()
+        | Structure structure ->
+          let scope = Ambivalent.scope structure in
+          if level type_ < scope
+          then (
+            Log.debug (fun m ->
+                m
+                  "Scope escape: id=%d, level=%d, scope=%d\n"
+                  (U.Type.id type_)
+                  (level type_)
+                  scope);
+            raise (Scope_escape type_)))
     in
     Array.iter ~f:(fun type_ -> loop type_ (level type_)) young_region
 
@@ -610,9 +568,9 @@ module Make (Former : Type_former.S) = struct
         if level type_ < state.current_level
         then set_region state type_
         else generalize_type type_;
-        match U.Type.get_structure type_ with
+        match repr type_ with
         | Structure structure ->
-          (match Scoped_abbreviations.repr structure with
+          (match Ambivalent.repr structure with
           | Rigid_var rigid_var ->
             let rigid_vars =
               Hashtbl.find_or_add state.rigid_vars rigid_var ~default:(fun () ->
@@ -629,7 +587,7 @@ module Make (Former : Type_former.S) = struct
       |> Hash_set.filter ~f:(fun type_ ->
              is_generic_at type_ state.current_level
              &&
-             match U.Type.get_structure type_ with
+             match repr type_ with
              | Var -> true
              | _ -> false)
       |> Hash_set.to_list
@@ -708,12 +666,9 @@ module Make (Former : Type_former.S) = struct
            If [Var], add to the relevant quantifier list,
            otherwise recurse.  
         *)
-        match U.Type.get_structure type_ with
+        match repr type_ with
         | Var -> variables := type_ :: !variables
-        | Structure structure ->
-          (match Scoped_abbreviations.repr structure with
-          | Rigid_var _ -> ()
-          | Structure former -> Former.iter ~f:loop former))
+        | Structure structure -> Ambivalent.iter ~f:loop structure)
     in
     loop root;
     !variables
@@ -759,17 +714,19 @@ module Make (Former : Type_former.S) = struct
           (* We now update the structure according to the original 
              structure of [typ].  *)
           let new_type =
-            match U.Type.get_structure type_ with
+            match repr type_ with
             | Var ->
               let new_type = make_flexible_var state in
               if level type_ = level'
               then instance_variables := new_type :: !instance_variables;
               new_type
             | Structure structure ->
-              (match Scoped_abbreviations.repr structure with
+              (match Ambivalent.repr structure with
               | Rigid_var rigid_var -> make_rigid_var state rigid_var
-              | Structure former ->
-                make_former state (Former.map ~f:copy former))
+              | Structure structure ->
+                make_former
+                  state
+                  (Former.map ~f:copy (Abbreviations.repr structure)))
           in
           (* Set the mapping from the original node to the copied 
              node. *)
@@ -789,10 +746,45 @@ module Make (Former : Type_former.S) = struct
     | Former of 'a Former.t
 
   let repr structure =
-    match structure with
+    match structure.repr with
     | Var -> Flexible_var
     | Structure structure ->
-      (match Scoped_abbreviations.repr structure with
+      (match Ambivalent.repr structure with
       | Rigid_var rigid_var -> Rigid_var rigid_var
-      | Structure former -> Former former)
+      | Structure structure -> Former (Abbreviations.repr structure))
+
+
+  module Equations = struct
+    include Ambivalent.Equations.Ctx
+
+    let add state ~abbrev_ctx t type1 type2 =
+      add
+        ~ctx:
+          { abbrev_ctx
+          ; make_structure =
+              (fun structure ->
+                Ambivalent.Rigid_type.make_structure
+                  (Abbreviations.make structure))
+          ; make_var = Ambivalent.Rigid_type.make_var
+          ; super_ = ()
+          }
+        t
+        type1
+        type2
+        state.current_level
+  end
+
+  module Abbrev_type = struct
+    include Abbreviations.Abbrev.Type
+
+    let make_former = make_structure
+  end
+
+  module Abbreviations = struct
+    module Abbrev = Abbreviations.Abbrev
+    include Abbrev.Ctx
+
+    let add t ~abbrev:(abbrev_former, abbrev_type) =
+      add t ~abbrev:(Abbrev.make abbrev_former abbrev_type)
+  end
 end

@@ -32,10 +32,11 @@ module Make (Algebra : Algebra) = struct
   (* Abbreviation exports *)
 
   module Abbrev_type = G.Abbrev_type
-  module Abbreviations = struct 
-    include G.Abbreviations
-    let empty = G.empty_ctx
-  end
+  module Abbreviations = G.Abbreviations
+
+  (* Ambivalent exports *)
+
+  module Equations = G.Equations
 
   (* Applicative structure used for elaboration. *)
 
@@ -64,7 +65,7 @@ module Make (Algebra : Algebra) = struct
     (* [decode_variable var] decodes [var] into a [Type_var] using it's unique identifier. *)
     let[@landmark] decode_variable var =
       assert (
-        match G.repr (U.Type.get_structure var) with
+        match G.repr (U.Type.structure var) with
         | G.Flexible_var -> true
         | _ -> false);
       Type_var.of_int (U.Type.id var)
@@ -235,12 +236,14 @@ module Make (Algebra : Algebra) = struct
     type t =
       { term_var_env :
           (Term_var.t, G.scheme, Term_var_comparator.comparator_witness) Map.t
-      ; ctx : G.ctx
+      ; abbrev_ctx : Abbreviations.t
+      ; equations_ctx : Equations.t
       }
 
-    let empty abbrevs =
+    let empty abbrev_ctx =
       { term_var_env = Map.empty (module Term_var_comparator)
-      ; ctx = abbrevs
+      ; abbrev_ctx 
+      ; equations_ctx = Equations.empty
       }
 
 
@@ -265,15 +268,15 @@ module Make (Algebra : Algebra) = struct
       | Some scheme -> scheme
       | None -> raise (Unbound_term_variable var)
 
-
-    let ctx t = t.ctx
+    let ctx t : G.ctx = { abbrev_ctx = t.abbrev_ctx; equations_ctx = t.equations_ctx }
 
     let[@landmark] add_equation state t (rigid_type1, rigid_type2) =
       { t with
-        ctx =
+        equations_ctx =
           G.Equations.add
             state.generalization_state
-            t.ctx
+            ~abbrev_ctx:t.abbrev_ctx
+            t.equations_ctx
             rigid_type1
             rigid_type2
       }
@@ -296,8 +299,8 @@ module Make (Algebra : Algebra) = struct
       | _ -> None) *)
 
   let rec utype_to_rigid_type state type_ : G.Rigid_type.t =
-    match G.repr (U.Type.get_structure type_) with
-    | G.Rigid_var rigid_var -> G.Rigid_type.make_var rigid_var
+    match G.repr (U.Type.structure type_) with
+    | G.Rigid_var rigid_var -> G.Rigid_type.make_rigid_var rigid_var
     | G.Former former ->
       G.Rigid_type.make_former
         (Type_former.map former ~f:(utype_to_rigid_type state))
@@ -309,7 +312,7 @@ module Make (Algebra : Algebra) = struct
     | C.Type.Var x ->
       (match Hashtbl.find state.constraint_var_env (x :> int) with
       | None -> raise (Unbound_constraint_variable x)
-      | Some (Rigid_var rigid_var) -> G.Rigid_type.make_var rigid_var
+      | Some (Rigid_var rigid_var) -> G.Rigid_type.make_rigid_var rigid_var
       | Some (Type type_) -> utype_to_rigid_type state type_)
     | C.Type.Former former ->
       G.Rigid_type.make_former

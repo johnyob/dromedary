@@ -26,14 +26,12 @@ open! Import
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
-  type 'a metadata
-
   (** The type ['a structure] is the unification structures (with children of type ['a]), 
       given by the functor argument [Structure]. *)
   type 'a structure
 
   (** The type [ctx] is the arbitrary unification context determined by
-      the structure's context, given by [Structure]  *)
+      the structure's context, given by [Structure]. *)
   type 'a ctx
 
   module Type : sig
@@ -49,22 +47,18 @@ module type S = sig
     (** [id t] returns the unique identifier of the type [t]. *)
     val id : t -> int
 
-    (** [get_structure t] returns the structure of [t]. *)
-    val get_structure : t -> t structure
+    (** [structure t] returns the structure of [t]. *)
+    val structure : t -> t structure
 
     (** [set_structure t structure] sets the structure of [t] to [structure]. *)
     val set_structure : t -> t structure -> unit
 
-    val get_metadata : t -> t metadata
-
-    val set_metadata : t -> t metadata -> unit
-
     (** [hash t] computes the hash of the graphical type [t]. 
-     Based on it's integer field: id. *)
+        Based on it's integer field: id. *)
     val hash : t -> int
 
     (** [make structure] creates a new unification type w/ structure [structure]. *)
-    val make : t structure -> t metadata -> t
+    val make : t structure -> t
   end
 
   (** [unify ~ctx t1 t2] equates the graphical type nodes [t1] and [t2], 
@@ -74,8 +68,7 @@ module type S = sig
       be unified. 
 
       No occurs check is implemented (this is separate from 
-      unification). See {!occurs_check}. 
-  *)
+      unification). See {!occurs_check}. *)
 
   exception Unify of Type.t * Type.t
 
@@ -84,8 +77,7 @@ module type S = sig
   (** [occurs_check t] detects whether there is a cycle in 
       the graphical type [t]. 
       
-      If a cycle is detected, [Cycle t] is raised. 
-  *)
+      If a cycle is detected, [Cycle t] is raised. *)
 
   exception Cycle of Type.t
 
@@ -112,8 +104,5 @@ module type Intf = sig
 
   (** The functor [Make]. *)
   module Make (Structure : Structure_intf.S) :
-    S
-      with type 'a structure = 'a Structure.t
-       and type 'a metadata = 'a Structure.Metadata.t
-       and type 'a ctx = 'a Structure.ctx
+    S with type 'a structure = 'a Structure.t and type 'a ctx = 'a Structure.ctx
 end

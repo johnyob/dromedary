@@ -62,7 +62,6 @@ module Private : sig
   module Unifier (Structure : Structure.S) :
     Unifier.S  
       with type 'a structure = 'a Structure.t
-      and type 'a metadata = 'a Structure.Metadata.t
       and type 'a ctx = 'a Structure.ctx
 
   module Union_find : module type of Union_find

@@ -41,7 +41,7 @@ module type S = sig
   module Rigid_type : sig
     type t
 
-    val make_var : Rigid_var.t -> t
+    val make_rigid_var : Rigid_var.t -> t
     val make_former : t former -> t
   end
 
@@ -52,23 +52,33 @@ module type S = sig
     val make_former : t former -> t
   end
 
-  type ctx
-
-  val empty_ctx : ctx
-
   module Abbreviations : sig
-    type t = ctx
+    type t
 
+    val empty : t
     val add : t -> abbrev:Abbrev_type.t former * Abbrev_type.t -> t
   end
 
   module Equations : sig
-    type t = ctx
+    type t
+
+    val empty : t
 
     exception Inconsistent
 
-    val add : state -> t -> Rigid_type.t -> Rigid_type.t -> t
+    val add
+      :  state
+      -> abbrev_ctx:Abbreviations.t
+      -> t
+      -> Rigid_type.t
+      -> Rigid_type.t
+      -> t
   end
+
+  type ctx =
+    { abbrev_ctx : Abbreviations.t
+    ; equations_ctx : Equations.t
+    }
 
   module Unifier : Unifier.S
 

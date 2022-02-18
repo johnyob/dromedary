@@ -29,7 +29,6 @@ module Make (Structure : Structure_intf.S) = struct
      the notion provides useful insight. 
   *)
 
-  type 'a metadata = 'a Structure.Metadata.t [@@deriving sexp_of]
   type 'a structure = 'a Structure.t [@@deriving sexp_of]
   type 'a ctx = 'a Structure.ctx
 
@@ -62,7 +61,6 @@ module Make (Structure : Structure_intf.S) = struct
     *)
     and desc =
       { id : int
-      ; mutable metadata : t metadata
       ; mutable structure : t structure
       }
     [@@deriving sexp_of]
@@ -72,8 +70,8 @@ module Make (Structure : Structure_intf.S) = struct
     (* [id t] returns the unique identifier of the type [t]. *)
     let id t = (desc t).id
 
-    (* [get_structure t] returns the structure of [t]. *)
-    let get_structure t = (desc t).structure
+    (* [structure t] returns the structure of [t]. *)
+    let structure t = (desc t).structure
 
     (* [set_structure t structure] sets the structure of [t] to [structure]. *)
     let set_structure t structure =
@@ -81,15 +79,8 @@ module Make (Structure : Structure_intf.S) = struct
       Union_find.set t { desc with structure }
 
 
-    let get_metadata t = (desc t).metadata
-
-    let set_metadata t metadata =
-      let desc = desc t in
-      Union_find.set t { desc with metadata }
-
-
     (* [compare t1 t2] computes the ordering of [t1, t2],
-     based on their unique identifiers. *)
+       based on their unique identifiers. *)
 
     let compare t1 t2 = Int.compare (id t1) (id t2)
 
@@ -102,8 +93,7 @@ module Make (Structure : Structure_intf.S) = struct
        metadata [metadata]. *)
     let make =
       let id = ref 0 in
-      fun structure metadata ->
-        Union_find.make { id = post_incr id; metadata; structure }
+      fun structure -> Union_find.make { id = post_incr id; structure }
 
 
     module To_dot = struct
@@ -118,8 +108,7 @@ module Make (Structure : Structure_intf.S) = struct
 
 
       let structure_to_string structure : string =
-        Structure.sexp_of_t (fun _ -> Atom "") structure
-        |> Sexp.to_string_hum
+        Structure.sexp_of_t (fun _ -> Atom "") structure |> Sexp.to_string_hum
 
 
       let register state t : string =
@@ -128,7 +117,7 @@ module Make (Structure : Structure_intf.S) = struct
         Buffer.add_char state.buffer ' ';
         Buffer.add_string
           state.buffer
-          (basic_shape ~label:(structure_to_string (get_structure t)) ());
+          (basic_shape ~label:(structure_to_string (structure t)) ());
         Buffer.add_char state.buffer '\n';
         state.id <- state.id + 1;
         id
@@ -146,7 +135,7 @@ module Make (Structure : Structure_intf.S) = struct
           | None ->
             let me = register state t in
             Hashtbl.set table ~key:(id t) ~data:me;
-            get_structure t
+            structure t
             |> Structure.iter ~f:(fun t ->
                    let from = loop t in
                    arrow state ~from ~to_:me);
@@ -174,28 +163,20 @@ module Make (Structure : Structure_intf.S) = struct
 
      See {!unify}. 
   *)
-  let rec unify_exn ~ctx t1 t2 =
-    Union_find.union ~f:(unify_desc ~ctx) t1 t2
-
+  let rec unify_exn ~ctx t1 t2 = Union_find.union ~f:(unify_desc ~ctx) t1 t2
 
   (* [unify_desc desc1 desc2] unifies the descriptors of the graph types
      (of multi-equations). *)
-  and unify_desc  ~ctx desc1 desc2 =
-    let structure =
-      unify_structure
-        ~ctx
-        (desc1.structure, desc1.metadata)
-        (desc2.structure, desc2.metadata)
-    in
-    let metadata = Structure.Metadata.merge desc1.metadata desc2.metadata in
-    { id = desc1.id; structure; metadata }
+  and unify_desc ~ctx desc1 desc2 =
+    { id = desc1.id
+    ; structure = unify_structure ~ctx desc1.structure desc2.structure
+    }
 
 
   (* [unify_structure structure1 structure2] unifies two graph type node
-     structures. We handle rigid variables here. *)
-  and unify_structure =
-    fun ~ctx structure1 structure2 ->
-      Structure.merge ~ctx ~equate:(unify_exn ~ctx) structure1 structure2
+     structures. *)
+  and unify_structure ~ctx structure1 structure2 =
+    Structure.merge ~ctx ~equate:(unify_exn ~ctx) structure1 structure2
 
 
   exception Unify of Type.t * Type.t
@@ -230,7 +211,7 @@ module Make (Structure : Structure_intf.S) = struct
       | Not_found_s _ ->
         Hashtbl.set table ~key:type_ ~data:false;
         (* Visit children *)
-        Structure.iter ~f:loop (get_structure type_);
+        Structure.iter ~f:loop (structure type_);
         (* Mark this variable as black. *)
         Hashtbl.set table ~key:type_ ~data:true
     in
@@ -240,9 +221,7 @@ module Make (Structure : Structure_intf.S) = struct
   (* [fold_acyclic type_ ~var ~form] will perform a bottom-up fold
      over the (assumed) acyclic graph defined by the type [type_]. *)
 
-  let fold_acyclic (type a) type_ ~(f : Type.t -> a Structure.t -> a)
-      : a
-    =
+  let fold_acyclic (type a) type_ ~(f : Type.t -> a Structure.t -> a) : a =
     (* Hash table records whether node has been visited, and 
       it's computed value. *)
     let visited : (Type.t, a) Hashtbl.t = Hashtbl.create (module Type) in
@@ -250,9 +229,7 @@ module Make (Structure : Structure_intf.S) = struct
     let rec loop type_ =
       try Hashtbl.find_exn visited type_ with
       | Not_found_s _ ->
-        let result =
-          f type_ (get_structure type_ |> Structure.map ~f:loop)
-        in
+        let result = f type_ (structure type_ |> Structure.map ~f:loop) in
         (* We assume we can set [type_] in [visited] *after* traversing
           it's children, since the graph is acyclic. *)
         Hashtbl.set visited ~key:type_ ~data:result;
@@ -283,9 +260,7 @@ module Make (Structure : Structure_intf.S) = struct
         (* Mark this node as grey. *)
         Hashtbl.set table ~key:type_ ~data:false;
         (* Visit children *)
-        let result =
-          f type_ (get_structure type_ |> Structure.map ~f:loop)
-        in
+        let result = f type_ (structure type_ |> Structure.map ~f:loop) in
         let status = Hashtbl.find_exn table type_ in
         Hashtbl.remove table type_;
         if status then mu type_ result else result)

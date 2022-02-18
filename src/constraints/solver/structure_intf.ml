@@ -30,13 +30,13 @@ end
 
 module type S = sig
   (** A structure defines the "structure" of the unification type.
-
-      We define a structure as a pair [(desc, metadata)], consistings of a descriptor
-      ['a desc] and some metadata ['a metadata]. 
       
-      We explicitly split these for composability reasons. 
+      A structure usually consists of 2 non-separable components:
+      "metadata" and a "descriptor". Historically we separated these, 
+      however, this results in a poor design:
+       - Metadata is required to be implicitly mutable.
+       - "Lifting" of metadata may result in potential impossible states.
   *)
-  module Metadata : Metadata
 
   type 'a t [@@deriving sexp_of]
 
@@ -61,12 +61,7 @@ module type S = sig
 
   exception Cannot_merge
 
-  val merge
-    :  ctx:'a ctx
-    -> equate:('a -> 'a -> unit)
-    -> 'a t * 'a Metadata.t
-    -> 'a t * 'a Metadata.t
-    -> 'a t
+  val merge : ctx:'a ctx -> equate:('a -> 'a -> unit) -> 'a t -> 'a t -> 'a t
 end
 
 module type Intf = sig
@@ -80,11 +75,7 @@ module type Intf = sig
   end
 
   module Of_former (Former : Type_former.S) : sig
-    include
-      S
-        with type 'a Metadata.t = unit
-         and type 'a t = 'a Former.t
-         and type 'a ctx = unit
+    include S with type 'a t = 'a Former.t and type 'a ctx = unit
   end
 
   module First_order (S : S) : sig
@@ -92,100 +83,7 @@ module type Intf = sig
       | Var
       | Structure of 'a S.t
 
-    include
-      S
-        with type 'a Metadata.t = 'a S.Metadata.t
-         and type 'a t := 'a t
-         and type 'a ctx = 'a S.ctx
-  end
-
-  module Scoped_abbreviations
-      (S : S)
-      (Id : Identifiable with type 'a t := 'a S.t) : sig
-    module Abbrev : sig
-      module Type : sig
-        type t [@@deriving sexp_of, compare]
-
-        type structure =
-          | Var
-          | Structure of t S.t
-
-        val structure : t -> structure
-        val make : structure -> t
-      end
-
-      module Scope : sig
-        type t = int [@@deriving sexp_of]
-
-        val outermost_scope : t
-      end
-
-      type t =
-        { structure : Type.t S.t
-        ; type_ : Type.t
-        ; scope : Scope.t
-        }
-      [@@deriving sexp_of]
-
-      module Ctx : sig
-        type abbrev := t
-        type t
-
-        val empty : t
-        val find : t -> _ S.t -> abbrev option
-        val add : t -> abbrev:Type.t S.t * Type.t -> scope:Scope.t -> t
-      end
-    end
-
-    module Metadata : sig
-      type 'a t [@@deriving sexp_of]
-
-      (** [scope t] *)
-      val scope : 'a t -> Abbrev.Scope.t
-
-      (** [update_scope t scope] updates the scope of [t] according to [scope]. *)
-      val update_scope : 'a t -> Abbrev.Scope.t -> unit
-
-      (** [super_ t] returns the parent metadata. *)
-      val super_ : 'a t -> 'a S.Metadata.t
-
-      include Metadata with type 'a t := 'a t
-    end
-
-    type 'a t
-
-    val make : 'a S.t -> 'a t
-    val repr : 'a t -> 'a S.t
-
-    type 'a ctx =
-      { abbrev_ctx : Abbrev.Ctx.t
-      ; make_structure : 'a S.t -> 'a
-      ; make_var : unit -> 'a
-      ; super_ : 'a S.ctx
-      }
-
-    include
-      S
-        with module Metadata := Metadata
-         and type 'a t := 'a t
-         and type 'a ctx := 'a ctx
-  end
-
-  module Rigid_structure (S : S) : sig
-    type 'a t =
-      | Rigid_var of Rigid_var.t
-      | Structure of 'a S.t
-
-    include
-      S
-        with type 'a Metadata.t = 'a S.Metadata.t
-         and type 'a t := 'a t
-         and type 'a ctx = 'a S.ctx
-  end
-
-  module Rigid_identifiable (S : S) (Id : Identifiable with type 'a t = 'a S.t) : sig
-    module Rigid_structure := Rigid_structure(S)
-    include Identifiable with type 'a t = 'a Rigid_structure.t
+    include S with type 'a t := 'a t and type 'a ctx = 'a S.ctx
   end
 
   module Ambivalent (S : S) : sig
@@ -227,36 +125,33 @@ module type Intf = sig
       end
     end
 
-    module Metadata : sig
-      type 'a t [@@deriving sexp_of]
+    (** ['a t] represents an ambivalent structure. *)
+    type 'a t
 
-      (** [scope t] *)
-      val scope : 'a t -> Equations.Scope.t
-
-      (** [update_scope t scope] updates the scope of [t] according to [scope]. *)
-      val update_scope : 'a t -> Equations.Scope.t -> unit
-
-      (** [super_ t] returns the parent metadata. *)
-      val super_ : 'a t -> 'a S.Metadata.t
-
-      include Metadata with type 'a t := 'a t
-    end
-
-    type 'a t =
+    (** ['a repr] is the representation of ['a t]. *)
+    type 'a repr =
       | Rigid_var of Rigid_var.t
       | Structure of 'a S.t
 
+    (** [make repr] creates an ambivalent structure with representation [repr]. *)
+    val make : 'a repr -> 'a t
+
+    (** [repr t] returns the representation of [t]. *)
+    val repr : 'a t -> 'a repr
+
+    (** [scope t] returns the equational scope of [t]. *)
+    val scope : 'a t -> Equations.Scope.t
+
+    (** [update_scope t scope] updates the scope of [t]. *)
+    val update_scope : 'a t -> Equations.Scope.t -> unit
+
     type 'a ctx =
-      { equations_ctx : Equations.Ctx.t 
+      { equations_ctx : Equations.Ctx.t
       ; make : 'a t -> 'a
       ; super_ : 'a S.ctx
       }
 
-    include
-      S
-        with module Metadata := Metadata
-         and type 'a t := 'a t
-         and type 'a ctx := 'a ctx
+    include S with type 'a t := 'a t and type 'a ctx := 'a ctx
   end
 
   module Abbreviations (S : S) (Id : Identifiable with type 'a t := 'a S.t) : sig
@@ -293,10 +188,6 @@ module type Intf = sig
       ; super_ : 'a S.ctx
       }
 
-    include
-      S
-        with type 'a Metadata.t = 'a S.Metadata.t
-         and type 'a t := 'a t
-         and type 'a ctx := 'a ctx
+    include S with type 'a t := 'a t and type 'a ctx := 'a ctx
   end
 end
