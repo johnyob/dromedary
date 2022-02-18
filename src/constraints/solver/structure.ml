@@ -265,6 +265,7 @@ module Ambivalent (Structure : S) = struct
           equate type_ type_'
         in
         let add_equation rigid_var structure =
+          Log.debug (fun m -> m "Adding equation for %d" rigid_var);
           let type_ = ctx.make structure in
           ctx.equations_ctx
             <- Equations.Ctx.add_equation
@@ -439,6 +440,25 @@ module Ambivalent (Structure : S) = struct
           (Structure.merge ~ctx:ctx.super_ ~equate structure1 structure2)
       | Rigid_var rigid_var1, Rigid_var rigid_var2
         when Rigid_var.compare rigid_var1 rigid_var2 = 0 -> Rigid_var rigid_var1
+      | Rigid_var rigid_var1, Rigid_var rigid_var2 ->
+        let rigid_var, rigid_type, scope', t =
+          match Equations.Ctx.get_equation ctx.equations_ctx rigid_var1 with
+          | Some (rigid_type, scope') ->
+            rigid_var1, rigid_type, scope', t2
+          | None ->
+            (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var2 with
+            | Some (rigid_type, scope') ->
+              rigid_var2, rigid_type, scope', t1
+            | None -> raise Cannot_merge)
+        in
+        (* Convert [rigid_type] to ['a] type. *)
+        let t' = convert_rigid_type ~ctx rigid_type in
+        (* Merge [t2'] and [t1]. *)
+        t' =~- t;
+        (* Update scope *)
+        if !scope < scope' then scope := scope';
+        (* Representative is the rigid variable *)
+        Rigid_var rigid_var
       | Rigid_var rigid_var, _ ->
         (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var with
         | None -> raise Cannot_merge

@@ -47,8 +47,8 @@ module Unifier =
 
 module Type = Unifier.Type
 
-let unify = Unifier.unify ~expansive:() ~ctx:()
-let make_flexible_var () = Unifier.Type.make Var ()
+let unify = Unifier.unify ~ctx:()
+let make_flexible_var () = Unifier.Type.make Var
 
 let make_rigid_var =
   let next_rigid = ref (-1) in
@@ -59,10 +59,10 @@ let make_rigid_var =
           , "rigid"
             ^
             (Int.incr next_rigid;
-             Int.to_string !next_rigid) ))) ()
+             Int.to_string !next_rigid) )))
 
 
-let ( @ ) f ts = Unifier.Type.make (Structure (Constr (ts, f))) ()
+let ( @ ) f ts = Unifier.Type.make (Structure (Constr (ts, f)))
 
 let print_type t =
   let content = Type.to_dot t in
@@ -76,26 +76,6 @@ let print_type t =
 let%expect_test "Test unify : correctness 1" =
   let t1 = "P" @ [ make_rigid_var () ]
   and t2 = "P" @ [ make_flexible_var () ] in
-  unify t1 t2;
-  print_type t1;
-  [%expect
-    {|
-      ┌────────────────────────────────┐
-      │ (Structure (Constr () rigid0)) │
-      └────────────────────────────────┘
-        │
-        │
-        ▼
-      ┌────────────────────────────────┐
-      │  (Structure (Constr ("") P))   │
-      └────────────────────────────────┘ |}]
-
-let%expect_test "Test unify : correctness 2" =
-  let t1 = "P" @ [ "f" @ [ make_rigid_var (); make_flexible_var () ] ]
-  and t2 =
-    let y = make_flexible_var () in
-    "P" @ [ "f" @ [ y; "g" @ [ y ] ] ]
-  in
   unify t1 t2;
   print_type t1;
   [%expect
@@ -121,6 +101,28 @@ let%expect_test "Test unify : correctness 2" =
       ┌────────────────────────────────┐
       │  (Structure (Constr ("") P))   │
       └────────────────────────────────┘ |}]
+
+let%expect_test "Test unify : correctness 2" =
+  let t1 = "P" @ [ "f" @ [ make_rigid_var (); make_flexible_var () ] ]
+  and t2 =
+    let y = make_flexible_var () in
+    "P" @ [ "f" @ [ y; "g" @ [ y ] ] ]
+  in
+  unify t1 t2;
+  print_type t1;
+  [%expect
+    {|
+         ┌────────────────────────────────┐
+      ┌▶ │ (Structure (Constr ("" "") P)) │
+      │  └────────────────────────────────┘
+      │    ▲
+      │    │
+      │    │
+      │  ┌────────────────────────────────┐
+      │  │                                │ ───┐
+      │  │  (Structure (Constr ("") f))   │    │
+      └─ │                                │ ◀──┘
+         └────────────────────────────────┘ |}]
 
 let%expect_test "Test unify : correctness 3" =
   let t1 =

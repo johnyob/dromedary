@@ -79,7 +79,6 @@ end
 
 let unify =
   Unifier.unify
-  ~expansive:()  
   ~ctx:()
       
 
@@ -100,12 +99,12 @@ module Type = struct
       match t with
       | Ttyp_var x ->
         Hashtbl.find_or_add table x ~default:(fun () ->
-            Unifier.Type.make Var ())
-      | Ttyp_int -> Unifier.Type.make (Structure Int) ()
+            Unifier.Type.make Var)
+      | Ttyp_int -> Unifier.Type.make (Structure Int)
       | Ttyp_arrow (t1, t2) ->
         let t1 = loop t1 in
         let t2 = loop t2 in
-        Unifier.Type.make (Structure (Arrow (t1, t2))) () 
+        Unifier.Type.make (Structure (Arrow (t1, t2)))
     in
     loop t
 end
@@ -132,7 +131,7 @@ let occurs_check t =
   with
   | _ -> true
 
-(* 
+
 let decode_acyclic t =
   let open Type in
   Unifier.fold_acyclic
@@ -149,7 +148,7 @@ let assume_unifiable t1 t2 =
   QCheck.assume (Result.is_ok t3);
   let t3 = Result.ok t3 |> Option.value_exn in
   QCheck.assume (occurs_check t3);
-  decode_acyclic t3 *)
+  decode_acyclic t3
 
 
 let test_unify_reflexivity =
@@ -170,7 +169,7 @@ let test_unify_symmetric =
   |> QCheck_alcotest.to_alcotest
 
 
-(* let test_unify_transitivity =
+let test_unify_transitivity =
   QCheck.Test.make
     ~count
     ~name:"Test unify : transitivity"
@@ -179,7 +178,7 @@ let test_unify_symmetric =
       let t1_t2 = assume_unifiable t1 t2 in
       let t12_t3 = assume_unifiable t1_t2 t3 in
       t1 =~? t12_t3)
-  |> QCheck_alcotest.to_alcotest *)
+  |> QCheck_alcotest.to_alcotest
 
 
 let test_unify_equality_impl_unify =
@@ -195,7 +194,7 @@ let tests =
   [ ( "Unifier"
     , [ test_unify_reflexivity
       ; test_unify_symmetric
-      (* ; test_unify_transitivity *)
+      ; test_unify_transitivity
       ; test_unify_equality_impl_unify
       ] )
   ]
