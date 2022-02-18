@@ -447,7 +447,7 @@ module Ambivalent (Structure : S) = struct
       end
     end
 
-    module Structure = struct
+    module Structure__ = struct
       module Metadata = Structure.Metadata
 
       type 'a t =
@@ -532,9 +532,10 @@ module Ambivalent (Structure : S) = struct
           t2
     end
 
-    module Unifier = Unifier.Make (First_order (Structure))
+    module Structure = First_order (Structure__)
+    module Unifier = Unifier.Make (Structure)
 
-    type t = Unifier.Type.t
+    type t = Unifier.Type.t [@@deriving sexp_of]
 
     let make structure =
       Unifier.Type.make structure (Structure.Metadata.empty ())
@@ -543,6 +544,19 @@ module Ambivalent (Structure : S) = struct
     let make_var () = make Var
     let make_rigid_var rigid_var = make (Structure (Rigid_var rigid_var))
     let make_structure structure = make (Structure (Structure structure))
+
+    let copy t =
+      let copied : (t, t) Hashtbl.t = Hashtbl.create (module Unifier.Type) in
+      let rec copy t =
+        try Hashtbl.find_exn copied t with
+        | Not_found_s _ ->
+          let new_t =
+            make (Unifier.Type.get_structure t |> Structure.map ~f:copy)
+          in
+          Hashtbl.set copied ~key:t ~data:new_t;
+          new_t
+      in
+      copy t
   end
 
   module Equations = struct
@@ -556,11 +570,11 @@ module Ambivalent (Structure : S) = struct
       exception Inconsistent = Rigid_type.Structure.Cannot_merge
 
       let add ~ctx t type1 type2 scope =
-        let ctx : _ Rigid_type.Structure.ctx =
+        let ctx : Rigid_type.t Rigid_type.Structure.ctx =
           { equations_ctx = t
           ; scope
           ; make = (fun structure -> Rigid_type.make (Structure structure))
-          ; copy = assert false
+          ; copy = Rigid_type.copy
           ; super_ = ctx
           }
         in
@@ -630,11 +644,12 @@ module Ambivalent (Structure : S) = struct
 
   let convert_rigid_type ~ctx rigid_type =
     let rec loop rigid_type =
-      let open Rigid_type in
+      let module Unifier = Rigid_type.Unifier in
       ctx.make
-        (match rigid_type with
-        | Rigid_var rigid_var -> Rigid_var rigid_var
-        | Structure structure ->
+        (match Unifier.Type.get_structure rigid_type with
+        | Var -> assert false
+        | Structure (Rigid_var rigid_var) -> Rigid_var rigid_var
+        | Structure (Structure structure) ->
           let structure = Structure.map structure ~f:loop in
           Structure structure)
     in
