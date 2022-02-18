@@ -2,4 +2,14 @@
  (public_name dromedary.parsing)
  (name parsing)
  (preprocess (pps ppx_jane))
- (libraries core dromedary.util))
+ (libraries core menhirLib dromedary.util))
+
+(ocamllex lexer)
+
+(menhir
+ (modules parser))
+
+(env
+ (dev
+  (flags
+   (:standard -w +A-39-48-42-44-4-70 -warn-error +A-3))))
