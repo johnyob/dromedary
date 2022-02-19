@@ -12,13 +12,10 @@
 (*****************************************************************************)
 
 {
-open Core
 open Parser
 
 module Lexer_util = MenhirLib.LexerUtil 
 exception Lexer_error of string
-
-let unescape = Staged.unstage (String.Escaping.unescape ~escape_char:'\\')
 }
 
 let upper = ['A' - 'Z']
@@ -49,8 +46,8 @@ rule read =
   | "if"                          { IF }
   | "then"                        { THEN }
   | "else"                        { ELSE }
-  | "true"                        { BOOL true }
-  | "false"                       { BOOL false }
+  | "true"                        { TRUE }
+  | "false"                       { FALSE }
   | "fun"                         { FUN }
   | "while"                       { WHILE }
   | "do"                          { DO }
@@ -75,6 +72,10 @@ rule read =
   | ","                           { COMMA }
   | ";"                           { SEMI_COLON }
   | "*"                           { STAR }
+  | "_"                           { UNDERSCORE }
+  | "\'"                          { QUOTE }
+  | "|"                           { BAR }
+
 
   (* comments *)
   | "(*"                          { read_comment lexbuf }
@@ -83,20 +84,20 @@ rule read =
   | ":="                          { OP_ASSIGN }
   | "!"                           { OP_DEREF }
 
-  | "<>"                          { OP_NOT_EQUAL }
+  (* | "<>"                          { OP_NOT_EQUAL }
   | "<="                          { OP_LESS_EQUAL }
   | "<"                           { OP_LESS }
   | ">="                          { OP_GREATER_EQUAL }
-  | ">"                           { OP_GREATER }
-  
+  | ">"                           { OP_GREATER } *)
+(*   
   | "||"                          { OP_OR }
-  | "&&"                          { OP_AND }
-
+  | "&&"                          { OP_AND } *)
+(* 
   | "*."                          { OP_FTIMES }
   | "+."                          { OP_FPLUS }
   | "-."                          { OP_FMINUS }
   | "/."                          { OP_FDIVIDE }
-  | "**"                          { OP_FEXP }
+  | "**"                          { OP_FEXP } *)
 
   | "+"                           { OP_PLUS }
   | "-"                           { OP_MINUS }
@@ -111,11 +112,18 @@ rule read =
 
   (* number literals *)
   | int                           { INT (int_of_string (Lexing.lexeme lexbuf)) }
-  | float                         { FLOAT (float_of_string (Lexing.lexeme lexbuf)) }
+  (* | float                         { FLOAT (float_of_string (Lexing.lexeme lexbuf)) } *)
 
   | space+                        { read lexbuf }
   | newline                       { Lexer_util.newline lexbuf; read lexbuf }
-  
+
+
+  (* braces *)
+  | "("                           { LEFT_PAREN }
+  | ")"                           { RIGHT_PAREN }
+  | "{"                           { LEFT_BRACE }
+  | "}"                           { RIGHT_BRACE }
+
   | eof                           { EOF }
   | _                             { raise (Lexer_error ("Unexpected character: " ^ Lexing.lexeme lexbuf)) }
 
