@@ -99,6 +99,7 @@
 
 // binary operators
 // %right RIGHT_ARROW
+// %nonassoc prec_below_EQUAL
 %right OP_ASSIGN
 %left EQUAL
 %left OP_PLUS OP_MINUS
@@ -106,9 +107,9 @@
 %nonassoc prec_unary_op
 %nonassoc prec_construct_app
 
-%nonassoc INT TRUE FALSE UNIT
-          LEFT_PAREN
-          IDENT CON_IDENT UNDERSCORE
+// %nonassoc INT TRUE FALSE UNIT
+          // LEFT_PAREN
+          // IDENT CON_IDENT UNDERSCORE
           
 
 
@@ -135,6 +136,9 @@ let rec fun_ ~pats ~exp =
 
 %type <rec_flag> rec_flag
 %type <constant> constant
+%type <primitive> bin_op
+%type <primitive> unary_op
+%type <direction_flag> direction_flag
 
 %type <string> type_var
 %type <core_type> core_type
@@ -143,10 +147,24 @@ let rec fun_ ~pats ~exp =
 %type <core_type list> type_argument_list
 
 
-
-%type <expression> expression
 %type <expression> seq_expression
+%type <expression> expression
 %type <expression> atom_expression
+
+%type <value_binding list> value_bindings
+%type <value_binding> value_binding
+
+%type <case list> cases
+%type <case> case
+
+%type <string * expression> record_assignment
+
+%type <pattern> pattern_var
+
+%type <pattern> pattern
+// %type <pattern> construct_pattern
+%type <pattern> atom_pattern
+// %type <string list * pattern> con_pattern_arg
 
 %%
 
@@ -228,10 +246,12 @@ seq_expression:
   | expression SEMI_COLON seq_expression  { Pexp_sequence ($1, $3) }
 
 expression:
-  | exp = atom_expression                                                                    
+  | exp = app_expression                                                                   
       { exp }
-  | exp1 = atom_expression; exp2 = atom_expression
-      { Pexp_app (exp1, exp2) }
+  | op = unary_op; exp = expression %prec prec_unary_op
+      { unary_op ~op ~exp }
+  | exp1 = expression; op = bin_op; exp2 = expression
+      { bin_op ~op ~exp1 ~exp2 }
   | IF
     ; cond = expression
     ; THEN
@@ -251,7 +271,7 @@ expression:
     ; exp3 = seq_expression
     ; DONE
       { Pexp_for (pat, exp1, exp2, dir_flag, exp3) }
-  | FUN; pats = nonempty_list(pattern); RIGHT_ARROW; exp = seq_expression 
+  | FUN; pats = nonempty_list(atom_pattern); RIGHT_ARROW; exp = seq_expression 
       { fun_ ~pats ~exp }
   | FORALL
     ; LEFT_PAREN
@@ -285,22 +305,31 @@ expression:
     ; IN
     ; exp = expression
       { Pexp_let (rec_flag, value_bindings, exp) }
-  | op = unary_op; exp = expression %prec prec_unary_op
-      { unary_op ~op ~exp }
-  | exp1 = expression; op = bin_op; exp2 = expression
-      { bin_op ~op ~exp1 ~exp2 }
 
-
+app_expression:
+  | exp = atom_expression
+    { exp }
+  | exp1 = app_expression; exp2 = atom_expression
+    { match exp1 with
+      | Pexp_construct (con_id, None) -> Pexp_construct (con_id, Some exp2)
+      | _ -> Pexp_app (exp1, exp2)
+    }
 
 %inline value_bindings:
   value_bindings = separated_nonempty_list(AND, value_binding)
     { value_bindings }
 
+%inline value_binding_type_vars:
+  | /* empty */   
+    { [] }
+  | LEFT_PAREN
+    ; TYPE
+    ; type_vars = nonempty_list(type_var)
+    ; RIGHT_PAREN
+      { type_vars }  
+
 value_binding:
-  LEFT_PAREN
-  ; TYPE
-  ; type_vars = nonempty_list(type_var)
-  ; RIGHT_PAREN
+  type_vars = value_binding_type_vars
   ; pat = pattern 
   ; EQUAL
   ; exp = seq_expression
@@ -324,6 +353,10 @@ atom_expression:
       { Pexp_const const }
   | id = IDENT
       { Pexp_var id }
+  | exp = atom_expression; DOT; label = IDENT
+      { Pexp_field (exp, label) }
+  | con_id = CON_IDENT
+      { Pexp_construct (con_id, None) }
   | LEFT_PAREN
     ; exps = separated_nontrivial_list(COMMA, seq_expression)
     ; RIGHT_PAREN
@@ -342,8 +375,6 @@ atom_expression:
     ; exp = seq_expression
     RIGHT_PAREN
       { exp }
-  | exp = atom_expression; DOT; label = IDENT
-      { Pexp_field (exp, label) } 
 
 %inline record_assignment:
   label = IDENT
@@ -380,19 +411,19 @@ pattern:
       { Ppat_alias (pat, id) }
 
 construct_pattern:
+  | pat = atom_pattern
+      { pat }
   | con_id = CON_IDENT
     ; con_pat_arg = con_pattern_arg %prec prec_construct_app
       { Ppat_construct (con_id, Some con_pat_arg) }
-  | pat = atom_pattern
-      { pat }
 
 atom_pattern:
-  | id = IDENT              
-      { Ppat_var id }
   | const = constant
       { Ppat_const const }
   | UNDERSCORE      
       { Ppat_any }
+  | id = IDENT            
+      { Ppat_var id }
   | con_id = CON_IDENT
       { Ppat_construct (con_id, None) }
   | LEFT_PAREN 
@@ -405,7 +436,10 @@ atom_pattern:
     ; core_type = core_type
     ; RIGHT_PAREN
       { Ppat_constraint (pat, core_type) }
-
+  | LEFT_PAREN
+    ; pat = pattern
+    RIGHT_PAREN
+      { pat }  
 
 %inline con_pattern_arg:
   | pat = pattern

@@ -105,7 +105,7 @@ let rec pp_core_type_mach ~indent ppf core_type =
   match core_type with
   | Ptyp_var x ->
     print "Variable";
-    Format.fprintf ppf "%sVariable: %s" indent x
+    Format.fprintf ppf "%sVariable: %s@." indent x
   | Ptyp_arrow (t1, t2) ->
     print "Arrow";
     pp_core_type_mach ~indent ppf t1;
@@ -115,7 +115,7 @@ let rec pp_core_type_mach ~indent ppf core_type =
     List.iter ~f:(pp_core_type_mach ~indent ppf) ts
   | Ptyp_constr (ts, constr) ->
     print "Constructor";
-    Format.fprintf ppf "%sConstructor: %s" indent constr;
+    Format.fprintf ppf "%sConstructor: %s@." indent constr;
     List.iter ~f:(pp_core_type_mach ~indent ppf) ts
 
 
@@ -173,7 +173,7 @@ let rec pp_expression_mach ~indent ppf exp =
     pp_expression_mach ~indent ppf exp1;
     pp_expression_mach ~indent ppf exp2
   | Pexp_let (rec_flag, value_bindings, exp) ->
-    print ("Let" ^ string_of_rec_flag rec_flag);
+    print ("Let: " ^ string_of_rec_flag rec_flag);
     pp_value_bindings_mach ~indent ppf value_bindings;
     pp_expression_mach ~indent ppf exp
   | Pexp_forall (variables, exp) ->
