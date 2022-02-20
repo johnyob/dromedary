@@ -96,7 +96,8 @@ and type_decl_kind =
 
 and label_declaration =
   { label_name : string
-  ; label_type_params : string list
+  ; label_alphas : string list
+  ; label_betas : string list
   ; label_arg : type_expr
   ; label_type : type_expr
   }
