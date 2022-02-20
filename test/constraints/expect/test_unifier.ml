@@ -81,6 +81,26 @@ let%expect_test "Test unify : correctness 1" =
   [%expect
     {|
       ┌────────────────────────────────┐
+      │ (Structure (Constr () rigid0)) │
+      └────────────────────────────────┘
+        │
+        │
+        ▼
+      ┌────────────────────────────────┐
+      │  (Structure (Constr ("") P))   │
+      └────────────────────────────────┘ |}]
+
+let%expect_test "Test unify : correctness 2" =
+  let t1 = "P" @ [ "f" @ [ make_rigid_var (); make_flexible_var () ] ]
+  and t2 =
+    let y = make_flexible_var () in
+    "P" @ [ "f" @ [ y; "g" @ [ y ] ] ]
+  in
+  unify t1 t2;
+  print_type t1;
+  [%expect
+    {|
+      ┌────────────────────────────────┐
       │ (Structure (Constr () rigid1)) │ ─┐
       └────────────────────────────────┘  │
         │                                 │
@@ -101,28 +121,6 @@ let%expect_test "Test unify : correctness 1" =
       ┌────────────────────────────────┐
       │  (Structure (Constr ("") P))   │
       └────────────────────────────────┘ |}]
-
-let%expect_test "Test unify : correctness 2" =
-  let t1 = "P" @ [ "f" @ [ make_rigid_var (); make_flexible_var () ] ]
-  and t2 =
-    let y = make_flexible_var () in
-    "P" @ [ "f" @ [ y; "g" @ [ y ] ] ]
-  in
-  unify t1 t2;
-  print_type t1;
-  [%expect
-    {|
-         ┌────────────────────────────────┐
-      ┌▶ │ (Structure (Constr ("" "") P)) │
-      │  └────────────────────────────────┘
-      │    ▲
-      │    │
-      │    │
-      │  ┌────────────────────────────────┐
-      │  │                                │ ───┐
-      │  │  (Structure (Constr ("") f))   │    │
-      └─ │                                │ ◀──┘
-         └────────────────────────────────┘ |}]
 
 let%expect_test "Test unify : correctness 3" =
   let t1 =

@@ -71,7 +71,8 @@ let add_list env =
 let%expect_test "constant: int" =
   let exp = Pexp_const (Const_int 1) in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -81,7 +82,8 @@ let%expect_test "constant: int" =
 let%expect_test "constant: bool" =
   let exp = Pexp_const (Const_bool true) in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -91,7 +93,8 @@ let%expect_test "constant: bool" =
 let%expect_test "constant: unit" =
   let exp = Pexp_const Const_unit in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -120,7 +123,8 @@ let%expect_test "primitives" =
     Pexp_app (Pexp_app (Pexp_prim Prim_eq, lhs), Pexp_const (Const_int 12))
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -223,7 +227,8 @@ let%expect_test "function - identity" =
     Pexp_fun (Ppat_var "x", Pexp_var "x")
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α60
     Expression:
     └──Expression:
@@ -253,7 +258,8 @@ let%expect_test "function - curry" =
       )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α70,α74,α75
     Expression:
     └──Expression:
@@ -329,7 +335,8 @@ let%expect_test "function - uncurry" =
           , Pexp_app (Pexp_app (Pexp_var "f", Pexp_var "x"), Pexp_var "y") ) )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α82,α89,α87
     Expression:
     └──Expression:
@@ -408,7 +415,8 @@ let%expect_test "function - compose" =
               ) ) )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α101,α103,α99
     Expression:
     └──Expression:
@@ -480,7 +488,8 @@ let%expect_test "function - fst" =
     Pexp_fun (Ppat_tuple [ Ppat_var "x"; Ppat_var "y" ], Pexp_var "x")
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α107,α109
     Expression:
     └──Expression:
@@ -512,7 +521,8 @@ let%expect_test "function - snd" =
     Pexp_fun (Ppat_tuple [ Ppat_var "x"; Ppat_var "y" ], Pexp_var "y")
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α117,α114
     Expression:
     └──Expression:
@@ -547,7 +557,8 @@ let%expect_test "function - hd" =
       , Pexp_var "x" )
   in
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α121
     Expression:
     └──Expression:
@@ -596,7 +607,8 @@ let%expect_test "annotation - identity" =
       , Pexp_fun (Ppat_constraint (Ppat_var "x", Ptyp_var "a"), Pexp_var "x") )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α133
     Expression:
     └──Expression:
@@ -620,7 +632,8 @@ let%expect_test "annotation - identity" =
       , Pexp_fun (Ppat_constraint (Ppat_var "x", Ptyp_var "a"), Pexp_var "x") )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α144
     Expression:
     └──Expression:
@@ -648,7 +661,8 @@ let%expect_test "annotation - succ" =
               , Pexp_const (Const_int 1) ) ) )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -694,7 +708,8 @@ let%expect_test "annotation - succ" =
               , Pexp_const (Const_int 1) ) ) )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     ("Cannot unify types" (type_expr1 (Ttyp_constr (() int)))
      (type_expr2 (Ttyp_var "\206\1771"))) |}]
 
@@ -712,7 +727,8 @@ let%expect_test "let - identity" =
       )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -831,7 +847,8 @@ let%expect_test "let - map" =
               , Pexp_construct ("Nil", None) ) ) )
   in
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -1104,7 +1121,8 @@ let%expect_test "let rec - monomorphic recursion" =
       , Pexp_var "id" )
   in
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -1202,7 +1220,8 @@ let%expect_test "let rec - mutual recursion (monomorphic)" =
       , Pexp_var "is_even" )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -1377,7 +1396,8 @@ let%expect_test "let rec - mutual recursion (polymorphic)" =
       , Pexp_var "foo" )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α342
     Expression:
     └──Expression:
@@ -1440,7 +1460,8 @@ let%expect_test "f-pottier elaboration 1" =
       , Pexp_var "u" )
   in
   print_infer_result ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α354
     Expression:
     └──Expression:
@@ -1514,7 +1535,8 @@ let%expect_test "let rec - polymorphic recursion" =
       , Pexp_var "id" )
   in
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: α384
     Expression:
     └──Expression:
@@ -1617,7 +1639,8 @@ let%expect_test "ambiv-f" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -1703,7 +1726,8 @@ let%expect_test "ambiv-f1" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -1794,7 +1818,8 @@ let%expect_test "ambiv-f2" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -1922,7 +1947,8 @@ let%expect_test "ambiv-g" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -2059,7 +2085,8 @@ let%expect_test "ambiv-p" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -2182,7 +2209,8 @@ let%expect_test "coerce" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -2277,8 +2305,9 @@ let%expect_test "solve" =
          ~bindings:[ "x" #= a1 ]
          ~in_:[ Var a1, Var a2 ] #=> (inst "x" a2))
   in
-  print_solve_result  cst;
-  [%expect{|
+  print_solve_result cst;
+  [%expect
+    {|
     ((Forall (481 482))
      ((Def_poly ()) ((x 481))
       ((Implication (((Var 481) (Var 482)))) ((Instance x) 482))))
@@ -2315,7 +2344,8 @@ let%expect_test "solve-1" =
                    (a4 =~ a7 &~ [ Var a5, Var a6 ] #=> (return ())))))
   in
   print_solve_result cst;
-  [%expect{|
+  [%expect
+    {|
     ((Forall (483))
      ((Def_poly ((484 ((Constr () int))) (485 ((Constr (483 484) eq)))))
       ((x 485))
@@ -2368,7 +2398,8 @@ let%expect_test "abbrev - morel" =
               , Pexp_app (Pexp_var "f", Pexp_var "x") ) ) )
   in
   print_infer_result ~abbrevs ~env:Env.empty exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -2661,7 +2692,8 @@ let%expect_test "term - eval" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~debug:false ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -3133,69 +3165,130 @@ let%expect_test "term - eval" =
                       └──Expression:
                          └──Type expr: Constructor: unit
                          └──Desc: Constant: () |}]
-(* 
-let%expect_test "solve-1" =
-  let open Constraint in
-  let open Algebra.Type_former in
-  let cst =
-    let a1 = fresh () in
-    let a2 = fresh () in
-    let a3 = fresh () in
-    let a4 = fresh () in
-    let a5 = fresh () in
-    let a6 = fresh () in
-    let a7 = fresh () in
-    let a8 = fresh () in
-    Infer.let_0
-      ~in_:
-        (exists
-           [ a3, None ]
-           (forall
-              [ a1 ]
-              (exists
-                 [ a4, None; a5, None ]
-                 (a4
-                 =~= Constr ([ a1 ], "term")
-                 &~ (a5
-                    =~ a1
-                    &~ def_poly
-                         ~flexible_vars:[ a6, Some (Constr ([ a1 ], "term")) ]
-                         ~bindings:[ "t" #= a6 ]
-                         ~in_:
-                           (exists
-                              [ a7, None ]
-                              (inst "t" a7
-                              &~ exists
-                                   [ a8, None ]
-                                   (a7
-                                   =~= Constr ([ a8 ], "term")
-                                   &~ exists
-                                        [ a2, Some (Constr ([], "int")) ]
-                                        [ Var a8, Former (Constr ([], "int")) ]
-                                        #=> (def
-                                               ~bindings:[ "x" #= a2 ]
-                                               ~in_:(a5 =~ a1 &~ inst "x" a1)))
-                              )))))))
+
+let add_boxed_id env =
+  let name = "boxed_id" in
+  let alphas = [] in
+  let type_ = Ttyp_constr ([], name) in
+  Env.add_type_decl
+    env
+    { type_name = name
+    ; type_kind =
+        Type_record
+          [ { label_name = "f"
+            ; label_alphas = alphas
+            ; label_betas = [ "a" ]
+            ; label_arg = Ttyp_arrow (Ttyp_var "a", Ttyp_var "a")
+            ; label_type = type_
+            }
+          ]
+    }
+
+
+let%expect_test "semi-explicit first-class poly-1" =
+  let env = add_boxed_id Env.empty in
+  let exp =
+    Pexp_let
+      ( Nonrecursive
+      , [ { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "id"
+          ; pvb_expr =
+              Pexp_record [ "f", Pexp_fun (Ppat_var "x", Pexp_var "x") ]
+          }
+        ]
+      , let f = Pexp_field (Pexp_var "id", "f") in
+        Pexp_tuple
+          [ Pexp_app (f, Pexp_const (Const_int 1))
+          ; Pexp_app (f, Pexp_const (Const_bool true))
+          ] )
   in
-  print_solve_result ~debug:false cst;
-  [%expect
-    {|
-    (Map
-     ((Let
-       (((Let_binding ()) () ()
-         ((Exist ((611 ())))
-          ((Forall (609))
-           ((Exist ((612 ()) (613 ())))
-            ((Conj ((Exist ((618 ((Constr (609) term))))) ((Eq 612) 618)))
-             ((Conj ((Eq 613) 609))
-              ((Def_poly ((614 ((Constr (609) term))))) ((t 614))
-               ((Exist ((615 ())))
-                ((Conj ((Instance t) 615))
-                 ((Exist ((616 ())))
-                  ((Conj ((Exist ((617 ((Constr (616) term))))) ((Eq 615) 617)))
-                   ((Exist ((610 ((Constr () int)))))
-                    ((Implication (((Var 616) (Former (Constr () int)))))
-                     ((Def ((x 610))) ((Conj ((Eq 613) 609)) ((Instance x) 609)))))))))))))))
-         ())))
-      (Map True)))
-    ("Type escape it's equational scope" (type_expr (Ttyp_var "\206\17722"))) |}] *)
+  print_infer_result ~env exp;
+  [%expect {|
+    Variables:
+    Expression:
+    └──Expression:
+       └──Type expr: Tuple
+          └──Type expr: Constructor: int
+          └──Type expr: Constructor: bool
+       └──Desc: Let
+          └──Value bindings:
+             └──Value binding:
+                └──Pattern:
+                   └──Type expr: Constructor: boxed_id
+                   └──Desc: Variable: id
+                └──Abstraction:
+                   └──Variables:
+                   └──Expression:
+                      └──Type expr: Constructor: boxed_id
+                      └──Desc: Record
+                         └──Label description:
+                            └──Label: f
+                            └──Label argument type:
+                               └──Type expr: Arrow
+                                  └──Type expr: Variable: α839
+                                  └──Type expr: Variable: α839
+                            └──Label type:
+                               └──Type expr: Constructor: boxed_id
+                         └──Expression:
+                            └──Type expr: Arrow
+                               └──Type expr: Variable: α839
+                               └──Type expr: Variable: α839
+                            └──Desc: Function
+                               └──Pattern:
+                                  └──Type expr: Variable: α839
+                                  └──Desc: Variable: x
+                               └──Expression:
+                                  └──Type expr: Variable: α839
+                                  └──Desc: Variable
+                                     └──Variable: x
+          └──Expression:
+             └──Type expr: Tuple
+                └──Type expr: Constructor: int
+                └──Type expr: Constructor: bool
+             └──Desc: Tuple
+                └──Expression:
+                   └──Type expr: Constructor: int
+                   └──Desc: Application
+                      └──Expression:
+                         └──Type expr: Arrow
+                            └──Type expr: Constructor: int
+                            └──Type expr: Constructor: int
+                         └──Desc: Field
+                            └──Expression:
+                               └──Type expr: Constructor: boxed_id
+                               └──Desc: Variable
+                                  └──Variable: id
+                            └──Label description:
+                               └──Label: f
+                               └──Label argument type:
+                                  └──Type expr: Arrow
+                                     └──Type expr: Constructor: int
+                                     └──Type expr: Constructor: int
+                               └──Label type:
+                                  └──Type expr: Constructor: boxed_id
+                      └──Expression:
+                         └──Type expr: Constructor: int
+                         └──Desc: Constant: 1
+                └──Expression:
+                   └──Type expr: Constructor: bool
+                   └──Desc: Application
+                      └──Expression:
+                         └──Type expr: Arrow
+                            └──Type expr: Constructor: bool
+                            └──Type expr: Constructor: bool
+                         └──Desc: Field
+                            └──Expression:
+                               └──Type expr: Constructor: boxed_id
+                               └──Desc: Variable
+                                  └──Variable: id
+                            └──Label description:
+                               └──Label: f
+                               └──Label argument type:
+                                  └──Type expr: Arrow
+                                     └──Type expr: Constructor: bool
+                                     └──Type expr: Constructor: bool
+                               └──Label type:
+                                  └──Type expr: Constructor: boxed_id
+                      └──Expression:
+                         └──Type expr: Constructor: bool
+                         └──Desc: Constant: true |}]
