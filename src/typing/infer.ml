@@ -189,22 +189,28 @@ let inst_constr_decl ~env name
 
 
 let inst_label_decl ~env label
-    : (Constraint.variable list * Type.t * Type.t, _) Result.t
+    : (Constraint.variable list * Constraint.variable list * Type.t * Type.t, _) Result.t
   =
   let open Result.Let_syntax in
-  let%bind { label_arg; label_type; label_type_params; _ } =
+  let%bind { label_arg; label_type; label_alphas; label_betas; _ } =
     Env.find_label env label
   in
-  (* Compute a fresh set of existential variables *)
-  let%bind substitution =
-    Substitution.of_alist (List.map ~f:(fun x -> x, fresh ()) label_type_params)
+  (* Redefined due to repeated error function *)
+  let substitution_of_vars vars =
+    substitution_of_vars vars
     |> Result.map_error ~f:(fun (`Duplicate_type_variable var) ->
-           `Duplicate_type_parameter_for_label (label, var))
+            `Duplicate_type_parameter_for_label (label, var))
   in
+  (* Compute a fresh set of existential variables *)
+  let%bind substitution = substitution_of_vars label_alphas in
+  let alphas = Substitution.rng substitution in
+  let%bind substitution' = substitution_of_vars label_betas in
+  let betas = Substitution.rng substitution' in
+  let substitution = Substitution.merge substitution substitution' in
   (* Compute the inferred type using the existential variables. *)
   let%bind label_arg = convert_type_expr ~substitution label_arg in
   let%bind label_type = convert_type_expr ~substitution label_type in
-  return (Substitution.rng substitution, label_arg, label_type)
+  return (alphas, betas, label_arg, label_type)
 
 
 let make_label_desc label_name label_arg label_type
@@ -585,18 +591,17 @@ module Expression = struct
     let%bind constr_arg =
       match constr_arg with
       | Some (constr_betas, constr_arg) ->
-        let%bind () = forall_vars constr_betas in
+        let%bind () = exists_vars constr_betas in
         return (Some constr_arg)
       | None -> return None
     in
     return (constr_arg, constr_type, constr_constraints)
 
 
-  let inst_label_decl label : (Type.t * Type.t) Binder.t =
-    let open Binder.Let_syntax in
-    let& vars, label_arg, constr_type =
-      let%bind.Computation env = env in
-      of_result (inst_label_decl ~env label) ~message:(function
+  let inst_label_decl label : (Constraint.variable list * Constraint.variable list * Type.t * Type.t) Computation.t =
+    let open Computation.Let_syntax in
+    let%bind env = env in
+    of_result (inst_label_decl ~env label) ~message:(function
           | `Duplicate_type_parameter_for_label (label, var) ->
             [%message
               "Duplicate type parameter in label in environment"
@@ -614,10 +619,7 @@ module Expression = struct
               "Unbound type variable when instantiating label (Cannot occur! \
                Good luck)"
                 (var : string)])
-    in
-    let%bind () = exists_vars vars in
-    return (label_arg, constr_type)
-
+    
 
   let ( -~- ) type1 type2 : unit Constraint.t =
     let bindings1, var1 = Shallow_type.of_type type1 in
@@ -656,7 +658,8 @@ module Expression = struct
       : (label_description Constraint.t * variable) Binder.t
     =
     let open Binder.Let_syntax in
-    let%bind label_arg, label_type' = inst_label_decl label in
+    let& label_alphas, label_betas, label_arg, label_type' = inst_label_decl label in
+    let%bind () = exists_vars (label_alphas @ label_betas) in
     (* Convert to variables *)
     let%bind label_arg = of_type label_arg in
     let label_desc =
@@ -995,9 +998,13 @@ module Expression = struct
       let open Computation.Let_syntax in
       let%bind label_exps =
         List.map label_exps ~f:(fun (label, exp) ->
-            let@ var = exists () in
-            let%bind exp = infer_exp exp var in
-            let%bind label_desc = inst_label label var exp_type in
+            let%bind label_alphas, label_betas, label_arg, label_type = inst_label_decl label in
+            let@ () = exists_vars label_alphas in
+            let@ () = forall_vars label_betas in
+            let@ label_arg = of_type label_arg in
+            let@ label_type = of_type label_type in
+            let%bind exp = infer_exp exp label_arg in
+            let label_desc = exp_type =~ label_type >> make_label_desc label label_arg label_type in
             return (label_desc &~ exp))
         |> all
       in
