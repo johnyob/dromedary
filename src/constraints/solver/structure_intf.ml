@@ -190,4 +190,19 @@ module type Intf = sig
 
     include S with type 'a t := 'a t and type 'a ctx := 'a ctx
   end
+
+  module Row (Label : Comparable.S) (S : S) : sig
+    type 'a t =
+      | Structure of 'a S.t
+      | Row_cons of Label.t * 'a * 'a
+      | Row_uniform of 'a
+
+    type 'a ctx =
+      { make_var : unit -> 'a
+      ; make_structure : 'a t -> 'a
+      ; super_ : 'a S.ctx
+      }
+
+    include S with type 'a t := 'a t and type 'a ctx := 'a ctx
+  end
 end
