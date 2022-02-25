@@ -485,7 +485,7 @@ module Ambivalent (Structure : S) = struct
     { scope = !scope; repr }
 end
 
-module Row (Label : Comparable.S) (Structure : S) = struct
+module Rows (Label : Comparable.S) (Structure : S) = struct
   module Label = struct
     include Label
 
@@ -534,9 +534,25 @@ module Row (Label : Comparable.S) (Structure : S) = struct
   let merge ~ctx ~equate t1 t2 =
     let ( =~ ) = equate in
     let ( =~- ) a structure = a =~ ctx.make_structure structure in
+
+    let is_row_cons l t = 
+      let t1, t2 = ctx.make_var (), ctx.make_var () in
+      t =~- Row_cons (l, t1, t2);
+      t1, t2
+    in
+
+    let is_row_uniform t = 
+      let t' = ctx.make_var () in
+      t =~- Row_uniform t';
+      t'
+    in
+
     match t1, t2 with
     | Structure structure1, Structure structure2 ->
       Structure (Structure.merge ~ctx:ctx.super_ ~equate structure1 structure2)
+    | Row_uniform t1, Row_uniform t2 ->
+      t1 =~ t2;
+      Row_uniform t1
     | Row_cons (label1, t11, t12), Row_cons (label2, t21, t22)
       when Label.compare label1 label2 = 0 ->
       (* The labels [label1] and [label2] are equal. *)
@@ -558,5 +574,20 @@ module Row (Label : Comparable.S) (Structure : S) = struct
       t11 =~ t;
       t12 =~- t2;
       t2
-    | _ -> raise Cannot_merge
+    | (Row_cons (l1, t11, t12) as t1), Structure t2
+    | Structure t2, (Row_cons (l1, t11, t12) as t1) ->
+      (* TODO: Understand WHY the distributive property for formers (structures) is required. *)
+      (* The children of [t2] must be of the form: [(l1: _; _)] (according to EMLTI). *)
+      let t11', t12' = 
+        let t11_12 = Structure.map t2 ~f:(is_row_cons l1) in
+        Structure.map ~f:fst t11_12, Structure.map ~f:snd t11_12
+      in
+      t11 =~- Structure t11';
+      t12 =~- Structure t12';
+      t1
+    | (Row_uniform t as t1), Structure t2
+    | Structure t2, (Row_uniform t as t1) ->
+      let t' = Structure.map t2 ~f:is_row_uniform in
+      t =~- Structure t';
+      t1
 end
