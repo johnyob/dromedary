@@ -19,6 +19,10 @@ open Structure
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
+  (** The type [label] is the type for row labels, given by the functor argument
+      [Label]. *)
+  type label
+
   (** The type ['a former] is the type formers (with children of type ['a]), 
       given by the functor argument [Former]. *)
   type 'a former
@@ -92,11 +96,24 @@ module type S = sig
   (** [make_flexible_var state] creates a flexible unification variable. *)
   val make_flexible_var : state -> Type.t
 
-  (** [make_former former] creates a unification type w/ former [former]. *)
+  (** [make_former state former] creates a unification type w/ former [former]. *)
   val make_former : state -> Type.t former -> Type.t
+
+  (** [make_row_uniform state type_] creates a unification row w/ row [∂(type_)] *)
+  val make_row_uniform : state -> Type.t -> Type.t
+
+  (** [make_row_cons state ~label ~field ~tl] creates a unification row w/ row [(label : field; tl)] *)
+  val make_row_cons
+    :  state
+    -> label:label
+    -> field:Type.t
+    -> tl:Type.t
+    -> Type.t
 
   type 'a repr =
     | Flexible_var
+    | Row_uniform of 'a
+    | Row_cons of label * 'a * 'a
     | Rigid_var of Rigid_var.t
     | Former of 'a former
 
@@ -162,5 +179,6 @@ module type Intf = sig
   module type S = S
 
   (** The functor [Make]. *)
-  module Make (Former : Type_former.S) : S with type 'a former := 'a Former.t
+  module Make (Label : Comparable.S) (Former : Type_former.S) :
+    S with type 'a former := 'a Former.t and type label := Label.t
 end

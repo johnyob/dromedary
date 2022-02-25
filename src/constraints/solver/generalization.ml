@@ -21,7 +21,7 @@ open! Import
 include Generalization_intf
 open Structure
 
-module Make (Former : Type_former.S) = struct
+module Make (Label : Comparable.S) (Former : Type_former.S) = struct
   (* We implement efficient level-based generalization by Remy [??].
   
      In theory, each unification variable has a "level" (or "rank").
@@ -93,7 +93,8 @@ module Make (Former : Type_former.S) = struct
   module Structure = struct
     module Abbreviations = Abbreviations (Of_former (Former)) (Former)
     module Ambivalent = Ambivalent (Abbreviations)
-    module First_order = First_order (Ambivalent)
+    module Rows = Rows (Label) (Ambivalent)
+    module First_order = First_order (Rows)
 
     type 'a t =
       { mutable level : int
@@ -115,11 +116,18 @@ module Make (Former : Type_former.S) = struct
     exception Cannot_merge = First_order.Cannot_merge
 
     let make_former former : _ First_order.t =
-      Structure (Ambivalent.make (Structure (Abbreviations.make former)))
+      Structure
+        (Structure (Ambivalent.make (Structure (Abbreviations.make former))))
 
 
     let make_rigid_var rigid_var : _ First_order.t =
-      Structure (Ambivalent.make (Rigid_var rigid_var))
+      Structure (Structure (Ambivalent.make (Rigid_var rigid_var)))
+
+
+    let make_row_uniform type_ : _ First_order.t = Structure (Row_uniform type_)
+
+    let make_row_cons ~label ~field ~tl : _ First_order.t =
+      Structure (Row_cons (label, field, tl))
 
 
     let to_abbrev_ctx ctx : _ Abbreviations.ctx =
@@ -132,8 +140,15 @@ module Make (Former : Type_former.S) = struct
 
     let to_ambiv_ctx ctx : _ Ambivalent.ctx =
       { equations_ctx = ctx.equations_ctx
-      ; make = (fun structure -> ctx.make (Structure structure))
+      ; make = (fun structure -> ctx.make (Structure (Structure structure)))
       ; super_ = to_abbrev_ctx ctx
+      }
+
+
+    let to_row_ctx ctx : _ Rows.ctx =
+      { make_var = (fun () -> ctx.make Var)
+      ; make_structure = (fun structure -> ctx.make (Structure structure))
+      ; super_ = to_ambiv_ctx ctx
       }
 
 
@@ -141,7 +156,7 @@ module Make (Former : Type_former.S) = struct
       let level = min t1.level t2.level in
       let is_generic = false in
       let repr =
-        First_order.merge ~ctx:(to_ambiv_ctx ctx) ~equate t1.repr t2.repr
+        First_order.merge ~ctx:(to_row_ctx ctx) ~equate t1.repr t2.repr
       in
       { level; is_generic; repr }
   end
@@ -307,6 +322,18 @@ module Make (Former : Type_former.S) = struct
     former
 
 
+  let make_row_uniform state type_ =
+    let row_uniform = make state (make_row_uniform type_) in
+    Log.debug (fun m -> m "New row uniform:\n %a" pp_type row_uniform);
+    row_uniform
+
+
+  let make_row_cons state ~label ~field ~tl =
+    let row_cons = make state (make_row_cons ~label ~field ~tl) in
+    Log.debug (fun m -> m "New row cons:\n %a" pp_type row_cons);
+    row_cons
+
+
   let unify state ~ctx t1 t2 =
     Log.debug (fun m -> m "Unify: %d %d.\n" (U.Type.id t1) (U.Type.id t2));
     U.unify
@@ -429,13 +456,14 @@ module Make (Former : Type_former.S) = struct
     let young_region = young_region state |> Hash_set.to_array in
     let scope t =
       match repr t with
-      | Var -> 0
-      | Structure structure -> Ambivalent.scope structure
+      | Structure (Structure structure) -> Ambivalent.scope structure
+      | _ -> 0
     in
     let update_scope t scope =
       match repr t with
-      | Var -> ()
-      | Structure structure -> Ambivalent.update_scope structure scope
+      | Structure (Structure structure) ->
+        Ambivalent.update_scope structure scope
+      | _ -> ()
     in
     (* Order the young region in highest to lowest scopes. *)
     Array.sort young_region ~compare:(fun t1 t2 ->
@@ -524,8 +552,7 @@ module Make (Former : Type_former.S) = struct
           |> Structure.iter ~f:(fun type_ -> loop type_ level');
         (* Perform scope check *)
         match repr type_ with
-        | Var -> ()
-        | Structure structure ->
+        | Structure (Structure structure) ->
           let scope = Ambivalent.scope structure in
           if level type_ < scope
           then (
@@ -535,7 +562,8 @@ module Make (Former : Type_former.S) = struct
                   (U.Type.id type_)
                   (level type_)
                   scope);
-            raise (Scope_escape type_)))
+            raise (Scope_escape type_))
+        | _ -> ())
     in
     Array.iter ~f:(fun type_ -> loop type_ (level type_)) young_region
 
@@ -569,7 +597,7 @@ module Make (Former : Type_former.S) = struct
         then set_region state type_
         else generalize_type type_;
         match repr type_ with
-        | Structure structure ->
+        | Structure (Structure structure) ->
           (match Ambivalent.repr structure with
           | Rigid_var rigid_var ->
             let rigid_vars =
@@ -668,7 +696,7 @@ module Make (Former : Type_former.S) = struct
         *)
         match repr type_ with
         | Var -> variables := type_ :: !variables
-        | Structure structure -> Ambivalent.iter ~f:loop structure)
+        | Structure structure -> Rows.iter ~f:loop structure)
     in
     loop root;
     !variables
@@ -720,7 +748,11 @@ module Make (Former : Type_former.S) = struct
               if level type_ = level'
               then instance_variables := new_type :: !instance_variables;
               new_type
-            | Structure structure ->
+            | Structure (Row_uniform type_) ->
+              make_row_uniform state (copy type_)
+            | Structure (Row_cons (l, type1, type2)) ->
+              make_row_cons state ~label:l ~field:(copy type1) ~tl:(copy type2)
+            | Structure (Structure structure) ->
               (match Ambivalent.repr structure with
               | Rigid_var rigid_var -> make_rigid_var state rigid_var
               | Structure structure ->
@@ -742,13 +774,17 @@ module Make (Former : Type_former.S) = struct
 
   type 'a repr =
     | Flexible_var
+    | Row_uniform of 'a
+    | Row_cons of Label.t * 'a * 'a
     | Rigid_var of Rigid_var.t
     | Former of 'a Former.t
 
   let repr structure =
     match structure.repr with
     | Var -> Flexible_var
-    | Structure structure ->
+    | Structure (Row_uniform t) -> Row_uniform t
+    | Structure (Row_cons (l, t1, t2)) -> Row_cons (l, t1, t2)
+    | Structure (Structure structure) ->
       (match Ambivalent.repr structure with
       | Rigid_var rigid_var -> Rigid_var rigid_var
       | Structure structure -> Former (Abbreviations.repr structure))
