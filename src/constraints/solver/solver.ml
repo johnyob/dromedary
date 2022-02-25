@@ -26,7 +26,7 @@ module Make (Algebra : Algebra) = struct
 
   (* Aliases *)
   module C = Constraint
-  module G = Generalization.Make (Type_former)
+  module G = Generalization.Make (Types.Label) (Type_former)
   module U = G.Unifier
 
   (* Abbreviation exports *)
@@ -82,6 +82,8 @@ module Make (Algebra : Algebra) = struct
          ~f:(fun type_ structure ->
            match G.repr structure with
            | G.Flexible_var -> Type.var (decode_variable type_)
+           | G.Row_cons (label, label_type, tl) -> Type.row_cons (label, label_type) tl
+           | G.Row_uniform type_ -> Type.row_uniform type_
            | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
            | G.Former former -> Type.former former)
          x [@landmark "decode_type_acyclic"])
@@ -95,6 +97,8 @@ module Make (Algebra : Algebra) = struct
            match G.repr structure with
            | G.Flexible_var -> Type.var (decode_variable type_)
            | G.Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
+           | G.Row_cons (label, label_type, tl) -> Type.row_cons (label, label_type) tl
+           | G.Row_uniform type_ -> Type.row_uniform type_
            | G.Former former -> Type.former former)
          ~var:(fun type_ -> Type.var (decode_variable type_))
          ~mu:(fun v t -> Type.mu (decode_variable v) t)
