@@ -15,17 +15,18 @@ open Util
 
 (** Representation of types and declarations  *)
 
+type label = string
+
 type type_expr =
-  | Ttyp_var of string 
-      (** Type variables ['a]. *)
-  | Ttyp_arrow of type_expr * type_expr 
-      (** Function types [T1 -> T2]. *)
-  | Ttyp_tuple of type_expr list 
-      (** Product (or "tuple") types. *)
-  | Ttyp_constr of type_constr 
-      (** Type constructors. *)
+  | Ttyp_var of string (** Type variables ['a]. *)
+  | Ttyp_arrow of type_expr * type_expr (** Function types [T1 -> T2]. *)
+  | Ttyp_tuple of type_expr list (** Product (or "tuple") types. *)
+  | Ttyp_constr of type_constr (** Type constructors. *)
   | Ttyp_alias of type_expr * string
       (** Alias, required for displaying recursive types. *)
+  | Ttyp_variant of type_expr (** Polymorphic variant. *)
+  | Ttyp_row_cons of label * type_expr * type_expr (**  *)
+  | Ttyp_row_uniform of type_expr (**  *)
 [@@deriving sexp_of]
 
 and type_constr = type_expr list * string [@@deriving sexp_of]
@@ -61,6 +62,7 @@ module Algebra : sig
       | Arrow of 'a * 'a
       | Tuple of 'a list
       | Constr of 'a list * string
+      | Variant of 'a
     [@@deriving sexp_of]
 
     include Type_former.S with type 'a t := 'a t
@@ -69,13 +71,15 @@ module Algebra : sig
   (** [Type] is the abstraction of Dromedary's types, [type_expr]. *)
   module Type :
     Type
-      with type variable := Type_var.t
+      with type label := string
+       and type variable := Type_var.t
        and type 'a former := 'a Type_former.t
        and type t = type_expr
 
   include
     Algebra
       with module Term_var := Term_var
+       and type Types.Label.t = string
        and module Types.Var = Type_var
        and module Types.Former = Type_former
        and module Types.Type = Type
@@ -127,7 +131,10 @@ type constructor_description =
   }
 [@@deriving sexp_of]
 
-val pp_constructor_description_mach : indent:string ->  constructor_description Pretty_printer.t
+val pp_constructor_description_mach
+  :  indent:string
+  -> constructor_description Pretty_printer.t
+
 val pp_constructor_description : constructor_description Pretty_printer.t
 
 type label_description =
@@ -137,5 +144,8 @@ type label_description =
   }
 [@@deriving sexp_of]
 
-val pp_label_description_mach : indent:string ->  label_description Pretty_printer.t
+val pp_label_description_mach
+  :  indent:string
+  -> label_description Pretty_printer.t
+
 val pp_label_description : label_description Pretty_printer.t

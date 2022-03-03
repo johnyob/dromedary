@@ -49,6 +49,10 @@ let exn = Type_former.Constr ([], "exn")
 let exn_ = Type.former exn
 let ref x = Type_former.Constr ([ x ], "ref")
 let ref_ x = Type.former (ref x)
+let variant t = Type_former.Variant t
+let variant_ t = Type.former (variant t)
+let row_cons label t1 t2 = Type.Row_cons (label, t1, t2)
+let row_uniform t = Type.Row_uniform t
 
 (* [convert_core_type core_type] converts core type [core_type] to [Type.t]. *)
 let rec convert_core_type ~substitution core_type : (Type.t, _) Result.t =
@@ -85,6 +89,24 @@ let rec convert_type_expr ~substitution type_expr : (Type.t, _) Result.t =
     let%bind ts = List.map ts ~f:(convert_type_expr ~substitution) |> all in
     return (constr_ ts constr')
   | Ttyp_alias _ -> fail (`Type_expr_contains_alias type_expr)
+  | Ttyp_variant t ->
+    let%bind t = convert_row ~substitution t in
+    return (variant_ t)
+  | _ -> fail (`Type_expr_is_ill_sorted type_expr)
+
+
+and convert_row ~substitution row : (Type.t, _) Result.t =
+  let open Result in
+  let open Let_syntax in
+  match row with
+  | Ttyp_row_cons (label, t1, t2) ->
+    let%bind t1 = convert_type_expr ~substitution t1 in
+    let%bind t2 = convert_row ~substitution t2 in
+    return (row_cons label t1 t2)
+  | Ttyp_row_uniform t ->
+    let%bind t = convert_type_expr ~substitution t in
+    return (row_uniform t)
+  | _ -> fail (`Type_expr_is_ill_sorted row)
 
 
 (* [infer_constant const] returns the type of [const]. *)
@@ -189,7 +211,8 @@ let inst_constr_decl ~env name
 
 
 let inst_label_decl ~env label
-    : (Constraint.variable list * Constraint.variable list * Type.t * Type.t, _) Result.t
+    : ( Constraint.variable list * Constraint.variable list * Type.t * Type.t, _
+    ) Result.t
   =
   let open Result.Let_syntax in
   let%bind { label_arg; label_type; label_alphas; label_betas; _ } =
@@ -199,7 +222,7 @@ let inst_label_decl ~env label
   let substitution_of_vars vars =
     substitution_of_vars vars
     |> Result.map_error ~f:(fun (`Duplicate_type_variable var) ->
-            `Duplicate_type_parameter_for_label (label, var))
+           `Duplicate_type_parameter_for_label (label, var))
   in
   (* Compute a fresh set of existential variables *)
   let%bind substitution = substitution_of_vars label_alphas in
@@ -319,16 +342,27 @@ let annotation_of_rec_value_binding value_binding
 
 (** {4: Value restriction} *)
 
-let rec is_non_expansive exp = 
+let rec is_non_expansive exp =
   match exp with
   | Pexp_var _ | Pexp_const _ | Pexp_prim _ | Pexp_fun _ -> true
   | Pexp_construct (_, Some exp) -> is_non_expansive exp
   | Pexp_construct (_, None) -> true
-  | Pexp_forall (_, exp) | Pexp_exists (_, exp) | Pexp_constraint (exp, _) | Pexp_let (Recursive, _, exp)   -> is_non_expansive exp
-  | Pexp_record label_exps -> List.for_all label_exps ~f:(fun (_, exp) -> is_non_expansive exp)
+  | Pexp_forall (_, exp)
+  | Pexp_exists (_, exp)
+  | Pexp_constraint (exp, _)
+  | Pexp_let (Recursive, _, exp) -> is_non_expansive exp
+  | Pexp_record label_exps ->
+    List.for_all label_exps ~f:(fun (_, exp) -> is_non_expansive exp)
   | Pexp_tuple exps -> List.for_all exps ~f:is_non_expansive
   | Pexp_sequence (exp1, exp2) -> is_non_expansive exp1 && is_non_expansive exp2
-  | Pexp_let _ | Pexp_match _ | Pexp_ifthenelse _ | Pexp_app _ | Pexp_while _ | Pexp_for _ | Pexp_try _ | Pexp_field _ -> false
+  | Pexp_let _
+  | Pexp_match _
+  | Pexp_ifthenelse _
+  | Pexp_app _
+  | Pexp_while _
+  | Pexp_for _
+  | Pexp_try _
+  | Pexp_field _ -> false
 
 
 module Pattern = struct
@@ -373,7 +407,10 @@ module Pattern = struct
             [%message
               "Unbound type variable when instantiating constructor (Cannot \
                occur! Good luck)"
-                (var : string)])
+                (var : string)]
+          | `Type_expr_is_ill_sorted type_expr ->
+            [%message
+              "Type expression is not correctly sorted" (type_expr : type_expr)])
     in
     let%bind () = exists_vars alphas in
     return (constr_arg, constr_type, constr_constraint)
@@ -441,7 +478,7 @@ module Pattern = struct
       | Ppat_tuple pats ->
         let@ vars, pats = infer_pats pats in
         return
-          (let%map () = pat_type =~= tuple vars
+          (let%map () = pat_type =~= Former (tuple vars)
            and pats = pats in
            Tpat_tuple pats)
       | Ppat_construct (constr, arg_pat) ->
@@ -585,7 +622,10 @@ module Expression = struct
             [%message
               "Unbound type variable when instantiating constructor (Cannot \
                occur! Good luck)"
-                (var : string)])
+                (var : string)]
+          | `Type_expr_is_ill_sorted type_expr ->
+            [%message
+              "Type expression is not correctly sorted" (type_expr : type_expr)])
     in
     let%bind () = exists_vars constr_alphas in
     let%bind constr_arg =
@@ -598,28 +638,34 @@ module Expression = struct
     return (constr_arg, constr_type, constr_constraints)
 
 
-  let inst_label_decl label : (Constraint.variable list * Constraint.variable list * Type.t * Type.t) Computation.t =
+  let inst_label_decl label
+      : (Constraint.variable list * Constraint.variable list * Type.t * Type.t)
+      Computation.t
+    =
     let open Computation.Let_syntax in
     let%bind env = env in
     of_result (inst_label_decl ~env label) ~message:(function
-          | `Duplicate_type_parameter_for_label (label, var) ->
-            [%message
-              "Duplicate type parameter in label in environment"
-                (var : string)
-                (label : string)]
-          | `Type_expr_contains_alias type_expr ->
-            [%message
-              "Label type in environment contains alias"
-                (label : string)
-                (type_expr : type_expr)]
-          | `Unbound_label label ->
-            [%message "Label is unbound in environment" (label : string)]
-          | `Unbound_type_variable var ->
-            [%message
-              "Unbound type variable when instantiating label (Cannot occur! \
-               Good luck)"
-                (var : string)])
-    
+        | `Duplicate_type_parameter_for_label (label, var) ->
+          [%message
+            "Duplicate type parameter in label in environment"
+              (var : string)
+              (label : string)]
+        | `Type_expr_contains_alias type_expr ->
+          [%message
+            "Label type in environment contains alias"
+              (label : string)
+              (type_expr : type_expr)]
+        | `Unbound_label label ->
+          [%message "Label is unbound in environment" (label : string)]
+        | `Unbound_type_variable var ->
+          [%message
+            "Unbound type variable when instantiating label (Cannot occur! \
+             Good luck)"
+              (var : string)]
+        | `Type_expr_is_ill_sorted type_expr ->
+          [%message
+            "Type expression is not correctly sorted" (type_expr : type_expr)])
+
 
   let ( -~- ) type1 type2 : unit Constraint.t =
     let bindings1, var1 = Shallow_type.of_type type1 in
@@ -658,7 +704,9 @@ module Expression = struct
       : (label_description Constraint.t * variable) Binder.t
     =
     let open Binder.Let_syntax in
-    let& label_alphas, label_betas, label_arg, label_type' = inst_label_decl label in
+    let& label_alphas, label_betas, label_arg, label_type' =
+      inst_label_decl label
+    in
     let%bind () = exists_vars (label_alphas @ label_betas) in
     (* Convert to variables *)
     let%bind label_arg = of_type label_arg in
@@ -752,7 +800,8 @@ module Expression = struct
     let%map term_let_bindings, _ =
       let_
         ~bindings:
-          [ (((vars, [ var, None ]) @. exp_desc) @=> (true, [ internal_name #= var ]))
+          [ (((vars, [ var, None ]) @. exp_desc)
+            @=> (true, [ internal_name #= var ]))
               []
           ]
         ~in_:(inst internal_name exp_type)
@@ -760,6 +809,7 @@ module Expression = struct
     match term_let_bindings with
     | [ (_, (_, exp_desc)) ] -> exp_desc
     | _ -> assert false
+
 
   let infer_exp exp exp_type : Typedtree.expression Constraint.t Computation.t =
     let rec infer_exp exp exp_type
@@ -794,12 +844,12 @@ module Expression = struct
         let@ var2 = exists () in
         let@ pat_exp = bind_pat pat var1 ~in_:(infer_exp exp var2) in
         return
-          (let%map () = exp_type =~= var1 @-> var2
+          (let%map () = exp_type =~= (Former (var1 @-> var2))
            and pat, exp = pat_exp in
            Texp_fun (pat, exp))
       | Pexp_app (exp1, exp2) ->
         let@ var = exists () in
-        let%bind exp1 = lift (infer_exp exp1) (var @-> exp_type) in
+        let%bind exp1 = lift (infer_exp exp1) (Former (var @-> exp_type)) in
         let%bind exp2 = infer_exp exp2 var in
         return
           (let%map exp1 = exp1
@@ -824,7 +874,7 @@ module Expression = struct
       | Pexp_tuple exps ->
         let@ vars, exps = infer_exps exps in
         return
-          (let%map () = exp_type =~= tuple vars
+          (let%map () = exp_type =~= (Former (tuple vars))
            and exps = exps in
            Texp_tuple exps)
       | Pexp_match (match_exp, cases) ->
@@ -837,7 +887,7 @@ module Expression = struct
            and cases = cases in
            Texp_match (match_exp, match_exp_type, cases))
       | Pexp_ifthenelse (if_exp, then_exp, else_exp) ->
-        let%bind if_exp = lift (infer_exp if_exp) bool in
+        let%bind if_exp = lift (infer_exp if_exp) (Former bool) in
         let%bind then_exp = infer_exp then_exp exp_type in
         let%bind else_exp = infer_exp else_exp exp_type in
         return
@@ -929,17 +979,17 @@ module Expression = struct
            and cases = cases in
            Texp_try (exp, cases))
       | Pexp_sequence (exp1, exp2) ->
-        let%bind exp1 = lift (infer_exp exp1) unit in
+        let%bind exp1 = lift (infer_exp exp1) (Former unit) in
         let%bind exp2 = infer_exp exp2 exp_type in
         return
           (let%map exp1 = exp1
            and exp2 = exp2 in
            Texp_sequence (exp1, exp2))
       | Pexp_while (exp1, exp2) ->
-        let%bind exp1 = lift (infer_exp exp1) bool in
-        let%bind exp2 = lift (infer_exp exp2) unit in
+        let%bind exp1 = lift (infer_exp exp1) (Former bool) in
+        let%bind exp2 = lift (infer_exp exp2) (Former unit) in
         return
-          (let%map () = exp_type =~= unit
+          (let%map () = exp_type =~= (Former unit)
            and exp1 = exp1
            and exp2 = exp2 in
            Texp_while (exp1, exp2))
@@ -951,12 +1001,12 @@ module Expression = struct
           | _ ->
             fail [%message "Invalid for loop index" (pat : Parsetree.pattern)]
         in
-        let%bind exp1 = lift (infer_exp exp1) int in
-        let%bind exp2 = lift (infer_exp exp2) int in
-        let%bind exp3 = lift (infer_exp exp3) unit in
+        let%bind exp1 = lift (infer_exp exp1) (Former int) in
+        let%bind exp2 = lift (infer_exp exp2) (Former int) in
+        let%bind exp3 = lift (infer_exp exp3) (Former unit) in
         let@ int = of_type int_ in
         return
-          (let%map () = exp_type =~= unit
+          (let%map () = exp_type =~= (Former unit)
            and exp1 = exp1
            and exp2 = exp2
            and exp3 = def ~bindings:[ index #= int ] ~in_:exp3 in
@@ -998,13 +1048,19 @@ module Expression = struct
       let open Computation.Let_syntax in
       let%bind label_exps =
         List.map label_exps ~f:(fun (label, exp) ->
-            let%bind label_alphas, label_betas, label_arg, label_type = inst_label_decl label in
+            let%bind label_alphas, label_betas, label_arg, label_type =
+              inst_label_decl label
+            in
             let@ () = exists_vars label_alphas in
             let@ () = forall_vars label_betas in
             let@ label_arg = of_type label_arg in
             let@ label_type = of_type label_type in
             let%bind exp = infer_exp exp label_arg in
-            let label_desc = exp_type =~ label_type >> make_label_desc label label_arg label_type in
+            let label_desc =
+              exp_type
+              =~ label_type
+              >> make_label_desc label label_arg label_type
+            in
             return (label_desc &~ exp))
         |> all
       in
