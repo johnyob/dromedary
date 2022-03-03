@@ -2324,8 +2324,8 @@ let%expect_test "solve-1" =
       [ a1 ]
       (def_poly
          ~flexible_vars:
-           [ a2, Some (Constr ([], "int"))
-           ; a3, Some (Constr ([ a1; a2 ], "eq"))
+           [ a2, Some (Former (Constr ([], "int")))
+           ; a3, Some (Former (Constr ([ a1; a2 ], "eq")))
            ]
          ~bindings:[ "x" #= a3 ]
          ~in_:
@@ -2338,8 +2338,8 @@ let%expect_test "solve-1" =
               (inst "x" a4
               &~ exists
                    [ a5, None
-                   ; a6, Some (Constr ([], "int"))
-                   ; a7, Some (Constr ([ a5; a6 ], "eq"))
+                   ; a6, Some (Former (Constr ([], "int")))
+                   ; a7, Some (Former (Constr ([ a5; a6 ], "eq")))
                    ]
                    (a4 =~ a7 &~ [ Var a5, Var a6 ] #=> (return ())))))
   in
@@ -2347,11 +2347,14 @@ let%expect_test "solve-1" =
   [%expect
     {|
     ((Forall (483))
-     ((Def_poly ((484 ((Constr () int))) (485 ((Constr (483 484) eq)))))
+     ((Def_poly
+       ((484 ((Former (Constr () int)))) (485 ((Former (Constr (483 484) eq))))))
       ((x 485))
       ((Exist ((486 ())))
        ((Conj ((Instance x) 486))
-        ((Exist ((487 ()) (488 ((Constr () int))) (489 ((Constr (487 488) eq)))))
+        ((Exist
+          ((487 ()) (488 ((Former (Constr () int))))
+           (489 ((Former (Constr (487 488) eq))))))
          ((Conj ((Eq 486) 489)) ((Implication (((Var 487) (Var 488)))) Return)))))))
     Constraint is true. |}]
 
