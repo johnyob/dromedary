@@ -23,6 +23,11 @@ module Make (Algebra : Algebra) = struct
 
   (* Add relevant modules from [Types]. *)
 
+  module Label = struct
+    include Types.Label
+
+    let sexp_of_t = comparator.sexp_of_t
+  end
   module Type_var = Types.Var
   module Type_former = Types.Former
 
@@ -54,6 +59,8 @@ module Make (Algebra : Algebra) = struct
     type t =
       | Var of variable
       | Former of t Type_former.t
+      | Row_cons of Label.t * t * t
+      | Row_uniform of t
     [@@deriving sexp_of]
 
     (* [var a] returns the representation of the type variable [a]. *)
@@ -75,7 +82,13 @@ module Make (Algebra : Algebra) = struct
   module Shallow_type = struct
     (* [t] represents a shallow type [ρ] is defined by the grammar:
        ρ ::= (ɑ₁, .., ɑ₂) F *)
-    type t = variable Type_former.t [@@deriving sexp_of]
+    type 'a f = 
+      | Former of 'a Type_former.t
+      | Row_cons of Label.t * 'a * 'a
+      | Row_uniform of 'a 
+    [@@deriving sexp_of]
+    
+    type t = variable f [@@deriving sexp_of]
 
     (* [binding] represents a shallow type binding defined by the grammar:
        b ::= ɑ | ɑ :: ρ *)
@@ -93,9 +106,22 @@ module Make (Algebra : Algebra) = struct
         | Type.Var var -> var
         | Type.Former former ->
           let var = fresh () in
-          let former = Type_former.map former ~f:loop in
+          let former = Former (Type_former.map former ~f:loop) in
           context := (var, Some former) :: !context;
           var
+        | Type.Row_cons (label, t1, t2) ->
+          let var = fresh () in
+          let t1 = loop t1 in
+          let t2 = loop t2 in
+          let row = Row_cons (label, t1, t2) in
+          context := (var, Some row) :: !context;
+          var
+        | Type.Row_uniform t ->
+          let var = fresh () in
+          let t = loop t in
+          let row = Row_uniform t in
+          context := (var, Some row) :: !context;
+          var 
       in
       let var = loop type_ in
       List.rev !context, var

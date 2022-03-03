@@ -25,6 +25,7 @@ open Module_types
 
 module Make (Algebra : Algebra) : sig
   open Algebra
+  module Label := Types.Label
   module Type_var := Types.Var
   module Type_former := Types.Former
 
@@ -52,6 +53,8 @@ module Make (Algebra : Algebra) : sig
     type t =
       | Var of variable
       | Former of t Type_former.t
+      | Row_cons of Label.t * t * t
+      | Row_uniform of t
     [@@deriving sexp_of]
 
     (** [var 'a] is the representation of the type variable ['a] as the 
@@ -75,7 +78,13 @@ module Make (Algebra : Algebra) : sig
   module Shallow_type : sig
     (** [t] represents a shallow type [ρ] is defined by the grammar:
         ρ ::= (ɑ₁, .., ɑ₂) F *)
-    type t = variable Type_former.t [@@deriving sexp_of]
+    type 'a f = 
+      | Former of 'a Type_former.t
+      | Row_cons of Label.t * 'a * 'a
+      | Row_uniform of 'a 
+    [@@deriving sexp_of]
+    
+    type t = variable f [@@deriving sexp_of]
 
     (** [binding] represents a shallow type binding defined by the grammar:
         b ::= ɑ | ɑ :: ρ *)

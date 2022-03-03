@@ -191,15 +191,26 @@ module Make (Algebra : Algebra) = struct
      (var, former_opt) in the environment. 
        
      Returning the graphical type mapped in the environment. *)
-  let[@landmark] bind_flexible state (var, former_opt) =
+  let[@landmark] bind_flexible state (var, shallow_type_opt) =
+    let open C.Shallow_type in
     let type_ =
-      match former_opt with
+      match shallow_type_opt with
       | None -> G.make_flexible_var state.generalization_state [@landmark "make_flexible_var"]
-      | Some former ->
+      | Some (Former former) ->
         G.make_former
           state.generalization_state
           (Type_former.map former ~f:(find state))
           [@landmark "make_former"]
+      | Some (Row_cons (label, t1, t2)) ->
+        G.make_row_cons
+          state.generalization_state
+          ~label:label 
+          ~field:(find state t1)
+          ~tl:(find state t2)
+      | Some (Row_uniform t) ->
+        G.make_row_uniform 
+          state.generalization_state
+          (find state t)
     in
     bind state var (Type type_);
     type_
@@ -321,6 +332,7 @@ module Make (Algebra : Algebra) = struct
     | C.Type.Former former ->
       G.Rigid_type.make_former
         (Type_former.map former ~f:(ctype_to_rigid_type state))
+    | C.Type.Row_cons _ | C.Type.Row_uniform _ -> failwith "TODO"
 
 
   exception Non_rigid_equations
