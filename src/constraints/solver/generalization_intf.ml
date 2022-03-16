@@ -33,43 +33,62 @@ module type S = sig
     
       We encapsulate this in the abstract type [state].  
   *)
-
   type state
 
   (** [make_state ()] creates a new empty state. *)
   val make_state : unit -> state
 
-  (** [Rigid_type] and [Equations] are external interfaces for [Ambivalent.Rigid_type]
-      and [Equations.Ctx]. We do this to avoid exposing the notion of a scope. *)
-
   module Rigid_type : sig
-    type t
+    (** [t] represents a rigid-type *)
+    type t [@@deriving sexp_of]
 
+    (** [make_rigid_var rigid_var] returns the rigid type 
+        representing the variable [rigid_var] *)
     val make_rigid_var : Rigid_var.t -> t
+
+    (** [make_former former] returns the rigid type representing the 
+        rigid type former [former].  *)
     val make_former : t former -> t
   end
 
   module Abbrev_type : sig
+    (** [t] represents a type used to encode abbreviations. *)
     type t [@@deriving sexp_of, compare]
 
+    (** [make_var ()] returns a new type variable *)
     val make_var : unit -> t
+
+    (** [make_former former] returns the abbreviation type representing the 
+        type former [former]. *)
     val make_former : t former -> t
   end
 
   module Abbreviations : sig
+    (** [t] represents the abbreviation context. *)
     type t
 
+    (** [empty] is the abbreviation context containing no abbreviations *)
     val empty : t
+
+    (** [add t ~abbrev] adds the abbreviation [abbrev] to [t] -- 
+        an abbreviation is a pair [('a1, ..., 'an) former = type_]. *)
     val add : t -> abbrev:Abbrev_type.t former * Abbrev_type.t -> t
   end
 
   module Equations : sig
+    (** [t] represents the equational context. *)
     type t
 
+    (** [empty] is the empty equational context -- containing
+        no equations. *)
     val empty : t
 
     exception Inconsistent
 
+
+    (** [add ~state ~abbrev_ctx t type1 type2] adds the equality [type1 = type2] to
+        the equational context [t] -- [abbrev_ctx] is used to determine the required equalities 
+        (modulo the abbreviation context) and [state] is used for equational scoping purposes. *)
     val add
       :  state
       -> abbrev_ctx:Abbreviations.t
@@ -86,6 +105,7 @@ module type S = sig
 
   module Unifier : Unifier.S
 
+  (** [] *)
   val unify : state -> ctx:ctx -> Unifier.Type.t -> Unifier.Type.t -> unit
 
   open Unifier
@@ -110,6 +130,7 @@ module type S = sig
     -> tl:Type.t
     -> Type.t
 
+  (** ['a repr] external representation of a ['a Unifier.structure]  *)
   type 'a repr =
     | Flexible_var
     | Row_uniform of 'a
@@ -117,6 +138,7 @@ module type S = sig
     | Rigid_var of Rigid_var.t
     | Former of 'a former
 
+  (** [repr structure] returns to representation of [structure] *)
   val repr : 'a Unifier.structure -> 'a repr
 
   (** The type [scheme] defines the abstract notion of a scheme in 

@@ -741,28 +741,30 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
         | Not_found_s _ ->
           (* We now update the structure according to the original 
              structure of [typ].  *)
-          let new_type =
-            match repr type_ with
-            | Var ->
-              let new_type = make_flexible_var state in
-              if level type_ = level'
-              then instance_variables := new_type :: !instance_variables;
-              new_type
-            | Structure (Row_uniform type_) ->
-              make_row_uniform state (copy type_)
-            | Structure (Row_cons (l, type1, type2)) ->
-              make_row_cons state ~label:l ~field:(copy type1) ~tl:(copy type2)
-            | Structure (Structure structure) ->
-              (match Ambivalent.repr structure with
-              | Rigid_var rigid_var -> make_rigid_var state rigid_var
-              | Structure structure ->
-                make_former
-                  state
-                  (Former.map ~f:copy (Abbreviations.repr structure)))
-          in
-          (* Set the mapping from the original node to the copied 
-             node. *)
+          let new_type = make_flexible_var state in
           Hashtbl.set copied ~key:type_ ~data:new_type;
+          (match repr type_ with
+          | Var ->
+            if level type_ = level'
+            then instance_variables := new_type :: !instance_variables
+          | Structure (Row_uniform type_) ->
+            set_repr new_type (Structure.make_row_uniform (copy type_))
+          | Structure (Row_cons (l, type1, type2)) ->
+            set_repr
+              new_type
+              (Structure.make_row_cons
+                 ~label:l
+                 ~field:(copy type1)
+                 ~tl:(copy type2))
+          | Structure (Structure structure) ->
+            (match Ambivalent.repr structure with
+            | Rigid_var rigid_var ->
+              set_repr new_type (Structure.make_rigid_var rigid_var)
+            | Structure structure ->
+              set_repr
+                new_type
+                (Structure.make_former
+                   (Former.map ~f:copy (Abbreviations.repr structure)))));
           new_type)
     in
     (* Copy the root, yielding the instance variables (as a side-effect). *)
