@@ -38,8 +38,6 @@ module type S = sig
     (** [t] represents a type. See "graphical types". *)
     type t [@@deriving sexp_of, compare]
 
-    val to_dot : t -> string
-
     (** Each graphical type node consists of:
         - a unique identifier [id] (used to define a total ordering).
         - a mutable [structure], which contains the node structure. *)
@@ -59,42 +57,29 @@ module type S = sig
 
     (** [make structure] creates a new unification type w/ structure [structure]. *)
     val make : t structure -> t
+
+    (** [fold t ~f ~var ~mu] will perform a fold over
+      the (potentially) cyclic graph defined by the type [t]. *)
+    val fold
+      :  t
+      -> f:(t -> 'a structure -> 'a)
+      -> var:(t -> 'a)
+      -> mu:(t -> 'a -> 'a)
+      -> 'a
+
+    (** [to_dot t] returns the graph-viz .dot encoding of [t]. *)
+    val to_dot : t -> string
   end
 
   (** [unify ~ctx t1 t2] equates the graphical type nodes [t1] and [t2], 
       and forms a multi-equation node.
       
       [Unify (t1, t2)] is raised if the two node cannot
-      be unified. 
-
-      No occurs check is implemented (this is separate from 
-      unification). See {!occurs_check}. *)
+      be unified. *)
 
   exception Unify of Type.t * Type.t
 
   val unify : ctx:Type.t ctx -> Type.t -> Type.t -> unit
-
-  (** [occurs_check t] detects whether there is a cycle in 
-      the graphical type [t]. 
-      
-      If a cycle is detected, [Cycle t] is raised. *)
-
-  exception Cycle of Type.t
-
-  val occurs_check : Type.t -> unit
-
-  (** [fold_acyclic type_ ~f] will perform a bottom-up fold
-      over the (assumed) acyclic graph defined by the type [type_]. *)
-  val fold_acyclic : Type.t -> f:(Type.t -> 'a structure -> 'a) -> 'a
-
-  (** [fold_cyclic type_ ~f ~var ~mu] will perform a fold over
-      the (potentially) cyclic graph defined by the type [type_]. *)
-  val fold_cyclic
-    :  Type.t
-    -> f:(Type.t -> 'a structure -> 'a)
-    -> var:(Type.t -> 'a)
-    -> mu:(Type.t -> 'a -> 'a)
-    -> 'a
 end
 
 (** The interface of {unifier.ml}. *)
