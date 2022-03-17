@@ -156,45 +156,36 @@ module Make (Algebra : Algebra) = struct
     | Some (Type type_) -> type_
 
 
-  (* let find_rigid state (var : C.variable) =
-    match Hashtbl.find state.constraint_var_env (var :> int) with
-    | None -> raise (Unbound_constraint_variable var)
-    | Some (Rigid_var rigid_var) -> Some rigid_var
-    | Some (Type type_) ->
-      (match G.repr (U.Type.get_structure type_) with
-      | G.Rigid_var rigid_var -> Some rigid_var
-      | _ -> None) *)
-
   (* [bind state var type_] binds [type_] to the constraint variable [var] in 
      the environment. *)
   let[@landmark] bind state (var : C.variable) type_ =
     Hashtbl.set state.constraint_var_env ~key:(var :> int) ~data:type_
 
 
+  let[@landmark] convert_shallow_type state shallow_type =
+    let open C.Shallow_type in
+    match shallow_type with
+    | Former former ->
+      G.make_former
+        ~state:state.generalization_state
+        (Type_former.map former ~f:(find state)) [@landmark "make_former"]
+    | Row_cons (label, t1, t2) ->
+      G.make_row_cons
+        ~state:state.generalization_state
+        ~label
+        ~field:(find state t1)
+        ~tl:(find state t2)
+    | Row_uniform t ->
+      G.make_row_uniform ~state:state.generalization_state (find state t)
+    | Mu t -> find state t
+
+
   (* [bind_flexible state (var, former_opt)] binds the flexible binding 
      (var, former_opt) in the environment. 
        
      Returning the graphical type mapped in the environment. *)
-  let[@landmark] bind_flexible state (var, shallow_type_opt) =
-    let open C.Shallow_type in
-    let type_ =
-      match shallow_type_opt with
-      | None ->
-        G.make_flexible_var
-          ~state:state.generalization_state [@landmark "make_flexible_var"]
-      | Some (Former former) ->
-        G.make_former
-          ~state:state.generalization_state
-          (Type_former.map former ~f:(find state)) [@landmark "make_former"]
-      | Some (Row_cons (label, t1, t2)) ->
-        G.make_row_cons
-          ~state:state.generalization_state
-          ~label
-          ~field:(find state t1)
-          ~tl:(find state t2)
-      | Some (Row_uniform t) ->
-        G.make_row_uniform ~state:state.generalization_state (find state t)
-    in
+  let[@landmark] bind_flexible state var =
+    let type_ = G.make_flexible_var ~state:state.generalization_state in
     bind state var (Type type_);
     type_
 
@@ -289,7 +280,7 @@ module Make (Algebra : Algebra) = struct
   end
 
   exception Invalid_rigid_type
-  
+
   let rec utype_to_rigid_type state type_ : G.Rigid_type.t =
     match G.Structure.repr (U.Type.structure type_) with
     | Rigid_var rigid_var -> G.Rigid_type.make_rigid_var rigid_var
@@ -300,16 +291,16 @@ module Make (Algebra : Algebra) = struct
 
 
   let rec ctype_to_rigid_type state type_ : G.Rigid_type.t =
-    match type_ with
-    | C.Type.Var x ->
+    match (type_ : C.Type.t) with
+    | Var x ->
       (match Hashtbl.find state.constraint_var_env (x :> int) with
       | None -> raise (Unbound_constraint_variable x)
       | Some (Rigid_var rigid_var) -> G.Rigid_type.make_rigid_var rigid_var
       | Some (Type type_) -> utype_to_rigid_type state type_)
-    | C.Type.Former former ->
+    | Former former ->
       G.Rigid_type.make_former
         (Type_former.map former ~f:(ctype_to_rigid_type state))
-    | C.Type.Row_cons _ | C.Type.Row_uniform _ -> failwith "TODO"
+    | _ -> raise Invalid_rigid_type
 
 
   exception Non_rigid_equations
@@ -342,23 +333,29 @@ module Make (Algebra : Algebra) = struct
         type2 [@landmark "unify"]
     with
     | U.Unify (type1, type2) ->
-      raise
-        (Unify
-           (Decoder.decode_type type1, Decoder.decode_type type2))
+      raise (Unify (Decoder.decode_type type1, Decoder.decode_type type2))
+
+
+  let[@landmark] bind_existential_ctx state (vars, bindings) =
+    (* TODO: Optimize! *)
+    List.iter vars ~f:(fun var -> ignore (bind_flexible state var : U.Type.t));
+    let unify = unify ~state ~env:(Env.empty Abbreviations.empty) in
+    List.iter bindings ~f:(fun (var, shallow_type) ->
+        unify (find state var) (convert_shallow_type state shallow_type))
 
 
   type 'a let_rec_poly_binding =
     | Polymorphic of
-        { rigid_vars : Constraint.variable list
-        ; annotation_bindings : Constraint.Shallow_type.binding list
-        ; binding : Constraint.binding
+        { universal_context : Constraint.universal_context
+        ; annotation : Constraint.Shallow_type.encoded_type
+        ; term_var : Term_var.t
         ; in_ : 'a Constraint.t
         }
 
   type 'a let_rec_mono_binding =
     | Monomorphic of
-        { rigid_vars : Constraint.variable list
-        ; flexible_vars : Constraint.Shallow_type.binding list
+        { universal_context : Constraint.universal_context
+        ; existential_context : Constraint.existential_context
         ; binding : Constraint.binding
         ; in_ : 'a Constraint.t
         }
@@ -383,16 +380,16 @@ module Make (Algebra : Algebra) = struct
         Log.debug (fun m -> m "Solving [Eq].");
         unify ~state ~env (find state a) (find state a');
         return ()
-      | Exist (bindings, cst) ->
+      | Exist (ctx, cst) ->
         Log.debug (fun m -> m "Solving [Exist].");
-        ignore (List.map ~f:(bind_flexible state) bindings : U.Type.t list);
+        bind_existential_ctx state ctx;
         solve ~state ~env cst
-      | Forall (vars, cst) ->
+      | Forall (ctx, cst) ->
         Log.debug (fun m -> m "Solving [Forall].");
         (* Enter a new region *)
         enter state;
         (* Introduce the rigid variables *)
-        let rigid_vars = List.map ~f:(fun var -> bind_rigid state var) vars in
+        let rigid_vars = List.map ~f:(bind_rigid state) ctx in
         (* Solve the constraint *)
         let value = solve ~state ~env cst in
         (* Generalize and exit *)
@@ -430,14 +427,6 @@ module Make (Algebra : Algebra) = struct
         in
         let value = solve ~state ~env cst in
         both term_let_rec_bindings value
-      | Match (cst, cases) ->
-        let value = solve ~state ~env cst in
-        let case_values =
-          List.map cases ~f:(fun (Case { bindings; in_ }) ->
-              let env = Env.extend_bindings state env bindings in
-              solve ~state ~env in_)
-        in
-        both value (list case_values)
       | Decode a ->
         let var = find state a in
         fun () -> Decoder.decode_type var
@@ -453,19 +442,6 @@ module Make (Algebra : Algebra) = struct
         ignore
           (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
         value
-      | Def_poly (flexible_vars, bindings, in_) ->
-        Log.debug (fun m -> m "Solving [Def_poly].");
-        (* Compute the type schemes for the polymorphic bindings *)
-        enter state;
-        let _flexible_vars = List.map ~f:(bind_flexible state) flexible_vars in
-        let types = List.map ~f:(fun (_, a) -> find state a) bindings in
-        let _generalizable, schemes = exit state ~rigid_vars:[] ~types in
-        (* Extend the environment *)
-        let env =
-          List.fold2_exn bindings schemes ~init:env ~f:(fun env (x, _) scheme ->
-              Env.extend env x scheme)
-        in
-        solve ~state ~env in_
 
 
   and[@landmark] solve_let_binding
@@ -480,8 +456,8 @@ module Make (Algebra : Algebra) = struct
    fun ~state
        ~env
        (Let_binding
-         { rigid_vars
-         ; flexible_vars
+         { universal_context
+         ; existential_context
          ; is_non_expansive
          ; bindings
          ; in_
@@ -490,10 +466,12 @@ module Make (Algebra : Algebra) = struct
     (* Enter a new region *)
     if is_non_expansive then enter state;
     (* Initialize fresh flexible and rigid variables *)
-    let _flexible_vars = List.map ~f:(bind_flexible state) flexible_vars
-    and rigid_vars =
-      if is_non_expansive then List.map ~f:(bind_rigid state) rigid_vars else []
+    let rigid_vars =
+      if is_non_expansive
+      then List.map ~f:(bind_rigid state) universal_context
+      else []
     in
+    bind_existential_ctx state existential_context;
     (* Convert the constraint types into graphic types *)
     let types = List.map bindings ~f:(fun (_, a) -> find state a) in
     (* Solve the constraint of the let binding *)
@@ -572,17 +550,17 @@ module Make (Algebra : Algebra) = struct
           let_rec_poly_bindings
           ~f:(fun
                (Polymorphic
-                 { rigid_vars; annotation_bindings; binding = _, a; _ })
+                 { universal_context; annotation = existential_context, a; _ })
              ->
             (* Enter a new region to generalize annotation *)
             enter state;
             (* Initialize rigid variables and the annotation *)
-            let rigid_vars = List.map ~f:(bind_rigid state) rigid_vars
-            and _annotation =
-              List.map ~f:(bind_flexible state) annotation_bindings
-            in
+            let rigid_vars = List.map ~f:(bind_rigid state) universal_context in
             (* Lookup the bound type *)
-            let type_ = find state a in
+            let type_ =
+              bind_existential_ctx state existential_context;
+              find state a
+            in
             (* Generalize and exit *)
             let _generalizable, schemes =
               exit state ~rigid_vars ~types:[ type_ ]
@@ -597,8 +575,8 @@ module Make (Algebra : Algebra) = struct
           let_rec_poly_bindings
           schemes
           ~init:(env, [])
-          ~f:(fun (env, bindings) (Polymorphic { binding = x, _; _ }) scheme ->
-            Env.extend env x scheme, (x, scheme) :: bindings)
+          ~f:(fun (env, bindings) (Polymorphic { term_var; _ }) scheme ->
+            Env.extend env term_var scheme, (term_var, scheme) :: bindings)
       in
       Log.debug (fun m -> m "Solving [Let_rec_mono] bindings");
       let term_let_mono_bindings, env = k ~state ~env in
@@ -608,12 +586,17 @@ module Make (Algebra : Algebra) = struct
       let values =
         List.map
           let_rec_poly_bindings
-          ~f:(fun (Polymorphic { in_; rigid_vars; annotation_bindings; _ }) ->
+          ~f:(fun
+               (Polymorphic
+                 { in_
+                 ; universal_context
+                 ; annotation = existential_context, _
+                 ; _
+                 })
+             ->
             enter state;
-            let rigid_vars = List.map ~f:(bind_rigid state) rigid_vars
-            and _annotation_binding =
-              List.map ~f:(bind_flexible state) annotation_bindings
-            in
+            let rigid_vars = List.map ~f:(bind_rigid state) universal_context in
+            bind_existential_ctx state existential_context;
             let value = solve ~state ~env in_ in
             let generalizable, _ = exit state ~rigid_vars ~types:[] in
             generalizable, value)
@@ -644,19 +627,17 @@ module Make (Algebra : Algebra) = struct
       (* Enter a new region. *)
       enter state;
       (* Initialize the fresh flexible and rigid variables for each of the bindings. *)
-      let _flexible_vars =
+      let rigid_vars =
         List.map
           let_rec_mono_bindings
-          ~f:(fun (Monomorphic { flexible_vars; _ }) -> flexible_vars)
-        |> List.concat
-        |> List.map ~f:(bind_flexible state)
-      and rigid_vars =
-        List.map
-          let_rec_mono_bindings
-          ~f:(fun (Monomorphic { rigid_vars; _ }) -> rigid_vars)
+          ~f:(fun (Monomorphic { universal_context; _ }) -> universal_context)
         |> List.concat
         |> List.map ~f:(bind_rigid state)
       in
+      List.iter
+        let_rec_mono_bindings
+        ~f:(fun (Monomorphic { existential_context; _ }) ->
+          bind_existential_ctx state existential_context);
       (* Convert the constraint types into graphical types. *)
       let types =
         List.map
@@ -713,14 +694,15 @@ module Make (Algebra : Algebra) = struct
       let mono, poly =
         List.partition_map bindings ~f:(fun binding ->
             match binding with
-            | Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ }
-              ->
+            | Let_rec_mono_binding
+                { universal_context; existential_context; binding; in_ } ->
               Either.First
-                (Monomorphic { rigid_vars; flexible_vars; binding; in_ })
+                (Monomorphic
+                   { universal_context; existential_context; binding; in_ })
             | Let_rec_poly_binding
-                { rigid_vars; annotation_bindings; binding; in_ } ->
+                { universal_context; annotation; term_var; in_ } ->
               Either.Second
-                (Polymorphic { rigid_vars; annotation_bindings; binding; in_ }))
+                (Polymorphic { universal_context; annotation; term_var; in_ }))
       in
       solve_let_rec_poly_bindings ~state ~env poly ~k:(fun ~state ~env ->
           solve_let_rec_mono_bindings ~state ~env mono)

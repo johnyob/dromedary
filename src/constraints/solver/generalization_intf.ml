@@ -120,6 +120,8 @@ module type S = sig
       ; equations_ctx : Equations.t
       }
 
+    val empty_ctx : ctx
+
     val unify : state:state -> ctx:ctx -> Type.t -> Type.t -> unit
   end
 
