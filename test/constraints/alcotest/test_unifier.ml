@@ -25,6 +25,7 @@ module Type_former = struct
       | Arrow _ -> 0
       | Int -> 1
 
+
     module Traverse (F : Applicative.S) = struct
       module Intf = struct
         module type S = sig end
@@ -77,16 +78,14 @@ module Unifier = struct
   end
 end
 
-let unify =
-  Unifier.unify
-  ~ctx:()
-      
+let unify = Unifier.unify ~ctx:()
 
 module Type = struct
   type t =
     | Ttyp_var of int
     | Ttyp_int
     | Ttyp_arrow of t * t
+    | Ttyp_as of t * int
   [@@deriving sexp_of, eq, qcheck]
 
   let arbitrary =
@@ -98,13 +97,19 @@ module Type = struct
     let rec loop t =
       match t with
       | Ttyp_var x ->
-        Hashtbl.find_or_add table x ~default:(fun () ->
-            Unifier.Type.make Var)
+        Hashtbl.find_or_add table x ~default:(fun () -> Unifier.Type.make Var)
       | Ttyp_int -> Unifier.Type.make (Structure Int)
       | Ttyp_arrow (t1, t2) ->
         let t1 = loop t1 in
         let t2 = loop t2 in
         Unifier.Type.make (Structure (Arrow (t1, t2)))
+      | Ttyp_as (t, x) ->
+        let x =
+          Hashtbl.find_or_add table x ~default:(fun () -> Unifier.Type.make Var)
+        in
+        let t = loop t in
+        Unifier.unify ~ctx:() x t;
+        t
     in
     loop t
 end
@@ -124,31 +129,24 @@ let ( =~ ) t1 t2 =
 
 let ( =~? ) t1 t2 = Result.is_ok (t1 =~ t2)
 
-let occurs_check t =
-  try
-    Unifier.occurs_check t;
-    false
-  with
-  | _ -> true
-
-
-let decode_acyclic t =
+let decode t =
   let open Type in
-  Unifier.fold_acyclic
+  Unifier.Type.fold
     t
     ~f:(fun type_ structure ->
       match structure with
       | Var -> Ttyp_var (Unifier.Type.id type_)
       | Structure (Arrow (t1, t2)) -> Ttyp_arrow (t1, t2)
-      | Structure (Int) -> Ttyp_int)
+      | Structure Int -> Ttyp_int)
+    ~var:(fun type_ -> Ttyp_var (Unifier.Type.id type_))
+    ~mu:(fun type_ t -> Ttyp_as (t, Unifier.Type.id type_))
 
 
 let assume_unifiable t1 t2 =
   let t3 = t1 =~ t2 in
   QCheck.assume (Result.is_ok t3);
   let t3 = Result.ok t3 |> Option.value_exn in
-  QCheck.assume (occurs_check t3);
-  decode_acyclic t3
+  decode t3
 
 
 let test_unify_reflexivity =
