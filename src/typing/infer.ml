@@ -431,7 +431,7 @@ module Pattern = struct
     let%bind constr_arg =
       match constr_arg with
       | Some (constr_betas, constr_arg) ->
-        let%bind () = forall_vars constr_betas in
+        let%bind () = forall_ctx ~ctx:constr_betas in
         let%bind constr_arg = of_type constr_arg in
         return (Some (constr_betas, constr_arg))
       | None -> return None
@@ -571,7 +571,7 @@ module Expression = struct
     let open Computation.Let_syntax in
     let var = fresh () in
     let%bind t = f var in
-    return (Constraint.exists [ var, Some shallow_type ] t)
+    return (Constraint.exists ~ctx:([ var ], [ var, shallow_type ]) t)
 
 
   (* TODO: Move to computation. *)
@@ -668,9 +668,9 @@ module Expression = struct
 
 
   let ( -~- ) type1 type2 : unit Constraint.t =
-    let bindings1, var1 = Shallow_type.of_type type1 in
-    let bindings2, var2 = Shallow_type.of_type type2 in
-    Constraint.exists (bindings1 @ bindings2) (var1 =~ var2)
+    let ctx1, var1 = Shallow_type.of_type type1 in
+    let ctx2, var2 = Shallow_type.of_type type2 in
+    Constraint.exists ~ctx:(Shallow_type.Ctx.merge ctx1 ctx2) (var1 =~ var2)
 
 
   let infer_constr constr_name constr_type
@@ -725,10 +725,10 @@ module Expression = struct
 
 
   let infer_pat pat pat_type
-      : (Shallow_type.binding list
+      : (existential_context
+        * equations
         * binding list
         * Typedtree.pattern Constraint.t
-        * (Constraint.Type.t * Constraint.Type.t) list
         * Substitution.t)
       Binder.t
     =
@@ -736,17 +736,11 @@ module Expression = struct
     (* print_endline
       (Sexp.to_string_hum [%message "infer_pat" (pat : Parsetree.pattern)]); *)
     let& fragment, pat = Pattern.infer pat pat_type in
-    let ( universal_bindings
-        , existential_bindings
-        , local_constraint
-        , term_bindings
-        , substitution )
-      =
+    let universal_ctx, existential_ctx, equations, term_bindings, substitution =
       Fragment.to_bindings fragment
     in
-    let%bind () = forall_vars universal_bindings in
-    return
-      (existential_bindings, term_bindings, pat, local_constraint, substitution)
+    let%bind () = forall_ctx ~ctx:universal_ctx in
+    return (existential_ctx, equations, term_bindings, pat, substitution)
 
 
   let infer_primitive prim prim_type : unit Constraint.t Computation.t =
@@ -772,8 +766,7 @@ module Expression = struct
   let bind_pat pat pat_type ~in_ : (Typedtree.pattern * _) Constraint.t Binder.t
     =
     let open Binder.Let_syntax in
-    let%bind existential_bindings, bindings, pat, local_constraint, substitution
-      =
+    let%bind existential_ctx, equations, bindings, pat, substitution =
       infer_pat pat pat_type
     in
     let& in_ = extend_substitution ~substitution in_ in
@@ -781,9 +774,14 @@ module Expression = struct
       (let%map pats, in_ =
          let_
            ~bindings:
-             [ ((([], existential_bindings) @. pat) @=> (true, bindings))
-                 local_constraint
-             ]
+             Binding.
+               [ let_
+                   ~ctx:([], existential_ctx)
+                   ~is_non_expansive:true
+                   ~bindings
+                   ~in_:pat
+                   ~equations
+               ]
            ~in_
        in
        let pat =
@@ -800,10 +798,14 @@ module Expression = struct
     let%map term_let_bindings, _ =
       let_
         ~bindings:
-          [ (((vars, [ var, None ]) @. exp_desc)
-            @=> (true, [ internal_name #= var ]))
-              []
-          ]
+          Binding.
+            [ let_
+                ~ctx:(vars, ([ var ], []))
+                ~is_non_expansive:true
+                ~bindings:[ internal_name #= var ]
+                ~in_:exp_desc
+                ~equations:[]
+            ]
         ~in_:(inst internal_name exp_type)
     in
     match term_let_bindings with
@@ -844,7 +846,7 @@ module Expression = struct
         let@ var2 = exists () in
         let@ pat_exp = bind_pat pat var1 ~in_:(infer_exp exp var2) in
         return
-          (let%map () = exp_type =~= (Former (var1 @-> var2))
+          (let%map () = exp_type =~= Former (var1 @-> var2)
            and pat, exp = pat_exp in
            Texp_fun (pat, exp))
       | Pexp_app (exp1, exp2) ->
@@ -874,7 +876,7 @@ module Expression = struct
       | Pexp_tuple exps ->
         let@ vars, exps = infer_exps exps in
         return
-          (let%map () = exp_type =~= (Former (tuple vars))
+          (let%map () = exp_type =~= Former (tuple vars)
            and exps = exps in
            Texp_tuple exps)
       | Pexp_match (match_exp, cases) ->
@@ -989,7 +991,7 @@ module Expression = struct
         let%bind exp1 = lift (infer_exp exp1) (Former bool) in
         let%bind exp2 = lift (infer_exp exp2) (Former unit) in
         return
-          (let%map () = exp_type =~= (Former unit)
+          (let%map () = exp_type =~= Former unit
            and exp1 = exp1
            and exp2 = exp2 in
            Texp_while (exp1, exp2))
@@ -1006,7 +1008,7 @@ module Expression = struct
         let%bind exp3 = lift (infer_exp exp3) (Former unit) in
         let@ int = of_type int_ in
         return
-          (let%map () = exp_type =~= (Former unit)
+          (let%map () = exp_type =~= Former unit
            and exp1 = exp1
            and exp2 = exp2
            and exp3 = def ~bindings:[ index #= int ] ~in_:exp3 in
@@ -1052,7 +1054,7 @@ module Expression = struct
               inst_label_decl label
             in
             let@ () = exists_vars label_alphas in
-            let@ () = forall_vars label_betas in
+            let@ () = forall_ctx ~ctx:label_betas in
             let@ label_arg = of_type label_arg in
             let@ label_type = of_type label_type in
             let%bind exp = infer_exp exp label_arg in
@@ -1084,23 +1086,23 @@ module Expression = struct
         ~f:(fun forall_vars ->
           let var = fresh () in
           let%bind fragment, pat = Pattern.infer pat var in
-          let ( universal_bindings
-              , existential_bindings
-              , local_constraint
-              , bindings
-              , _substitution )
+          let universal_ctx, existential_ctx, equations, bindings, _substitution
             =
             Fragment.to_bindings fragment
           in
           (* Temporary: TODO: Figure out how to merge universals w/ new lets. *)
-          assert (List.is_empty universal_bindings);
+          assert (List.is_empty universal_ctx);
           let is_non_expansive = is_non_expansive exp in
           let%bind exp = infer_exp exp var in
           return
-            ((((forall_vars, (var, None) :: existential_bindings)
-              @. (pat &~ exp))
-             @=> (is_non_expansive, bindings))
-               local_constraint))
+            (Binding.let_
+               ~ctx:
+                 ( forall_vars
+                 , Shallow_type.Ctx.merge ([ var ], []) existential_ctx )
+               ~is_non_expansive
+               ~bindings
+               ~equations
+               ~in_:(pat &~ exp)))
         ~message:(fun var ->
           [%message
             "Duplicate variable in universal quantifier (let)"
@@ -1122,12 +1124,17 @@ module Expression = struct
           forall_vars
           ~f:(fun forall_vars ->
             let%bind annotation = convert_core_type annotation in
-            let annotation_bindings, annotation =
+            let ((_, exp_type) as annotation) =
               Shallow_type.of_type annotation
             in
-            let%bind exp = infer_exp exp annotation in
+            let%bind exp = infer_exp exp exp_type in
             return
-              ((forall_vars, annotation_bindings) @. exp) #~> (f #= annotation))
+              Binding.(
+                let_prec
+                  ~universal_ctx:forall_vars
+                  ~annotation
+                  ~term_var:f
+                  ~in_:exp))
           ~message:(fun var ->
             [%message
               "Duplicate variable in forall quantifier (let)" (var : string)])
@@ -1137,7 +1144,12 @@ module Expression = struct
           ~f:(fun forall_vars ->
             let var = fresh () in
             let%bind exp = infer_exp exp var in
-            return (((forall_vars, [ var, None ]) @. exp) @~> (f #= var)))
+            return
+              Binding.(
+                let_mrec
+                  ~ctx:(forall_vars, ([ var ], []))
+                  ~binding:f #= var
+                  ~in_:exp))
           ~message:(fun var ->
             [%message
               "Duplicate variable in forall quantifier (let)" (var : string)])
@@ -1152,7 +1164,17 @@ module Expression = struct
 end
 
 let let_0 ~in_ =
-  let_ ~bindings:[ ((([], []) @. in_) @=> (true, [])) [] ] ~in_:(return ())
+  let_
+    ~bindings:
+      Binding.
+        [ let_
+            ~ctx:([], ([], []))
+            ~is_non_expansive:true
+            ~equations:[]
+            ~bindings:[]
+            ~in_
+        ]
+    ~in_:(return ())
   >>| function
   | [ ([], (vars, t)) ], _ -> vars, t
   | _ -> assert false
