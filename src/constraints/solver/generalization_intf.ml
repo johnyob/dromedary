@@ -39,7 +39,7 @@ module type S = sig
   val make_state : unit -> state
 
   module Rigid_type : sig
-    (** [t] represents a rigid-type *)
+    (** [t] represents a rigid type *)
     type t [@@deriving sexp_of]
 
     (** [make_rigid_var rigid_var] returns the rigid type 
@@ -85,12 +85,11 @@ module type S = sig
 
     exception Inconsistent
 
-
     (** [add ~state ~abbrev_ctx t type1 type2] adds the equality [type1 = type2] to
         the equational context [t] -- [abbrev_ctx] is used to determine the required equalities 
         (modulo the abbreviation context) and [state] is used for equational scoping purposes. *)
     val add
-      :  state
+      :  state:state
       -> abbrev_ctx:Abbreviations.t
       -> t
       -> Rigid_type.t
@@ -98,48 +97,55 @@ module type S = sig
       -> t
   end
 
-  type ctx =
-    { abbrev_ctx : Abbreviations.t
-    ; equations_ctx : Equations.t
-    }
+  module Structure : sig
+    include Structure.S
 
-  module Unifier : Unifier.S
+    (** ['a repr] external representation of a ['a t]  *)
+    type 'a repr =
+      | Flexible_var
+      | Row_uniform of 'a
+      | Row_cons of label * 'a * 'a
+      | Rigid_var of Rigid_var.t
+      | Former of 'a former
 
-  (** [] *)
-  val unify : state -> ctx:ctx -> Unifier.Type.t -> Unifier.Type.t -> unit
+    (** [repr structure] returns to representation of [structure] *)
+    val repr : 'a t -> 'a repr
+  end
+
+  module Unifier : sig
+    include Unifier.S with type 'a structure = 'a Structure.t
+
+    type ctx =
+      { abbrev_ctx : Abbreviations.t
+      ; equations_ctx : Equations.t
+      }
+
+    val empty_ctx : ctx
+
+    val unify : state:state -> ctx:ctx -> Type.t -> Type.t -> unit
+  end
 
   open Unifier
 
-  (** [make_rigid_var state rigid_var] creates rigid unification variable. *)
-  val make_rigid_var : state -> Rigid_var.t -> Type.t
+  (** [make_rigid_var ~state rigid_var] creates rigid unification variable. *)
+  val make_rigid_var : state:state -> Rigid_var.t -> Type.t
 
-  (** [make_flexible_var state] creates a flexible unification variable. *)
-  val make_flexible_var : state -> Type.t
+  (** [make_flexible_var ~state] creates a flexible unification variable. *)
+  val make_flexible_var : state:state -> Type.t
 
-  (** [make_former state former] creates a unification type w/ former [former]. *)
-  val make_former : state -> Type.t former -> Type.t
+  (** [make_former ~state former] creates a unification type w/ former [former]. *)
+  val make_former : state:state -> Type.t former -> Type.t
 
-  (** [make_row_uniform state type_] creates a unification row w/ row [∂(type_)] *)
-  val make_row_uniform : state -> Type.t -> Type.t
+  (** [make_row_uniform ~state type_] creates a unification row w/ row [∂(type_)] *)
+  val make_row_uniform : state:state -> Type.t -> Type.t
 
-  (** [make_row_cons state ~label ~field ~tl] creates a unification row w/ row [(label : field; tl)] *)
+  (** [make_row_cons ~state ~label ~field ~tl] creates a unification row w/ row [(label : field; tl)] *)
   val make_row_cons
-    :  state
+    :  state:state
     -> label:label
     -> field:Type.t
     -> tl:Type.t
     -> Type.t
-
-  (** ['a repr] external representation of a ['a Unifier.structure]  *)
-  type 'a repr =
-    | Flexible_var
-    | Row_uniform of 'a
-    | Row_cons of label * 'a * 'a
-    | Rigid_var of Rigid_var.t
-    | Former of 'a former
-
-  (** [repr structure] returns to representation of [structure] *)
-  val repr : 'a Unifier.structure -> 'a repr
 
   (** The type [scheme] defines the abstract notion of a scheme in 
       "graphic" types.
@@ -170,26 +176,26 @@ module type S = sig
   (** [mono_scheme] creates a scheme with no generic variables. *)
   val mono_scheme : Type.t -> scheme
 
-  (** [enter state] creates a new "stack frame" in the constraint solver
+  (** [enter ~state] creates a new "stack frame" in the constraint solver
      and enters it.  *)
 
-  val enter : state -> unit
+  val enter : state:state -> unit
 
-  (** [instantiate scheme] instantates the scheme [scheme]. It does so, by
+  (** [instantiate ~state scheme] instantates the scheme [scheme]. It does so, by
       taking fresh copies of the generic variables, without necessarily
       copying other bits of the type. 
       
       This is designed for efficient sharing of nodes within the
       "graphic type". 
   *)
-  val instantiate : state -> scheme -> variables * Type.t
+  val instantiate : state:state -> scheme -> variables * Type.t
 
   exception Cannot_flexize of Rigid_var.t
   exception Rigid_variable_escape of Rigid_var.t
   exception Scope_escape of Type.t
 
   val exit
-    :  state
+    :  state:state
     -> rigid_vars:Rigid_var.t list
     -> types:Type.t list
     -> variables * scheme list

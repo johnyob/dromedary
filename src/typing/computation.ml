@@ -105,7 +105,7 @@ module Expression = struct
           (fun k ->
             let var = Constraint.fresh () in
             let%map.Computation t = k var in
-            Constraint.exists [ var, None ] t)
+            Constraint.exists ~ctx:([ var ], []) t)
       }
 
 
@@ -114,34 +114,34 @@ module Expression = struct
           (fun k ->
             let var = Constraint.fresh () in
             let%map.Computation t = k var in
-            Constraint.forall [ var ] t)
+            Constraint.forall ~ctx:[ var ] t)
       }
 
 
-    let exists_bindings bindings =
+    let exists_ctx ~ctx =
       { f =
           (fun k ->
             let%map.Computation t = k () in
-            Constraint.exists bindings t)
+            Constraint.exists ~ctx t)
       }
 
 
-    let exists_vars vars = exists_bindings (List.map ~f:(fun x -> x, None) vars)
+    let exists_vars vars = exists_ctx ~ctx:(vars, [])
 
-    let forall_vars vars =
+    let forall_ctx ~ctx =
       { f =
           (fun k ->
             let%map.Computation t = k () in
-            Constraint.forall vars t)
+            Constraint.forall ~ctx t)
       }
 
 
     let of_type type_ =
       { f =
           (fun k ->
-            let bindings, var = Constraint.Shallow_type.of_type type_ in
+            let ctx, var = Constraint.Shallow_type.of_type type_ in
             let%map.Computation t = k var in
-            Constraint.exists bindings t)
+            Constraint.exists ~ctx t)
       }
 
 
@@ -190,21 +190,19 @@ module Fragment = struct
   open Constraint
 
   type t =
-    { universal_variables : variable list
-    ; existential_bindings : Shallow_type.binding list
-    ; term_bindings :
-        (String.t, Constraint.variable, String.comparator_witness) Map.t
-    ; local_constraint : (Type.t * Type.t) list
-    ; substitution :
-        (String.t, Constraint.variable, String.comparator_witness) Map.t
+    { universal_context : universal_context
+    ; existential_context : existential_context
+    ; term_bindings : Constraint.variable String.Map.t
+    ; equations : equations
+    ; substitution : Constraint.variable String.Map.t
     }
 
   let empty =
-    { universal_variables = []
-    ; existential_bindings = []
-    ; term_bindings = Map.empty (module String)
-    ; local_constraint = []
-    ; substitution = Map.empty (module String)
+    { universal_context = []
+    ; existential_context = [], []
+    ; term_bindings = String.Map.empty
+    ; equations = []
+    ; substitution = String.Map.empty
     }
 
 
@@ -218,13 +216,13 @@ module Fragment = struct
           t2.term_bindings
           ~combine:(fun ~key _ _ -> raise (Duplicate_term_var key))
       in
-      let universal_variables =
-        t1.universal_variables @ t2.universal_variables
+      let universal_context =
+        t1.universal_context @ t2.universal_context
       in
-      let existential_bindings =
-        t1.existential_bindings @ t2.existential_bindings
+      let existential_context =
+        Shallow_type.Ctx.merge t1.existential_context t2.existential_context
       in
-      let local_constraint = t1.local_constraint @ t2.local_constraint in
+      let equations = t1.equations @ t2.equations in
       let substitution =
         Map.merge_skewed
           t1.substitution
@@ -232,10 +230,10 @@ module Fragment = struct
           ~combine:(fun ~key _ _ -> raise (Duplicate_type_var key))
       in
       Ok
-        { universal_variables
-        ; existential_bindings
+        { universal_context
+        ; existential_context
         ; term_bindings
-        ; local_constraint
+        ; equations
         ; substitution
         }
     with
@@ -243,8 +241,8 @@ module Fragment = struct
     | Duplicate_type_var var -> Error (`Duplicate_type_var var)
 
 
-  let of_existential_bindings existential_bindings =
-    { empty with existential_bindings }
+  let of_existential_ctx existential_context =
+    { empty with existential_context }
 
 
   let of_term_binding x a =
@@ -252,9 +250,9 @@ module Fragment = struct
 
 
   let to_bindings t =
-    ( t.universal_variables
-    , t.existential_bindings
-    , t.local_constraint
+    ( t.universal_context
+    , t.existential_context
+    , t.equations
     , t.term_bindings |> Map.to_alist |> List.map ~f:(fun (x, a) -> x #= a)
     , Substitution.of_map t.substitution )
 end
@@ -304,7 +302,7 @@ module Pattern = struct
 
   let write fragment : unit t = fun _input -> Ok (fragment, ())
   let extend x a = write (Fragment.of_term_binding x a)
-  let assert_ local_constraint = write Fragment.{ empty with local_constraint }
+  let assert_ equations = write Fragment.{ empty with equations }
 
   let extend_fragment_substitution substitution =
     write
@@ -317,7 +315,7 @@ module Pattern = struct
     let exists () =
       let var = Constraint.fresh () in
       let%bind.Computation () =
-        write (Fragment.of_existential_bindings [ var, None ])
+        write (Fragment.of_existential_ctx ([ var ], []))
       in
       return var
 
@@ -325,25 +323,25 @@ module Pattern = struct
     let forall () =
       let var = Constraint.fresh () in
       let%bind.Computation () =
-        write Fragment.{ empty with universal_variables = [ var ] }
+        write Fragment.{ empty with universal_context = [ var ] }
       in
       return var
 
 
-    let exists_bindings bindings =
-      write (Fragment.of_existential_bindings bindings)
+    let exists_ctx ~ctx =
+      write (Fragment.of_existential_ctx ctx)
 
 
-    let exists_vars vars = exists_bindings (List.map ~f:(fun x -> x, None) vars)
+    let exists_vars vars = exists_ctx ~ctx:(vars, [])
 
-    let forall_vars vars =
-      write Fragment.{ empty with universal_variables = vars }
+    let forall_ctx ~ctx =
+      write Fragment.{ empty with universal_context = ctx }
 
 
     let of_type type_ =
-      let bindings, var = Constraint.Shallow_type.of_type type_ in
+      let ctx, var = Constraint.Shallow_type.of_type type_ in
       let%bind.Computation () =
-        write (Fragment.of_existential_bindings bindings)
+        write (Fragment.of_existential_ctx ctx)
       in
       return var
 

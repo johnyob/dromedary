@@ -106,12 +106,11 @@ module type S = sig
 
     include Monad.S with type 'a t := 'a t
 
-    (* TODO: Formalize this notion of binding context, defined by the methods below.  *)
     val exists : unit -> Constraint.variable t
     val forall : unit -> Constraint.variable t
     val exists_vars : Constraint.variable list -> unit t
-    val forall_vars : Constraint.variable list -> unit t
-    val exists_bindings : Constraint.Shallow_type.binding list -> unit t
+    val forall_ctx : ctx:Constraint.universal_context -> unit t
+    val exists_ctx : ctx:Constraint.existential_context -> unit t
     val of_type : Constraint.Type.t -> Constraint.variable t
 
     module Let_syntax : sig
@@ -180,9 +179,9 @@ module type Intf = sig
 
     val to_bindings
       :  t
-      -> variable list
-         * Shallow_type.binding list
-         * (Type.t * Type.t) list
+      -> universal_context
+         * existential_context
+         * equations
          * binding list
          * Substitution.t
   end
@@ -193,7 +192,7 @@ module type Intf = sig
     val write : Fragment.t -> unit t
     val extend : string -> Constraint.variable -> unit t
 
-    val assert_ : (Constraint.Type.t * Constraint.Type.t) list-> unit t
+    val assert_ : Constraint.equations -> unit t
     val extend_fragment_substitution : Substitution.t -> unit t
 
     val run : 'a t -> (Fragment.t * 'a) Expression.t

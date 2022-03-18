@@ -33,12 +33,13 @@ module Make (Structure : Structure_intf.S) = struct
   type 'a ctx = 'a Structure.ctx
 
   module Type = struct
-    (* A graphical type consists of a [Union_find] node,
+    module T = struct
+      (* A graphical type consists of a [Union_find] node,
      allowing reasoning w/ multi-equations of nodes. *)
 
-    type t = desc Union_find.t [@@deriving sexp_of]
+      type t = desc Union_find.t [@@deriving sexp_of]
 
-    (* Graphical type node descriptors contain information related to the 
+      (* Graphical type node descriptors contain information related to the 
       node that dominates the multi-equation.
 
       Each node contains a global unique identifier [id]. 
@@ -59,41 +60,74 @@ module Make (Structure : Structure_intf.S) = struct
       the merging of metadata on unification. No further traversals / updates
       are implemented here. 
     *)
-    and desc =
-      { id : int
-      ; mutable structure : t structure
-      }
-    [@@deriving sexp_of]
+      and desc =
+        { id : int
+        ; mutable structure : t structure
+        }
+      [@@deriving sexp_of]
 
-    let desc t = Union_find.find t
+      let desc t = Union_find.find t
 
-    (* [id t] returns the unique identifier of the type [t]. *)
-    let id t = (desc t).id
+      (* [id t] returns the unique identifier of the type [t]. *)
+      let id t = (desc t).id
 
-    (* [structure t] returns the structure of [t]. *)
-    let structure t = (desc t).structure
+      (* [structure t] returns the structure of [t]. *)
+      let structure t = (desc t).structure
 
-    (* [set_structure t structure] sets the structure of [t] to [structure]. *)
-    let set_structure t structure =
-      let desc = desc t in
-      Union_find.set t { desc with structure }
+      (* [set_structure t structure] sets the structure of [t] to [structure]. *)
+      let set_structure t structure =
+        let desc = desc t in
+        Union_find.set t { desc with structure }
 
 
-    (* [compare t1 t2] computes the ordering of [t1, t2],
+      (* [compare t1 t2] computes the ordering of [t1, t2],
        based on their unique identifiers. *)
 
-    let compare t1 t2 = Int.compare (id t1) (id t2)
+      let compare t1 t2 = Int.compare (id t1) (id t2)
 
-    (* [hash t] computes the hash of the graphical type [t]. 
+      (* [hash t] computes the hash of the graphical type [t]. 
        Based on it's integer field: id. *)
 
-    let hash t = Hashtbl.hash (id t)
+      let hash t = Hashtbl.hash (id t)
+    end
+
+    include T
 
     (* [make structure metadata] returns a fresh type w/ structure [structure] and
        metadata [metadata]. *)
     let make =
       let id = ref 0 in
       fun structure -> Union_find.make { id = post_incr id; structure }
+
+
+    let fold
+        (type a)
+        type_
+        ~(f : t -> a Structure.t -> a)
+        ~(var : t -> a)
+        ~(mu : t -> a -> a)
+        : a
+      =
+      (* Hash table records the variables that are grey ([false])
+       or black ([true]). *)
+      let table = Hashtbl.create (module T) in
+      (* Recursive loop that traverses the graph. *)
+      let rec loop type_ =
+        if Hashtbl.mem table type_
+        then (
+          (* Mark this node as black *)
+          Hashtbl.set table ~key:type_ ~data:true;
+          var type_)
+        else (
+          (* Mark this node as grey. *)
+          Hashtbl.set table ~key:type_ ~data:false;
+          (* Visit children *)
+          let result = f type_ (structure type_ |> Structure.map ~f:loop) in
+          let status = Hashtbl.find_exn table type_ in
+          Hashtbl.remove table type_;
+          if status then mu type_ result else result)
+      in
+      loop type_
 
 
     module To_dot = struct
@@ -184,86 +218,4 @@ module Make (Structure : Structure_intf.S) = struct
   let unify ~ctx t1 t2 =
     try unify_exn ~ctx t1 t2 with
     | Structure.Cannot_merge -> raise (Unify (t1, t2))
-
-
-  exception Cycle of Type.t
-
-  (* [occurs_check ~ctx t] detects whether there is a cycle in 
-     the graphical type [t]. 
-      
-     If a cycle is detected, [Cycle t] is raised. 
-  *)
-  let occurs_check =
-    (* Hash table records the variables that are grey ([false])
-       or black ([true]). *)
-    let table = Hashtbl.create (module Type) in
-    (* Recursive loop that traverses the graph, checking 
-       for cycles. *)
-    let rec loop type_ =
-      try
-        (* We raise an exception [Not_found_s] instead of using
-           an option, since it is more efficient.
-        *)
-        let visited = Hashtbl.find_exn table type_ in
-        (* A cycle has occurred is the variable is grey. *)
-        if not visited then raise (Cycle type_)
-      with
-      | Not_found_s _ ->
-        Hashtbl.set table ~key:type_ ~data:false;
-        (* Visit children *)
-        Structure.iter ~f:loop (structure type_);
-        (* Mark this variable as black. *)
-        Hashtbl.set table ~key:type_ ~data:true
-    in
-    loop
-
-
-  (* [fold_acyclic type_ ~var ~form] will perform a bottom-up fold
-     over the (assumed) acyclic graph defined by the type [type_]. *)
-
-  let fold_acyclic (type a) type_ ~(f : Type.t -> a Structure.t -> a) : a =
-    (* Hash table records whether node has been visited, and 
-      it's computed value. *)
-    let visited : (Type.t, a) Hashtbl.t = Hashtbl.create (module Type) in
-    (* Recursive loop, folding over the graph *)
-    let rec loop type_ =
-      try Hashtbl.find_exn visited type_ with
-      | Not_found_s _ ->
-        let result = f type_ (structure type_ |> Structure.map ~f:loop) in
-        (* We assume we can set [type_] in [visited] *after* traversing
-          it's children, since the graph is acyclic. *)
-        Hashtbl.set visited ~key:type_ ~data:result;
-        result
-    in
-    loop type_
-
-
-  let fold_cyclic
-      (type a)
-      type_
-      ~(f : Type.t -> a Structure.t -> a)
-      ~(var : Type.t -> a)
-      ~(mu : Type.t -> a -> a)
-      : a
-    =
-    (* Hash table records the variables that are grey ([false])
-       or black ([true]). *)
-    let table = Hashtbl.create (module Type) in
-    (* Recursive loop that traverses the graph. *)
-    let rec loop type_ =
-      if Hashtbl.mem table type_
-      then (
-        (* Mark this node as black *)
-        Hashtbl.set table ~key:type_ ~data:true;
-        var type_)
-      else (
-        (* Mark this node as grey. *)
-        Hashtbl.set table ~key:type_ ~data:false;
-        (* Visit children *)
-        let result = f type_ (structure type_ |> Structure.map ~f:loop) in
-        let status = Hashtbl.find_exn table type_ in
-        Hashtbl.remove table type_;
-        if status then mu type_ result else result)
-    in
-    loop type_
 end
