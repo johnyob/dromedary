@@ -27,7 +27,16 @@ type core_type =
   | Ptyp_constr of core_type list * string
       (** A type constructor (or "type former"), name "constr" is used for 
           consistency between OCaml and Dromedary code. *)
+  | Ptyp_variant of row
+      (** Polymorphic variants [ [ ... ] ] *)
+  | Ptyp_row_cons of string * core_type * row
+      (* Row cons [< tag : T, ... >] *)
+  | Ptyp_row_empty 
+      (* Empty row [ <> ] *)
 [@@deriving sexp_of]
+
+and row = core_type
+[@@dering sexp_of]
 
 (** [pp_core_type_mach ppf core_type] pretty prints [core_type] in a "machine format" 
     (an explicit tree structure). *)
@@ -60,6 +69,8 @@ type pattern =
       (** (P1, ..., Pn). Invariant n >= 2. *)
   | Ppat_construct of string * (string list * pattern) option 
       (** [C <P>]. *)
+  | Ppat_variant of string * pattern option
+      (** [`A <P>]. *)
   | Ppat_constraint of pattern * core_type 
       (** [(P : T)]. *)
 [@@deriving sexp_of]
@@ -97,9 +108,9 @@ type expression =
   | Pexp_construct of string * expression option
       (** An applied algebraic data type constructor [C <E>]. *)
   | Pexp_record of (string * expression) list 
-      (** {l1 = E1; ...; ln = En} *)
+      (** [{l1 = E1; ...; ln = En}] *)
   | Pexp_field of expression * string 
-      (** E.l *)
+      (** [E.l] *)
   | Pexp_tuple of expression list
       (** Tuples [(E1, ..., En)]. Invariant: n >= 2. *)
   | Pexp_match of expression * case list
@@ -107,14 +118,16 @@ type expression =
   | Pexp_ifthenelse of expression * expression * expression
       (** If (or ternary) expressions [if E then E1 else E2]. *)
   | Pexp_try of expression * case list
-      (** try E0 with P1 -> E1 | ... | Pn -> En *)
+      (** [try E0 with P1 -> E1 | ... | Pn -> En] *)
   | Pexp_sequence of expression * expression
-      (** E1; E2 *)
+      (** [E1; E2] *)
   | Pexp_while of expression * expression
-      (** while E1 do E2 done *)
+      (** [while E1 do E2 done] *)
   | Pexp_for of pattern * expression * expression * direction_flag * expression
-      (** for i = E1 to E2 do E3 done
-          for i = E2 downto E2 do E3 done *)
+      (** [for i = E1 to E2 do E3 done]
+          [for i = E2 downto E2 do E3 done] *)
+  | Pexp_variant of string * expression option
+      (** [`A <E>] *)
 [@@deriving sexp_of]
 
 (** [P = E] *)

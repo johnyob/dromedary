@@ -15,20 +15,28 @@ open Util
 
 (** Representation of types and declarations  *)
 
-type label = string
+type tag = string
 
 type type_expr =
-  | Ttyp_var of string (** Type variables ['a]. *)
-  | Ttyp_arrow of type_expr * type_expr (** Function types [T1 -> T2]. *)
-  | Ttyp_tuple of type_expr list (** Product (or "tuple") types. *)
-  | Ttyp_constr of type_constr (** Type constructors. *)
+  | Ttyp_var of string 
+      (** Type variables ['a]. *)
+  | Ttyp_arrow of type_expr * type_expr 
+      (** Function types [T1 -> T2]. *)
+  | Ttyp_tuple of type_expr list 
+      (** Product (or "tuple") types. *)
+  | Ttyp_constr of type_constr 
+      (** Type constructors. *)
   | Ttyp_alias of type_expr * string
-      (** Alias, required for displaying recursive types. *)
-  | Ttyp_variant of type_expr (** Polymorphic variant. *)
-  | Ttyp_row_cons of label * type_expr * type_expr (**  *)
-  | Ttyp_row_uniform of type_expr (**  *)
+      (** Alias, required for displaying equi-recursive types. *)
+  | Ttyp_variant of type_expr 
+      (** Polymorphic variant [ [ ... ] ] *)
+  | Ttyp_row_cons of tag * type_expr * row 
+      (** Row cons [< `A : T, row >] *)
+  | Ttyp_row_uniform of type_expr 
+      (** Uniform row [ ∂<T> ] *)
 [@@deriving sexp_of]
 
+and row = type_expr
 and type_constr = type_expr list * string [@@deriving sexp_of]
 
 (** [pp_type_expr_mach ppf type_expr] pretty prints an explicit tree of the 
@@ -136,6 +144,18 @@ val pp_constructor_description_mach
   -> constructor_description Pretty_printer.t
 
 val pp_constructor_description : constructor_description Pretty_printer.t
+
+type variant_description =
+  { variant_tag : tag
+  ; variant_row : row
+  }
+[@@deriving sexp_of]
+
+val pp_variant_description_mach
+  :  indent:string
+  -> variant_description Pretty_printer.t
+
+val pp_variant_description : variant_description Pretty_printer.t
 
 type label_description =
   { label_name : string

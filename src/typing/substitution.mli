@@ -56,3 +56,6 @@ val rng : t -> Constraint.variable list
 
 (** [merge t1 t2] returns the merged substitution of [t1] and [t2]. *)
 val merge : t -> t -> t
+
+(** [add t var1 var2] adds [var1 |-> var2] to substitution [t]. *)
+val add : t -> string -> Constraint.variable -> t

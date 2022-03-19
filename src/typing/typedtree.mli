@@ -38,6 +38,8 @@ and pattern_desc =
       (** [(P1, ..., Pn)]. Invariant n >= 2 *)
   | Tpat_construct of constructor_description * pattern option
       (** [C <P>] *)
+  | Tpat_variant of variant_description * pattern option
+      (** [`A <P>] *)
 [@@deriving sexp_of]
 
 val pp_pattern_mach : pattern Pretty_printer.t
@@ -89,6 +91,8 @@ and expression_desc =
   | Texp_for of string * expression * expression * direction_flag * expression
       (** for i = E1 to E2 do E3 done
           for i = E2 downto E2 do E3 done *)
+  | Texp_variant of variant_description * expression option
+      (** Polymorphic variant [`A <E>]. *)
 [@@deriving sexp_of]
 
 (** [P = a .. a. E]. *)

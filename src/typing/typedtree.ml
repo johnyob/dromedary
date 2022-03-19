@@ -33,6 +33,7 @@ and pattern_desc =
   | Tpat_const of constant
   | Tpat_tuple of pattern list
   | Tpat_construct of constructor_description * pattern option
+  | Tpat_variant of variant_description * pattern option
 [@@deriving sexp_of]
 
 type expression =
@@ -59,6 +60,7 @@ and expression_desc =
   | Texp_sequence of expression * expression
   | Texp_while of expression * expression
   | Texp_for of string * expression * expression * direction_flag * expression
+  | Texp_variant of variant_description * expression option
 [@@deriving sexp_of]
 
 and value_binding =
@@ -108,7 +110,13 @@ and pp_pattern_desc_mach ~indent ppf pat_desc =
     (match pat with
     | None -> ()
     | Some pat -> pp_pattern_mach ~indent ppf pat)
-
+  | Tpat_variant (variant_desc, pat) ->
+    print "Variant";
+    pp_variant_description_mach ~indent ppf variant_desc;
+    (match pat with
+    | None -> ()
+    | Some pat -> pp_pattern_mach ~indent ppf pat)
+  
 
 let pp_pattern _ppf = assert false
 
@@ -196,7 +204,12 @@ and pp_expression_desc_mach ~indent ppf exp_desc =
       (string_of_direction_flag direction_flag);
     pp_expression_mach ~indent ppf exp2;
     pp_expression_mach ~indent ppf exp3
-
+  | Texp_variant (variant_desc, exp) ->
+    print "Variant";
+    pp_variant_description_mach ~indent ppf variant_desc;
+    (match exp with
+    | None -> ()
+    | Some exp -> pp_expression_mach ~indent ppf exp)
 
 and pp_value_bindings_mach ~indent ppf value_bindings =
   Format.fprintf ppf "%sValue bindings:@." indent;

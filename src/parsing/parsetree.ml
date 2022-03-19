@@ -22,7 +22,13 @@ type core_type =
   | Ptyp_arrow of core_type * core_type
   | Ptyp_tuple of core_type list
   | Ptyp_constr of core_type list * string
+  (* | Ptyp_alias of core_type * string *)
+  | Ptyp_variant of row
+  | Ptyp_row_cons of string * core_type * row
+  | Ptyp_row_empty 
 [@@deriving sexp_of]
+
+and row = core_type
 
 type core_scheme = string list * core_type [@@deriving sexp_of]
 
@@ -33,6 +39,7 @@ type pattern =
   | Ppat_const of constant
   | Ppat_tuple of pattern list
   | Ppat_construct of string * (string list * pattern) option
+  | Ppat_variant of string * pattern option
   | Ppat_constraint of pattern * core_type
 [@@deriving sexp_of]
 
@@ -56,6 +63,7 @@ type expression =
   | Pexp_sequence of expression * expression
   | Pexp_while of expression * expression
   | Pexp_for of pattern * expression * expression * direction_flag * expression
+  | Pexp_variant of string * expression option
 [@@deriving sexp_of]
 
 (** [P = E] *)
@@ -101,6 +109,7 @@ let indent_space = "   "
 
 let rec pp_core_type_mach ~indent ppf core_type =
   let print = Format.fprintf ppf "%sType: %s@." indent in
+  let print_row = Format.fprintf ppf "%sRow: %s@." indent in
   let indent = indent_space ^ indent in
   match core_type with
   | Ptyp_var x ->
@@ -117,7 +126,22 @@ let rec pp_core_type_mach ~indent ppf core_type =
     print "Constructor";
     Format.fprintf ppf "%sConstructor: %s@." indent constr;
     List.iter ~f:(pp_core_type_mach ~indent ppf) ts
+  (* | Ptyp_alias (t, x) ->
+    print "Alias";
+    Format.fprintf ppf "%sVariable: %s@." indent x;
+    pp_core_type_mach ~indent ppf t *)
+  | Ptyp_variant row ->
+    print "Variant";
+    pp_row_mach ~indent ppf row
+  | Ptyp_row_cons (tag, t, row) ->
+    print_row "Cons";
+    Format.fprintf ppf "%sTag: %s@." indent tag;
+    pp_core_type_mach ~indent ppf t;
+    pp_row_mach ~indent ppf row
+  | Ptyp_row_empty ->
+    print_row "Empty"
 
+and pp_row_mach ~indent ppf row = pp_core_type_mach ~indent ppf row
 
 let pp_core_scheme_mach ~indent ppf (variables, core_type) =
   Format.fprintf ppf "%sScheme:@." indent;
@@ -151,6 +175,12 @@ let rec pp_pattern_mach ~indent ppf pat =
     (match pat with
     | None -> ()
     | Some (_, pat) -> pp_pattern_mach ~indent ppf pat)
+  | Ppat_variant (tag, pat) ->
+    print "Variant";
+    Format.fprintf ppf "%sTag: %s@." indent tag;
+    (match pat with
+    | None -> ()
+    | Some pat -> pp_pattern_mach ~indent ppf pat)
   | Ppat_constraint (pat, core_type) ->
     print "Constraint";
     pp_pattern_mach ~indent ppf pat;
@@ -240,7 +270,12 @@ let rec pp_expression_mach ~indent ppf exp =
       (string_of_direction_flag direction_flag);
     pp_expression_mach ~indent ppf exp2;
     pp_expression_mach ~indent ppf exp3
-
+  | Pexp_variant (tag, exp) ->
+    print "Variant";
+    Format.fprintf ppf "%sTag: %s@." indent tag;
+    (match exp with
+    | None -> ()
+    | Some exp -> pp_expression_mach ~indent ppf exp)
 
 and pp_value_bindings_mach ~indent ppf value_bindings =
   Format.fprintf ppf "%sValue bindings:@." indent;
@@ -366,6 +401,7 @@ let pp_core_type ppf core_type =
         (list ~first:"(" ~last:")" ~sep:",@;" ~pp:(loop ~parens:false))
         ts
         constr
+    | _ -> raise_s [%message "TODO: pp_core_type"]
   in
   loop ppf core_type
 
@@ -403,6 +439,7 @@ let rec pp_pattern ppf pattern =
       Option.(pat >>| snd)
   | Ppat_constraint (pat, core_type) ->
     Format.fprintf ppf "@[(%a@;:@;%a)@]" pp_pattern pat pp_core_type core_type
+  | _ -> raise_s [%message "TODO: pp_pattern"]
 
 
 (* and pp_quantified_pattern ppf (vars, pat) =
@@ -556,6 +593,8 @@ let rec pp_expression ppf exp =
       exp2
       pp_expression
       exp3
+  | _ -> raise_s [%message "TODO: pp_expression"]
+
 
 
 and pp_expression_function ppf exp =
