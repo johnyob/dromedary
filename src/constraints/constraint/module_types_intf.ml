@@ -74,6 +74,7 @@ end
 module type Type = sig
   (* Abstract types to be substituted by functor arguments. *)
 
+  type label
   type variable
   type 'a former
 
@@ -108,6 +109,13 @@ module type Type = sig
       printing cyclic types (e.g. when using [Cycle]).  
   *)
   val mu : variable -> t -> t
+
+  (** [row_cons (label, label_type) tl] is the representation of the
+      row [(label : label_type; tl)]. *)
+  val row_cons : label * t -> t -> t
+
+  (** [row_uniform t] is the representation of the row [∂t]. *)
+  val row_uniform : t -> t
 end
 
 module type Types = sig
@@ -117,9 +125,12 @@ module type Types = sig
   (** Type formers used for type reconstruction. Used by the Unifier. *)
   module Former : Type_former.S
 
+  (** Labels for row types. *)
+  module Label : Comparable.S
+
   (** Types used for type reconstruction. *)
   module Type :
-    Type with type variable := Var.t and type 'a former := 'a Former.t
+    Type with type variable := Var.t and type 'a former := 'a Former.t and type label := Label.t
 
   (** A scheme [scheme] is defined as by the grammar: σ ::= τ | ∀ ɑ. σ *)
   type scheme = Var.t list * Type.t

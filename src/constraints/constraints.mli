@@ -16,6 +16,7 @@ module Module_types = Private.Constraint.Module_types
 
 module Make (Algebra : Algebra) : sig
   open Algebra
+  module Label := Types.Label
   module Type_var := Types.Var
   module Type_former := Types.Former
 
@@ -40,7 +41,6 @@ module Make (Algebra : Algebra) : sig
   and def_binding = binding
   and 'a let_binding
   and 'a let_rec_binding
-  and 'a case
 
   val sexp_of_t : 'a t -> Sexp.t
 
@@ -64,6 +64,9 @@ module Make (Algebra : Algebra) : sig
     type t =
       | Var of variable
       | Former of t Type_former.t
+      | Row_cons of Label.t * t * t
+      | Row_uniform of t
+      | Mu of variable * t
     [@@deriving sexp_of]
 
     (** [var 'a] is the representation of the type variable ['a] as the 
@@ -87,18 +90,30 @@ module Make (Algebra : Algebra) : sig
   module Shallow_type : sig
     (** [t] represents a shallow type [ρ] is defined by the grammar:
         ρ ::= (ɑ₁, .., ɑ₂) F *)
-    type t = variable Type_former.t [@@deriving sexp_of]
+    type t =
+      | Former of variable Type_former.t
+      | Row_cons of Label.t * variable * variable
+      | Row_uniform of variable
+      | Mu of variable
+    [@@deriving sexp_of]
 
     (** [binding] represents a shallow type binding defined by the grammar:
-        b ::= ɑ | ɑ :: ρ *)
-    type binding = variable * t option [@@deriving sexp_of]
+        b ::= ɑ :: ρ *)
+    type binding = variable * t [@@deriving sexp_of]
 
-    (** [context] represents a shallow type context Θ. *)
-    type context = binding list
+    module Ctx : sig
+      type t = variable list * binding list [@@deriving sexp_of]
+
+      val merge : t -> t -> t
+    end
+
+    (** [encoded_type] represents the shallow encoding [Θ |> ɑ]
+            of a deep type. *)
+    type encoded_type = Ctx.t * variable [@@deriving sexp_of]
 
     (** [of_type type_] returns the shallow encoding [Θ |> ɑ] of the deep 
-        type [type_]. *)
-    val of_type : Type.t -> context * variable
+            type [type_]. *)
+    val of_type : Type.t -> encoded_type
   end
 
   (** Constraints form a applicative functor, allowing us to combine
@@ -160,6 +175,10 @@ module Make (Algebra : Algebra) : sig
     -> 'a t
     -> ('a, [> Solver.error ]) Result.t
 
+  type existential_context = Shallow_type.Ctx.t [@@deriving sexp_of]
+  type universal_context = variable list [@@deriving sexp_of]
+  type equations = (Type.t * Type.t) list [@@deriving sexp_of]
+
   (** [&~] is an infix alias for [both]. *)
   val ( &~ ) : 'a t -> 'b t -> ('a * 'b) t
 
@@ -187,11 +206,11 @@ module Make (Algebra : Algebra) : sig
       type of [a]. *)
   val decode : variable -> Types.Type.t t
 
-  (** [exists bindings t] binds [bindings] existentially in [t]. *)
-  val exists : Shallow_type.binding list -> 'a t -> 'a t
+  (** [exists ~ctx t] binds existential context [ctx] in [t]. *)
+  val exists : ctx:existential_context -> 'a t -> 'a t
 
-  (** [forall vars t]  binds [vars] as universally quantifier variables in [t]. *)
-  val forall : variable list -> 'a t -> 'a t
+  (** [forall ~ctx t] binds universal context [ctx] in [t]. *)
+  val forall : ctx:universal_context -> 'a t -> 'a t
 
   (** [x #= a] yields the binding that binds [x] to [a].  *)
   val ( #= ) : Term_var.t -> variable -> binding
@@ -199,37 +218,10 @@ module Make (Algebra : Algebra) : sig
   (** [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
   val def : bindings:def_binding list -> in_:'a t -> 'a t
 
-  val def_poly
-    :  flexible_vars:Shallow_type.binding list
-    -> bindings:binding list
-    -> in_:'a t
-    -> 'a t
+  (** [equations #=> t] is an alias for the implication constraint [Implication (equations, t)]. *)
+  val ( #=> ) : equations -> 'a t -> 'a t
 
-  (** ([ |., @=>, @~> ]) are combinators designed for the infix construction
-      of let and let rec bindings. *)
-
-  val ( @. )
-    :  variable list * Shallow_type.binding list
-    -> 'a t
-    -> variable list * Shallow_type.binding list * 'a t
-
-  val ( @=> )
-    :  variable list * Shallow_type.binding list * 'a t
-    -> bool * binding list
-    -> (Type.t * Type.t) list
-    -> 'a let_binding
-
-  val ( @~> )
-    :  variable list * Shallow_type.binding list * 'a t
-    -> binding
-    -> 'a let_rec_binding
-
-  val ( #~> )
-    :  variable list * Shallow_type.binding list * 'a t
-    -> binding
-    -> 'a let_rec_binding
-
-  (** [let_ ~binding ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
+  (** [let_ ~binding ~in_] binds the let binding [binding] in the constraint [in_]. *)
   val let_
     :  bindings:'a let_binding list
     -> in_:'b t
@@ -242,7 +234,26 @@ module Make (Algebra : Algebra) : sig
     -> in_:'b t
     -> ('a term_let_rec_binding list * 'b) t
 
-  val ( #=> ) : (Type.t * Type.t) list -> 'a t -> 'a t
+  module Binding : sig
+    type ctx = universal_context * existential_context [@@deriving sexp_of]
+
+    val let_
+      :  ctx:ctx
+      -> is_non_expansive:bool
+      -> bindings:binding list
+      -> in_:'a t
+      -> equations:equations
+      -> 'a let_binding
+
+    val let_mrec : ctx:ctx -> binding:binding -> in_:'a t -> 'a let_rec_binding
+
+    val let_prec
+      :  universal_ctx:universal_context
+      -> annotation:Shallow_type.encoded_type
+      -> term_var:Term_var.t
+      -> in_:'a t
+      -> 'a let_rec_binding
+  end
 end
 
 module Private : sig

@@ -443,12 +443,10 @@ module Ambivalent (Structure : S) = struct
       | Rigid_var rigid_var1, Rigid_var rigid_var2 ->
         let rigid_var, rigid_type, scope', t =
           match Equations.Ctx.get_equation ctx.equations_ctx rigid_var1 with
-          | Some (rigid_type, scope') ->
-            rigid_var1, rigid_type, scope', t2
+          | Some (rigid_type, scope') -> rigid_var1, rigid_type, scope', t2
           | None ->
             (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var2 with
-            | Some (rigid_type, scope') ->
-              rigid_var2, rigid_type, scope', t1
+            | Some (rigid_type, scope') -> rigid_var2, rigid_type, scope', t1
             | None -> raise Cannot_merge)
         in
         (* Convert [rigid_type] to ['a] type. *)
@@ -485,4 +483,111 @@ module Ambivalent (Structure : S) = struct
           Rigid_var rigid_var)
     in
     { scope = !scope; repr }
+end
+
+module Rows (Label : Comparable.S) (Structure : S) = struct
+  module Label = struct
+    include Label
+
+    (* Add [sexp_of_t] for label into module scope for 
+       below [@@deriving sexp_of] *)
+    let sexp_of_t = comparator.sexp_of_t
+  end
+
+  type 'a t =
+    | Structure of 'a Structure.t
+    | Row_cons of Label.t * 'a * 'a
+    | Row_uniform of 'a
+  [@@deriving sexp_of]
+
+  type 'a ctx =
+    { make_var : unit -> 'a
+    ; make_structure : 'a t -> 'a
+    ; super_ : 'a Structure.ctx
+    }
+
+  let map t ~f =
+    match t with
+    | Structure structure -> Structure (Structure.map structure ~f)
+    | Row_cons (label, t1, t2) -> Row_cons (label, f t1, f t2)
+    | Row_uniform t -> Row_uniform (f t)
+
+
+  let iter t ~f =
+    match t with
+    | Structure structure -> Structure.iter structure ~f
+    | Row_cons (_, t1, t2) ->
+      f t1;
+      f t2
+    | Row_uniform t -> f t
+
+
+  let fold t ~f ~init =
+    match t with
+    | Structure structure -> Structure.fold structure ~f ~init
+    | Row_cons (_, t1, t2) -> f t2 (f t1 init)
+    | Row_uniform t -> f t init
+
+
+  exception Cannot_merge = Structure.Cannot_merge
+
+  let merge ~ctx ~equate t1 t2 =
+    let ( =~ ) = equate in
+    let ( =~- ) a structure = a =~ ctx.make_structure structure in
+
+    let is_row_cons l t = 
+      let t1, t2 = ctx.make_var (), ctx.make_var () in
+      t =~- Row_cons (l, t1, t2);
+      t1, t2
+    in
+
+    let is_row_uniform t = 
+      let t' = ctx.make_var () in
+      t =~- Row_uniform t';
+      t'
+    in
+
+    match t1, t2 with
+    | Structure structure1, Structure structure2 ->
+      Structure (Structure.merge ~ctx:ctx.super_ ~equate structure1 structure2)
+    | Row_uniform t1, Row_uniform t2 ->
+      t1 =~ t2;
+      Row_uniform t1
+    | Row_cons (label1, t11, t12), Row_cons (label2, t21, t22)
+      when Label.compare label1 label2 = 0 ->
+      (* The labels [label1] and [label2] are equal. *)
+      t11 =~ t21;
+      t12 =~ t22;
+      (* We arbitrary return a Row_cons. *)
+      t1
+    | Row_cons (label1, t11, t12), Row_cons (label2, t21, t22) ->
+      (* The labels [label1] and [label2] are not equal. *)
+      let t = ctx.make_var () in
+      (* Unify the label of t1 with a Row containing (label2) *)
+      t12 =~- Row_cons (label2, t21, t);
+      t22 =~- Row_cons (label1, t11, t);
+      (* We arbitrary return a Row_cons. We wish to maintain some sorted
+         order to the Rows, as this gives us canoncial rows. *)
+      if Label.compare label1 label2 < 0 then t1 else t2
+    | Row_cons (_, t11, t12), (Row_uniform t as t2)
+    | (Row_uniform t as t2), Row_cons (_, t11, t12) ->
+      t11 =~ t;
+      t12 =~- t2;
+      t2
+    | (Row_cons (l1, t11, t12) as t1), Structure t2
+    | Structure t2, (Row_cons (l1, t11, t12) as t1) ->
+      (* TODO: Understand WHY the distributive property for formers (structures) is required. *)
+      (* The children of [t2] must be of the form: [(l1: _; _)] (according to EMLTI). *)
+      let t11', t12' = 
+        let t11_12 = Structure.map t2 ~f:(is_row_cons l1) in
+        Structure.map ~f:fst t11_12, Structure.map ~f:snd t11_12
+      in
+      t11 =~- Structure t11';
+      t12 =~- Structure t12';
+      t1
+    | (Row_uniform t as t1), Structure t2
+    | Structure t2, (Row_uniform t as t1) ->
+      let t' = Structure.map t2 ~f:is_row_uniform in
+      t =~- Structure t';
+      t1
 end

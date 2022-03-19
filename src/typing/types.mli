@@ -15,6 +15,8 @@ open Util
 
 (** Representation of types and declarations  *)
 
+type tag = string
+
 type type_expr =
   | Ttyp_var of string 
       (** Type variables ['a]. *)
@@ -25,9 +27,16 @@ type type_expr =
   | Ttyp_constr of type_constr 
       (** Type constructors. *)
   | Ttyp_alias of type_expr * string
-      (** Alias, required for displaying recursive types. *)
+      (** Alias, required for displaying equi-recursive types. *)
+  | Ttyp_variant of type_expr 
+      (** Polymorphic variant [ [ ... ] ] *)
+  | Ttyp_row_cons of tag * type_expr * row 
+      (** Row cons [< `A : T, row >] *)
+  | Ttyp_row_uniform of type_expr 
+      (** Uniform row [ ∂<T> ] *)
 [@@deriving sexp_of]
 
+and row = type_expr
 and type_constr = type_expr list * string [@@deriving sexp_of]
 
 (** [pp_type_expr_mach ppf type_expr] pretty prints an explicit tree of the 
@@ -61,6 +70,7 @@ module Algebra : sig
       | Arrow of 'a * 'a
       | Tuple of 'a list
       | Constr of 'a list * string
+      | Variant of 'a
     [@@deriving sexp_of]
 
     include Type_former.S with type 'a t := 'a t
@@ -69,13 +79,15 @@ module Algebra : sig
   (** [Type] is the abstraction of Dromedary's types, [type_expr]. *)
   module Type :
     Type
-      with type variable := Type_var.t
+      with type label := string
+       and type variable := Type_var.t
        and type 'a former := 'a Type_former.t
        and type t = type_expr
 
   include
     Algebra
       with module Term_var := Term_var
+       and type Types.Label.t = string
        and module Types.Var = Type_var
        and module Types.Former = Type_former
        and module Types.Type = Type
@@ -127,8 +139,23 @@ type constructor_description =
   }
 [@@deriving sexp_of]
 
-val pp_constructor_description_mach : indent:string ->  constructor_description Pretty_printer.t
+val pp_constructor_description_mach
+  :  indent:string
+  -> constructor_description Pretty_printer.t
+
 val pp_constructor_description : constructor_description Pretty_printer.t
+
+type variant_description =
+  { variant_tag : tag
+  ; variant_row : row
+  }
+[@@deriving sexp_of]
+
+val pp_variant_description_mach
+  :  indent:string
+  -> variant_description Pretty_printer.t
+
+val pp_variant_description : variant_description Pretty_printer.t
 
 type label_description =
   { label_name : string
@@ -137,5 +164,8 @@ type label_description =
   }
 [@@deriving sexp_of]
 
-val pp_label_description_mach : indent:string ->  label_description Pretty_printer.t
+val pp_label_description_mach
+  :  indent:string
+  -> label_description Pretty_printer.t
+
 val pp_label_description : label_description Pretty_printer.t

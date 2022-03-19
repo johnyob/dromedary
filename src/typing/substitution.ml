@@ -41,3 +41,6 @@ let of_type_vars vars =
 let dom t = Map.keys t
 let rng t = to_alist t |> List.map ~f:snd
 let merge t1 t2 = Map.merge_skewed t1 t2 ~combine:(fun ~key:_ _ a -> a)
+
+let add t key data = 
+  Map.set t ~key ~data

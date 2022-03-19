@@ -21,47 +21,52 @@ module type Identifiable = sig
   val id : 'a t -> int
 end
 
-module type Metadata = sig
-  type 'a t [@@deriving sexp_of]
-
-  val empty : unit -> 'a t
-  val merge : 'a t -> 'a t -> 'a t
-end
-
 module type S = sig
-  (** A structure defines the "structure" of the unification type.
+  (** A structure define the internal structure of unification (or graphical)
+      types.
       
-      A structure usually consists of 2 non-separable components:
-      "metadata" and a "descriptor". Historically we separated these, 
-      however, this results in a poor design:
-       - Metadata is required to be implicitly mutable.
-       - "Lifting" of metadata may result in potential impossible states.
+      A structures consists of 2 non-separable components: 
+      "metadata" and a "descriptor".
+      
+      Descriptors define the syntactic structure -- often containing children
+      of type ['a]. 
+      
+      Examples of structures include:
+        - First order structures
+        - First order rows
+        - Ambivalent structures      
   *)
 
   type 'a t [@@deriving sexp_of]
 
-  val map : 'a t -> f:('a -> 'b) -> 'b t
-  val iter : 'a t -> f:('a -> unit) -> unit
-  val fold : 'a t -> f:('a -> 'b -> 'b) -> init:'b -> 'b
-
-  (** Descriptors must exhibit [merge], which is the ability
-      to compute a logically consistent descriptor from 2 descriptor. 
-
-      If the 2 descriptors are not consistent, then we raise [Cannot_merge].
+  (** Structures must exhibit [merge] for unification -- this is required for 
+      equating structures.  
       
-      Consistency is determined via the ability to emit first-order equalities,
+      Equivalence is determined via the ability to emit first-order equalities,
       provided by [equate].
 
-      In some cases, logical consistency of 2 descriptor requires a context. 
-      (e.g. Abbreviations, and Ambivalence), thus [merge] requires a
-      context ['a ctx]. 
+      In some cases, equivalence of 2 structures requires a context. 
+      (e.g. Abbreviations, and Ambivalence), thus [merge] requires a context 
+      ['a ctx]. 
   *)
 
+  (** ['a ctx] represents the arbitrary context used by [merge] *)
   type 'a ctx
 
+  (** [Cannot_merge] is raised by [merge] -- if the 2 structures are not "consistent". *)
   exception Cannot_merge
 
   val merge : ctx:'a ctx -> equate:('a -> 'a -> unit) -> 'a t -> 'a t -> 'a t
+
+  (** [map t ~f] traverses [t], applying the transformation [f]. *)
+  val map : 'a t -> f:('a -> 'b) -> 'b t
+
+  (** [iter t ~f] traverses [t], executing [f] on each child. *)
+  val iter : 'a t -> f:('a -> unit) -> unit
+
+  (** [fold t ~f ~init] performs the computation of [f], traversing
+      over [t] with the initial accumulator value of [init]. *)
+  val fold : 'a t -> f:('a -> 'b -> 'b) -> init:'b -> 'b
 end
 
 module type Intf = sig
@@ -185,6 +190,21 @@ module type Intf = sig
       { abbrev_ctx : Abbrev.Ctx.t
       ; make_structure : 'a S.t -> 'a
       ; make_var : unit -> 'a
+      ; super_ : 'a S.ctx
+      }
+
+    include S with type 'a t := 'a t and type 'a ctx := 'a ctx
+  end
+
+  module Rows (Label : Comparable.S) (S : S) : sig
+    type 'a t =
+      | Structure of 'a S.t
+      | Row_cons of Label.t * 'a * 'a
+      | Row_uniform of 'a
+
+    type 'a ctx =
+      { make_var : unit -> 'a
+      ; make_structure : 'a t -> 'a
       ; super_ : 'a S.ctx
       }
 

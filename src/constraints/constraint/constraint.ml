@@ -23,6 +23,12 @@ module Make (Algebra : Algebra) = struct
 
   (* Add relevant modules from [Types]. *)
 
+  module Label = struct
+    include Types.Label
+
+    let sexp_of_t = comparator.sexp_of_t
+  end
+
   module Type_var = Types.Var
   module Type_former = Types.Former
 
@@ -54,13 +60,17 @@ module Make (Algebra : Algebra) = struct
     type t =
       | Var of variable
       | Former of t Type_former.t
+      | Row_cons of Label.t * t * t
+      | Row_uniform of t
+      | Mu of variable * t
     [@@deriving sexp_of]
 
     (* [var a] returns the representation of the type variable [a]. *)
-    let var a = Var a
+    let var var = Var var
 
     (* [former f] returns the representation of the applied type former [f]. *)
-    let former f = Former f
+    let former former = Former former
+    let mu var t = Mu (var, t)
   end
 
   (* The module [Shallow_type] provides the shallow type definition
@@ -73,34 +83,64 @@ module Make (Algebra : Algebra) = struct
   *)
 
   module Shallow_type = struct
-    (* [t] represents a shallow type [ρ] is defined by the grammar:
-       ρ ::= (ɑ₁, .., ɑ₂) F *)
-    type t = variable Type_former.t [@@deriving sexp_of]
+    type t =
+      | Former of variable Type_former.t
+      | Row_cons of Label.t * variable * variable
+      | Row_uniform of variable
+      | Mu of variable
+    [@@deriving sexp_of]
 
-    (* [binding] represents a shallow type binding defined by the grammar:
-       b ::= ɑ | ɑ :: ρ *)
-    type binding = variable * t option [@@deriving sexp_of]
+    type binding = variable * t [@@deriving sexp_of]
 
-    (* [context] represents a shallow type context Θ. *)
-    type context = binding list
+    module Ctx = struct
+      type t = variable list * binding list [@@deriving sexp_of]
+
+
+      let merge (vars1, bindings1) (vars2, bindings2) =
+        vars1 @ vars2, bindings1 @ bindings2
+    end
+
+    type encoded_type = Ctx.t * variable [@@deriving sexp_of]
 
     (* [of_type type_] returns the shallow encoding [Θ |> ɑ] of the 
        deep type [type_]. *)
-    let of_type type_ =
-      let context = ref [] in
+    let of_type type_ : encoded_type =
+      let variables = ref [] in
+      let fresh () =
+        let var = fresh () in
+        variables := var :: !variables;
+        var
+      in
+      let bindings = ref [] in
+      let bind var shallow_type =
+        bindings := (var, shallow_type) :: !bindings
+      in
       let rec loop t =
         match t with
         | Type.Var var -> var
         | Type.Former former ->
           let var = fresh () in
-          let former = Type_former.map former ~f:loop in
-          context := (var, Some former) :: !context;
+          bind var (Former (Type_former.map former ~f:loop));
+          var
+        | Type.Row_cons (label, t1, t2) ->
+          let var = fresh () in
+          bind var (Row_cons (label, loop t1, loop t2));
+          var
+        | Type.Row_uniform t ->
+          let var = fresh () in
+          bind var (Row_uniform (loop t));
+          var
+        | Type.Mu (var, t) ->
+          bind var (Mu (loop t));
           var
       in
       let var = loop type_ in
-      List.rev !context, var
+      (!variables, !bindings), var
   end
 
+  type existential_context = Shallow_type.Ctx.t [@@deriving sexp_of]
+  type universal_context = variable list [@@deriving sexp_of]
+  type equations = (Type.t * Type.t) list [@@deriving sexp_of]
   type 'a bound = Type_var.t list * 'a
 
   type term_binding = Term_var.t * Types.scheme
@@ -109,59 +149,49 @@ module Make (Algebra : Algebra) = struct
 
   (* ['a t] is a constraint with value type ['a]. *)
   type _ t =
-    | True : unit t (** [true] *)
+    | True : unit t
     | Return : 'a -> 'a t
-    | Conj : 'a t * 'b t -> ('a * 'b) t (** [C₁ && C₂] *)
-    | Eq : variable * variable -> unit t (** [ɑ₁ = ɑ₂] *)
-    | Exist : Shallow_type.binding list * 'a t -> 'a t (** [exists Θ. C] *)
-    | Forall : variable list * 'a t -> 'a t (** [forall Λ. C] *)
-    | Instance : Term_var.t * variable -> Types.Type.t list t (** [x <= ɑ] *)
+    | Conj : 'a t * 'b t -> ('a * 'b) t
+    | Eq : variable * variable -> unit t
+    | Exist : existential_context * 'a t -> 'a t
+    | Forall : universal_context * 'a t -> 'a t
+    | Instance : Term_var.t * variable -> Types.Type.t list t
     | Def : binding list * 'a t -> 'a t
-        (** [def x1 : t1 and ... and xn : tn in C] *)
-    | Def_poly : Shallow_type.binding list * binding list * 'a t -> 'a t
     | Let : 'a let_binding list * 'b t -> ('a term_let_binding list * 'b) t
-        (** [let Γ in C] *)
     | Let_rec :
         'a let_rec_binding list * 'b t
-        -> ('a term_let_rec_binding list * 'b) t (** [let rec Γ in C] *)
-    | Map : 'a t * ('a -> 'b) -> 'b t (** [map C f]. *)
-    | Match : 'a t * 'b case list -> ('a * 'b list) t
-        (** [match C with (... | (x₁ : ɑ₁ ... xₙ : ɑₙ) -> Cᵢ | ...)]. *)
-    | Decode : variable -> Types.Type.t t (** [decode ɑ] *)
-    | Implication : (Type.t * Type.t) list * 'a t -> 'a t
+        -> ('a term_let_rec_binding list * 'b) t
+    | Map : 'a t * ('a -> 'b) -> 'b t
+    | Decode : variable -> Types.Type.t t
+    | Implication : equations * 'a t -> 'a t
 
   and binding = Term_var.t * variable
   and def_binding = binding
 
   and 'a let_binding =
     | Let_binding of
-        { rigid_vars : variable list
-        ; flexible_vars : Shallow_type.binding list
+        { universal_context : universal_context
+        ; existential_context : existential_context
         ; is_non_expansive : bool
         ; bindings : binding list
         ; in_ : 'a t
-        ; equations : (Type.t * Type.t) list
+        ; equations : equations
         }
 
   and 'a let_rec_binding =
     | Let_rec_mono_binding of
-        { rigid_vars : variable list
-        ; flexible_vars : Shallow_type.binding list
+        { universal_context : universal_context
+        ; existential_context : existential_context
         ; binding : binding
         ; in_ : 'a t
         }
     | Let_rec_poly_binding of
-        { rigid_vars : variable list
-        ; annotation_bindings : Shallow_type.binding list
-        ; binding : binding
+        { universal_context : universal_context
+        ; annotation : Shallow_type.Ctx.t * variable
+        ; term_var : Term_var.t
         ; in_ : 'a t
         }
 
-  and 'a case =
-    | Case of
-        { bindings : binding list
-        ; in_ : 'a t
-        }
 
   let rec sexp_of_t : type a. a t -> Sexp.t =
    fun t ->
@@ -169,23 +199,16 @@ module Make (Algebra : Algebra) = struct
     | Return _ -> [%sexp Return]
     | True -> [%sexp True]
     | Conj (t1, t2) -> [%sexp Conj (t1 : t), (t2 : t)]
-    | Eq (a1, a2) -> [%sexp Eq (a1 : variable), (a2 : variable)]
-    | Exist (vars, t) ->
-      [%sexp Exist (vars : Shallow_type.binding list), (t : t)]
+    | Eq (var1, var2) -> [%sexp Eq (var1 : variable), (var2 : variable)]
+    | Exist (ctx, t) -> [%sexp Exist (ctx : existential_context), (t : t)]
     | Forall (vars, t) -> [%sexp Forall (vars : variable list), (t : t)]
     | Instance (x, a) -> [%sexp Instance (x : Term_var.t), (a : variable)]
     | Def (bindings, t) -> [%sexp Def (bindings : binding list), (t : t)]
-    | Def_poly (flexible_vars, bindings, t) ->
-      [%sexp
-        Def_poly (flexible_vars : Shallow_type.binding list)
-        , (bindings : binding list)
-        , (t : t)]
     | Let (let_bindings, t) ->
       [%sexp Let (let_bindings : let_binding list), (t : t)]
     | Let_rec (let_rec_bindings, t) ->
       [%sexp Let_rec (let_rec_bindings : let_rec_binding list), (t : t)]
     | Map (t, _f) -> [%sexp Map (t : t)]
-    | Match (t, cases) -> [%sexp Match (t : t), (cases : case list)]
     | Decode a -> [%sexp Decode (a : variable)]
     | Implication (equations, t) ->
       [%sexp Implication (equations : (Type.t * Type.t) list), (t : t)]
@@ -193,11 +216,20 @@ module Make (Algebra : Algebra) = struct
 
   and sexp_of_binding = [%sexp_of: Term_var.t * variable]
 
+  and sexp_of_def_binding def_binding = sexp_of_binding def_binding
+
   and sexp_of_let_binding : type a. a let_binding -> Sexp.t =
-   fun (Let_binding { rigid_vars; flexible_vars; is_non_expansive; bindings; in_; equations }) ->
+   fun (Let_binding
+         { universal_context
+         ; existential_context
+         ; is_non_expansive
+         ; bindings
+         ; in_
+         ; equations
+         }) ->
     [%sexp
-      Let_binding (rigid_vars : variable list)
-      , (flexible_vars : Shallow_type.binding list)
+      Let_binding (universal_context : universal_context)
+      , (existential_context : existential_context)
       , (bindings : binding list)
       , (is_non_expansive : bool)
       , (in_ : t)
@@ -207,23 +239,19 @@ module Make (Algebra : Algebra) = struct
   and sexp_of_let_rec_binding : type a. a let_rec_binding -> Sexp.t =
    fun binding ->
     match binding with
-    | Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ } ->
+    | Let_rec_mono_binding
+        { universal_context; existential_context; binding; in_ } ->
       [%sexp
-        Let_rec_binding (rigid_vars : variable list)
-        , (flexible_vars : Shallow_type.binding list)
+        Let_rec_binding (universal_context : universal_context)
+        , (existential_context : existential_context)
         , (binding : binding)
         , (in_ : t)]
-    | Let_rec_poly_binding { rigid_vars; annotation_bindings; binding; in_ } ->
+    | Let_rec_poly_binding { universal_context; annotation; term_var; in_ } ->
       [%sexp
-        Let_rec_poly_binding (rigid_vars : variable list)
-        , (annotation_bindings : Shallow_type.binding list)
-        , (binding : binding)
+        Let_rec_poly_binding (universal_context : universal_context)
+        , (annotation : Shallow_type.encoded_type)
+        , (term_var : Term_var.t)
         , (in_ : t)]
-
-
-  and sexp_of_case : type a. a case -> Sexp.t =
-   fun (Case { bindings; in_ }) ->
-    [%sexp Case (bindings : binding list), (in_ : t)]
 
 
   (* ['a t] forms an applicative functor, allowing us to combine
@@ -280,7 +308,7 @@ module Make (Algebra : Algebra) = struct
 
   let ( =~= ) a1 shallow_type =
     let a2 = fresh () in
-    Exist ([ a2, Some shallow_type ], a1 =~ a2)
+    Exist (([ a2 ], [ a2, shallow_type ]), a1 =~ a2)
 
 
   let ( =~- ) a1 type_ =
@@ -296,16 +324,19 @@ module Make (Algebra : Algebra) = struct
      type of [a]. *)
   let decode a = Decode a
 
-  (* [exists bindings t] binds [bindings] existentially in [t]. *)
-  let exists bindings t =
-    match t with
-    | Exist (bindings', t) -> Exist (bindings @ bindings', t)
-    | t -> Exist (bindings, t)
+  (* [exists ~ctx t] binds existential context [ctx] in [t]. *)
+  let exists ~ctx t =
+    match ctx with
+    | [], [] -> t
+    | ctx ->
+      (match t with
+      | Exist (ctx', t) -> Exist (Shallow_type.Ctx.merge ctx ctx', t)
+      | t -> Exist (ctx, t))
 
 
-  (* [forall vars t]  binds [vars] as universally quantifier variables in [t]. *)
-  let forall vars t =
-    match vars with
+  (* [forall ~ctx t] binds universal context [ctx] in [t]. *)
+  let forall ~ctx t =
+    match ctx with
     | [] -> t
     | vars ->
       (match t with
@@ -316,45 +347,49 @@ module Make (Algebra : Algebra) = struct
   (* [x #= a] yields the binding that binds [x] to [a]. *)
   let ( #= ) x a : binding = x, a
 
-
   (* [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
   let def ~bindings ~in_ = Def (bindings, in_)
-  let def_poly ~flexible_vars ~bindings ~in_ = Def_poly (flexible_vars, bindings, in_)
-
-  (* [rvs, fvs @. in_ @=> bindings] returns the let binding, that binds 
-     the rigid vars [rvs] and flexible vars [fvs] w/ the constraint [in_]
-     and bindings [bindings]. 
-     
-     We split this across 2 combinators, using the precedence of [ | > @ ] 
-     to ensure that [ |.] binds tighter. Providing a "mixfix" operator. 
-  *)
-  let ( @. ) (rigid_vars, flexible_vars) in_ = rigid_vars, flexible_vars, in_
-
-  let ( @=> ) (rigid_vars, flexible_vars, in_) (is_non_expansive, bindings) equations =
-    Let_binding { rigid_vars; flexible_vars; is_non_expansive; bindings; in_; equations }
-
-
-  (* [let_ ~bindings ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
-  let let_ ~bindings ~in_ = Let (bindings, in_)
-
-  (* [rvs, fvs |. in_ @~> binding] returns the let rec binding, that binds 
-     the rigid vars [rvs] and flexible vars [fvs] w/ the constraint [in_]
-     and binding [binding]. 
-  *)
-  let ( @~> ) (rigid_vars, flexible_vars, in_) binding =
-    Let_rec_mono_binding { rigid_vars; flexible_vars; binding; in_ }
-
-
-  let ( #~> ) (rigid_vars, annotation_bindings, in_) binding =
-    Let_rec_poly_binding { rigid_vars; annotation_bindings; binding; in_ }
-
-
-  (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
-     constraint [in_]. *)
-  let let_rec ~bindings ~in_ = Let_rec (bindings, in_)
 
   let ( #=> ) equations t =
     match equations with
     | [] -> t
     | equations -> Implication (equations, t)
+
+
+  (* [let_ ~bindings ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
+  let let_ ~bindings ~in_ = Let (bindings, in_)
+
+  (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
+     constraint [in_]. *)
+  let let_rec ~bindings ~in_ = Let_rec (bindings, in_)
+
+  module Binding = struct
+    type ctx = universal_context * existential_context [@@deriving sexp_of]
+
+    let let_
+        ~ctx:(universal_context, existential_context)
+        ~is_non_expansive
+        ~bindings
+        ~in_
+        ~equations
+      =
+      Let_binding
+        { universal_context
+        ; existential_context
+        ; is_non_expansive
+        ; bindings
+        ; in_
+        ; equations
+        }
+
+
+    let let_mrec ~ctx:(universal_context, existential_context) ~binding ~in_ =
+      Let_rec_mono_binding
+        { universal_context; existential_context; binding; in_ }
+
+
+    let let_prec ~universal_ctx ~annotation ~term_var ~in_ =
+      Let_rec_poly_binding
+        { universal_context = universal_ctx; annotation; term_var; in_ }
+  end
 end

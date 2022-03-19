@@ -56,8 +56,8 @@ end
 module Private : sig
   module Structure = Structure
 
-  module Generalization (Type_former : Type_former.S) :
-    Generalization.S with type 'a former := 'a Type_former.t
+  module Generalization (Label : Comparable.S) (Type_former : Type_former.S) :
+    Generalization.S with type 'a former := 'a Type_former.t and type label := Label.t
 
   module Unifier (Structure : Structure.S) :
     Unifier.S  
