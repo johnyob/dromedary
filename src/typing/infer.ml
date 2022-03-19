@@ -53,6 +53,10 @@ let variant t = Type_former.Variant t
 let variant_ t = Type.former (variant t)
 let row_cons label t1 t2 = Type.Row_cons (label, t1, t2)
 let row_uniform t = Type.Row_uniform t
+let some x = Type_former.Constr ([ x ], "some")
+let some_ x = Type.former (some x)
+let none = Type_former.Constr ([], "none")
+let none_ = Type.former none
 
 (* [convert_core_type core_type] converts core type [core_type] to [Type.t]. *)
 let rec convert_core_type ~substitution core_type : (Type.t, _) Result.t =
@@ -70,7 +74,22 @@ let rec convert_core_type ~substitution core_type : (Type.t, _) Result.t =
   | Ptyp_constr (ts, constr') ->
     let%bind ts = List.map ts ~f:(convert_core_type ~substitution) |> all in
     return (constr_ ts constr')
+  (* | Ptyp_alias (t, x) ->
+    let var = fresh () in
+    let substitution = Substitution.add substitution x var in
+    let%bind t = convert_core_type ~substitution t in
+    return (Type.Mu (var, t)) *)
+  | Ptyp_variant row ->
+    let%bind row = convert_row ~substitution row in
+    return (variant_ row)
+  | Ptyp_row_cons (tag, t, row) ->
+    let%bind t = convert_core_type ~substitution t in
+    let%bind row = convert_row ~substitution row in
+    return (row_cons tag (some_ t) row)
+  | Ptyp_row_empty -> return (row_uniform none_)
 
+
+and convert_row ~substitution row = convert_core_type ~substitution row
 
 (* [convert_type_expr type_expr] converts type expression [type_expr] to [Type.t]. *)
 let rec convert_type_expr ~substitution type_expr : (Type.t, _) Result.t =
@@ -268,6 +287,10 @@ let rec is_pat_generalized ~env pat : (bool, _) Result.t =
       List.map pats ~f:(is_pat_generalized ~env) |> Result.all
     in
     List.exists ~f:Fn.id is_pats_generalized
+  | Ppat_variant (_, pat) ->
+    (match pat with
+    | Some pat -> is_pat_generalized ~env pat
+    | None -> return false)
   | Ppat_constraint (pat, _) | Ppat_alias (pat, _) ->
     is_pat_generalized ~env pat
   | Ppat_const _ | Ppat_any | Ppat_var _ -> return false
@@ -345,8 +368,9 @@ let annotation_of_rec_value_binding value_binding
 let rec is_non_expansive exp =
   match exp with
   | Pexp_var _ | Pexp_const _ | Pexp_prim _ | Pexp_fun _ -> true
-  | Pexp_construct (_, Some exp) -> is_non_expansive exp
-  | Pexp_construct (_, None) -> true
+  | Pexp_construct (_, Some exp) | Pexp_variant (_, Some exp) ->
+    is_non_expansive exp
+  | Pexp_construct (_, None) | Pexp_variant (_, None) -> true
   | Pexp_forall (_, exp)
   | Pexp_exists (_, exp)
   | Pexp_constraint (exp, _)
@@ -363,6 +387,68 @@ let rec is_non_expansive exp =
   | Pexp_for _
   | Pexp_try _
   | Pexp_field _ -> false
+
+
+(** {5: Polymorphic variants} *)
+
+type variant_pattern = Vpat_variant of tag * Parsetree.pattern option
+
+type variant_default_pattern =
+  | Vpat_any
+  | Vpat_var of string
+
+type variant_case =
+  { vc_lhs : variant_pattern
+  ; vc_rhs : Parsetree.expression
+  }
+
+type variant_default_case =
+  { vdc_lhs : variant_default_pattern
+  ; vdc_rhs : Parsetree.expression
+  }
+
+type variant_cases =
+  { cases : variant_case list
+  ; default_case : variant_default_case option
+  }
+
+let variant_default_case_of_case : Parsetree.case -> variant_default_case option
+  =
+ fun { pc_lhs = pat; pc_rhs = exp } ->
+  match pat with
+  | Ppat_any -> Some { vdc_lhs = Vpat_any; vdc_rhs = exp }
+  | Ppat_var x -> Some { vdc_lhs = Vpat_var x; vdc_rhs = exp }
+  | _ -> None
+
+
+let variant_case_of_case : Parsetree.case -> variant_case option =
+ fun { pc_lhs = pat; pc_rhs = exp } ->
+  match pat with
+  | Ppat_variant (tag, pat) ->
+    Some { vc_lhs = Vpat_variant (tag, pat); vc_rhs = exp }
+  | _ -> None
+
+
+let rec variant_cases_of_cases : Parsetree.case list -> variant_cases option =
+ fun cases ->
+  let open Option.Let_syntax in
+  match cases with
+  | [] -> None
+  | [ case ] ->
+    let%map case = variant_case_of_case case in
+    { cases = [ case ]; default_case = None }
+  | [ case1; case2 ] ->
+    let%map case = variant_case_of_case case1 in
+    (match variant_case_of_case case2 with
+    | Some case' -> { cases = [ case; case' ]; default_case = None }
+    | None ->
+      let default_case = variant_default_case_of_case case2 in
+      { cases = [ case ]; default_case })
+  | case :: cases ->
+    (* invairant: len cases >= 2 *)
+    let%bind case = variant_case_of_case case in
+    let%map cases = variant_cases_of_cases cases in
+    { cases with cases = case :: cases.cases }
 
 
 module Pattern = struct
@@ -541,6 +627,10 @@ module Pattern = struct
           (let%map () = pat_type =~ pat_type1
            and pat_desc = pat_desc in
            pat_desc)
+      | Ppat_variant _ ->
+        fail
+          [%message
+            "Deep pattern matching for polymorphic variants not supported!"]
     and infer_pats pats
         : (variable list * Typedtree.pattern list Constraint.t) Binder.t
       =
@@ -558,6 +648,27 @@ module Pattern = struct
       return (vars, Constraint.all pats)
     in
     Computation.run (infer_pat pat pat_type)
+
+
+  let infer_variant_default_pat variant_default_pat pat_type default_pat_type =
+    let rec infer_pat pat pat_type
+        : Typedtree.pattern Constraint.t Computation.t
+      =
+      let open Computation.Let_syntax in
+      let%bind pat_desc = infer_pat_desc pat in
+      return
+        (let%map pat_desc = pat_desc
+         and pat_type = decode pat_type in
+         { pat_desc; pat_type })
+    and infer_pat_desc pat : Typedtree.pattern_desc Constraint.t Computation.t =
+      let open Computation.Let_syntax in
+      match pat with
+      | Vpat_any -> const Tpat_any
+      | Vpat_var x ->
+        let%bind () = extend x default_pat_type in
+        const (Tpat_var x)
+    in
+    Computation.run (infer_pat variant_default_pat pat_type)
 end
 
 module Expression = struct
@@ -951,6 +1062,32 @@ module Expression = struct
           (let%map constr_desc = constr_desc
            and arg_exp = arg_exp in
            Texp_construct (constr_desc, arg_exp))
+      | Pexp_variant (tag, arg_exp) ->
+        let@ rho1 = exists () in
+        let@ rho2 = exists () in
+        let@ arg_exp_type = exists () in
+        let%bind arg_exp =
+          match arg_exp with
+          | Some arg_exp ->
+            let%bind exp = infer_exp arg_exp arg_exp_type in
+            return (exp >>| Option.some)
+          | None ->
+            return
+              (let%map () = arg_exp_type =~- unit_ in
+               None)
+        in
+        let variant_desc =
+          let%map () =
+            rho1
+            =~- row_cons tag (some_ (Type.var arg_exp_type)) (Type.var rho2)
+          and variant_row = decode rho1 in
+          { variant_tag = tag; variant_row }
+        in
+        return
+          (let%map variant_desc = variant_desc
+           and () = exp_type =~- variant_ (Type.var rho1)
+           and arg_exp = arg_exp in
+           Texp_variant (variant_desc, arg_exp))
       | Pexp_let (Nonrecursive, value_bindings, exp) ->
         (* TODO: Coercion! *)
         let%bind let_bindings = infer_value_bindings value_bindings in
@@ -1032,17 +1169,128 @@ module Expression = struct
         : Typedtree.case list Constraint.t Computation.t
       =
       let open Computation.Let_syntax in
-      let%bind cases =
-        List.map cases ~f:(fun { pc_lhs; pc_rhs } ->
-            let@ pat_exp =
-              bind_pat pc_lhs lhs_type ~in_:(infer_exp pc_rhs rhs_type)
-            in
-            return
-              (let%map pat, exp = pat_exp in
-               { tc_lhs = pat; tc_rhs = exp }))
-        |> all
+      match variant_cases_of_cases cases with
+      | None ->
+        let%bind cases =
+          List.map cases ~f:(fun { pc_lhs; pc_rhs } ->
+              let@ pat_exp =
+                bind_pat pc_lhs lhs_type ~in_:(infer_exp pc_rhs rhs_type)
+              in
+              return
+                (let%map pat, exp = pat_exp in
+                 { tc_lhs = pat; tc_rhs = exp }))
+          |> all
+        in
+        return (Constraint.all cases)
+      | Some variant_cases ->
+        infer_variant_cases variant_cases lhs_type rhs_type
+    and infer_variant_case
+        { vc_lhs = Vpat_variant (tag, arg_pat); vc_rhs }
+        lhs_type
+        rhs_type
+        : (tag * variable * Typedtree.case Constraint.t) Binder.t
+      =
+      let open Binder.Let_syntax in
+      let%bind arg_pat_type = exists () in
+      let%bind arg_pat_exp =
+        match arg_pat with
+        | None ->
+          let& exp = infer_exp vc_rhs rhs_type in
+          return
+            (let%map () = arg_pat_type =~- unit_
+             and exp = exp in
+             None, exp)
+        | Some arg_pat ->
+          let%bind pat_exp =
+            bind_pat arg_pat lhs_type ~in_:(infer_exp vc_rhs rhs_type)
+          in
+          return
+            (let%map pat, exp = pat_exp in
+             Some pat, exp)
       in
-      return (Constraint.all cases)
+      let variant_desc =
+        let%map variant_row = decode lhs_type in
+        { variant_tag = tag; variant_row }
+      in
+      let case =
+        let%map arg_pat, exp = arg_pat_exp
+        and variant_desc = variant_desc
+        and pat_type = decode lhs_type in
+        { tc_lhs = { pat_desc = Tpat_variant (variant_desc, arg_pat); pat_type }
+        ; tc_rhs = exp
+        }
+      in
+      return (tag, arg_pat_type, case)
+    and infer_variant_default_case
+        { vdc_lhs; vdc_rhs }
+        default_case_type
+        lhs_type
+        rhs_type
+        : Typedtree.case Constraint.t Computation.t
+      =
+      let open Computation.Let_syntax in
+      let%bind fragment, pat =
+        Pattern.infer_variant_default_pat vdc_lhs lhs_type default_case_type
+      in
+      let ( _universal_ctx
+          , existential_ctx
+          , _equations
+          , term_bindings
+          , _substitution )
+        =
+        Fragment.to_bindings fragment
+      in
+      (* TODO: Add assertions *)
+      let@ () = exists_ctx ~ctx:existential_ctx in
+      let%bind exp = infer_exp vdc_rhs rhs_type in
+      return
+        (let%map pat = pat
+         and exp = def ~bindings:term_bindings ~in_:exp in
+         { tc_lhs = pat; tc_rhs = exp })
+    and infer_variant_cases { cases; default_case } lhs_type rhs_type
+        : Typedtree.case list Constraint.t Computation.t
+      =
+      let open Computation.Let_syntax in
+      let@ default_case_type = exists () in
+      let@ cases =
+        List.map cases ~f:(fun case ->
+            infer_variant_case case lhs_type rhs_type)
+        |> Binder.all
+      in
+      let row_type =
+        List.fold_right
+          cases
+          ~init:(Type.var default_case_type)
+          ~f:(fun (tag, var, _) row -> row_cons tag (Type.var var) row)
+      in
+      let cases =
+        List.map cases ~f:(fun (_, _, case) -> case) |> Constraint.all
+      in
+      let%bind default_case =
+        match default_case with
+        | None ->
+          return
+            (let%map () = default_case_type =~- row_uniform none_ in
+             None)
+        | Some default_case ->
+          let%bind default_case =
+            infer_variant_default_case
+              default_case
+              default_case_type
+              lhs_type
+              rhs_type
+          in
+          return
+            (let%map default_case = default_case in
+             Some default_case)
+      in
+      return
+        (let%map () = lhs_type =~- variant_ row_type
+         and cases = cases
+         and default_case = default_case in
+         match default_case with
+         | None -> cases
+         | Some default_case -> cases @ [ default_case ])
     and infer_label_exps label_exps exp_type
         : (label_description * Typedtree.expression) list Constraint.t
         Computation.t
