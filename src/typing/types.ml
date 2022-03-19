@@ -14,7 +14,7 @@
 open Core
 open Util.Pretty_printer
 
-type label = string [@@deriving sexp_of]
+type tag = string [@@deriving sexp_of]
 
 type type_expr =
   | Ttyp_var of string
@@ -23,9 +23,11 @@ type type_expr =
   | Ttyp_constr of type_constr
   | Ttyp_alias of type_expr * string
   | Ttyp_variant of type_expr
-  | Ttyp_row_cons of label * type_expr * type_expr
+  | Ttyp_row_cons of tag * type_expr * row
   | Ttyp_row_uniform of type_expr
 [@@deriving sexp_of]
+
+and row = type_expr
 
 and type_constr = type_expr list * string [@@deriving sexp_of]
 
@@ -201,6 +203,13 @@ type constructor_description =
   }
 [@@deriving sexp_of]
 
+type variant_description = 
+  { variant_tag : tag
+  ; variant_row : row
+  }
+[@@deriving sexp_of]
+
+
 type label_description =
   { label_name : string
   ; label_arg : type_expr
@@ -295,6 +304,18 @@ let pp_constructor_description_mach ~indent ppf constr_desc =
     pp_type_expr_mach ~indent:indent' ppf constr_arg);
   Format.fprintf ppf "%sConstructor type:@." indent;
   pp_type_expr_mach ~indent:indent' ppf constr_desc.constructor_type
+
+let pp_variant_description_mach ~indent ppf variant_desc =
+  Format.fprintf ppf "%sVariant description:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf ppf "%sTag: %s@." indent variant_desc.variant_tag;
+  let indent' = indent_space ^ indent in
+  Format.fprintf ppf "%sVariant row:@." indent;
+  pp_type_expr_mach ~indent:indent' ppf variant_desc.variant_row
+  
+  
+
+let pp_variant_description _ppf = assert false
 
 
 let pp_constructor_description _ppf = assert false
