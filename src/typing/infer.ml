@@ -45,6 +45,12 @@ let bool = Type_former.Constr ([], "bool")
 let bool_ = Type.former bool
 let unit = Type_former.Constr ([], "unit")
 let unit_ = Type.former unit
+let float = Type_former.Constr ([], "float")
+let float_ = Type.former float
+let char = Type_former.Constr ([], "char")
+let char_ = Type.former char
+let string = Type_former.Constr ([], "string")
+let string_ = Type.former string
 let exn = Type_former.Constr ([], "exn")
 let exn_ = Type.former exn
 let ref x = Type_former.Constr ([ x ], "ref")
@@ -133,6 +139,9 @@ let infer_constant const : Type.t =
   match const with
   | Const_int _ -> int_
   | Const_bool _ -> bool_
+  | Const_float _ -> float_
+  | Const_char _ -> char_
+  | Const_string _ -> string_
   | Const_unit -> unit_
 
 
