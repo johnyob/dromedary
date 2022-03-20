@@ -30,9 +30,9 @@ type core_type =
   | Ptyp_variant of row
       (** Polymorphic variants [ [ ... ] ] *)
   | Ptyp_row_cons of string * core_type * row
-      (* Row cons [< tag : T, ... >] *)
+      (* Row cons [ < tag : T, ... > ] *)
   | Ptyp_row_empty 
-      (* Empty row [ <> ] *)
+      (* Empty row [ < > ] *)
 [@@deriving sexp_of]
 
 and row = core_type
@@ -66,7 +66,7 @@ type pattern =
   | Ppat_const of constant 
       (** [c]. e.g. [1, true, ()]. *)
   | Ppat_tuple of pattern list 
-      (** (P1, ..., Pn). Invariant n >= 2. *)
+      (** [(P1, ..., Pn)]. Invariant n >= 2. *)
   | Ppat_construct of string * (string list * pattern) option 
       (** [C <P>]. *)
   | Ppat_variant of string * pattern option
@@ -130,7 +130,7 @@ type expression =
       (** [`A <E>] *)
 [@@deriving sexp_of]
 
-(** [P = E] *)
+(** Value bindings [P = E] *)
 and value_binding =
   { pvb_forall_vars : string list 
   ; pvb_pat : pattern
@@ -138,8 +138,7 @@ and value_binding =
   }
 [@@deriving sexp_of]
 
-
-(** [P -> E]. *)
+(** Cases [P -> E]. *)
 and case =
   { pc_lhs : pattern
   ; pc_rhs : expression
@@ -165,3 +164,126 @@ val pp_case_mach : case Pretty_printer.t
 
 (** [pp_case ppf case] prety prints the case [case] as a syntactic representation. *)
 val pp_case : case Pretty_printer.t
+
+(** External value descriptions {| external x : T = "prim" |} *)
+type value_description = 
+  { pval_name : string
+  ; pval_type : core_scheme
+  ; pval_prim : string
+  }
+[@@deriving sexp_of]
+
+(** [pp_value_description_mach ppf value_desc] pretty prints value description [value_desc] as an explicit tree structure. *)
+val pp_value_description_mach : value_description Pretty_printer.t
+
+
+type type_declaration = 
+  { ptype_name : string
+      (* Type name [t] *)
+  ; ptype_params : string list
+      (** Parameters: [('a1, .., 'an) t] *)
+  ; ptype_kind : type_decl_kind
+      (** Declaration kinds: record or variant *)
+  }
+[@@deriving sexp_of]
+
+and type_decl_kind = 
+  | Ptype_variant of constructor_declaration list
+  | Ptype_record of label_declaration list
+[@@deriving sexp_of]
+
+(** Label declaration: [l : 'b1 .. 'bm. T] *)
+and label_declaration =
+  { plabel_name : string
+      (** Label name [l] *)
+  ; plabel_betas : string list
+      (** Label betas, used for semi-explicit first-class polymorphism *)
+  ; plabel_arg : core_type
+      (** Label argument type *)
+  }
+[@@deriving sexp_of]
+
+(** Constructor declaration: [C of 'b1 .. 'bm. T constraint E] *)
+and constructor_declaration =
+  { pconstructor_name : string
+      (** Constructor name [C] *)
+  ; pconstructor_arg : constructor_argument option
+      (** Constructor argument *)
+  ; pconstructor_constraints : (core_type * core_type) list
+      (** Constructor constraints (used for GADTs) *)
+  }
+[@@deriving sexp_of]
+
+and constructor_argument =
+  { pconstructor_arg_betas : string list
+  ; pconstructor_arg_type : core_type
+  }
+[@@deriving sexp_of]
+
+(** [pp_type_declaration_mach ppf type_decl] pretty prints [type_decl] using explicit tree structure. *)
+val pp_type_declaration_mach : type_declaration Pretty_printer.t 
+
+(** [pp_type_declaration ppf type_decl] pretty prints a [type_decl] as a syntax representation. *)
+val pp_type_declaration : type_declaration Pretty_printer.t
+
+(** [pp_label_declaration_mach ppf label_decl] pretty prints [label_decl] using explicit tree structure. *)
+val pp_label_declaration_mach : label_declaration Pretty_printer.t 
+
+(** [pp_label_declaration ppf label_decl] pretty prints a [label_decl] as a syntax representation. *)
+val pp_label_declaration : label_declaration Pretty_printer.t
+
+(** [pp_constructor_declaration_mach ppf constr_decl] pretty prints [constr_decl] using explicit tree structure. *)
+val pp_constructor_declaration_mach : constructor_declaration Pretty_printer.t 
+
+(** [pp_constructor_declaration ppf constr_decl] pretty prints a [constr_decl] as a syntax representation. *)
+val pp_constructor_declaration : constructor_declaration Pretty_printer.t
+
+
+(** Extension constructor [type ('a1, ... 'an) t += ...] *)
+type extension_constructor = 
+  { pext_name : string
+      (** Extension type name [t]. *)
+  ; pext_params : string list
+      (** Extension type params: [('a1, ..., 'an)]. *)
+  ; pext_kind : extension_constructor_kind 
+  }
+[@@derving sexp_of]
+
+and extension_constructor_kind = 
+  | Pext_decl of constructor_declaration
+      (** [C of 'b1 .. 'bm. T constraint E] *)
+[@@derving sexp_of]
+
+(** [pp_extension_constructor_mach ppf ext_constr] pretty prints [ext_constr] using explicit tree structure. *)
+val pp_extension_constructor_mach : extension_constructor Pretty_printer.t 
+
+(** [pp_extension_constructor ppf ext_constr] pretty prints a [ext_constr] as a syntax representation. *)
+val pp_extension_constructor : extension_constructor Pretty_printer.t
+
+
+(** Exception [exception C <of T>] *)
+type type_exception = 
+  { ptyexn_constructor : extension_constructor }
+[@@derving sexp_of]
+
+type structure_item = 
+  | Pstr_value of rec_flag * value_binding list
+      (** Structure let binding: [let <rec> P1 = E1 and ... and Pn = En] *)
+  | Pstr_primitive of value_description
+      (** External primitive descriptions *)
+  | Pstr_type of rec_flag * type_declaration list
+      (** Type declarations [type t1 = ... and ... tn = ...] *)
+  | Pstr_exception of type_exception
+      (** Exception [exception C <of T>] *)
+[@@deriving sexp_of]
+
+val pp_structure_item_mach : structure_item Pretty_printer.t
+
+val pp_structure_item : structure_item Pretty_printer.t
+
+(** Structures -- a list of structure items *)
+type structure = structure_item list [@@deriving sexp_of]
+
+val pp_structure_mach : structure Pretty_printer.t
+
+val pp_structure : structure Pretty_printer.t

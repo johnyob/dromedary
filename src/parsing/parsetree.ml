@@ -13,6 +13,7 @@
 
 open Core
 open Ast_types
+open Util.Pretty_printer
 
 (** [Parsetree] is the abstract syntax tree produced by parsing
     Dromedary's source code. *)
@@ -22,10 +23,9 @@ type core_type =
   | Ptyp_arrow of core_type * core_type
   | Ptyp_tuple of core_type list
   | Ptyp_constr of core_type list * string
-  (* | Ptyp_alias of core_type * string *)
   | Ptyp_variant of row
   | Ptyp_row_cons of string * core_type * row
-  | Ptyp_row_empty 
+  | Ptyp_row_empty
 [@@deriving sexp_of]
 
 and row = core_type
@@ -66,18 +66,71 @@ type expression =
   | Pexp_variant of string * expression option
 [@@deriving sexp_of]
 
-(** [P = E] *)
 and value_binding =
   { pvb_forall_vars : string list
   ; pvb_pat : pattern
   ; pvb_expr : expression
   }
 
-(** [P -> E]. *)
 and case =
   { pc_lhs : pattern
   ; pc_rhs : expression
   }
+
+type value_description =
+  { pval_name : string
+  ; pval_type : core_scheme
+  ; pval_prim : string
+  }
+[@@deriving sexp_of]
+
+type type_declaration =
+  { ptype_name : string
+  ; ptype_params : string list
+  ; ptype_kind : type_decl_kind
+  }
+[@@deriving sexp_of]
+
+and type_decl_kind =
+  | Ptype_variant of constructor_declaration list
+  | Ptype_record of label_declaration list
+
+and label_declaration =
+  { plabel_name : string
+  ; plabel_betas : string list
+  ; plabel_arg : core_type
+  }
+
+and constructor_declaration =
+  { pconstructor_name : string
+  ; pconstructor_arg : constructor_argument option
+  ; pconstructor_constraints : (core_type * core_type) list
+  }
+
+and constructor_argument =
+  { pconstructor_arg_betas : string list
+  ; pconstructor_arg_type : core_type
+  }
+
+type extension_constructor =
+  { pext_name : string
+  ; pext_params : string list
+  ; pext_kind : extension_constructor_kind
+  }
+[@@deriving sexp_of]
+
+and extension_constructor_kind = Pext_decl of constructor_declaration
+
+type structure_item =
+  | Pstr_value of rec_flag * value_binding list
+  | Pstr_primitive of value_description
+  | Pstr_type of rec_flag * type_declaration list
+  | Pstr_exception of type_exception
+[@@deriving sexp_of]
+
+and type_exception = { ptyexn_constructor : extension_constructor }
+
+type structure = structure_item list [@@deriving sexp_of]
 
 (* "Machine format" pretty prints display terms using an explicit tree structure,
    using indentations to mark new structures. 
@@ -126,10 +179,6 @@ let rec pp_core_type_mach ~indent ppf core_type =
     print "Constructor";
     Format.fprintf ppf "%sConstructor: %s@." indent constr;
     List.iter ~f:(pp_core_type_mach ~indent ppf) ts
-  (* | Ptyp_alias (t, x) ->
-    print "Alias";
-    Format.fprintf ppf "%sVariable: %s@." indent x;
-    pp_core_type_mach ~indent ppf t *)
   | Ptyp_variant row ->
     print "Variant";
     pp_row_mach ~indent ppf row
@@ -138,8 +187,8 @@ let rec pp_core_type_mach ~indent ppf core_type =
     Format.fprintf ppf "%sTag: %s@." indent tag;
     pp_core_type_mach ~indent ppf t;
     pp_row_mach ~indent ppf row
-  | Ptyp_row_empty ->
-    print_row "Empty"
+  | Ptyp_row_empty -> print_row "Empty"
+
 
 and pp_row_mach ~indent ppf row = pp_core_type_mach ~indent ppf row
 
@@ -277,6 +326,7 @@ let rec pp_expression_mach ~indent ppf exp =
     | None -> ()
     | Some exp -> pp_expression_mach ~indent ppf exp)
 
+
 and pp_value_bindings_mach ~indent ppf value_bindings =
   Format.fprintf ppf "%sValue bindings:@." indent;
   let indent = indent_space ^ indent in
@@ -303,6 +353,135 @@ and pp_case_mach ~indent ppf case =
   pp_expression_mach ~indent ppf case.pc_rhs
 
 
+let pp_value_description_mach ~indent ppf value_desc =
+  Format.fprintf ppf "%sValue description:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf ppf "%sName: %s@." indent value_desc.pval_name;
+  pp_core_scheme_mach ~indent ppf value_desc.pval_type;
+  Format.fprintf ppf "%sPrimitive name: %s@." indent value_desc.pval_prim
+
+
+let pp_constraint_mach ~indent ppf (lhs, rhs) =
+  Format.fprintf ppf "%sConstraint:@." indent;
+  let indent = indent_space ^ indent in
+  pp_core_type_mach ~indent ppf lhs;
+  pp_core_type_mach ~indent ppf rhs
+
+
+let pp_constructor_argument_mach ~indent ppf constr_arg =
+  Format.fprintf ppf "%sConstructor argument:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf
+    ppf
+    "%sConstructor existentials: %s@."
+    indent
+    (String.concat ~sep:" " constr_arg.pconstructor_arg_betas);
+  pp_core_type_mach ~indent ppf constr_arg.pconstructor_arg_type
+
+
+let pp_constructor_declaration_mach ~indent ppf constr_decl =
+  Format.fprintf ppf "%sConstructor declaration:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf
+    ppf
+    "%sConstructor name: %s@."
+    indent
+    constr_decl.pconstructor_name;
+  (match constr_decl.pconstructor_arg with
+  | None -> ()
+  | Some constr_arg -> pp_constructor_argument_mach ~indent ppf constr_arg);
+  List.iter
+    ~f:(pp_constraint_mach ~indent ppf)
+    constr_decl.pconstructor_constraints
+
+
+let pp_label_declaration_mach ~indent ppf label_decl =
+  Format.fprintf ppf "%sLabel declaration:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf ppf "%sLabel name: %s@." indent label_decl.plabel_name;
+  Format.fprintf
+    ppf
+    "%sLabel polymorphic parameters: %s@."
+    indent
+    (String.concat ~sep:" " label_decl.plabel_betas);
+  pp_core_type_mach ~indent ppf label_decl.plabel_arg
+
+
+let pp_type_decl_kind_mach ~indent ppf type_decl_kind =
+  let print = Format.fprintf ppf "%sType declaration kind: %s@." indent in
+  let indent = indent_space ^ indent in
+  match type_decl_kind with
+  | Ptype_variant constr_decls ->
+    print "Variant";
+    List.iter constr_decls ~f:(pp_constructor_declaration_mach ~indent ppf)
+  | Ptype_record label_decls ->
+    print "Record";
+    List.iter label_decls ~f:(pp_label_declaration_mach ~indent ppf)
+
+
+let pp_type_declaration_mach ~indent ppf type_decl =
+  Format.fprintf ppf "%sType declaration:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf ppf "%sType name: %s@." indent type_decl.ptype_name;
+  Format.fprintf
+    ppf
+    "%sType parameters: %s@."
+    indent
+    (String.concat ~sep:" " type_decl.ptype_params);
+  pp_type_decl_kind_mach ~indent ppf type_decl.ptype_kind
+
+
+let pp_extension_constructor_kind_mach ~indent ppf ext_constr_kind =
+  let print = Format.fprintf ppf "%sExtension constructor kind: %s@." indent in
+  let indent = indent_space ^ indent in
+  match ext_constr_kind with
+  | Pext_decl constr_decl ->
+    print "Declaration";
+    pp_constructor_declaration_mach ~indent ppf constr_decl
+
+
+let pp_extension_constructor_mach ~indent ppf ext_constr =
+  Format.fprintf ppf "%sExtension constructor:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf ppf "%sExtension name: %s@." indent ext_constr.pext_name;
+  Format.fprintf
+    ppf
+    "%sExtension parameters: %s@."
+    indent
+    (String.concat ~sep:" " ext_constr.pext_params);
+  pp_extension_constructor_kind_mach ~indent ppf ext_constr.pext_kind
+
+
+let pp_type_exception_mach ~indent ppf type_exn =
+  Format.fprintf ppf "%sType exception:@." indent;
+  let indent = indent_space ^ indent in
+  pp_extension_constructor_mach ~indent ppf type_exn.ptyexn_constructor
+
+
+let pp_structure_item_mach ~indent ppf str_item =
+  let print = Format.fprintf ppf "%sStructure item: %s@." indent in
+  let indent = indent_space ^ indent in
+  match str_item with
+  | Pstr_value (rec_flag, value_bindings) ->
+    print ("Let: " ^ string_of_rec_flag rec_flag);
+    pp_value_bindings_mach ~indent ppf value_bindings
+  | Pstr_primitive value_desc ->
+    print "Primitive";
+    pp_value_description_mach ~indent ppf value_desc
+  | Pstr_type (rec_flag, type_decls) ->
+    print ("Type: " ^ string_of_rec_flag rec_flag);
+    List.iter type_decls ~f:(pp_type_declaration_mach ~indent ppf)
+  | Pstr_exception type_exception ->
+    print "Exception";
+    pp_type_exception_mach ~indent ppf type_exception
+
+
+let pp_structure_mach ~indent ppf str =
+  Format.fprintf ppf "%sStructure:@." indent;
+  let indent = indent_space ^ indent in
+  List.iter str ~f:(pp_structure_item_mach ~indent ppf)
+
+
 let to_pp_mach ~name ~pp ppf t =
   Format.fprintf ppf "%s:@." name;
   let indent = "└──" in
@@ -315,10 +494,36 @@ let pp_pattern_mach = to_pp_mach ~name:"Pattern" ~pp:pp_pattern_mach
 let pp_expression_mach = to_pp_mach ~name:"Expression" ~pp:pp_expression_mach
 
 let pp_value_binding_mach =
-  to_pp_mach ~name:"Balue binding" ~pp:pp_value_binding_mach
+  to_pp_mach ~name:"Value binding" ~pp:pp_value_binding_mach
 
 
 let pp_case_mach = to_pp_mach ~name:"Case" ~pp:pp_case_mach
+
+let pp_value_description_mach =
+  to_pp_mach ~name:"Value description" ~pp:pp_value_description_mach
+
+
+let pp_type_declaration_mach =
+  to_pp_mach ~name:"Type declaration" ~pp:pp_type_declaration_mach
+
+
+let pp_label_declaration_mach =
+  to_pp_mach ~name:"Label declaration" ~pp:pp_label_declaration_mach
+
+
+let pp_constructor_declaration_mach =
+  to_pp_mach ~name:"Constructor declaration" ~pp:pp_constructor_declaration_mach
+
+
+let pp_extension_constructor_mach =
+  to_pp_mach ~name:"Extension constructor" ~pp:pp_extension_constructor_mach
+
+
+let pp_structure_item_mach =
+  to_pp_mach ~name:"Structure item" ~pp:pp_structure_item_mach
+
+
+let pp_structure_mach = to_pp_mach ~name:"Structure" ~pp:pp_structure_mach
 
 (* "Human format" (or standard) pretty printer display the terms using their 
    syntactic representation. This is often used in error reporting, etc.
@@ -334,50 +539,7 @@ let pp_case_mach = to_pp_mach ~name:"Case" ~pp:pp_case_mach
    ]}
 *)
 
-type separator = (unit, Format.formatter, unit) format
-
-let none : separator = ""
-
-let paren ?(first = none) ?(last = none) ~parens ~pp ppf t =
-  if parens
-  then (
-    Format.fprintf ppf "(";
-    Format.fprintf ppf first;
-    pp ppf t;
-    Format.fprintf ppf last;
-    Format.fprintf ppf ")")
-  else pp ppf t
-
-
-let list ?(sep = ("@ " : separator)) ?(first = none) ?(last = none) ~pp ppf ts =
-  match ts with
-  | [] -> ()
-  | [ t ] -> pp ppf t
-  | ts ->
-    let rec loop ppf ts =
-      match ts with
-      | [] -> assert false
-      | [ t ] -> pp ppf t
-      | t :: ts ->
-        pp ppf t;
-        Format.fprintf ppf sep;
-        loop ppf ts
-    in
-    Format.fprintf ppf first;
-    loop ppf ts;
-    Format.fprintf ppf last
-
-
-let option ?(first = none) ?(last = none) ~pp ppf opt =
-  match opt with
-  | None -> ()
-  | Some t ->
-    Format.fprintf ppf first;
-    pp ppf t;
-    Format.fprintf ppf last
-
-
-let pp_core_type ppf core_type =
+let rec pp_core_type ppf core_type =
   let rec loop ?(parens = false) ppf core_type =
     match core_type with
     | Ptyp_var x -> Format.fprintf ppf "%s" x
@@ -391,32 +553,41 @@ let pp_core_type ppf core_type =
           (loop ~parens:false)
           t2
       in
-      paren ~parens ~pp ppf (t1, t2)
+      paren ~parens pp ppf (t1, t2)
     | Ptyp_tuple ts ->
-      paren ~parens ~pp:(list ~sep:"@;*@;" ~pp:(loop ~parens:true)) ppf ts
+      paren ~parens (list ~sep:"@;*@;" (loop ~parens:true)) ppf ts
     | Ptyp_constr (ts, constr) ->
       Format.fprintf
         ppf
         "%a@;%s"
-        (list ~first:"(" ~last:")" ~sep:",@;" ~pp:(loop ~parens:false))
+        (list ~first:"(" ~last:")" ~sep:",@;" (loop ~parens:false))
         ts
         constr
-    | _ -> raise_s [%message "TODO: pp_core_type"]
+    | Ptyp_variant row -> Format.fprintf ppf "@[[@;%a@;]@]" pp_row row
+    | row -> pp_row ppf row
   in
   loop ppf core_type
+
+
+and pp_row ppf row =
+  match row with
+  | Ptyp_row_cons (tag, t, Ptyp_row_empty) ->
+    Format.fprintf ppf "%s@;:@;%a" tag pp_core_type t
+  | Ptyp_row_cons (tag, t, row) ->
+    Format.fprintf ppf "%s@;:@;%a@;|@;%a" tag pp_core_type t pp_row row
+  | Ptyp_row_empty -> Format.fprintf ppf "@;"
+  | core_type -> pp_core_type ppf core_type
 
 
 let pp_core_scheme ppf (variables, core_type) =
   Format.fprintf
     ppf
     "@[%a@;.@;%a@]"
-    (fun ppf -> list ~sep:",@;" ~pp:Format.pp_print_string ppf)
+    (fun ppf -> list ~sep:",@;" Format.pp_print_string ppf)
     variables
     pp_core_type
     core_type
 
-
-(* TODO: Improve bracketing! *)
 
 let rec pp_pattern ppf pattern =
   match pattern with
@@ -425,30 +596,24 @@ let rec pp_pattern ppf pattern =
   | Ppat_alias (pat, x) -> Format.fprintf ppf "@[%a@;as@;%s@]" pp_pattern pat x
   | Ppat_const const -> Format.fprintf ppf "%s" (string_of_constant const)
   | Ppat_tuple ts ->
-    Format.fprintf
-      ppf
-      "@[(%a)@]"
-      (fun ppf -> list ~sep:",@;" ~pp:pp_pattern ppf)
-      ts
+    Format.fprintf ppf "@[(%a)@]" (fun ppf -> list ~sep:",@;" pp_pattern ppf) ts
   | Ppat_construct (constr, pat) ->
     Format.fprintf
       ppf
       "@[%s%a@]"
       constr
-      (fun ppf -> option ~first:"@;" ~pp:pp_pattern ppf)
+      (fun ppf -> option ~first:"@;" pp_pattern ppf)
       Option.(pat >>| snd)
   | Ppat_constraint (pat, core_type) ->
     Format.fprintf ppf "@[(%a@;:@;%a)@]" pp_pattern pat pp_core_type core_type
-  | _ -> raise_s [%message "TODO: pp_pattern"]
+  | Ppat_variant (tag, pat) ->
+    Format.fprintf
+      ppf
+      "@[`%s%a@]"
+      tag
+      (fun ppf -> option ~first:"@;" pp_pattern ppf)
+      pat
 
-
-(* and pp_quantified_pattern ppf (vars, pat) =
-  Format.fprintf
-    ppf
-    "@[%s@;%a@]"
-    (String.concat ~sep:"," vars)
-    pp_pattern
-    pat *)
 
 let pp_let_bindings ?(flag = "") ~pp ppf bindings =
   match bindings with
@@ -461,7 +626,7 @@ let pp_let_bindings ?(flag = "") ~pp ppf bindings =
       flag
       pp
       b
-      (fun ppf -> list ~sep:"@,and" ~pp ppf)
+      (fun ppf -> list ~sep:"@,and" pp ppf)
       bs
 
 
@@ -491,7 +656,7 @@ let rec pp_expression ppf exp =
     Format.fprintf
       ppf
       "@[forall@;%a->@;%a@]"
-      (fun ppf -> list ~sep:",@;" ~pp:Format.pp_print_string ppf)
+      (fun ppf -> list ~sep:",@;" Format.pp_print_string ppf)
       variables
       pp_expression
       exp
@@ -499,7 +664,7 @@ let rec pp_expression ppf exp =
     Format.fprintf
       ppf
       "@[exists@;%a->@;%a@]"
-      (fun ppf -> list ~sep:",@;" ~pp:Format.pp_print_string ppf)
+      (fun ppf -> list ~sep:",@;" Format.pp_print_string ppf)
       variables
       pp_expression
       exp
@@ -508,7 +673,7 @@ let rec pp_expression ppf exp =
       ppf
       "@[%s%a@]"
       constr
-      (fun ppf -> option ~first:"@;" ~pp:pp_expression ppf)
+      (fun ppf -> option ~first:"@;" pp_expression ppf)
       exp
   | Pexp_constraint (exp, core_type) ->
     Format.fprintf
@@ -522,18 +687,14 @@ let rec pp_expression ppf exp =
     let pp ppf (label, exp) =
       Format.fprintf ppf "@[%s@;=@;%a@]" label pp_expression exp
     in
-    Format.fprintf
-      ppf
-      "@[{%a}@]"
-      (fun ppf -> list ~sep:",@;" ~pp ppf)
-      label_exps
+    Format.fprintf ppf "@[{%a}@]" (fun ppf -> list ~sep:",@;" pp ppf) label_exps
   | Pexp_field (exp, label) ->
     Format.fprintf ppf "@[%a.%s@]" pp_expression exp label
   | Pexp_tuple exps ->
     Format.fprintf
       ppf
       "@[(%a)@]"
-      (fun ppf -> list ~sep:",@;" ~pp:pp_expression ppf)
+      (fun ppf -> list ~sep:",@;" pp_expression ppf)
       exps
   | Pexp_match (exp, cases) ->
     Format.fprintf
@@ -541,7 +702,7 @@ let rec pp_expression ppf exp =
       "@[<hv>@[@[match@ %a@]@ with@]@ (%a)@]"
       pp_expression
       exp
-      (fun ppf -> list ~sep:"@;|@;" ~pp:pp_case ppf)
+      (fun ppf -> list ~sep:"@;|@;" pp_case ppf)
       cases
   | Pexp_ifthenelse (exp1, exp2, exp3) ->
     Format.fprintf
@@ -559,7 +720,7 @@ let rec pp_expression ppf exp =
       "@[<hv>@[@[try@ %a@]@ with@]@ (%a)@]"
       pp_expression
       exp
-      (fun ppf -> list ~sep:"@;|@;" ~pp:pp_case ppf)
+      (fun ppf -> list ~sep:"@;|@;" pp_case ppf)
       cases
   | Pexp_sequence _ ->
     let rec loop exp =
@@ -570,7 +731,7 @@ let rec pp_expression ppf exp =
     Format.fprintf
       ppf
       "@[<hv>%a@]"
-      (fun ppf -> list ~sep:";@;" ~pp:pp_expression ppf)
+      (fun ppf -> list ~sep:";@;" pp_expression ppf)
       (loop exp)
   | Pexp_while (exp1, exp2) ->
     Format.fprintf
@@ -593,8 +754,13 @@ let rec pp_expression ppf exp =
       exp2
       pp_expression
       exp3
-  | _ -> raise_s [%message "TODO: pp_expression"]
-
+  | Pexp_variant (tag, exp) ->
+    Format.fprintf
+      ppf
+      "@[`%s%a@]"
+      tag
+      (fun ppf -> option ~first:"@;" pp_expression ppf)
+      exp
 
 
 and pp_expression_function ppf exp =
@@ -620,3 +786,156 @@ and pp_case ppf case =
     case.pc_lhs
     pp_expression
     case.pc_rhs
+
+
+let pp_constructor_argument ppf constr_arg =
+  Format.fprintf
+    ppf
+    "@[of@;%a%a@]"
+    (fun ppf -> list ~sep:"@;" ~last:".@;" Format.pp_print_string ppf)
+    constr_arg.pconstructor_arg_betas
+    pp_core_type
+    constr_arg.pconstructor_arg_type
+
+
+let pp_constraints ppf constraints =
+  let pp_constraint ppf (t1, t2) =
+    Format.fprintf ppf "@[%a@;=@;%a@]" pp_core_type t1 pp_core_type t2
+  in
+  list ~first:"constraint@;" ~sep:"@;and@;" pp_constraint ppf constraints
+
+
+let pp_constructor_declaration ppf constr_decl =
+  Format.fprintf
+    ppf
+    "@[%s%a%a@]"
+    constr_decl.pconstructor_name
+    (fun ppf -> option ~first:"@;" pp_constructor_argument ppf)
+    constr_decl.pconstructor_arg
+    pp_constraints
+    constr_decl.pconstructor_constraints
+
+
+let pp_label_declaration ppf label_decl =
+  Format.fprintf
+    ppf
+    "@[%s@;:@;%a%a@]"
+    label_decl.plabel_name
+    (fun ppf -> list ~sep:"@;" ~last:".@;" Format.pp_print_string ppf)
+    label_decl.plabel_betas
+    pp_core_type
+    label_decl.plabel_arg
+
+
+let pp_type_decl_kind ppf type_decl_kind =
+  match type_decl_kind with
+  | Ptype_variant constr_decls ->
+    Format.fprintf
+      ppf
+      "@[<hv>%a@]"
+      (fun ppf -> list ~sep:"@;|@;" pp_constructor_declaration ppf)
+      constr_decls
+  | Ptype_record label_decls ->
+    Format.fprintf
+      ppf
+      "@[<hv>{@;%a@;}@]"
+      (fun ppf -> list ~sep:"@;;@;" pp_label_declaration ppf)
+      label_decls
+
+
+let pp_type_params ppf params =
+  match params with
+  | [] -> ()
+  | [ param ] -> Format.fprintf ppf "%s@;" param
+  | params ->
+    list ~sep:",@;" ~first:"(" ~last:")@;" Format.pp_print_string ppf params
+
+
+let pp_type_declaration ppf type_decl =
+  Format.fprintf
+    ppf
+    "@[<hv>@[type@;%a%s@]@;=@;%a@]"
+    pp_type_params
+    type_decl.ptype_params
+    type_decl.ptype_name
+    pp_type_decl_kind
+    type_decl.ptype_kind
+
+
+let pp_extension_constructor_kind ppf ext_constr_kind =
+  match ext_constr_kind with
+  | Pext_decl constr_decl -> pp_constructor_declaration ppf constr_decl
+
+
+let pp_extension_constructor ppf ext_constr =
+  Format.fprintf
+    ppf
+    "@[@[type@;%a%s@]@;+=@;%a@]"
+    pp_type_params
+    ext_constr.pext_params
+    ext_constr.pext_name
+    pp_extension_constructor_kind
+    ext_constr.pext_kind
+
+
+let pp_type_exception ppf { ptyexn_constructor = exn_constr } =
+  assert (String.(exn_constr.pext_name = "exn"));
+  assert (List.is_empty exn_constr.pext_params);
+  assert (
+    match exn_constr.pext_kind with
+    | Pext_decl constr_decl ->
+      List.is_empty constr_decl.pconstructor_constraints);
+  Format.fprintf
+    ppf
+    "@[exception@;%a]"
+    pp_extension_constructor_kind
+    exn_constr.pext_kind
+
+
+let pp_type_declarations ~pp ppf bindings =
+  match bindings with
+  | [] -> ()
+  | [ b ] -> Format.fprintf ppf "@[type %a@]" pp b
+  | b :: bs ->
+    Format.fprintf
+      ppf
+      "@[<v>type %a@,%a@]"
+      pp
+      b
+      (fun ppf -> list ~sep:"@,and" pp ppf)
+      bs
+
+
+let pp_structure_item ppf str_item =
+  match str_item with
+  | Pstr_value (rec_flag, value_bindings) ->
+    let flag =
+      match rec_flag with
+      | Nonrecursive -> ""
+      | Recursive -> "rec "
+    in
+    pp_let_bindings ~flag ~pp:pp_value_binding ppf value_bindings
+  | Pstr_primitive value_desc ->
+    Format.fprintf
+      ppf
+      "@[external@;%s@;:@;%a@;=@;%s@]"
+      value_desc.pval_name
+      pp_core_scheme
+      value_desc.pval_type
+      value_desc.pval_prim
+  | Pstr_type (_, type_decls) ->
+    let pp_type_declaration ppf type_decl =
+      Format.fprintf
+        ppf
+        "@[<hv>@[%a%s@]@;=@;%a@]"
+        pp_type_params
+        type_decl.ptype_params
+        type_decl.ptype_name
+        pp_type_decl_kind
+        type_decl.ptype_kind
+    in
+    pp_type_declarations ~pp:pp_type_declaration ppf type_decls
+  | Pstr_exception exn -> pp_type_exception ppf exn
+
+let pp_structure ppf str = 
+  list ~sep:"@." pp_structure_item ppf str
