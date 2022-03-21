@@ -8,6 +8,9 @@
 *.cmxs
 *.cmxa
 
+# vscode local files
+.vscode/
+
 # ocamlbuild working directory
 _build/
 
