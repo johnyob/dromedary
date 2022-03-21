@@ -1,6 +1,56 @@
 open! Import
 open Util
 
+let%expect_test "variable : alphas" =
+  let exp = {|
+      hello_world_var
+    |} in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Variable: hello_world_var |}]
+
+let%expect_test "variable : alphanum" =
+  let exp = {|
+      hello_world_var_123
+    |} in
+  print_expression_parsetree exp;
+  [%expect
+    {|
+    Expression:
+    └──Expression: Variable: hello_world_var_123 |}]
+
+let%expect_test "variable : prime" =
+  let exp = {|
+      x'
+    |} in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Variable: x' |}]
+
+let%expect_test "constructor : alpha" =
+  let exp = {|
+      Nil
+    |} in
+  print_expression_parsetree exp;
+  [%expect
+    {|
+    Expression:
+    └──Expression: Construct
+       └──Constructor: Nil |}]
+
+let%expect_test "constructor : all" =
+  let exp = {|
+      True_false_11'
+    |} in
+  print_expression_parsetree exp;
+  [%expect
+    {|
+    Expression:
+    └──Expression: Construct
+       └──Constructor: True_false_11' |}]
+
 let%expect_test "constant : unit" =
   let exp = {| () |} in
   print_expression_parsetree exp;
@@ -15,12 +65,84 @@ let%expect_test "constant : int" =
     Expression:
     └──Expression: Constant: 5000 |}]
 
+let%expect_test "constant : int (prefixed)" =
+  let exp = {|
+      -10
+    |} in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Constant: -10 |}]
+
 let%expect_test "constant : bool" =
   let exp = {| false |} in
   print_expression_parsetree exp;
   [%expect {|
     Expression:
     └──Expression: Constant: false |}]
+
+let%expect_test "constant : float" =
+  let exp = {|
+      1234.5678
+    |} in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Constant: 1234.567800 |}]
+
+let%expect_test "constant : float (prefixed)" =
+  let exp = {|
+      -1234.3
+    |} in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Constant: -1234.300000 |}]
+
+let%expect_test "constant : float (no int part)" =
+  let exp = {|
+      .5
+    |} in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Constant: 0.500000 |}]
+
+let%expect_test "constant : float (no frac part)" =
+  let exp = {|
+      3.
+    |} in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Constant: 3.000000 |}]
+
+let%expect_test "constant : string (escaping)" =
+  let exp = {|
+      "\tHello world!\n"
+    |} in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Constant: 	Hello world! |}]
+
+let%expect_test "constant : char " =
+  let exp = {|
+      'h'
+    |} in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Constant: h |}]
+
+let%expect_test "constant : char (escaping)" =
+  let exp = {|
+      '\t'
+    |} in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Constant: |}]
 
 let%expect_test "primitive : binary operators" =
   let exp = {| (5 + 4 - 8 * 2) / 2 = 0 |} in
@@ -70,7 +192,7 @@ let%expect_test "primitive : references" =
              └──Expression: Constant: 40
           └──Expression: Constant: 10 |}]
 
-let%expect_test "annotation : type var" =
+let%expect_test "core_type : type var" =
   let exp = {| (x : 'a) |} in
   print_expression_parsetree exp;
   [%expect
@@ -81,8 +203,8 @@ let%expect_test "annotation : type var" =
         └──Type: Variable
            └──Variable: a |}]
 
-let%expect_test "annotation : function" =
-  let exp = {| (fun x -> x : int -> int) |} in
+let%expect_test "core_type : function" =
+  let exp = {| (fun x -> x : (int -> int) -> int -> int) |} in
   print_expression_parsetree exp;
   [%expect
     {|
@@ -92,12 +214,18 @@ let%expect_test "annotation : function" =
            └──Pattern: Variable: x
            └──Expression: Variable: x
         └──Type: Arrow
-           └──Type: Constructor
-              └──Constructor: int
-           └──Type: Constructor
-              └──Constructor: int |}]
+           └──Type: Arrow
+              └──Type: Constructor
+                 └──Constructor: int
+              └──Type: Constructor
+                 └──Constructor: int
+           └──Type: Arrow
+              └──Type: Constructor
+                 └──Constructor: int
+              └──Type: Constructor
+                 └──Constructor: int |}]
 
-let%expect_test "annotation : tuple" =
+let%expect_test "core_type : tuple" =
   let exp = {| ((1,2,3) : int * int * int) |} in
   print_expression_parsetree exp;
   [%expect
@@ -116,7 +244,7 @@ let%expect_test "annotation : tuple" =
            └──Type: Constructor
               └──Constructor: int |}]
 
-let%expect_test "annotation : constr" =
+let%expect_test "core_type : constr" =
   let exp = {| (Cons ((1, x), Cons ((2, y), Nil)) : (int * 'a) list) |} in
   print_expression_parsetree exp;
   [%expect
@@ -144,6 +272,19 @@ let%expect_test "annotation : constr" =
                  └──Constructor: int
               └──Type: Variable
                  └──Variable: a |}]
+
+let%expect_test "if" =
+  let exp = {|
+      if true then 3 else 4
+    |} in
+  print_expression_parsetree exp;
+  [%expect
+    {|
+    Expression:
+    └──Expression: If
+       └──Expression: Constant: true
+       └──Expression: Constant: 3
+       └──Expression: Constant: 4 |}]
 
 let%expect_test "fun : identity" =
   let exp = {| fun x -> x |} in
@@ -212,7 +353,7 @@ let%expect_test "fun : map" =
                                      └──Expression: Variable: f
        └──Expression: Constant: () |}]
 
-let%expect_test "annotation : id" =
+let%expect_test "annotation : exists" =
   let exp =
     {| exists (type 'a 'b) -> 
         fun (x : 'a) -> (x : 'b)
@@ -234,7 +375,7 @@ let%expect_test "annotation : id" =
              └──Type: Variable
                 └──Variable: b |}]
 
-let%expect_test "annotation : id" =
+let%expect_test "annotation : forall" =
   let exp = {| forall (type 'a) -> fun (x : 'a) -> (x : 'a) |} in
   print_expression_parsetree exp;
   [%expect
@@ -311,7 +452,8 @@ let%expect_test "record" =
 let%expect_test "field" =
   let exp = {| let name_of_student = fun t -> t.name in () |} in
   print_expression_parsetree exp;
-  [%expect {|
+  [%expect
+    {|
     Expression:
     └──Expression: Let: Nonrecursive
        └──Value bindings:
@@ -617,3 +759,99 @@ let%expect_test "fact : for" =
                          └──Expression: Primitive: (!)
                          └──Expression: Variable: result
        └──Expression: Constant: () |}]
+
+let%expect_test "pattern : constant" =
+  let exp = {|
+      fun 1 -> ()
+    |} in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Function
+       └──Pattern: Constant: 1
+       └──Expression: Constant: () |}]
+
+let%expect_test "pattern : wildcard" =
+  let exp = 
+    {|
+      fun _ -> ()
+    |}
+  in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Function
+       └──Pattern: Any
+       └──Expression: Constant: () |}]
+
+let%expect_test "pattern : constructor" =
+  let exp = 
+    {|
+      fun (Cons (x, t)) -> x
+    |}
+  in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Function
+       └──Pattern: Construct
+          └──Constructor: Cons
+          └──Pattern: Tuple
+             └──Pattern: Variable: x
+             └──Pattern: Variable: t
+       └──Expression: Variable: x |}]
+
+let%expect_test "pattern : tuple" =
+  let exp = 
+    {|
+      fun (x, _, _, _) -> x
+    |}
+  in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Function
+       └──Pattern: Tuple
+          └──Pattern: Variable: x
+          └──Pattern: Any
+          └──Pattern: Any
+          └──Pattern: Any
+       └──Expression: Variable: x |}]
+
+let%expect_test "pattern : annotation" =
+  let exp = 
+    {|
+      fun (x : 'a) -> x
+    |}
+  in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Function
+       └──Pattern: Constraint
+          └──Pattern: Variable: x
+          └──Type: Variable
+             └──Variable: a
+       └──Expression: Variable: x |}]
+
+
+let%expect_test "pattern : as" =
+  let exp = 
+    {|
+      fun ((Cons (x as y, _)) as t) -> y
+    |}
+  in
+  print_expression_parsetree exp;
+  [%expect {|
+    Expression:
+    └──Expression: Function
+       └──Pattern: Alias
+          └──Pattern: Construct
+             └──Constructor: Cons
+             └──Pattern: Tuple
+                └──Pattern: Alias
+                   └──Pattern: Variable: x
+                   └──As: y
+                └──Pattern: Any
+          └──As: t
+       └──Expression: Variable: y |}]

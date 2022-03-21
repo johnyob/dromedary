@@ -169,7 +169,7 @@ and read_comment =
 and read_string buf = 
   parse
   | '"' { STRING (Buffer.contents buf) }
-  | escape_char (escape_char as c)          
+  | escape_char (escaped_char as c)          
       { Buffer.add_char buf (char_unescape c); 
         read_string buf lexbuf }
   | [^ '"' '\\']+                             
