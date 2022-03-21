@@ -379,6 +379,8 @@ let%expect_test "type definition - poly records" =
       let map_elem = fun (Elem (key, value)) mapper ->
         Elem (key, mapper.f key value)
       ;;
+
+      type t = elem list;;
     |}
   in
   print_structure_parsetree str;
@@ -425,7 +427,16 @@ let%expect_test "type definition - poly records" =
                                      └──Expression: Variable: mapper
                                      └──Label: f
                                   └──Expression: Variable: key
-                               └──Expression: Variable: value |}]
+                               └──Expression: Variable: value
+       └──Structure item: Type
+          └──Type declaration:
+             └──Type name: t
+             └──Type parameters:
+             └──Type declaration kind: Alias
+                └──Type: Constructor
+                   └──Constructor: list
+                   └──Type: Constructor
+                      └──Constructor: elem |}]
 
 let%expect_test "top-level definition -- polymorphic recursion" =
   let str = 
@@ -921,3 +932,62 @@ let%expect_test "top level external definitions" =
                 └──Expression: Application
                    └──Expression: Variable: print_endline
                    └──Expression: Constant: Hello world! |}]
+
+let%expect_test "type definition - abstract types" =
+  let str = 
+    {|
+      type zero;;
+      type 'n succ;;
+
+      type ('a, 'n) list = 
+        | Nil constraint 'n = zero
+        | Cons of 'm. 'a * ('a, 'm) list constraint 'n = 'm succ
+      ;;
+    |}
+  in
+  print_structure_parsetree str;
+  [%expect {|
+    Structure:
+    └──Structure:
+       └──Structure item: Type
+          └──Type declaration:
+             └──Type name: zero
+             └──Type parameters:
+             └──Type declaration kind: Abstract
+       └──Structure item: Type
+          └──Type declaration:
+             └──Type name: succ
+             └──Type parameters: n
+             └──Type declaration kind: Abstract
+       └──Structure item: Type
+          └──Type declaration:
+             └──Type name: list
+             └──Type parameters: a n
+             └──Type declaration kind: Variant
+                └──Constructor declaration:
+                   └──Constructor name: Nil
+                   └──Constraint:
+                      └──Type: Variable
+                         └──Variable: n
+                      └──Type: Constructor
+                         └──Constructor: zero
+                └──Constructor declaration:
+                   └──Constructor name: Cons
+                   └──Constructor argument:
+                      └──Constructor existentials: m
+                      └──Type: Tuple
+                         └──Type: Variable
+                            └──Variable: a
+                         └──Type: Constructor
+                            └──Constructor: list
+                            └──Type: Variable
+                               └──Variable: a
+                            └──Type: Variable
+                               └──Variable: m
+                   └──Constraint:
+                      └──Type: Variable
+                         └──Variable: n
+                      └──Type: Constructor
+                         └──Constructor: succ
+                         └──Type: Variable
+                            └──Variable: m |}]
