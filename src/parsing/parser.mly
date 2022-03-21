@@ -509,16 +509,20 @@ type_declarations:
       { decls }
 
 %inline type_declaration:
-  | params = type_param_list; id = IDENT; EQUAL; kind = type_decl_kind
+  | params = type_param_list; id = IDENT; kind = type_decl_kind
       { { ptype_name = id; ptype_params = params; ptype_kind = kind } }
 
 type_decl_kind:
-  | constr_decls = preceded_or_separated_nonempty_list(BAR, constructor_declaration)
+  | /* empty */
+      { Ptype_abstract }
+  | EQUAL; constr_decls = preceded_or_separated_nonempty_list(BAR, constructor_declaration)
       { Ptype_variant constr_decls }
-  | LEFT_BRACE
+  | EQUAL; LEFT_BRACE
     ; label_decls = separated_nonempty_list(SEMI_COLON, label_declaration)
     ; RIGHT_BRACE
       { Ptype_record label_decls }
+  | EQUAL; type_ = core_type
+      { Ptype_alias type_ }
 
 %inline label_declaration:
   | label = IDENT

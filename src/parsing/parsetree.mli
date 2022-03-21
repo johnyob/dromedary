@@ -190,6 +190,8 @@ type type_declaration =
 and type_decl_kind = 
   | Ptype_variant of constructor_declaration list
   | Ptype_record of label_declaration list
+  | Ptype_abstract
+  | Ptype_alias of core_type
 [@@deriving sexp_of]
 
 (** Label declaration: [l : 'b1 .. 'bm. T] *)

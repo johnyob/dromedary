@@ -94,6 +94,8 @@ type type_declaration =
 and type_decl_kind =
   | Ptype_variant of constructor_declaration list
   | Ptype_record of label_declaration list
+  | Ptype_abstract
+  | Ptype_alias of core_type
 
 and label_declaration =
   { plabel_name : string
@@ -417,6 +419,10 @@ let pp_type_decl_kind_mach ~indent ppf type_decl_kind =
   | Ptype_record label_decls ->
     print "Record";
     List.iter label_decls ~f:(pp_label_declaration_mach ~indent ppf)
+  | Ptype_abstract -> print "Abstract"
+  | Ptype_alias core_type ->
+    print "Alias";
+    pp_core_type_mach ~indent ppf core_type
 
 
 let pp_type_declaration_mach ~indent ppf type_decl =
@@ -832,15 +838,17 @@ let pp_type_decl_kind ppf type_decl_kind =
   | Ptype_variant constr_decls ->
     Format.fprintf
       ppf
-      "@[<hv>%a@]"
+      "@;=@;@[<hv>%a@]"
       (fun ppf -> list ~sep:"@;|@;" pp_constructor_declaration ppf)
       constr_decls
   | Ptype_record label_decls ->
     Format.fprintf
       ppf
-      "@[<hv>{@;%a@;}@]"
+      "@;=@;@[<hv>{@;%a@;}@]"
       (fun ppf -> list ~sep:"@;;@;" pp_label_declaration ppf)
       label_decls
+  | Ptype_abstract -> ()
+  | Ptype_alias core_type -> Format.fprintf ppf "@;=@;%a" pp_core_type core_type
 
 
 let pp_type_params ppf params =
@@ -854,7 +862,7 @@ let pp_type_params ppf params =
 let pp_type_declaration ppf type_decl =
   Format.fprintf
     ppf
-    "@[<hv>@[type@;%a%s@]@;=@;%a@]"
+    "@[<hv>@[type@;%a%s@]%a@]"
     pp_type_params
     type_decl.ptype_params
     type_decl.ptype_name
