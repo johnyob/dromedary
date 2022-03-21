@@ -31,6 +31,8 @@ and row = type_expr
 
 and type_constr = type_expr list * string [@@deriving sexp_of]
 
+and scheme = string list * type_expr [@@deriving sexp_of]
+
 module Algebra = struct
   open Constraints.Module_types
 
@@ -168,6 +170,15 @@ type type_declaration =
 and type_decl_kind =
   | Type_record of label_declaration list
   | Type_variant of constructor_declaration list
+  | Type_abstract
+  | Type_alias of alias
+[@@deriving sexp_of]
+
+and alias = 
+  { alias_alphas : string list
+  ; alias_name : string
+  ; alias_type : type_expr
+  }
 [@@deriving sexp_of]
 
 and label_declaration =

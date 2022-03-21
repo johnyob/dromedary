@@ -81,6 +81,35 @@ and case =
   }
 [@@deriving sexp_of]
 
+type value_description =
+  { tval_name : string
+  ; tval_type : scheme
+  ; tval_prim : string
+  }
+[@@deriving sexp_of]
+
+type extension_constructor =
+  { text_name : string
+  ; text_params : string list
+  ; text_kind : extension_constructor_kind
+  }
+[@@derving sexp_of]
+
+and extension_constructor_kind = Text_decl of constructor_declaration
+[@@derving sexp_of]
+
+and type_exception = { tyexn_constructor : extension_constructor }
+[@@derving sexp_of]
+
+and structure_item =
+  | Tstr_value of rec_flag * value_binding list
+  | Tstr_primitive of value_description
+  | Tstr_type of type_declaration list
+  | Tstr_exception of type_exception
+[@@deriving sexp_of]
+
+type structure = structure_item list [@@deriving sexp_of]
+
 let indent_space = "   "
 
 let rec pp_pattern_mach ~indent ppf pat =
@@ -116,7 +145,7 @@ and pp_pattern_desc_mach ~indent ppf pat_desc =
     (match pat with
     | None -> ()
     | Some pat -> pp_pattern_mach ~indent ppf pat)
-  
+
 
 let pp_pattern _ppf = assert false
 
@@ -210,6 +239,7 @@ and pp_expression_desc_mach ~indent ppf exp_desc =
     (match exp with
     | None -> ()
     | Some exp -> pp_expression_mach ~indent ppf exp)
+
 
 and pp_value_bindings_mach ~indent ppf value_bindings =
   Format.fprintf ppf "%sValue bindings:@." indent;
