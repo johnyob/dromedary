@@ -8,4 +8,6 @@ type error =
   | `Parser_error
   ]
 
-val parse_string : string -> (Parsetree.expression, error) Result.t 
+val parse_expression_from_string : string -> (Parsetree.expression, error) Result.t 
+
+val parse_structure_from_string : string -> (Parsetree.structure, error) Result.t

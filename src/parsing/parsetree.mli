@@ -271,7 +271,7 @@ type structure_item =
       (** Structure let binding: [let <rec> P1 = E1 and ... and Pn = En] *)
   | Pstr_primitive of value_description
       (** External primitive descriptions *)
-  | Pstr_type of rec_flag * type_declaration list
+  | Pstr_type of type_declaration list
       (** Type declarations [type t1 = ... and ... tn = ...] *)
   | Pstr_exception of type_exception
       (** Exception [exception C <of T>] *)

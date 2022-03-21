@@ -12,10 +12,19 @@
 (*****************************************************************************)
 
 {
+open Base
 open Parser
 
 module Lexer_util = MenhirLib.LexerUtil 
 exception Lexer_error of string
+
+let char_unescape c = 
+  match c with
+  | 'n' -> '\n'
+  | 'r' -> '\r'
+  | 'b' -> '\b'
+  | 't' -> '\t'
+  | c -> c
 }
 
 let upper = ['A' - 'Z']
@@ -35,6 +44,12 @@ let int = sign digit+
 
 let frac = '.' digit+
 let float = sign (int? frac | int '.')
+
+let escape_char = '\\'
+let escaped_char = ['n' 't' '"' '\\' '\'' 'b' 'r']
+(* let decimal_code = ['0' - '9'] ['0' - '9'] ['0' - '9'] *)
+let ascii_char = [^ '\\' '\'']
+
 
 rule read = 
   parse
@@ -63,6 +78,10 @@ rule read =
   | "type"                        { TYPE }
   | "as"                          { AS }
   | "ref"                         { REF }
+  | "of"                          { OF }
+  | "external"                    { EXTERNAL }
+  | "exception"                   { EXCEPTION }
+  | "constraint"                  { CONSTRAINT }
 
   (* reserved operators *)
   | "->"                          { RIGHT_ARROW }
@@ -70,10 +89,12 @@ rule read =
   | "="                           { EQUAL }
   | "."                           { DOT }
   | ","                           { COMMA }
+  | ";;"                          { SEMI_SEMI_COLON }
   | ";"                           { SEMI_COLON }
   | "*"                           { STAR }
   | "_"                           { UNDERSCORE }
   | "\'"                          { QUOTE }
+  | "`"                           { BACKTICK }
   | "|"                           { BAR }
 
 
@@ -111,9 +132,13 @@ rule read =
   | "()"                          { UNIT }
 
   (* number literals *)
-  | int                           { INT (int_of_string (Lexing.lexeme lexbuf)) }
-  (* | float                         { FLOAT (float_of_string (Lexing.lexeme lexbuf)) } *)
+  | int                           { INT (Int.of_string (Lexing.lexeme lexbuf)) }
+  | float                         { FLOAT (Float.of_string (Lexing.lexeme lexbuf)) }
 
+  (* string / char literals *)
+  | "\""                          { read_string (Buffer.create 17) lexbuf }
+  | "\'"                          { read_char lexbuf }
+  
   | space+                        { read lexbuf }
   | newline                       { Lexer_util.newline lexbuf; read lexbuf }
 
@@ -134,3 +159,26 @@ and read_comment =
   | "*)"                          { read lexbuf }
   | eof                           { raise (Lexer_error "Unclosed comment") }
   | _                             { read_comment lexbuf }
+
+and read_char =
+  parse
+  | (ascii_char as c) "\'"                  
+      { CHAR c }
+  | escape_char (escaped_char as c) "\'"    
+      { CHAR (char_unescape c) }
+  | _                                       
+      { raise (Lexer_error "Illegal character") }
+
+and read_string buf = 
+  parse
+  | "\"" { STRING (Buffer.contents buf) }
+  | escape_char (escape_char as c)          
+      { Buffer.add_char buf (char_unescape c); 
+        read_string buf lexbuf }
+  | ascii_char+                             
+      { Buffer.add_string buf (Lexing.lexeme lexbuf); 
+        read_string buf lexbuf }
+  | _                                       
+      { raise (Lexer_error "Illegal character") }
+  | eof                                     
+      { raise (Lexer_error "String is not terminated") }

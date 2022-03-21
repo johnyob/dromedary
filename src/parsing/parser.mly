@@ -36,6 +36,11 @@
 %token EXISTS
 %token TYPE
 %token AS
+%token OF
+%token EXCEPTION
+%token EXTERNAL
+%token CONSTRAINT
+%token SEMI_SEMI_COLON
 
 // operators / special
 %token RIGHT_ARROW
@@ -47,6 +52,7 @@
 %token STAR
 %token UNDERSCORE
 %token QUOTE
+%token BACKTICK
 %token BAR
 
 // primitives
@@ -72,8 +78,10 @@
 // literals
 %token TRUE
 %token FALSE
+%token <char> CHAR
+%token <string> STRING
 %token <int> INT
-// %token <float> FLOAT
+%token <float> FLOAT
 %token UNIT
 
 // identifiers
@@ -128,11 +136,33 @@ let rec fun_ ~pats ~exp =
   | [] -> assert false
   | [ pat ] -> Pexp_fun (pat, exp)
   | pat :: pats -> Pexp_fun (pat, fun_ ~pats ~exp)
+
+let exn_decl ~con ~arg =
+  let arg =
+    Option.map
+      (fun arg ->
+      { pconstructor_arg_betas = []; pconstructor_arg_type = arg })
+      arg
+  in
+  let constr_decl =
+    { pconstructor_name = con
+    ; pconstructor_arg = arg
+    ; pconstructor_constraints = []
+    }
+  in
+  let ext_constr =
+    { pext_name = "exn"; pext_params = []; pext_kind = Pext_decl constr_decl }
+  in
+  { ptyexn_constructor = ext_constr }
+
 %}
 
 
-%start parse
-%type <expression> parse
+%start parse_structure parse_expression
+%type <structure> parse_structure
+%type <expression> parse_expression
+
+%type <structure_item> structure_item
 
 %type <rec_flag> rec_flag
 %type <constant> constant
@@ -190,7 +220,11 @@ separated_nontrivial_list(sep, X):
 
 // Parsing
 
-parse:
+parse_structure:
+  structure EOF { $1 }
+
+
+parse_expression:
   expression EOF { $1 }
 
 rec_flag:
@@ -199,8 +233,11 @@ rec_flag:
 
 constant:
   | int_ = INT      { Const_int int_ }
+  | float = FLOAT   { Const_float float }
   | TRUE            { Const_bool true }
   | FALSE           { Const_bool false }
+  | string = STRING { Const_string string }
+  | char = CHAR     { Const_char char }
   | UNIT            { Const_unit }
 
 %inline type_var:
@@ -240,6 +277,16 @@ atom_type:
     ; core_types = separated_nontrivial_list(COMMA, core_type)
     ; RIGHT_PAREN
       { core_types }
+
+%inline type_param_list:
+  | /* empty */   
+      { [] }
+  | type_var = type_var 
+      { [ type_var ] }
+  | LEFT_PAREN
+    ; type_vars = separated_nontrivial_list(COMMA, type_var)
+    ; RIGHT_PAREN
+      { type_vars }
 
 seq_expression:
   | expression %prec prec_below_SEMI     { $1 }
@@ -312,6 +359,7 @@ app_expression:
   | exp1 = app_expression; exp2 = atom_expression
     { match exp1 with
       | Pexp_construct (con_id, None) -> Pexp_construct (con_id, Some exp2)
+      | Pexp_variant (tag, None) -> Pexp_variant (tag, Some exp2)
       | _ -> Pexp_app (exp1, exp2)
     }
 
@@ -357,6 +405,8 @@ atom_expression:
       { Pexp_field (exp, label) }
   | con_id = CON_IDENT
       { Pexp_construct (con_id, None) }
+  | BACKTICK; tag = CON_IDENT
+      { Pexp_variant (tag, None) } 
   | LEFT_PAREN
     ; exps = separated_nontrivial_list(COMMA, seq_expression)
     ; RIGHT_PAREN
@@ -438,9 +488,92 @@ atom_pattern:
       { Ppat_constraint (pat, core_type) }
   | LEFT_PAREN
     ; pat = pattern
-    RIGHT_PAREN
+    ; RIGHT_PAREN
       { pat }  
 
 %inline con_pattern_arg:
   | pat = pattern
       { ([], pat) }
+
+%inline core_scheme:
+  | type_vars = nonempty_list(type_var)
+    ; DOT
+    ; type_ = core_type
+      { (type_vars, type_) }
+  | type_ = core_type
+      { ([], type_) }
+
+type_declarations:
+  | TYPE; decls = separated_nonempty_list(AND, type_declaration)
+      { decls }
+
+%inline type_declaration:
+  | params = type_param_list; id = IDENT; kind = type_decl_kind
+      { { ptype_name = id; ptype_params = params; ptype_kind = kind } }
+
+type_decl_kind:
+  | constr_decls = preceded_or_separated_nonempty_list(BAR, constructor_declaration)
+      { Ptype_variant constr_decls }
+  | LEFT_BRACE
+    ; label_decls = separated_nonempty_list(SEMI_COLON, label_declaration)
+    ; RIGHT_BRACE
+      { Ptype_record label_decls }
+
+%inline label_declaration:
+  | label = IDENT
+    ; COLON
+    ; scheme = core_scheme
+      { let betas, arg = scheme in
+        { plabel_name = label; plabel_betas = betas; plabel_arg = arg } }
+
+%inline constructor_declaration:
+  | con_id = CON_IDENT
+    ; arg = option(constructor_argument)
+    ; constraints = constraints
+      { { pconstructor_name = con_id; pconstructor_arg = arg; pconstructor_constraints = constraints } }
+
+
+%inline constructor_argument:
+  | OF
+    ; scheme = core_scheme
+      { let betas, arg = scheme in
+        { pconstructor_arg_betas = betas; pconstructor_arg_type = arg } }
+
+%inline constraint_:
+  | type1 = core_type
+    ; EQUAL
+    ; type2 = core_type
+      { (type1, type2) }
+
+constraints:
+  | /* empty */     { [] }
+  | CONSTRAINT
+    ; constraints = separated_nonempty_list(AND, constraint_)
+      { constraints }
+
+%inline exception_declaration:
+  | con_id = CON_IDENT
+    ; arg = option(core_type)
+      { exn_decl ~con:con_id ~arg }
+
+structure_item:
+  | LET
+    ; rec_flag = rec_flag
+    ; value_bindings = value_bindings
+      { Pstr_value (rec_flag, value_bindings) }
+  | EXTERNAL
+    ; id = IDENT
+    ; COLON
+    ; scheme = core_scheme
+    ; EQUAL
+    ; prim = STRING
+      { Pstr_primitive { pval_name = id; pval_type = scheme; pval_prim = prim } }
+  | type_decls = type_declarations
+      { Pstr_type type_decls }
+  | EXCEPTION
+    ; exn_decl = exception_declaration
+      { Pstr_exception exn_decl }
+
+structure:
+  | structure = separated_nonempty_list(SEMI_SEMI_COLON, structure_item)
+      { structure }

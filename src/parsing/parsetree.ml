@@ -124,7 +124,7 @@ and extension_constructor_kind = Pext_decl of constructor_declaration
 type structure_item =
   | Pstr_value of rec_flag * value_binding list
   | Pstr_primitive of value_description
-  | Pstr_type of rec_flag * type_declaration list
+  | Pstr_type of type_declaration list
   | Pstr_exception of type_exception
 [@@deriving sexp_of]
 
@@ -468,8 +468,8 @@ let pp_structure_item_mach ~indent ppf str_item =
   | Pstr_primitive value_desc ->
     print "Primitive";
     pp_value_description_mach ~indent ppf value_desc
-  | Pstr_type (rec_flag, type_decls) ->
-    print ("Type: " ^ string_of_rec_flag rec_flag);
+  | Pstr_type type_decls ->
+    print "Type";
     List.iter type_decls ~f:(pp_type_declaration_mach ~indent ppf)
   | Pstr_exception type_exception ->
     print "Exception";
@@ -923,7 +923,7 @@ let pp_structure_item ppf str_item =
       pp_core_scheme
       value_desc.pval_type
       value_desc.pval_prim
-  | Pstr_type (_, type_decls) ->
+  | Pstr_type type_decls ->
     let pp_type_declaration ppf type_decl =
       Format.fprintf
         ppf
@@ -937,5 +937,5 @@ let pp_structure_item ppf str_item =
     pp_type_declarations ~pp:pp_type_declaration ppf type_decls
   | Pstr_exception exn -> pp_type_exception ppf exn
 
-let pp_structure ppf str = 
-  list ~sep:"@." pp_structure_item ppf str
+
+let pp_structure ppf str = list ~sep:"@." pp_structure_item ppf str
