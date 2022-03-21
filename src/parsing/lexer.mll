@@ -93,8 +93,6 @@ rule read =
   | ";"                           { SEMI_COLON }
   | "*"                           { STAR }
   | "_"                           { UNDERSCORE }
-  | "\'"                          { QUOTE }
-  | "`"                           { BACKTICK }
   | "|"                           { BAR }
 
 
@@ -137,11 +135,19 @@ rule read =
 
   (* string / char literals *)
   | "\""                          { read_string (Buffer.create 17) lexbuf }
-  | "\'"                          { read_char lexbuf }
+  
+  | "\'"  (ascii_char as c) "\'"  { CHAR c }
+  | "\'" 
+    escape_char (escaped_char as c) 
+    "\'"    
+                                  { CHAR (char_unescape c) }                         
   
   | space+                        { read lexbuf }
   | newline                       { Lexer_util.newline lexbuf; read lexbuf }
 
+
+  | "\'"                          { QUOTE }
+  | "`"                           { BACKTICK }
 
   (* braces *)
   | "("                           { LEFT_PAREN }
@@ -160,22 +166,13 @@ and read_comment =
   | eof                           { raise (Lexer_error "Unclosed comment") }
   | _                             { read_comment lexbuf }
 
-and read_char =
-  parse
-  | (ascii_char as c) "\'"                  
-      { CHAR c }
-  | escape_char (escaped_char as c) "\'"    
-      { CHAR (char_unescape c) }
-  | _                                       
-      { raise (Lexer_error "Illegal character") }
-
 and read_string buf = 
   parse
-  | "\"" { STRING (Buffer.contents buf) }
+  | '"' { STRING (Buffer.contents buf) }
   | escape_char (escape_char as c)          
       { Buffer.add_char buf (char_unescape c); 
         read_string buf lexbuf }
-  | ascii_char+                             
+  | [^ '"' '\\']+                             
       { Buffer.add_string buf (Lexing.lexeme lexbuf); 
         read_string buf lexbuf }
   | _                                       

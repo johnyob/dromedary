@@ -95,9 +95,10 @@
 %token RIGHT_BRACE
 
 // infix syntax
-%nonassoc IN
+// %nonassoc IN
 %nonassoc prec_below_SEMI
 %nonassoc SEMI_COLON
+// %nonassoc LET
 // %nonassoc WITH
 // %nonassoc AND
 // %nonassoc THEN
@@ -350,7 +351,7 @@ expression:
     ; rec_flag = rec_flag
     ; value_bindings = value_bindings
     ; IN
-    ; exp = expression
+    ; exp = seq_expression
       { Pexp_let (rec_flag, value_bindings, exp) }
 
 app_expression:
@@ -508,7 +509,7 @@ type_declarations:
       { decls }
 
 %inline type_declaration:
-  | params = type_param_list; id = IDENT; kind = type_decl_kind
+  | params = type_param_list; id = IDENT; EQUAL; kind = type_decl_kind
       { { ptype_name = id; ptype_params = params; ptype_kind = kind } }
 
 type_decl_kind:
@@ -551,9 +552,13 @@ constraints:
     ; constraints = separated_nonempty_list(AND, constraint_)
       { constraints }
 
+%inline exception_argument:
+  | OF; arg = core_type
+      { arg }
+
 %inline exception_declaration:
   | con_id = CON_IDENT
-    ; arg = option(core_type)
+    ; arg = option(exception_argument)
       { exn_decl ~con:con_id ~arg }
 
 structure_item:
@@ -574,6 +579,12 @@ structure_item:
     ; exn_decl = exception_declaration
       { Pstr_exception exn_decl }
 
+%inline terminated_structure_item:
+  | str_item = structure_item
+    ; SEMI_SEMI_COLON
+      { str_item }
+
+
 structure:
-  | structure = separated_nonempty_list(SEMI_SEMI_COLON, structure_item)
+  | structure = nonempty_list(terminated_structure_item)
       { structure }
