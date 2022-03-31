@@ -236,6 +236,21 @@ module Make (Algebra : Algebra) = struct
       }
 
 
+    (* TODO: Move to different env w/out abbrev_ctx and equations *)
+    let merge t1 t2 =
+      let term_var_env =
+        Map.merge_skewed
+          t1.term_var_env
+          t2.term_var_env
+          ~combine:(fun ~key:_ _ scheme -> scheme)
+      in
+      (* Arbitraryly chose [t1] abbrev_ctx and equation_ctx *)
+      { term_var_env
+      ; abbrev_ctx = t1.abbrev_ctx
+      ; equations_ctx = t2.equations_ctx
+      }
+
+
     let[@landmark] extend t var scheme =
       { t with term_var_env = Map.set t.term_var_env ~key:var ~data:scheme }
 
@@ -707,6 +722,7 @@ module Make (Algebra : Algebra) = struct
       solve_let_rec_poly_bindings ~state ~env poly ~k:(fun ~state ~env ->
           solve_let_rec_mono_bindings ~state ~env mono)
 
+
   type error =
     [ `Unify of Type.t * Type.t
     | `Cycle of Type.t
@@ -719,12 +735,12 @@ module Make (Algebra : Algebra) = struct
     | `Inconsistent_equations
     ]
 
-  let init_logs ~debug:debug_flag = 
+  let init_logs ~debug:debug_flag =
     Logs.set_reporter reporter;
     Logs.Src.set_level src Logs.(if debug_flag then Some Debug else Some Info)
-    
 
-  let with_result ~f t : (_, [> error]) Result.t =
+
+  let with_result ~f t : (_, [> error ]) Result.t =
     try Ok (f t) with
     | Unify (t1, t2) -> Error (`Unify (t1, t2))
     | Rigid_variable_escape a -> Error (`Rigid_variable_escape a)
@@ -736,7 +752,7 @@ module Make (Algebra : Algebra) = struct
     | G.Equations.Inconsistent -> Error `Inconsistent_equations
 
 
-  let solve ?debug:(debug = false) ~abbrevs =
+  let solve ?(debug = false) ~abbrevs =
     init_logs ~debug;
     with_result ~f:(fun cst ->
         let[@landmark] solved =
@@ -746,16 +762,88 @@ module Make (Algebra : Algebra) = struct
 
 
   module Structure = struct
-    module Item = struct 
+    open Constraint.Structure
 
-      (* let  *)
+    module Item = struct
+      let solve_let_bindings
+          ~state
+          ~env
+          (let_bindings : _ Item.let_binding list)
+        =
+        let let_bindings =
+          let_bindings
+          |> List.map
+               ~f:(fun
+                    Item.
+                      { universal_context
+                      ; existential_context
+                      ; is_non_expansive
+                      ; bindings
+                      ; in_
+                      }
+                  ->
+                 Constraint.Binding.let_
+                   ~ctx:(universal_context, existential_context)
+                   ~is_non_expansive
+                   ~bindings
+                   ~in_
+                   ~equations:[])
+        in
+        let let_bindings, env, equations =
+          solve_let_bindings ~state ~env let_bindings
+        in
+        assert (List.is_empty equations);
+        let_bindings, env
 
 
-      (* let solve ?debug:(debug = false) ~abbrevs = 
-        init_logs; *)
-      
-    
+      let rec solve
+          : type a.
+            state:state -> env:Env.t -> a Item.t -> a Elaborate.t * Env.t
+        =
+        let open Item in
+        let open Elaborate in
+        fun ~state ~env t ->
+          match t with
+          | Return x -> return x, env
+          | Map (t, f) ->
+            let value, env = solve ~state ~env t in
+            map value ~f, env
+          | Both (t1, t2) ->
+            let value1, env1 = solve ~state ~env t1 in
+            let value2, env2 = solve ~state ~env t2 in
+            both value1 value2, Env.merge env1 env2
+          | Let let_bindings -> solve_let_bindings ~state ~env let_bindings
+          | Def bindings ->
+            let env = Env.extend_bindings state env bindings in
+            return (), env
+          | Let_rec let_rec_bindings ->
+            solve_let_rec_bindings ~state ~env let_rec_bindings
     end
+
+    (* Would require new type for modules: 
+        type 'a t = 
+          { structure: 'a 
+          ; env : Env.t 
+          } *)
+
+    let solve : type a. state:state -> env:Env.t -> a t -> a list Elaborate.t =
+     fun ~state ~env t ->
+      let _env, values =
+        List.fold_right t ~init:(env, []) ~f:(fun item (env, values) ->
+            let value, env = Item.solve ~state ~env item in
+            env, value :: values)
+      in
+      Elaborate.list values
+
+    let solve ?(debug = false) ~abbrevs =
+      init_logs ~debug;
+      with_result ~f:(fun t ->
+        let[@landmark] solved =
+          solve ~state:(make_state ()) ~env:(Env.empty abbrevs) t
+        in
+        (Elaborate.run solved [@landmark "elaborate-structure"]))
+
+  
   end
 end
 

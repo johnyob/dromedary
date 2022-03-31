@@ -27,12 +27,11 @@ module Make (Algebra : Algebra) : sig
     val make_former : t Type_former.t -> t
   end
 
-
   module Abbreviations : sig
     type t
 
     val empty : t
-    val add : t -> abbrev:(Abbrev_type.t Type_former.t * Abbrev_type.t) -> t
+    val add : t -> abbrev:Abbrev_type.t Type_former.t * Abbrev_type.t -> t
   end
 
   (** [solve t] solves [t] and computes it's value. *)
@@ -49,7 +48,19 @@ module Make (Algebra : Algebra) : sig
     | `Inconsistent_equations
     ]
 
-  val solve : ?debug:bool -> abbrevs:Abbreviations.t -> 'a Constraint.t -> ('a, [> error ]) Result.t
+  val solve
+    :  ?debug:bool
+    -> abbrevs:Abbreviations.t
+    -> 'a Constraint.t
+    -> ('a, [> error ]) Result.t
+
+  module Structure : sig
+    val solve
+      :  ?debug:bool
+      -> abbrevs:Abbreviations.t
+      -> 'a Constraint.Structure.t
+      -> ('a list, [> error ]) Result.t
+  end
 end
 
 (** [Private] submodule for [expect] tests. *)
@@ -57,12 +68,14 @@ module Private : sig
   module Structure = Structure
 
   module Generalization (Label : Comparable.S) (Type_former : Type_former.S) :
-    Generalization.S with type 'a former := 'a Type_former.t and type label := Label.t
+    Generalization.S
+      with type 'a former := 'a Type_former.t
+       and type label := Label.t
 
   module Unifier (Structure : Structure.S) :
-    Unifier.S  
+    Unifier.S
       with type 'a structure = 'a Structure.t
-      and type 'a ctx = 'a Structure.ctx
+       and type 'a ctx = 'a Structure.ctx
 
   module Union_find : module type of Union_find
 end

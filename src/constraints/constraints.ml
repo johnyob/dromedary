@@ -21,6 +21,11 @@ module Make (Algebra : Algebra) = struct
   module Abbreviations = Solver.Abbreviations
 
   let solve = Solver.solve
+
+  module Structure = struct
+    include Structure
+    let solve = Solver.Structure.solve
+  end
 end
 
 module Private = struct

@@ -416,8 +416,8 @@ module Make (Algebra : Algebra) = struct
         | Return : 'a -> 'a t
         | Map : 'a t * ('a -> 'b) -> 'b t
         | Both : 'a t * 'b t -> ('a * 'b) t
-        | Let : 'a let_binding list -> 'a t
-        | Let_rec : 'a let_rec_binding list -> 'a t
+        | Let : 'a let_binding list -> 'a term_let_binding list t
+        | Let_rec : 'a let_rec_binding list -> 'a term_let_rec_binding list t
         | Def : binding list -> unit t
 
       let rec sexp_of_t : type a. a t -> Sexp.t =

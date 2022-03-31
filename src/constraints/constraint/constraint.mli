@@ -312,8 +312,8 @@ module Make (Algebra : Algebra) : sig
         | Return : 'a -> 'a t
         | Map : 'a t * ('a -> 'b) -> 'b t
         | Both : 'a t * 'b t -> ('a * 'b) t
-        | Let : 'a let_binding list -> 'a t
-        | Let_rec : 'a let_rec_binding list -> 'a t
+        | Let : 'a let_binding list -> 'a term_let_binding list t
+        | Let_rec : 'a let_rec_binding list -> 'a term_let_rec_binding list t
         | Def : binding list -> unit t
 
       val sexp_of_t : _ t -> Sexp.t
@@ -321,8 +321,11 @@ module Make (Algebra : Algebra) : sig
       include Applicative.S with type 'a t := 'a t
       include Applicative.Let_syntax with type 'a t := 'a t
 
-      val let_ : bindings:'a let_binding list -> 'a t
-      val let_rec : bindings:'a let_rec_binding list -> 'a t
+      val let_ : bindings:'a let_binding list -> 'a term_let_binding list t
+      val let_rec 
+        :  bindings:'a let_rec_binding list 
+        -> 'a term_let_rec_binding list t
+
       val def : bindings:def_binding list -> unit t
     end
 

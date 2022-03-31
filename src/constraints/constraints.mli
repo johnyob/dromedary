@@ -37,9 +37,13 @@ module Make (Algebra : Algebra) : sig
   *)
 
   type 'a t
+
   and binding = Term_var.t * variable
+
   and def_binding = binding
+
   and 'a let_binding
+
   and 'a let_rec_binding
 
   val sexp_of_t : 'a t -> Sexp.t
@@ -159,12 +163,6 @@ module Make (Algebra : Algebra) : sig
       | `Non_rigid_equations
       | `Inconsistent_equations
       ]
-
-    val solve
-      :  ?debug:bool
-      -> abbrevs:Abbreviations.t
-      -> 'a t
-      -> ('a, [> error ]) Result.t
   end
 
   (** [solve t] solves the constraint [t], returning it's value 
@@ -194,8 +192,11 @@ module Make (Algebra : Algebra) : sig
   val ( =~- ) : variable -> Type.t -> unit t
 
   type 'a bound = Type_var.t list * 'a
+
   and term_binding = Term_var.t * Types.scheme
+
   and 'a term_let_binding = term_binding list * 'a bound
+
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   (** [inst x a] is the constraint that instantiates [x] to [a].
@@ -255,6 +256,69 @@ module Make (Algebra : Algebra) : sig
       -> 'a let_rec_binding
   end
 
+  (** Constraints may be used to define "structures" of constraints. 
+
+      Intuitively these correspond to structures in the expression language. 
+      
+      These structures also form applicatives functors :) 
+  *)
+
+  module Structure : sig
+    module Item : sig
+      type 'a let_rec_binding
+
+      and 'a let_binding
+
+      module Binding : sig
+        type ctx = universal_context * existential_context [@@deriving sexp_of]
+
+        val let_
+          :  ctx:ctx
+          -> is_non_expansive:bool
+          -> bindings:binding list
+          -> in_:'a t
+          -> 'a let_binding
+
+        val let_mrec
+          :  ctx:ctx
+          -> binding:binding
+          -> in_:'a t
+          -> 'a let_rec_binding
+
+        val let_prec
+          :  universal_ctx:universal_context
+          -> annotation:Shallow_type.encoded_type
+          -> term_var:Term_var.t
+          -> in_:'a t
+          -> 'a let_rec_binding
+      end
+
+      type 'a t
+
+      val sexp_of_t : _ t -> Sexp.t
+
+      include Applicative.S with type 'a t := 'a t
+      include Applicative.Let_syntax with type 'a t := 'a t
+
+      val let_ : bindings:'a let_binding list -> 'a term_let_binding list t
+
+      val let_rec
+        :  bindings:'a let_rec_binding list
+        -> 'a term_let_rec_binding list t
+
+      val def : bindings:def_binding list -> unit t
+    end
+
+    type 'a t = 'a Item.t list
+
+    val sexp_of_t : _ t -> Sexp.t
+
+    val solve
+      :  ?debug:bool
+      -> abbrevs:Abbreviations.t
+      -> 'a t
+      -> ('a list, [> Solver.error ]) Result.t
+  end
 end
 
 module Private : sig
