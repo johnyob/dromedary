@@ -707,7 +707,6 @@ module Make (Algebra : Algebra) = struct
       solve_let_rec_poly_bindings ~state ~env poly ~k:(fun ~state ~env ->
           solve_let_rec_mono_bindings ~state ~env mono)
 
-
   type error =
     [ `Unify of Type.t * Type.t
     | `Cycle of Type.t
@@ -720,17 +719,13 @@ module Make (Algebra : Algebra) = struct
     | `Inconsistent_equations
     ]
 
-  let solve ?debug:(debug_flag = false) ~abbrevs cst =
-    (* Wrap exceptions raised by solving in a [Result] type. *)
+  let init_logs ~debug:debug_flag = 
     Logs.set_reporter reporter;
-    Logs.Src.set_level src Logs.(if debug_flag then Some Debug else Some Info);
-    try
-      Ok
-        (let[@landmark] solved =
-           solve ~state:(make_state ()) ~env:(Env.empty abbrevs) cst
-         in
-         (Elaborate.run solved [@landmark "elaborate"]))
-    with
+    Logs.Src.set_level src Logs.(if debug_flag then Some Debug else Some Info)
+    
+
+  let with_result ~f t : (_, [> error]) Result.t =
+    try Ok (f t) with
     | Unify (t1, t2) -> Error (`Unify (t1, t2))
     | Rigid_variable_escape a -> Error (`Rigid_variable_escape a)
     | Cannot_flexize a -> Error (`Cannot_flexize a)
@@ -739,6 +734,29 @@ module Make (Algebra : Algebra) = struct
     | Unbound_constraint_variable a -> Error (`Unbound_constraint_variable a)
     | Non_rigid_equations -> Error `Non_rigid_equations
     | G.Equations.Inconsistent -> Error `Inconsistent_equations
+
+
+  let solve ?debug:(debug = false) ~abbrevs =
+    init_logs ~debug;
+    with_result ~f:(fun cst ->
+        let[@landmark] solved =
+          solve ~state:(make_state ()) ~env:(Env.empty abbrevs) cst
+        in
+        (Elaborate.run solved [@landmark "elaborate"]))
+
+
+  module Structure = struct
+    module Item = struct 
+
+      (* let  *)
+
+
+      (* let solve ?debug:(debug = false) ~abbrevs = 
+        init_logs; *)
+      
+    
+    end
+  end
 end
 
 module Private = struct

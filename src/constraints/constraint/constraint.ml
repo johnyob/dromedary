@@ -95,7 +95,6 @@ module Make (Algebra : Algebra) = struct
     module Ctx = struct
       type t = variable list * binding list [@@deriving sexp_of]
 
-
       let merge (vars1, bindings1) (vars2, bindings2) =
         vars1 @ vars2, bindings1 @ bindings2
     end
@@ -192,7 +191,6 @@ module Make (Algebra : Algebra) = struct
         ; in_ : 'a t
         }
 
-
   let rec sexp_of_t : type a. a t -> Sexp.t =
    fun t ->
     match t with
@@ -215,7 +213,6 @@ module Make (Algebra : Algebra) = struct
 
 
   and sexp_of_binding = [%sexp_of: Term_var.t * variable]
-
   and sexp_of_def_binding def_binding = sexp_of_binding def_binding
 
   and sexp_of_let_binding : type a. a let_binding -> Sexp.t =
@@ -391,5 +388,103 @@ module Make (Algebra : Algebra) = struct
     let let_prec ~universal_ctx ~annotation ~term_var ~in_ =
       Let_rec_poly_binding
         { universal_context = universal_ctx; annotation; term_var; in_ }
+  end
+
+  module Structure = struct
+    module Item = struct
+      type nonrec 'a let_rec_binding = 'a let_rec_binding
+
+      type 'a let_binding =
+        { universal_context : universal_context
+        ; existential_context : existential_context
+        ; is_non_expansive : bool
+        ; bindings : binding list
+        ; in_ : 'a t
+        }
+
+      let sexp_of_let_binding : type a. a let_binding -> Sexp.t =
+       fun t ->
+        [%sexp
+          Let_binding (t.universal_context : universal_context)
+          , (t.existential_context : existential_context)
+          , (t.bindings : binding list)
+          , (t.is_non_expansive : bool)
+          , (t.in_ : t)]
+
+
+      type _ t =
+        | Return : 'a -> 'a t
+        | Map : 'a t * ('a -> 'b) -> 'b t
+        | Both : 'a t * 'b t -> ('a * 'b) t
+        | Let : 'a let_binding list -> 'a t
+        | Let_rec : 'a let_rec_binding list -> 'a t
+        | Def : binding list -> unit t
+
+      let rec sexp_of_t : type a. a t -> Sexp.t =
+       fun t ->
+        match t with
+        | Return _ -> [%sexp Return]
+        | Map (t, _) -> [%sexp Map, (t : t)]
+        | Both (t1, t2) -> [%sexp Both, (t1 : t), (t2 : t)]
+        | Let let_bindings -> [%sexp Let, (let_bindings : let_binding list)]
+        | Let_rec let_rec_bindings ->
+          [%sexp Let_rec, (let_rec_bindings : let_rec_binding list)]
+        | Def bindings -> [%sexp Def, (bindings : binding list)]
+
+
+      include Applicative.Make (struct
+        type nonrec 'a t = 'a t
+
+        let return x = Return x
+        let map = `Custom (fun t ~f -> Map (t, f))
+        let apply t1 t2 = Map (Both (t1, t2), fun (f, x) -> f x)
+      end)
+
+      (* [both] is explicitly defined for efficiency reasons. *)
+      let both t1 t2 = Both (t1, t2)
+
+      module Open_on_rhs_intf = struct
+        module type S = sig end
+      end
+
+      module Let_syntax = struct
+        let return = return
+
+        include Applicative_infix
+
+        module Let_syntax = struct
+          let return = return
+          let map = map
+          let both = both
+
+          module Open_on_rhs = struct end
+        end
+      end
+
+      let let_ ~bindings = Let bindings
+      let let_rec ~bindings = Let_rec bindings
+      let def ~bindings = Def bindings
+
+      module Binding = struct
+        include Binding
+
+        let let_
+            ~ctx:(universal_context, existential_context)
+            ~is_non_expansive
+            ~bindings
+            ~in_
+          =
+          { universal_context
+          ; existential_context
+          ; is_non_expansive
+          ; bindings
+          ; in_
+          }
+      end
+    end
+
+    type 'a t = 'a Item.t list
+
+    let sexp_of_t t = [%sexp (t : Item.t list)]
   end
 end

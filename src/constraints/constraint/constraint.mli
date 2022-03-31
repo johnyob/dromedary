@@ -86,7 +86,7 @@ module Make (Algebra : Algebra) : sig
       | Former of variable Type_former.t
       | Row_cons of Label.t * variable * variable
       | Row_uniform of variable
-      | Mu of variable 
+      | Mu of variable
     [@@deriving sexp_of]
 
     (** [binding] represents a shallow type binding defined by the grammar:
@@ -94,8 +94,7 @@ module Make (Algebra : Algebra) : sig
     type binding = variable * t [@@deriving sexp_of]
 
     module Ctx : sig
-      type t = variable list * binding list
-      [@@deriving sexp_of]
+      type t = variable list * binding list [@@deriving sexp_of]
 
       val merge : t -> t -> t
     end
@@ -110,22 +109,16 @@ module Make (Algebra : Algebra) : sig
   end
 
   type existential_context = Shallow_type.Ctx.t [@@deriving sexp_of]
-  
   type universal_context = variable list [@@deriving sexp_of]
-  
   type equations = (Type.t * Type.t) list [@@deriving sexp_of]
 
   type 'a bound = Type_var.t list * 'a
-
   and term_binding = Term_var.t * Types.scheme
-  
   and 'a term_let_binding = term_binding list * 'a bound
-  
   and 'a term_let_rec_binding = term_binding * 'a bound
 
-
-  type binding = Term_var.t * variable [@@deriving sexp_of] 
-  and def_binding = binding  
+  type binding = Term_var.t * variable [@@deriving sexp_of]
+  and def_binding = binding
 
   (** ['a t] is a constraint with value type ['a]. 
           
@@ -167,7 +160,6 @@ module Make (Algebra : Algebra) : sig
     | Implication : equations * 'a t -> 'a t 
         (** [E => C] *)
 
-
   and 'a let_binding =
     | Let_binding of
         { universal_context : universal_context
@@ -191,7 +183,6 @@ module Make (Algebra : Algebra) : sig
         ; term_var : Term_var.t
         ; in_ : 'a t
         }
-
 
   val sexp_of_t : 'a t -> Sexp.t
 
@@ -258,11 +249,7 @@ module Make (Algebra : Algebra) : sig
       -> equations:equations
       -> 'a let_binding
 
-    val let_mrec 
-      :  ctx:ctx 
-      -> binding:binding 
-      -> in_:'a t 
-      -> 'a let_rec_binding
+    val let_mrec : ctx:ctx -> binding:binding -> in_:'a t -> 'a let_rec_binding
 
     val let_prec
       :  universal_ctx:universal_context
@@ -284,4 +271,63 @@ module Make (Algebra : Algebra) : sig
     :  bindings:'a let_rec_binding list
     -> in_:'b t
     -> ('a term_let_rec_binding list * 'b) t
+
+  module Structure : sig
+    module Item : sig
+      type nonrec 'a let_rec_binding = 'a let_rec_binding
+
+      type 'a let_binding =
+        { universal_context : universal_context
+        ; existential_context : existential_context
+        ; is_non_expansive : bool
+        ; bindings : binding list
+        ; in_ : 'a t
+        }
+
+      module Binding : sig
+        type ctx = universal_context * existential_context [@@deriving sexp_of]
+
+        val let_
+          :  ctx:ctx
+          -> is_non_expansive:bool
+          -> bindings:binding list
+          -> in_:'a t
+          -> 'a let_binding
+
+        val let_mrec
+          :  ctx:ctx
+          -> binding:binding
+          -> in_:'a t
+          -> 'a let_rec_binding
+
+        val let_prec
+          :  universal_ctx:universal_context
+          -> annotation:Shallow_type.encoded_type
+          -> term_var:Term_var.t
+          -> in_:'a t
+          -> 'a let_rec_binding
+      end
+
+      type _ t =
+        | Return : 'a -> 'a t
+        | Map : 'a t * ('a -> 'b) -> 'b t
+        | Both : 'a t * 'b t -> ('a * 'b) t
+        | Let : 'a let_binding list -> 'a t
+        | Let_rec : 'a let_rec_binding list -> 'a t
+        | Def : binding list -> unit t
+
+      val sexp_of_t : _ t -> Sexp.t
+
+      include Applicative.S with type 'a t := 'a t
+      include Applicative.Let_syntax with type 'a t := 'a t
+
+      val let_ : bindings:'a let_binding list -> 'a t
+      val let_rec : bindings:'a let_rec_binding list -> 'a t
+      val def : bindings:def_binding list -> unit t
+    end
+
+    type 'a t = 'a Item.t list
+
+    val sexp_of_t : _ t -> Sexp.t
+  end
 end

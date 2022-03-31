@@ -11,10 +11,10 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-module P = Parsing
+module Parsing_ = Parsing (* Core overwrites [Parsing] *)
 include Core
 
 (* Include other libraries *)
-include P
+include Parsing_
 include Util
 module Constraint = Constraints.Make (Types.Algebra)

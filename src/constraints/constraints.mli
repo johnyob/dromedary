@@ -254,6 +254,7 @@ module Make (Algebra : Algebra) : sig
       -> in_:'a t
       -> 'a let_rec_binding
   end
+
 end
 
 module Private : sig

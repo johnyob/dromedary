@@ -11,6 +11,7 @@
 (*                                                                           *)
 (*****************************************************************************)
 
+open! Import
 open Base
 open Types
 
@@ -18,13 +19,18 @@ type t =
   { types : type_declaration map
   ; constrs : constructor_declaration map
   ; labels : label_declaration map
+  ; abbrevs : Constraint.Abbreviations.t
   }
 
 and 'a map = (String.t, 'a, String.comparator_witness) Map.t
 
 let empty =
   let empty_map () = Map.empty (module String) in
-  { types = empty_map (); constrs = empty_map (); labels = empty_map () }
+  { types = empty_map ()
+  ; constrs = empty_map ()
+  ; labels = empty_map ()
+  ; abbrevs = Constraint.Abbreviations.empty
+  }
 
 
 let add_label_decl t (label_decl : label_declaration) =
@@ -49,6 +55,10 @@ let add_type_decl t type_decl =
     | Type_variant constr_decls ->
       List.fold_left constr_decls ~init:t ~f:(fun t constr_decl ->
           add_constr_decl t constr_decl)
+    | Type_alias _alias ->
+      let abbrev = assert false in
+      { t with abbrevs = Constraint.Abbreviations.add t.abbrevs ~abbrev }
+    | Type_abstract -> t
   in
   { t with types = Map.set t.types ~key:type_decl.type_name ~data:type_decl }
 
