@@ -496,8 +496,8 @@ module Pattern = struct
               "Constructor type in environment contains alias"
                 (name : string)
                 (type_expr : type_expr)]
-          | `Unbound_constructor constr ->
-            [%message "Constructor is unbound in environment" (constr : string)]
+          | `Unbound_constructor  ->
+            [%message "Constructor is unbound in environment" (name : string)]
           | `Unbound_type_variable var ->
             [%message
               "Unbound type variable when instantiating constructor (Cannot \
@@ -687,6 +687,11 @@ module Expression = struct
   open Computation
 
   (* TODO: Move this somewhere? (It's a library function). *)
+  let ( -~- ) type1 type2 : unit Constraint.t =
+  let ctx1, var1 = Shallow_type.of_type type1 in
+  let ctx2, var2 = Shallow_type.of_type type2 in
+  Constraint.exists ~ctx:(Shallow_type.Ctx.merge ctx1 ctx2) (var1 =~ var2)
+
   let lift f shallow_type =
     let open Computation.Let_syntax in
     let var = fresh () in
@@ -736,8 +741,8 @@ module Expression = struct
               "Constructor type in environment contains alias"
                 (name : string)
                 (type_expr : type_expr)]
-          | `Unbound_constructor constr ->
-            [%message "Constructor is unbound in environment" (constr : string)]
+          | `Unbound_constructor ->
+            [%message "Constructor is unbound in environment" (name : string)]
           | `Unbound_type_variable var ->
             [%message
               "Unbound type variable when instantiating constructor (Cannot \
@@ -775,7 +780,7 @@ module Expression = struct
             "Label type in environment contains alias"
               (label : string)
               (type_expr : type_expr)]
-        | `Unbound_label label ->
+        | `Unbound_label ->
           [%message "Label is unbound in environment" (label : string)]
         | `Unbound_type_variable var ->
           [%message
@@ -787,10 +792,6 @@ module Expression = struct
             "Type expression is not correctly sorted" (type_expr : type_expr)])
 
 
-  let ( -~- ) type1 type2 : unit Constraint.t =
-    let ctx1, var1 = Shallow_type.of_type type1 in
-    let ctx2, var2 = Shallow_type.of_type type2 in
-    Constraint.exists ~ctx:(Shallow_type.Ctx.merge ctx1 ctx2) (var1 =~ var2)
 
 
   let infer_constr constr_name constr_type
@@ -1420,21 +1421,7 @@ module Expression = struct
     infer_exp exp var
 end
 
-let let_0 ~in_ =
-  let_
-    ~bindings:
-      Binding.
-        [ let_
-            ~ctx:([], ([], []))
-            ~is_non_expansive:true
-            ~equations:[]
-            ~bindings:[]
-            ~in_
-        ]
-    ~in_:(return ())
-  >>| function
-  | [ ([], (vars, t)) ], _ -> vars, t
-  | _ -> assert false
+
 
 
 let solve ?(debug = false) ~abbrevs cst =

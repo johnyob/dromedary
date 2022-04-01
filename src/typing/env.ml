@@ -64,9 +64,8 @@ let add_type_decl t type_decl =
 
 
 let find_constr env constr =
-  Map.find env.constrs constr
-  |> Result.of_option ~error:(`Unbound_constructor constr)
+  Map.find env.constrs constr |> Result.of_option ~error:`Unbound_constructor
 
 
 let find_label env label =
-  Map.find env.labels label |> Result.of_option ~error:(`Unbound_label label)
+  Map.find env.labels label |> Result.of_option ~error:`Unbound_label

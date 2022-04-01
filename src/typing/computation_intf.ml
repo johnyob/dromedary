@@ -83,6 +83,7 @@ module type S = sig
   val substitution : Substitution.t t
 
   val extend_substitution : 'a t -> substitution:Substitution.t -> 'a t
+  val extend_substitution_vars : in_:(Constraint.variable list -> 'a t) -> vars:string list -> on_duplicate_var:(string -> Sexp.t) -> 'a t
 
   (** [find_var var] returns the corresponding constraint variable for the
       bound type variable [var] in the local substitution. *)

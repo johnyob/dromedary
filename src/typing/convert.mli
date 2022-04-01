@@ -12,23 +12,30 @@
 (*****************************************************************************)
 
 open! Import
-open Types
+open Constraint
 
-(** [t] represents the typing environment Ω. *)
-type t
+val core_type
+  :  substitution:Substitution.t
+  -> Parsetree.core_type
+  -> (Type.t, [> `Unbound_type_variable of string ]) Result.t
 
-val empty : t
+val row
+  :  substitution:Substitution.t
+  -> Parsetree.row
+  -> (Type.t, [> `Unbound_type_variable of string ]) Result.t
 
-val add_type_decl : t -> type_declaration -> t
+val type_expr
+  :  substitution:Substitution.t
+  -> Types.type_expr
+  -> ( Type.t
+     , [> `Unbound_type_variable of string
+       | `Type_expr_is_ill_sorted of Types.type_expr
+       | `Type_expr_contains_alias of Types.type_expr
+       ] )
+     Result.t
 
-(** [find_constr t constr] returns the constructor declaration w/ constructor name [constr]. *)
-val find_constr
-  :  t
-  -> string
-  -> (constructor_declaration, [> `Unbound_constructor ]) Result.t
-
-(** [find_label t label] returns the label declaration w/ label name [label]. *)
-val find_label
-  :  t
-  -> string
-  -> (label_declaration, [> `Unbound_label ]) Result.t
+module With_computation (Computation : Computation.S) : sig
+  val core_type : Parsetree.core_type -> Type.t Computation.t
+  val row : Parsetree.row -> Type.t Computation.t
+  val type_expr : Types.type_expr -> Type.t Computation.t
+end

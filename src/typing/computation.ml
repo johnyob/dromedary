@@ -60,13 +60,13 @@ module Expression = struct
   let find_label label : Types.label_declaration t =
    fun input ->
     Env.find_label (Input.env input) label
-    |> Result.map_error ~f:(fun (`Unbound_label _label) -> assert false)
+    |> Result.map_error ~f:(fun `Unbound_label -> assert false)
 
 
   let find_constr name : Types.constructor_declaration t =
    fun input ->
     Env.find_constr (Input.env input) name
-    |> Result.map_error ~f:(fun (`Unbound_constructor _constr) -> assert false)
+    |> Result.map_error ~f:(fun `Unbound_constructor -> assert false)
 
 
   let substitution : Substitution.t t =
@@ -75,6 +75,18 @@ module Expression = struct
 
   let extend_substitution t ~substitution input =
     t (Input.extend_substitution input ~substitution)
+
+
+  let extend_substitution_vars ~in_ ~vars ~on_duplicate_var =
+    let open Let_syntax in
+    let%bind substitution =
+      of_result
+        (Substitution.of_alist
+           (List.map ~f:(fun x -> x, Constraint.fresh ()) vars))
+        ~message:(fun (`Duplicate_type_variable var) -> on_duplicate_var var)
+    in
+    let vars = Substitution.rng substitution in
+    extend_substitution ~substitution (in_ vars)
 
 
   let find_var var : Constraint.variable t =
@@ -216,9 +228,7 @@ module Fragment = struct
           t2.term_bindings
           ~combine:(fun ~key _ _ -> raise (Duplicate_term_var key))
       in
-      let universal_context =
-        t1.universal_context @ t2.universal_context
-      in
+      let universal_context = t1.universal_context @ t2.universal_context in
       let existential_context =
         Shallow_type.Ctx.merge t1.existential_context t2.existential_context
       in
@@ -300,6 +310,18 @@ module Pattern = struct
     t (Input.extend_substitution input ~substitution)
 
 
+  let extend_substitution_vars ~in_ ~vars ~on_duplicate_var =
+    let open Let_syntax in
+    let%bind substitution =
+      of_result
+        (Substitution.of_alist
+           (List.map ~f:(fun x -> x, Constraint.fresh ()) vars))
+        ~message:(fun (`Duplicate_type_variable var) -> on_duplicate_var var)
+    in
+    let vars = Substitution.rng substitution in
+    extend_substitution ~substitution (in_ vars)
+
+
   let write fragment : unit t = fun _input -> Ok (fragment, ())
   let extend x a = write (Fragment.of_term_binding x a)
   let assert_ equations = write Fragment.{ empty with equations }
@@ -328,21 +350,13 @@ module Pattern = struct
       return var
 
 
-    let exists_ctx ~ctx =
-      write (Fragment.of_existential_ctx ctx)
-
-
+    let exists_ctx ~ctx = write (Fragment.of_existential_ctx ctx)
     let exists_vars vars = exists_ctx ~ctx:(vars, [])
-
-    let forall_ctx ~ctx =
-      write Fragment.{ empty with universal_context = ctx }
-
+    let forall_ctx ~ctx = write Fragment.{ empty with universal_context = ctx }
 
     let of_type type_ =
       let ctx, var = Constraint.Shallow_type.of_type type_ in
-      let%bind.Computation () =
-        write (Fragment.of_existential_ctx ctx)
-      in
+      let%bind.Computation () = write (Fragment.of_existential_ctx ctx) in
       return var
 
 
