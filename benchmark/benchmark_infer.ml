@@ -6,14 +6,14 @@ open Typing
 open Parsetree
 open Ast_types
 open Types
-module Constraint = Typing.Import.Constraint
+module Constraint = Typing.Private.Constraint
 open Constraint
 
 let t1 =
   Bench.Test.create
     ~name:"constant: int"
     (let exp = Pexp_const (Const_int 1) in
-     fun () -> Infer.infer ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
+     fun () -> Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
 
 
 let t2 =
@@ -38,14 +38,14 @@ let t2 =
        in
        Pexp_app (Pexp_app (Pexp_prim Prim_eq, lhs), Pexp_const (Const_int 12))
      in
-     fun () -> Infer.infer ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
+     fun () -> Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
 
 
 let t3 =
   Bench.Test.create
     ~name:"function - identity"
     (let exp = Pexp_fun (Ppat_var "x", Pexp_var "x") in
-     fun () -> Infer.infer ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
+     fun () -> Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
 
 
 let t4 =
@@ -62,7 +62,7 @@ let t4 =
                      (Pexp_var "f", Pexp_tuple [ Pexp_var "x"; Pexp_var "y" ])
                  ) ) )
      in
-     fun () -> Infer.infer ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
+     fun () -> Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
 
 
 let add_list env =
@@ -106,7 +106,7 @@ let t5 =
          , Pexp_var "x" )
      in
      let env = add_list Env.empty in
-     fun () -> Infer.infer ~env ~abbrevs:Abbreviations.empty exp)
+     fun () -> Typing.infer_exp ~env ~abbrevs:Abbreviations.empty exp)
 
 
 let t6 =
@@ -169,7 +169,7 @@ let t6 =
                  , Pexp_construct ("Nil", None) ) ) )
      in
      let env = add_list Env.empty in
-     fun () -> Infer.infer ~env ~abbrevs:Abbreviations.empty exp)
+     fun () -> Typing.infer_exp ~env ~abbrevs:Abbreviations.empty exp)
 
 
 let t7 =
@@ -197,7 +197,7 @@ let t7 =
            ]
          , Pexp_var "id" )
      in
-     fun () -> Infer.infer ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
+     fun () -> Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
 
 
 let add_term env =
@@ -427,7 +427,7 @@ let t8 =
                      ]
                    , Pexp_const Const_unit )))
      in
-     fun () -> Infer.infer ~env ~abbrevs:Abbreviations.empty exp)
+     fun () -> Typing.infer_exp ~env ~abbrevs:Abbreviations.empty exp)
 
 
 let tests = [ t1; t2; t3; t4; t5; t6; t7; t8 ]

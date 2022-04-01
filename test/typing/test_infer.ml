@@ -2,11 +2,11 @@ open! Import
 open Parsetree
 open Ast_types
 open Types
-module Constraint = Typing.Import.Constraint
+module Constraint = Typing.Private.Constraint
 open Constraint
 
 let print_constraint_result ~env exp =
-  let t = Infer.Expression.infer exp |> Computation.Expression.run ~env in
+  let t = Private.Infer_core.Expression.(infer_exp_ exp |> Computation.run ~env) in
   let output =
     match t with
     | Ok t -> Constraint.sexp_of_t t
@@ -17,7 +17,7 @@ let print_constraint_result ~env exp =
 
 let print_solve_result ?(debug = false) ?(abbrevs = Abbreviations.empty) cst =
   Constraint.sexp_of_t cst |> Sexp.to_string_hum |> print_endline;
-  match Infer.solve ~debug ~abbrevs cst with
+  match Private.solve ~debug ~abbrevs cst with
   | Ok _ -> Format.fprintf Format.std_formatter "Constraint is true.\n"
   | Error err -> Sexp.to_string_hum err |> print_endline
 
@@ -28,7 +28,7 @@ let print_infer_result
     ?(abbrevs = Abbreviations.empty)
     exp
   =
-  let texp = Infer.infer ~debug ~env ~abbrevs exp in
+  let texp = Typing.infer_exp ~debug ~env ~abbrevs exp in
   match texp with
   | Ok (variables, texp) ->
     let ppf = Format.std_formatter in

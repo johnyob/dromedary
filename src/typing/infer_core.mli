@@ -43,6 +43,10 @@ module Expression : sig
     -> variable
     -> Typedtree.expression Constraint.t Computation.t
 
+  val infer_exp_
+    :  Parsetree.expression
+    -> Typedtree.expression bound Constraint.t Computation.t
+
   val infer_value_bindings
     :  Parsetree.value_binding list
     -> (Typedtree.pattern * Typedtree.expression) let_binding list Computation.t

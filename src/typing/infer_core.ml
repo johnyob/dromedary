@@ -1215,4 +1215,10 @@ module Expression = struct
                 ~ctx:(forall_vars, ([ var ], []))
                 ~binding:f #= var
                 ~in_:exp))
+
+  let infer_exp_ exp = 
+    let open Computation.Let_syntax in 
+    let@ var = exists () in
+    let%bind exp = infer_exp exp var in
+    return (let_0 ~in_:exp)
 end
