@@ -6,7 +6,9 @@ module Constraint = Typing.Private.Constraint
 open Constraint
 
 let print_constraint_result ~env exp =
-  let t = Private.Infer_core.Expression.(infer_exp_ exp |> Computation.run ~env) in
+  let t =
+    Private.Infer_core.Expression.(infer_exp_ exp |> Computation.run ~env)
+  in
   let output =
     match t with
     | Ok t -> Constraint.sexp_of_t t
@@ -40,7 +42,8 @@ let print_infer_result
 let add_list env =
   let name = "list" in
   let params = [ "a" ] in
-  let type_ = Ttyp_constr ([ Ttyp_var "a" ], name) in
+  let a = make_type_expr (Ttyp_var "a") in
+  let type_ = make_type_expr (Ttyp_constr ([ a ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -58,8 +61,7 @@ let add_list env =
                 Some
                   { constructor_arg_betas = []
                   ; constructor_arg_type =
-                      Ttyp_tuple
-                        [ Ttyp_var "a"; Ttyp_constr ([ Ttyp_var "a" ], name) ]
+                      make_type_expr (Ttyp_tuple [ a; type_ ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -711,8 +713,8 @@ let%expect_test "annotation - succ" =
   print_infer_result ~env:Env.empty exp;
   [%expect
     {|
-    ("Cannot unify types" (type_expr1 (Ttyp_constr (() int)))
-     (type_expr2 (Ttyp_var "\206\1771"))) |}]
+    ("Cannot unify types" (type_expr1 ((desc (Ttyp_constr (() int)))))
+     (type_expr2 ((desc (Ttyp_var "\206\1771"))))) |}]
 
 let%expect_test "let - identity" =
   let exp =
@@ -860,29 +862,29 @@ let%expect_test "let - map" =
              └──Value binding:
                 └──Variable: map
                 └──Abstraction:
-                   └──Variables: α299,α324
+                   └──Variables: α313,α324
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Arrow
                             └──Type expr: Variable: α324
-                            └──Type expr: Variable: α299
+                            └──Type expr: Variable: α313
                          └──Type expr: Arrow
                             └──Type expr: Constructor: list
                                └──Type expr: Variable: α324
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: α299
+                               └──Type expr: Variable: α313
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Arrow
                                └──Type expr: Variable: α324
-                               └──Type expr: Variable: α299
+                               └──Type expr: Variable: α313
                             └──Desc: Variable: f
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: list
                                   └──Type expr: Variable: α324
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: α299
+                                  └──Type expr: Variable: α313
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: list
@@ -890,7 +892,7 @@ let%expect_test "let - map" =
                                   └──Desc: Variable: xs
                                └──Expression:
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: α299
+                                     └──Type expr: Variable: α313
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: list
@@ -912,13 +914,13 @@ let%expect_test "let - map" =
                                                           └──Type expr: Variable: α324
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: α299
+                                                 └──Type expr: Variable: α313
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: α299
+                                                          └──Type expr: Variable: α313
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: list
@@ -949,31 +951,31 @@ let%expect_test "let - map" =
                                                           └──Desc: Variable: xs
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: α299
+                                                 └──Type expr: Variable: α313
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Cons
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: α299
+                                                          └──Type expr: Variable: α313
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: α299
+                                                             └──Type expr: Variable: α313
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: α299
+                                                          └──Type expr: Variable: α313
                                                  └──Expression:
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: α299
+                                                       └──Type expr: Variable: α313
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: α299
+                                                          └──Type expr: Variable: α313
                                                     └──Desc: Tuple
                                                        └──Expression:
-                                                          └──Type expr: Variable: α299
+                                                          └──Type expr: Variable: α313
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Variable: α324
-                                                                   └──Type expr: Variable: α299
+                                                                   └──Type expr: Variable: α313
                                                                 └──Desc: Variable
                                                                    └──Variable: f
                                                              └──Expression:
@@ -982,31 +984,31 @@ let%expect_test "let - map" =
                                                                    └──Variable: x
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: α299
+                                                             └──Type expr: Variable: α313
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: list
                                                                       └──Type expr: Variable: α324
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: α299
+                                                                      └──Type expr: Variable: α313
                                                                 └──Desc: Application
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Variable: α324
-                                                                            └──Type expr: Variable: α299
+                                                                            └──Type expr: Variable: α313
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Constructor: list
                                                                                └──Type expr: Variable: α324
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: α299
+                                                                               └──Type expr: Variable: α313
                                                                       └──Desc: Variable
                                                                          └──Variable: map
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
                                                                          └──Type expr: Variable: α324
-                                                                         └──Type expr: Variable: α299
+                                                                         └──Type expr: Variable: α313
                                                                       └──Desc: Variable
                                                                          └──Variable: f
                                                              └──Expression:
@@ -1599,7 +1601,9 @@ let%expect_test "let rec - polymorphic recursion" =
 let add_eq env =
   let name = "eq" in
   let params = [ "a"; "b" ] in
-  let type_ = Ttyp_constr ([ Ttyp_var "a"; Ttyp_var "b" ], name) in
+  let a = make_type_expr (Ttyp_var "a")
+  and b = make_type_expr (Ttyp_var "b") in
+  let type_ = make_type_expr (Ttyp_constr ([ a; b ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -1609,7 +1613,7 @@ let add_eq env =
             ; constructor_alphas = params
             ; constructor_arg = None
             ; constructor_type = type_
-            ; constructor_constraints = [ Ttyp_var "a", Ttyp_var "b" ]
+            ; constructor_constraints = [ a, b ]
             }
           ]
     }
@@ -2466,9 +2470,12 @@ let%expect_test "abbrev - morel" =
 let add_term env =
   let name = "term" in
   let alphas = [ "a" ] in
-  let type_ = Ttyp_constr ([ Ttyp_var "a" ], name) in
-  let int = Ttyp_constr ([], "int") in
-  let bool = Ttyp_constr ([], "bool") in
+  let a = make_type_expr (Ttyp_var "a") in
+  let type_ = make_type_expr (Ttyp_constr ([ a ], name)) in
+  let int = make_type_expr (Ttyp_constr ([], "int")) in
+  let bool = make_type_expr (Ttyp_constr ([], "bool")) in
+  let b1 = make_type_expr (Ttyp_var "b1") in
+  let b2 = make_type_expr (Ttyp_var "b2") in
   Env.add_type_decl
     env
     { type_name = name
@@ -2479,24 +2486,25 @@ let add_term env =
             ; constructor_arg =
                 Some { constructor_arg_betas = []; constructor_arg_type = int }
             ; constructor_type = type_
-            ; constructor_constraints = [ Ttyp_var "a", int ]
+            ; constructor_constraints = [ a, int ]
             }
           ; { constructor_name = "Succ"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type = Ttyp_constr ([ int ], name)
+                  ; constructor_arg_type =
+                      make_type_expr (Ttyp_constr ([ int ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ Ttyp_var "a", int ]
+            ; constructor_constraints = [ a, int ]
             }
           ; { constructor_name = "Bool"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some { constructor_arg_betas = []; constructor_arg_type = bool }
             ; constructor_type = type_
-            ; constructor_constraints = [ Ttyp_var "a", bool ]
+            ; constructor_constraints = [ a, bool ]
             }
           ; { constructor_name = "If"
             ; constructor_alphas = alphas
@@ -2504,11 +2512,12 @@ let add_term env =
                 Some
                   { constructor_arg_betas = []
                   ; constructor_arg_type =
-                      Ttyp_tuple
-                        [ Ttyp_constr ([ bool ], name)
-                        ; Ttyp_constr ([ Ttyp_var "a" ], name)
-                        ; Ttyp_constr ([ Ttyp_var "a" ], name)
-                        ]
+                      make_type_expr
+                        (Ttyp_tuple
+                           [ make_type_expr (Ttyp_constr ([ bool ], name))
+                           ; make_type_expr (Ttyp_constr ([ a ], name))
+                           ; make_type_expr (Ttyp_constr ([ a ], name))
+                           ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -2519,14 +2528,15 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ "b1"; "b2" ]
                   ; constructor_arg_type =
-                      Ttyp_tuple
-                        [ Ttyp_constr ([ Ttyp_var "b1" ], name)
-                        ; Ttyp_constr ([ Ttyp_var "b2" ], name)
-                        ]
+                      make_type_expr
+                        (Ttyp_tuple
+                           [ make_type_expr (Ttyp_constr ([ b1 ], name))
+                           ; make_type_expr (Ttyp_constr ([ b2 ], name))
+                           ])
                   }
             ; constructor_type = type_
             ; constructor_constraints =
-                [ Ttyp_var "a", Ttyp_tuple [ Ttyp_var "b1"; Ttyp_var "b2" ] ]
+                [ a, make_type_expr (Ttyp_tuple [ b1; b2 ]) ]
             }
           ; { constructor_name = "Fst"
             ; constructor_alphas = alphas
@@ -2534,11 +2544,12 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ "b1"; "b2" ]
                   ; constructor_arg_type =
-                      Ttyp_constr
-                        ([ Ttyp_tuple [ Ttyp_var "b1"; Ttyp_var "b2" ] ], name)
+                      make_type_expr
+                        (Ttyp_constr
+                           ([ make_type_expr (Ttyp_tuple [ b1; b2 ]) ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ Ttyp_var "a", Ttyp_var "b1" ]
+            ; constructor_constraints = [ a, b1 ]
             }
           ; { constructor_name = "Snd"
             ; constructor_alphas = alphas
@@ -2546,11 +2557,12 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ "b1"; "b2" ]
                   ; constructor_arg_type =
-                      Ttyp_constr
-                        ([ Ttyp_tuple [ Ttyp_var "b1"; Ttyp_var "b2" ] ], name)
+                      make_type_expr
+                        (Ttyp_constr
+                           ([ make_type_expr (Ttyp_tuple [ b1; b2 ]) ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ Ttyp_var "a", Ttyp_var "b2" ]
+            ; constructor_constraints = [ a, b2 ]
             }
           ]
     }
@@ -3173,7 +3185,8 @@ let%expect_test "term - eval" =
 let add_boxed_id env =
   let name = "boxed_id" in
   let alphas = [] in
-  let type_ = Ttyp_constr ([], name) in
+  let type_ = make_type_expr (Ttyp_constr ([], name)) in
+  let a = make_type_expr (Ttyp_var "a") in
   Env.add_type_decl
     env
     { type_name = name
@@ -3182,7 +3195,7 @@ let add_boxed_id env =
           [ { label_name = "f"
             ; label_alphas = alphas
             ; label_betas = [ "a" ]
-            ; label_arg = Ttyp_arrow (Ttyp_var "a", Ttyp_var "a")
+            ; label_arg = make_type_expr (Ttyp_arrow (a, a))
             ; label_type = type_
             }
           ]
@@ -3207,7 +3220,8 @@ let%expect_test "semi-explicit first-class poly-1" =
           ] )
   in
   print_infer_result ~env exp;
-  [%expect {|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:

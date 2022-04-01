@@ -17,7 +17,9 @@ open Util
 
 type tag = string
 
-type type_expr =
+type type_expr [@@deriving sexp_of]
+
+type type_desc =
   | Ttyp_var of string 
       (** Type variables ['a]. *)
   | Ttyp_arrow of type_expr * type_expr 
@@ -40,6 +42,11 @@ and row = type_expr
 and type_constr = type_expr list * string [@@deriving sexp_of]
 
 and scheme = string list * type_expr [@@deriving sexp_of]
+
+
+val make_type_expr : type_desc -> type_expr
+
+val type_desc : type_expr -> type_desc
 
 (** [pp_type_expr_mach ppf type_expr] pretty prints an explicit tree of the 
     type expression [type_expr]. *)

@@ -16,7 +16,9 @@ open Util.Pretty_printer
 
 type tag = string [@@deriving sexp_of]
 
-type type_expr =
+type type_expr = { mutable desc : type_desc } [@@deriving sexp_of]
+
+and type_desc =
   | Ttyp_var of string
   | Ttyp_arrow of type_expr * type_expr
   | Ttyp_tuple of type_expr list
@@ -25,13 +27,13 @@ type type_expr =
   | Ttyp_variant of type_expr
   | Ttyp_row_cons of tag * type_expr * row
   | Ttyp_row_uniform of type_expr
-[@@deriving sexp_of]
 
 and row = type_expr
-
 and type_constr = type_expr list * string [@@deriving sexp_of]
-
 and scheme = string list * type_expr [@@deriving sexp_of]
+
+let make_type_expr type_desc = { desc = type_desc }
+let type_desc type_expr = type_expr.desc
 
 module Algebra = struct
   open Constraints.Module_types
@@ -132,21 +134,20 @@ module Algebra = struct
   module Type = struct
     type t = type_expr [@@deriving sexp_of]
 
-    let var x = Ttyp_var x
+    let var x = make_type_expr (Ttyp_var x)
 
     let former former =
-      match former with
-      | Type_former.Arrow (t1, t2) -> Ttyp_arrow (t1, t2)
-      | Type_former.Tuple ts -> Ttyp_tuple ts
-      | Type_former.Constr (ts, constr) -> Ttyp_constr (ts, constr)
-      | Type_former.Variant t -> Ttyp_variant t
+      make_type_expr
+        (match former with
+        | Type_former.Arrow (t1, t2) -> Ttyp_arrow (t1, t2)
+        | Type_former.Tuple ts -> Ttyp_tuple ts
+        | Type_former.Constr (ts, constr) -> Ttyp_constr (ts, constr)
+        | Type_former.Variant t -> Ttyp_variant t)
 
 
-    let mu x t = Ttyp_alias (t, x)
-
-    let row_cons (label, t1) t2 = Ttyp_row_cons (label, t1, t2)
-    
-    let row_uniform t = Ttyp_row_uniform t
+    let mu x t = make_type_expr (Ttyp_alias (t, x))
+    let row_cons (label, t1) t2 = make_type_expr (Ttyp_row_cons (label, t1, t2))
+    let row_uniform t = make_type_expr (Ttyp_row_uniform t)
   end
 
   module Types = struct
@@ -174,7 +175,7 @@ and type_decl_kind =
   | Type_alias of alias
 [@@deriving sexp_of]
 
-and alias = 
+and alias =
   { alias_alphas : string list
   ; alias_name : string
   ; alias_type : type_expr
@@ -214,12 +215,11 @@ type constructor_description =
   }
 [@@deriving sexp_of]
 
-type variant_description = 
+type variant_description =
   { variant_tag : tag
   ; variant_row : row
   }
 [@@deriving sexp_of]
-
 
 type label_description =
   { label_name : string
@@ -233,7 +233,7 @@ let indent_space = "   "
 let rec pp_type_expr_mach ~indent ppf type_expr =
   let print = Format.fprintf ppf "%sType expr: %s@." indent in
   let indent = indent_space ^ indent in
-  match type_expr with
+  match type_desc type_expr with
   | Ttyp_var x -> print (Format.asprintf "Variable: %s" x)
   | Ttyp_arrow (t1, t2) ->
     print "Arrow";
@@ -264,7 +264,7 @@ let rec pp_type_expr_mach ~indent ppf type_expr =
 
 let pp_type_expr ppf type_expr =
   let rec loop ?(parens = false) ppf type_expr =
-    match type_expr with
+    match type_desc type_expr with
     | Ttyp_var x -> Format.fprintf ppf "%s" x
     | Ttyp_arrow (t1, t2) ->
       let pp ppf (t1, t2) =
@@ -316,6 +316,7 @@ let pp_constructor_description_mach ~indent ppf constr_desc =
   Format.fprintf ppf "%sConstructor type:@." indent;
   pp_type_expr_mach ~indent:indent' ppf constr_desc.constructor_type
 
+
 let pp_variant_description_mach ~indent ppf variant_desc =
   Format.fprintf ppf "%sVariant description:@." indent;
   let indent = indent_space ^ indent in
@@ -323,12 +324,9 @@ let pp_variant_description_mach ~indent ppf variant_desc =
   let indent' = indent_space ^ indent in
   Format.fprintf ppf "%sVariant row:@." indent;
   pp_type_expr_mach ~indent:indent' ppf variant_desc.variant_row
-  
-  
+
 
 let pp_variant_description _ppf = assert false
-
-
 let pp_constructor_description _ppf = assert false
 
 let pp_label_description_mach ~indent ppf label_desc =

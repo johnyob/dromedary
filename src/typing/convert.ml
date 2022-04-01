@@ -49,7 +49,7 @@ let rec type_expr ~substitution t =
   let open Types in
   let open Result in
   let open Let_syntax in
-  match t with
+  match type_desc t with
   | Ttyp_var x -> Substitution.find_var substitution x >>| Type.var
   | Ttyp_arrow (t1, t2) ->
     let%bind t1 = type_expr ~substitution t1 in
@@ -72,7 +72,7 @@ and type_expr_row ~substitution t =
   let open Types in
   let open Result in
   let open Let_syntax in
-  match t with
+  match type_desc t with
   | Ttyp_row_cons (label, t1, t2) ->
     let%bind t1 = type_expr ~substitution t1 in
     let%bind t2 = type_expr_row ~substitution t2 in

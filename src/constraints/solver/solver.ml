@@ -77,19 +77,27 @@ module Make (Algebra : Algebra) = struct
 
     (* [decode_type type_] decodes type [type_] (may contain cycles) into a [Type]. *)
     let decode_type : t =
-     fun x ->
-      (U.Type.fold
-         ~f:(fun type_ structure ->
-           match G.Structure.repr structure with
-           | Flexible_var -> Type.var (decode_variable type_)
-           | Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
-           | Row_cons (label, label_type, tl) ->
-             Type.row_cons (label, label_type) tl
-           | Row_uniform type_ -> Type.row_uniform type_
-           | Former former -> Type.former former)
-         ~var:(fun type_ -> Type.var (decode_variable type_))
-         ~mu:(fun v t -> Type.mu (decode_variable v) t)
-         x [@landmark "decode_type_cyclic"])
+      let cache = Hashtbl.create ~size:30 (module U.Type) in
+      fun type_ ->
+        try Hashtbl.find_exn cache type_ with
+        | Not_found_s _ ->
+          let decoded_type =
+            U.Type.fold
+              ~f:(fun type_ structure ->
+                match G.Structure.repr structure with
+                | Flexible_var -> Type.var (decode_variable type_)
+                | Rigid_var rigid_var ->
+                  Type.var (decode_rigid_variable rigid_var)
+                | Row_cons (label, label_type, tl) ->
+                  Type.row_cons (label, label_type) tl
+                | Row_uniform type_ -> Type.row_uniform type_
+                | Former former -> Type.former former)
+              ~var:(fun type_ -> Type.var (decode_variable type_))
+              ~mu:(fun v t -> Type.mu (decode_variable v) t)
+              type_
+          in
+          Hashtbl.add_exn cache ~key:type_ ~data:decoded_type;
+          decoded_type [@landmark "decode_type"]
 
 
     (* [decode_scheme scheme] decodes the graphical scheme [scheme] into a [Type.scheme]. *)
@@ -835,15 +843,14 @@ module Make (Algebra : Algebra) = struct
       in
       Elaborate.list values
 
+
     let solve ?(debug = false) ~abbrevs =
       init_logs ~debug;
       with_result ~f:(fun t ->
-        let[@landmark] solved =
-          solve ~state:(make_state ()) ~env:(Env.empty abbrevs) t
-        in
-        (Elaborate.run solved [@landmark "elaborate-structure"]))
-
-  
+          let[@landmark] solved =
+            solve ~state:(make_state ()) ~env:(Env.empty abbrevs) t
+          in
+          (Elaborate.run solved [@landmark "elaborate-structure"]))
   end
 end
 

@@ -189,10 +189,11 @@ let[@warning "-32"] is_cases_generalized ~env cases =
 
 type variant_pattern = Vpat_variant of string * Parsetree.pattern option
 
-let variant_pattern_of_pattern pat = 
+let variant_pattern_of_pattern pat =
   match pat with
   | Ppat_variant (tag, arg_pat) -> Some (Vpat_variant (tag, arg_pat))
   | _ -> None
+
 
 type variant_default_pattern =
   | Vpat_any
@@ -600,7 +601,7 @@ module Expression = struct
     return (constr_desc, constr_arg)
 
 
-  let inst_label label_name label_type' label_arg' =
+  let inst_label label_name label_arg' label_type' =
     let open Computation.Let_syntax in
     let%bind label_alphas, label_betas, label_arg, label_type =
       find_label label_name
@@ -699,10 +700,7 @@ module Expression = struct
     let open Computation.Let_syntax in
     (* Infer the pattern *)
     let%bind fragment, pat =
-      infer_variant_default_pat
-        variant_default_pat
-        pat_type
-        ~default_pat_type
+      infer_variant_default_pat variant_default_pat pat_type ~default_pat_type
     in
     (* Unpack the fragment; asserting that [universal_ctx] and [equations]
        are empty; since GADTs cannot occur in default patterns. *)
@@ -1216,9 +1214,12 @@ module Expression = struct
                 ~binding:f #= var
                 ~in_:exp))
 
-  let infer_exp_ exp = 
-    let open Computation.Let_syntax in 
-    let@ var = exists () in
-    let%bind exp = infer_exp exp var in
+
+  let infer_exp_ exp =
+    let open Computation.Let_syntax in
+    let%bind exp =
+      let@ var = exists () in
+      infer_exp exp var
+    in
     return (let_0 ~in_:exp)
 end

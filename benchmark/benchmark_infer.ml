@@ -1,4 +1,4 @@
-(* open Core *)
+open Core
 open Core_bench
 open Dromedary
 open Parsing
@@ -68,7 +68,8 @@ let t4 =
 let add_list env =
   let name = "list" in
   let params = [ "a" ] in
-  let type_ = Ttyp_constr ([ Ttyp_var "a" ], name) in
+  let a = make_type_expr (Ttyp_var "a") in
+  let type_ = make_type_expr (Ttyp_constr ([ a ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -86,8 +87,7 @@ let add_list env =
                 Some
                   { constructor_arg_betas = []
                   ; constructor_arg_type =
-                      Ttyp_tuple
-                        [ Ttyp_var "a"; Ttyp_constr ([ Ttyp_var "a" ], name) ]
+                      make_type_expr (Ttyp_tuple [ a; type_ ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -203,9 +203,12 @@ let t7 =
 let add_term env =
   let name = "term" in
   let alphas = [ "a" ] in
-  let type_ = Ttyp_constr ([ Ttyp_var "a" ], name) in
-  let int = Ttyp_constr ([], "int") in
-  let bool = Ttyp_constr ([], "bool") in
+  let a = make_type_expr (Ttyp_var "a") in
+  let type_ = make_type_expr (Ttyp_constr ([ a ], name)) in
+  let int = make_type_expr (Ttyp_constr ([], "int")) in
+  let bool = make_type_expr (Ttyp_constr ([], "bool")) in
+  let b1 = make_type_expr (Ttyp_var "b1") in
+  let b2 = make_type_expr (Ttyp_var "b2") in
   Env.add_type_decl
     env
     { type_name = name
@@ -216,24 +219,25 @@ let add_term env =
             ; constructor_arg =
                 Some { constructor_arg_betas = []; constructor_arg_type = int }
             ; constructor_type = type_
-            ; constructor_constraints = [ Ttyp_var "a", int ]
+            ; constructor_constraints = [ a, int ]
             }
           ; { constructor_name = "Succ"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type = Ttyp_constr ([ int ], name)
+                  ; constructor_arg_type =
+                      make_type_expr (Ttyp_constr ([ int ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ Ttyp_var "a", int ]
+            ; constructor_constraints = [ a, int ]
             }
           ; { constructor_name = "Bool"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some { constructor_arg_betas = []; constructor_arg_type = bool }
             ; constructor_type = type_
-            ; constructor_constraints = [ Ttyp_var "a", bool ]
+            ; constructor_constraints = [ a, bool ]
             }
           ; { constructor_name = "If"
             ; constructor_alphas = alphas
@@ -241,11 +245,12 @@ let add_term env =
                 Some
                   { constructor_arg_betas = []
                   ; constructor_arg_type =
-                      Ttyp_tuple
-                        [ Ttyp_constr ([ bool ], name)
-                        ; Ttyp_constr ([ Ttyp_var "a" ], name)
-                        ; Ttyp_constr ([ Ttyp_var "a" ], name)
-                        ]
+                      make_type_expr
+                        (Ttyp_tuple
+                           [ make_type_expr (Ttyp_constr ([ bool ], name))
+                           ; make_type_expr (Ttyp_constr ([ a ], name))
+                           ; make_type_expr (Ttyp_constr ([ a ], name))
+                           ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -256,14 +261,15 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ "b1"; "b2" ]
                   ; constructor_arg_type =
-                      Ttyp_tuple
-                        [ Ttyp_constr ([ Ttyp_var "b1" ], name)
-                        ; Ttyp_constr ([ Ttyp_var "b2" ], name)
-                        ]
+                      make_type_expr
+                        (Ttyp_tuple
+                           [ make_type_expr (Ttyp_constr ([ b1 ], name))
+                           ; make_type_expr (Ttyp_constr ([ b2 ], name))
+                           ])
                   }
             ; constructor_type = type_
             ; constructor_constraints =
-                [ Ttyp_var "a", Ttyp_tuple [ Ttyp_var "b1"; Ttyp_var "b2" ] ]
+                [ a, make_type_expr (Ttyp_tuple [ b1; b2 ]) ]
             }
           ; { constructor_name = "Fst"
             ; constructor_alphas = alphas
@@ -271,11 +277,12 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ "b1"; "b2" ]
                   ; constructor_arg_type =
-                      Ttyp_constr
-                        ([ Ttyp_tuple [ Ttyp_var "b1"; Ttyp_var "b2" ] ], name)
+                      make_type_expr
+                        (Ttyp_constr
+                           ([ make_type_expr (Ttyp_tuple [ b1; b2 ]) ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ Ttyp_var "a", Ttyp_var "b1" ]
+            ; constructor_constraints = [ a, b1 ]
             }
           ; { constructor_name = "Snd"
             ; constructor_alphas = alphas
@@ -283,11 +290,12 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ "b1"; "b2" ]
                   ; constructor_arg_type =
-                      Ttyp_constr
-                        ([ Ttyp_tuple [ Ttyp_var "b1"; Ttyp_var "b2" ] ], name)
+                      make_type_expr
+                        (Ttyp_constr
+                           ([ make_type_expr (Ttyp_tuple [ b1; b2 ]) ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ Ttyp_var "a", Ttyp_var "b2" ]
+            ; constructor_constraints = [ a, b2 ]
             }
           ]
     }
@@ -430,5 +438,34 @@ let t8 =
      fun () -> Typing.infer_exp ~env ~abbrevs:Abbreviations.empty exp)
 
 
+let def_id ~in_ =
+  Pexp_let
+    ( Nonrecursive
+    , [ { pvb_forall_vars = []
+        ; pvb_pat = Ppat_var "id"
+        ; pvb_expr = Pexp_fun (Ppat_var "x", Pexp_var "x")
+        }
+      ]
+    , in_ )
+
+
+let t9 =
+  let rec loop n =
+    match n with
+    | 0 -> Pexp_var "id"
+    | n -> Pexp_app (loop (n - 1), Pexp_var "id")
+  in
+  Bench.Test.create_indexed
+    ~name:"id - stress test"
+    ~args:[ 1; 5; 10 ]
+    (fun n ->
+      Staged.stage (fun () ->
+          Typing.infer_exp
+            ~env:Env.empty
+            ~abbrevs:Abbreviations.empty
+            (def_id ~in_:(loop n))))
+
+
 let tests = [ t1; t2; t3; t4; t5; t6; t7; t8 ]
 let command = Bench.make_command tests
+let stress_command = Bench.make_command [ t9 ]
