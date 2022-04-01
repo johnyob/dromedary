@@ -143,7 +143,9 @@ module Make (Algebra : Algebra) = struct
   type 'a bound = Type_var.t list * 'a
 
   type term_binding = Term_var.t * Types.scheme
+
   and 'a term_let_binding = term_binding list * 'a bound
+
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   (* ['a t] is a constraint with value type ['a]. *)
@@ -165,6 +167,7 @@ module Make (Algebra : Algebra) = struct
     | Implication : equations * 'a t -> 'a t
 
   and binding = Term_var.t * variable
+
   and def_binding = binding
 
   and 'a let_binding =
@@ -389,6 +392,30 @@ module Make (Algebra : Algebra) = struct
       Let_rec_poly_binding
         { universal_context = universal_ctx; annotation; term_var; in_ }
   end
+
+  let let_0 ~in_ =
+    let_
+      ~bindings:
+        Binding.
+          [ let_
+              ~ctx:([], ([], []))
+              ~is_non_expansive:true
+              ~equations:[]
+              ~bindings:[]
+              ~in_
+          ]
+      ~in_:(return ())
+    >>| function
+    | [ ([], (vars, t)) ], _ -> vars, t
+    | _ -> assert false
+
+
+  let let_1 ~binding ~in_ =
+    let_ ~bindings:[ binding ] ~in_
+    >>| function
+    | [ term_binding ], in_ -> term_binding, in_
+    | _ -> assert false
+
 
   module Structure = struct
     module Item = struct

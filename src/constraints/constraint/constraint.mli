@@ -265,6 +265,13 @@ module Make (Algebra : Algebra) : sig
     -> in_:'b t
     -> ('a term_let_binding list * 'b) t
 
+  val let_0 : in_:'a t -> 'a bound t
+
+  val let_1 
+    :  binding:'a let_binding 
+    -> in_:'b t 
+    -> ('a term_let_binding * 'b) t
+
   (** [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
       constraint [in_]. *)
   val let_rec
