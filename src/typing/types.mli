@@ -11,16 +11,28 @@
 (*                                                                           *)
 (*****************************************************************************)
 
+open! Import
 open Util
+
 
 (** Representation of types and declarations  *)
 
 type tag = string
 
-type type_expr [@@deriving sexp_of]
+module Var : sig
+  type t = Decoded.Var.t [@@deriving sexp_of]
+  include Comparable with type t := t
+  
+  val make : unit -> t
+  val id : t -> int
+end
+
+type type_var = Var.t [@@deriving sexp_of]
+
+type type_expr = Decoded.Type.t [@@deriving sexp_of]
 
 type type_desc =
-  | Ttyp_var of string 
+  | Ttyp_var
       (** Type variables ['a]. *)
   | Ttyp_arrow of type_expr * type_expr 
       (** Function types [T1 -> T2]. *)
@@ -28,8 +40,6 @@ type type_desc =
       (** Product (or "tuple") types. *)
   | Ttyp_constr of type_constr 
       (** Type constructors. *)
-  | Ttyp_alias of type_expr * string
-      (** Alias, required for displaying equi-recursive types. *)
   | Ttyp_variant of type_expr 
       (** Polymorphic variant [ [ ... ] ] *)
   | Ttyp_row_cons of tag * type_expr * row 
@@ -41,12 +51,15 @@ type type_desc =
 and row = type_expr
 and type_constr = type_expr list * string [@@deriving sexp_of]
 
-and scheme = string list * type_expr [@@deriving sexp_of]
+and scheme = type_var list * type_expr [@@deriving sexp_of]
 
 
-val make_type_expr : type_desc -> type_expr
+val make : type_desc -> type_expr
+val desc : type_expr -> type_desc
+val id : type_expr -> int
+val of_var : type_var -> type_expr
+val to_var : type_expr -> type_var option
 
-val type_desc : type_expr -> type_desc
 
 (** [pp_type_expr_mach ppf type_expr] pretty prints an explicit tree of the 
     type expression [type_expr]. *)
@@ -56,51 +69,6 @@ val pp_type_expr_mach : indent:string -> type_expr Pretty_printer.t
     type expression [type_expr]. *)
 val pp_type_expr : type_expr Pretty_printer.t
 
-module Algebra : sig
-  open Constraints.Module_types
-
-  (** [Term_var] implements the abstract notion of variables in Dromedary's expressions
-   (or "Terms"). *)
-  module Term_var : Term_var with type t = string
-
-  (** [Type_var] implements the abstract notion of type variables in Dromedary's types. *)
-  module Type_var : Type_var with type t = string
-
-  (** [Type_former] defines the various type formers for Dromedary's types.
-   
-       This notion of type former differs from that of our formal descriptions,
-       since it describes:
-       - Arrow types (or function types).
-       - Tuple tuples.
-       - Type constructors (or "Type formers" are referred to in the formalizations).
-   *)
-  module Type_former : sig
-    type 'a t =
-      | Arrow of 'a * 'a
-      | Tuple of 'a list
-      | Constr of 'a list * string
-      | Variant of 'a
-    [@@deriving sexp_of]
-
-    include Type_former.S with type 'a t := 'a t
-  end
-
-  (** [Type] is the abstraction of Dromedary's types, [type_expr]. *)
-  module Type :
-    Type
-      with type label := string
-       and type variable := Type_var.t
-       and type 'a former := 'a Type_former.t
-       and type t = type_expr
-
-  include
-    Algebra
-      with module Term_var := Term_var
-       and type Types.Label.t = string
-       and module Types.Var = Type_var
-       and module Types.Former = Type_former
-       and module Types.Type = Type
-end
 
 (* Type definitions *)
 
@@ -118,7 +86,7 @@ and type_decl_kind =
 [@@deriving sexp_of]
 
 and alias = 
-  { alias_alphas : string list
+  { alias_alphas : type_var list
   ; alias_name : string
   ; alias_type : type_expr
   }
@@ -126,8 +94,8 @@ and alias =
 
 and label_declaration =
   { label_name : string
-  ; label_alphas : string list
-  ; label_betas : string list
+  ; label_alphas : type_var list
+  ; label_betas : type_var list
   ; label_arg : type_expr
   ; label_type : type_expr
   }
@@ -135,7 +103,7 @@ and label_declaration =
 
 and constructor_declaration =
   { constructor_name : string
-  ; constructor_alphas : string list
+  ; constructor_alphas : type_var list
   ; constructor_arg : constructor_argument option
   ; constructor_type : type_expr
   ; constructor_constraints : (type_expr * type_expr) list
@@ -143,7 +111,7 @@ and constructor_declaration =
 [@@deriving sexp_of]
 
 and constructor_argument =
-  { constructor_arg_betas : string list
+  { constructor_arg_betas : type_var list
   ; constructor_arg_type : type_expr
   }
 [@@deriving sexp_of]

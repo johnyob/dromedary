@@ -25,17 +25,20 @@ val row
   -> (Type.t, [> `Unbound_type_variable of string ]) Result.t
 
 val type_expr
-  :  substitution:Substitution.t
+  :  substitution:variable Types.Var.Map.t
   -> Types.type_expr
   -> ( Type.t
-     , [> `Unbound_type_variable of string
+     , [> `Unbound_type_variable of Types.Var.t
        | `Type_expr_is_ill_sorted of Types.type_expr
-       | `Type_expr_contains_alias of Types.type_expr
        ] )
      Result.t
 
 module With_computation (Computation : Computation.S) : sig
   val core_type : Parsetree.core_type -> Type.t Computation.t
   val row : Parsetree.row -> Type.t Computation.t
-  val type_expr : Types.type_expr -> Type.t Computation.t
+
+  val type_expr
+    :  substitution:variable Types.Var.Map.t
+    -> Types.type_expr
+    -> Type.t Computation.t
 end

@@ -18,7 +18,7 @@ open Types
 (** Abstract syntax tree after typing *)
 
 type 'a instance = 'a * type_expr list [@@deriving sexp_of]
-and 'a abstraction = string list * 'a [@@deriving sexp_of]
+and 'a abstraction = Decoded.Var.t list * 'a [@@deriving sexp_of]
 
 type pattern =
   { pat_desc : pattern_desc
@@ -252,14 +252,15 @@ and pp_label_exp_mach ~indent ppf (label_desc, exp) =
   pp_expression_mach ~indent ppf exp
 
 
-and pp_abstraction_mach ~indent ~pp ppf (variables, t) =
+and pp_abstraction_mach ~indent ~pp ppf ((variables, t) : _ abstraction) =
   Format.fprintf ppf "%sAbstraction:@." indent;
   let indent = indent_space ^ indent in
   Format.fprintf
     ppf
     "%sVariables: %s@."
     indent
-    (String.concat ~sep:"," variables);
+    (List.map variables ~f:(fun var -> var |> Types.Var.id |> Int.to_string)
+    |> String.concat ~sep:",");
   pp ~indent ppf t
 
 

@@ -28,6 +28,7 @@ module Private : sig
   module Constraint = Constraint
   module Computation = Computation
   module Infer_core = Infer_core
+  module Algebra = Algebra
 
   val solve
     :  ?debug:bool

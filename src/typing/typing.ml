@@ -62,6 +62,7 @@ module Private = struct
   module Constraint = Constraint
   module Computation = Computation
   module Infer_core = Infer_core
+  module Algebra = Algebra
 
   let solve = solve
 end

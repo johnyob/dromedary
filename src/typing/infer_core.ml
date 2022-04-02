@@ -32,19 +32,38 @@ module Env = struct
     open Computation
 
     let substitution_of_vars vars =
-      Substitution.of_alist (List.map ~f:(fun x -> x, fresh ()) vars)
-      |> of_result ~message:(fun (`Duplicate_type_variable var) ->
-             [%message "Duplicate type variable" (var : string)])
+      match
+        Types.Var.Map.of_alist (List.map ~f:(fun x -> x, fresh ()) vars)
+      with
+      | `Ok substitution -> return substitution
+      | `Duplicate_key var ->
+        fail [%message "Duplicate type variable" (var : Types.type_var)]
+
+
+    let rng substitution =
+      Types.Var.Map.to_alist substitution |> List.map ~f:snd
+
+
+    let merge substitution1 substitution2 =
+      Types.Var.Map.merge
+        substitution1
+        substitution2
+        ~f:(fun ~key:_type_var var ->
+          Some
+            (match var with
+            | `Both (_, var2) -> var2
+            | `Left var | `Right var -> var))
 
 
     let convert_type_expr ~substitution type_expr =
       let open Types in
       Convert.type_expr ~substitution type_expr
       |> of_result ~message:(function
-             | `Unbound_type_variable var ->
-               [%message
+             | `Unbound_type_variable _var ->
+               raise_s [%message "Here" (type_expr : type_expr)]
+             (* [%message
                  "Unbound type variable when converting type expression"
-                   (var : string)]
+                   (var : string)] *)
              | `Type_expr_is_ill_sorted type_expr ->
                [%message
                  "Type expression is ill-sorted" (type_expr : type_expr)]
@@ -72,7 +91,7 @@ module Env = struct
       in
       (* Compute fresh set of variables for [constr_alphas]. *)
       let%bind substitution = substitution_of_vars constr_alphas in
-      let alphas = Substitution.rng substitution in
+      let alphas = rng substitution in
       (* Compute the constructor (return) type. *)
       let%bind constr_type = convert_type_expr ~substitution constr_type in
       (* Compute the constructor argument. *)
@@ -86,18 +105,21 @@ module Env = struct
           let%bind () =
             match
               List.find
-                ~f:(List.mem ~equal:String.equal constr_betas)
+                ~f:
+                  (List.mem
+                     ~equal:(fun t1 t2 -> Types.Var.compare t1 t2 = 0)
+                     constr_betas)
                 constr_alphas
             with
             | Some var ->
-              fail [%message "Duplicate type variable" (var : string)]
+              fail [%message "Duplicate type variable" (var : Types.type_var)]
             | None -> return ()
           in
           (* Compute fresh set of variables for [constr_betas]. *)
           let%bind substitution' = substitution_of_vars constr_betas in
-          let betas = Substitution.rng substitution' in
+          let betas = rng substitution' in
           (* Compute the type for the [constr_arg]. *)
-          let substitution = Substitution.merge substitution substitution' in
+          let substitution = merge substitution substitution' in
           let%bind constr_arg = convert_type_expr ~substitution constr_arg in
           (* Return the constructor argument and modified substitution, used for constraints. *)
           return (Some (betas, constr_arg), substitution)
@@ -127,10 +149,10 @@ module Env = struct
       let substitution_of_vars vars = substitution_of_vars vars in
       (* Compute a fresh set of existential variables *)
       let%bind substitution = substitution_of_vars label_alphas in
-      let alphas = Substitution.rng substitution in
+      let alphas = rng substitution in
       let%bind substitution' = substitution_of_vars label_betas in
-      let betas = Substitution.rng substitution' in
-      let substitution = Substitution.merge substitution substitution' in
+      let betas = rng substitution' in
+      let substitution = merge substitution substitution' in
       (* Compute the inferred type using the existential variables. *)
       let%bind label_arg = convert_type_expr ~substitution label_arg in
       let%bind label_type = convert_type_expr ~substitution label_type in

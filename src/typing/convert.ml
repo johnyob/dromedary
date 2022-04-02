@@ -49,8 +49,12 @@ let rec type_expr ~substitution t =
   let open Types in
   let open Result in
   let open Let_syntax in
-  match type_desc t with
-  | Ttyp_var x -> Substitution.find_var substitution x >>| Type.var
+  match desc t with
+  | Ttyp_var ->
+    let var = to_var t |> Option.value_exn in
+    Types.Var.Map.find substitution var
+    |> Result.of_option ~error:(`Unbound_type_variable var)
+    >>| Type.var
   | Ttyp_arrow (t1, t2) ->
     let%bind t1 = type_expr ~substitution t1 in
     let%bind t2 = type_expr ~substitution t2 in
@@ -61,7 +65,7 @@ let rec type_expr ~substitution t =
   | Ttyp_constr (ts, constr') ->
     let%bind ts = List.map ts ~f:(type_expr ~substitution) |> all in
     return (constr ts constr')
-  | Ttyp_alias _ -> fail (`Type_expr_contains_alias t)
+  (* | Ttyp_alias _ -> fail (`Type_expr_contains_alias t) *)
   | Ttyp_variant t ->
     let%bind t = type_expr_row ~substitution t in
     return (variant t)
@@ -72,7 +76,7 @@ and type_expr_row ~substitution t =
   let open Types in
   let open Result in
   let open Let_syntax in
-  match type_desc t with
+  match desc t with
   | Ttyp_row_cons (label, t1, t2) ->
     let%bind t1 = type_expr ~substitution t1 in
     let%bind t2 = type_expr_row ~substitution t2 in
@@ -102,13 +106,13 @@ module With_computation (Computation : Computation.S) = struct
         [%message "Unbound type variable when converting row" (var : string)])
 
 
-  let type_expr =
+  let type_expr ~substitution t =
     let open Types in
-    with_computation ~f:type_expr ~message:(function
+    Computation.of_result (type_expr ~substitution t) ~message:(function
         | `Unbound_type_variable var ->
           [%message
             "Unbound type variable when converting type expression"
-              (var : string)]
+              (var : type_var)]
         | `Type_expr_is_ill_sorted type_expr ->
           [%message "Type expression is ill-sorted" (type_expr : type_expr)]
         | `Type_expr_contains_alias type_expr ->
