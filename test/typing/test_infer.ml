@@ -34,9 +34,30 @@ let print_infer_result
   match texp with
   | Ok (variables, texp) ->
     let ppf = Format.std_formatter in
-    Format.fprintf ppf "Variables: %s@." (String.concat ~sep:"," (List.map ~f:(fun var -> Var.id var |> Int.to_string) variables));
+    Format.fprintf
+      ppf
+      "Variables: %s@."
+      (String.concat
+         ~sep:","
+         (List.map ~f:(fun var -> Var.id var |> Int.to_string) variables));
     Typedtree.pp_expression_mach ppf texp
   | Error err -> Sexp.to_string_hum err |> print_endline
+
+
+let print_infer_result'
+    ~env
+    ?(debug = false)
+    ?(abbrevs = Abbreviations.empty)
+    exp
+  =
+  match Parsing.parse_expression_from_string exp with
+  | Ok exp -> print_infer_result ~env ~debug ~abbrevs exp
+  | Error err ->
+    (match err with
+    | `Lexer_error message -> [%sexp ("lexer error: " ^ message : string)]
+    | `Parser_error -> [%sexp ("parse error" : string)])
+    |> Sexp.to_string_hum
+    |> print_endline
 
 
 let add_list env =
@@ -61,8 +82,7 @@ let add_list env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type =
-                      make (Ttyp_tuple [ a'; type_ ])
+                  ; constructor_arg_type = make (Ttyp_tuple [ a'; type_ ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -560,7 +580,8 @@ let%expect_test "function - hd" =
       , Pexp_var "x" )
   in
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables: 188,188
     Expression:
     └──Expression:
@@ -850,7 +871,8 @@ let%expect_test "let - map" =
               , Pexp_construct ("Nil", None) ) ) )
   in
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -1645,7 +1667,8 @@ let%expect_test "ambiv-f" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -1731,7 +1754,8 @@ let%expect_test "ambiv-f1" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -1822,7 +1846,8 @@ let%expect_test "ambiv-f2" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -1950,7 +1975,8 @@ let%expect_test "ambiv-g" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -2087,7 +2113,8 @@ let%expect_test "ambiv-p" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -2210,7 +2237,8 @@ let%expect_test "coerce" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -2491,8 +2519,7 @@ let add_term env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type =
-                      make (Ttyp_constr ([ int ], name))
+                  ; constructor_arg_type = make (Ttyp_constr ([ int ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', int ]
@@ -2533,8 +2560,7 @@ let add_term env =
                            ])
                   }
             ; constructor_type = type_
-            ; constructor_constraints =
-                [ a', make (Ttyp_tuple [ b1'; b2' ]) ]
+            ; constructor_constraints = [ a', make (Ttyp_tuple [ b1'; b2' ]) ]
             }
           ; { constructor_name = "Fst"
             ; constructor_alphas = alphas
@@ -2543,8 +2569,7 @@ let add_term env =
                   { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
                       make
-                        (Ttyp_constr
-                           ([ make (Ttyp_tuple [ b1'; b2' ]) ], name))
+                        (Ttyp_constr ([ make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', b1' ]
@@ -2556,8 +2581,7 @@ let add_term env =
                   { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
                       make
-                        (Ttyp_constr
-                           ([ make (Ttyp_tuple [ b1'; b2' ]) ], name))
+                        (Ttyp_constr ([ make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', b2' ]
@@ -2706,7 +2730,8 @@ let%expect_test "term - eval" =
   in
   (* print_constraint_result ~env exp; *)
   print_infer_result ~debug:false ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -3218,7 +3243,8 @@ let%expect_test "semi-explicit first-class poly-1" =
           ] )
   in
   print_infer_result ~env exp;
-  [%expect{|
+  [%expect
+    {|
     Variables:
     Expression:
     └──Expression:
@@ -3307,3 +3333,225 @@ let%expect_test "semi-explicit first-class poly-1" =
                       └──Expression:
                          └──Type expr: Constructor: bool
                          └──Desc: Constant: true |}]
+
+let add_tree env =
+  let name = "tree" in
+  let a = Var.make () in
+  let params = [ a ]
+  and a' = Types.of_var a in
+  let type_ = make (Ttyp_constr ([ a' ], name)) in
+  Env.add_type_decl
+    env
+    { type_name = name
+    ; type_kind =
+        Type_variant
+          [ { constructor_name = "Empty_tree"
+            ; constructor_alphas = params
+            ; constructor_arg = None
+            ; constructor_type = type_
+            ; constructor_constraints = []
+            }
+          ; { constructor_name = "Node"
+            ; constructor_alphas = params
+            ; constructor_arg =
+                Some
+                  { constructor_arg_betas = []
+                  ; constructor_arg_type = make (Ttyp_tuple [ a'; type_; a' ])
+                  }
+            ; constructor_type = type_
+            ; constructor_constraints = []
+            }
+          ]
+    }
+
+
+let add_option env =
+  let name = "option" in
+  let a = Var.make () in
+  let params = [ a ]
+  and a' = Types.of_var a in
+  let type_ = make (Ttyp_constr ([ a' ], name)) in
+  Env.add_type_decl
+    env
+    { type_name = name
+    ; type_kind =
+        Type_variant
+          [ { constructor_name = "None"
+            ; constructor_alphas = params
+            ; constructor_arg = None
+            ; constructor_type = type_
+            ; constructor_constraints = []
+            }
+          ; { constructor_name = "Some"
+            ; constructor_alphas = params
+            ; constructor_arg =
+                Some { constructor_arg_betas = []; constructor_arg_type = a' }
+            ; constructor_type = type_
+            ; constructor_constraints = []
+            }
+          ]
+    }
+
+let%expect_test "is even, is odd" = 
+   let exp = 
+      {| 
+         let rec is_even = fun n -> 
+            if n = 0 then true else is_odd (n - 1)
+         and is_odd = fun n -> 
+            if n = 1 then true else is_even (n - 1)
+         in ()
+      |}
+   in
+   print_infer_result' ~env:Env.empty exp;
+   [%expect {|
+     Variables:
+     Expression:
+     └──Expression:
+        └──Type expr: Constructor: unit
+        └──Desc: Let rec
+           └──Value bindings:
+              └──Value binding:
+                 └──Variable: is_odd
+                 └──Abstraction:
+                    └──Variables:
+                    └──Expression:
+                       └──Type expr: Arrow
+                          └──Type expr: Constructor: int
+                          └──Type expr: Constructor: bool
+                       └──Desc: Function
+                          └──Pattern:
+                             └──Type expr: Constructor: int
+                             └──Desc: Variable: n
+                          └──Expression:
+                             └──Type expr: Constructor: bool
+                             └──Desc: If
+                                └──Expression:
+                                   └──Type expr: Constructor: bool
+                                   └──Desc: Application
+                                      └──Expression:
+                                         └──Type expr: Arrow
+                                            └──Type expr: Constructor: int
+                                            └──Type expr: Constructor: bool
+                                         └──Desc: Application
+                                            └──Expression:
+                                               └──Type expr: Arrow
+                                                  └──Type expr: Constructor: int
+                                                  └──Type expr: Arrow
+                                                     └──Type expr: Constructor: int
+                                                     └──Type expr: Constructor: bool
+                                               └──Desc: Primitive: (=)
+                                            └──Expression:
+                                               └──Type expr: Constructor: int
+                                               └──Desc: Variable
+                                                  └──Variable: n
+                                      └──Expression:
+                                         └──Type expr: Constructor: int
+                                         └──Desc: Constant: 0
+                                └──Expression:
+                                   └──Type expr: Constructor: bool
+                                   └──Desc: Constant: true
+                                └──Expression:
+                                   └──Type expr: Constructor: bool
+                                   └──Desc: Application
+                                      └──Expression:
+                                         └──Type expr: Arrow
+                                            └──Type expr: Constructor: int
+                                            └──Type expr: Constructor: bool
+                                         └──Desc: Variable
+                                            └──Variable: is_odd
+                                      └──Expression:
+                                         └──Type expr: Constructor: int
+                                         └──Desc: Application
+                                            └──Expression:
+                                               └──Type expr: Arrow
+                                                  └──Type expr: Constructor: int
+                                                  └──Type expr: Constructor: int
+                                               └──Desc: Application
+                                                  └──Expression:
+                                                     └──Type expr: Arrow
+                                                        └──Type expr: Constructor: int
+                                                        └──Type expr: Arrow
+                                                           └──Type expr: Constructor: int
+                                                           └──Type expr: Constructor: int
+                                                     └──Desc: Primitive: (-)
+                                                  └──Expression:
+                                                     └──Type expr: Constructor: int
+                                                     └──Desc: Variable
+                                                        └──Variable: n
+                                            └──Expression:
+                                               └──Type expr: Constructor: int
+                                               └──Desc: Constant: 1
+              └──Value binding:
+                 └──Variable: is_even
+                 └──Abstraction:
+                    └──Variables:
+                    └──Expression:
+                       └──Type expr: Arrow
+                          └──Type expr: Constructor: int
+                          └──Type expr: Constructor: bool
+                       └──Desc: Function
+                          └──Pattern:
+                             └──Type expr: Constructor: int
+                             └──Desc: Variable: n
+                          └──Expression:
+                             └──Type expr: Constructor: bool
+                             └──Desc: If
+                                └──Expression:
+                                   └──Type expr: Constructor: bool
+                                   └──Desc: Application
+                                      └──Expression:
+                                         └──Type expr: Arrow
+                                            └──Type expr: Constructor: int
+                                            └──Type expr: Constructor: bool
+                                         └──Desc: Application
+                                            └──Expression:
+                                               └──Type expr: Arrow
+                                                  └──Type expr: Constructor: int
+                                                  └──Type expr: Arrow
+                                                     └──Type expr: Constructor: int
+                                                     └──Type expr: Constructor: bool
+                                               └──Desc: Primitive: (=)
+                                            └──Expression:
+                                               └──Type expr: Constructor: int
+                                               └──Desc: Variable
+                                                  └──Variable: n
+                                      └──Expression:
+                                         └──Type expr: Constructor: int
+                                         └──Desc: Constant: 1
+                                └──Expression:
+                                   └──Type expr: Constructor: bool
+                                   └──Desc: Constant: true
+                                └──Expression:
+                                   └──Type expr: Constructor: bool
+                                   └──Desc: Application
+                                      └──Expression:
+                                         └──Type expr: Arrow
+                                            └──Type expr: Constructor: int
+                                            └──Type expr: Constructor: bool
+                                         └──Desc: Variable
+                                            └──Variable: is_even
+                                      └──Expression:
+                                         └──Type expr: Constructor: int
+                                         └──Desc: Application
+                                            └──Expression:
+                                               └──Type expr: Arrow
+                                                  └──Type expr: Constructor: int
+                                                  └──Type expr: Constructor: int
+                                               └──Desc: Application
+                                                  └──Expression:
+                                                     └──Type expr: Arrow
+                                                        └──Type expr: Constructor: int
+                                                        └──Type expr: Arrow
+                                                           └──Type expr: Constructor: int
+                                                           └──Type expr: Constructor: int
+                                                     └──Desc: Primitive: (-)
+                                                  └──Expression:
+                                                     └──Type expr: Constructor: int
+                                                     └──Desc: Variable
+                                                        └──Variable: n
+                                            └──Expression:
+                                               └──Type expr: Constructor: int
+                                               └──Desc: Constant: 1
+           └──Expression:
+              └──Type expr: Constructor: unit
+              └──Desc: Constant: () |}]
