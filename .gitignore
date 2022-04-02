@@ -30,3 +30,6 @@ setup.log
 
 # Local OPAM switch
 _opam/
+
+# benchmark csvs
+benchmark/results/
