@@ -67,9 +67,10 @@ let t4 =
 
 let add_list env =
   let name = "list" in
-  let params = [ "a" ] in
-  let a = make_type_expr (Ttyp_var "a") in
-  let type_ = make_type_expr (Ttyp_constr ([ a ], name)) in
+  let a = Var.make () in
+  let params = [ a ] in
+  let a' = Types.of_var a in
+  let type_ = make (Ttyp_constr ([ a' ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -86,8 +87,7 @@ let add_list env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type =
-                      make_type_expr (Ttyp_tuple [ a; type_ ])
+                  ; constructor_arg_type = make (Ttyp_tuple [ a'; type_ ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -202,13 +202,16 @@ let t7 =
 
 let add_term env =
   let name = "term" in
-  let alphas = [ "a" ] in
-  let a = make_type_expr (Ttyp_var "a") in
-  let type_ = make_type_expr (Ttyp_constr ([ a ], name)) in
-  let int = make_type_expr (Ttyp_constr ([], "int")) in
-  let bool = make_type_expr (Ttyp_constr ([], "bool")) in
-  let b1 = make_type_expr (Ttyp_var "b1") in
-  let b2 = make_type_expr (Ttyp_var "b2") in
+  let a = Var.make () in
+  let a' = Types.of_var a in
+  let alphas = [ a ] in
+  let type_ = make (Ttyp_constr ([ a' ], name)) in
+  let int = make (Ttyp_constr ([], "int")) in
+  let bool = make (Ttyp_constr ([], "bool")) in
+  let b1 = Var.make () in
+  let b2 = Var.make () in
+  let b1' = Types.of_var b1 in
+  let b2' = Types.of_var b2 in
   Env.add_type_decl
     env
     { type_name = name
@@ -219,25 +222,24 @@ let add_term env =
             ; constructor_arg =
                 Some { constructor_arg_betas = []; constructor_arg_type = int }
             ; constructor_type = type_
-            ; constructor_constraints = [ a, int ]
+            ; constructor_constraints = [ a', int ]
             }
           ; { constructor_name = "Succ"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type =
-                      make_type_expr (Ttyp_constr ([ int ], name))
+                  ; constructor_arg_type = make (Ttyp_constr ([ int ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ a, int ]
+            ; constructor_constraints = [ a', int ]
             }
           ; { constructor_name = "Bool"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some { constructor_arg_betas = []; constructor_arg_type = bool }
             ; constructor_type = type_
-            ; constructor_constraints = [ a, bool ]
+            ; constructor_constraints = [ a', bool ]
             }
           ; { constructor_name = "If"
             ; constructor_alphas = alphas
@@ -245,11 +247,11 @@ let add_term env =
                 Some
                   { constructor_arg_betas = []
                   ; constructor_arg_type =
-                      make_type_expr
+                      make
                         (Ttyp_tuple
-                           [ make_type_expr (Ttyp_constr ([ bool ], name))
-                           ; make_type_expr (Ttyp_constr ([ a ], name))
-                           ; make_type_expr (Ttyp_constr ([ a ], name))
+                           [ make (Ttyp_constr ([ bool ], name))
+                           ; make (Ttyp_constr ([ a' ], name))
+                           ; make (Ttyp_constr ([ a' ], name))
                            ])
                   }
             ; constructor_type = type_
@@ -259,43 +261,40 @@ let add_term env =
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some
-                  { constructor_arg_betas = [ "b1"; "b2" ]
+                  { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make_type_expr
+                      make
                         (Ttyp_tuple
-                           [ make_type_expr (Ttyp_constr ([ b1 ], name))
-                           ; make_type_expr (Ttyp_constr ([ b2 ], name))
+                           [ make (Ttyp_constr ([ b1' ], name))
+                           ; make (Ttyp_constr ([ b2' ], name))
                            ])
                   }
             ; constructor_type = type_
-            ; constructor_constraints =
-                [ a, make_type_expr (Ttyp_tuple [ b1; b2 ]) ]
+            ; constructor_constraints = [ a', make (Ttyp_tuple [ b1'; b2' ]) ]
             }
           ; { constructor_name = "Fst"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some
-                  { constructor_arg_betas = [ "b1"; "b2" ]
+                  { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make_type_expr
-                        (Ttyp_constr
-                           ([ make_type_expr (Ttyp_tuple [ b1; b2 ]) ], name))
+                      make
+                        (Ttyp_constr ([ make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ a, b1 ]
+            ; constructor_constraints = [ a', b1' ]
             }
           ; { constructor_name = "Snd"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some
-                  { constructor_arg_betas = [ "b1"; "b2" ]
+                  { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make_type_expr
-                        (Ttyp_constr
-                           ([ make_type_expr (Ttyp_tuple [ b1; b2 ]) ], name))
+                      make
+                        (Ttyp_constr ([ make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ a, b2 ]
+            ; constructor_constraints = [ a', b2' ]
             }
           ]
     }
@@ -457,7 +456,7 @@ let t9 =
   in
   Bench.Test.create_indexed
     ~name:"id - stress test"
-    ~args:[ 1; 5; 10 ]
+    ~args:[ 1; 5; 10; 50; 100; 200; 500; 1000; 2000 ]
     (fun n ->
       Staged.stage (fun () ->
           Typing.infer_exp
