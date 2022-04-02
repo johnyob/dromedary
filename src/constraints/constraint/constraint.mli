@@ -23,7 +23,7 @@ open Module_types
 (** The [Make] functor defines the constraint syntax, parameterized
     by the Algebra.  *)
 
-module Make (Algebra : Algebra) : sig
+module Make (Algebra : Algebra_with_decoded) : sig
   open Algebra
   module Label := Types.Label
   module Type_var := Types.Var
@@ -112,8 +112,8 @@ module Make (Algebra : Algebra) : sig
   type universal_context = variable list [@@deriving sexp_of]
   type equations = (Type.t * Type.t) list [@@deriving sexp_of]
 
-  type 'a bound = Type_var.t list * 'a
-  and term_binding = Term_var.t * Types.scheme
+  type 'a bound = Decoded.Var.t list * 'a
+  and term_binding = Term_var.t * Decoded.scheme
   and 'a term_let_binding = term_binding list * 'a bound
   and 'a term_let_rec_binding = term_binding * 'a bound
 
@@ -143,7 +143,7 @@ module Make (Algebra : Algebra) : sig
         (** [exists Θ. C] *)
     | Forall : universal_context * 'a t -> 'a t 
         (** [forall Λ. C] *)
-    | Instance : Term_var.t * variable -> Types.Type.t list t 
+    | Instance : Term_var.t * variable -> Decoded.Type.t list t 
         (** [x <= ɑ] *)
     | Def : binding list * 'a t -> 'a t
         (** [def x1 : t1 and ... and xn : tn in C] *)
@@ -155,7 +155,7 @@ module Make (Algebra : Algebra) : sig
         (** [let rec Γ in C] *)
     | Map : 'a t * ('a -> 'b) -> 'b t 
         (** [map C f]. *)
-    | Decode : variable -> Types.Type.t t 
+    | Decode : variable -> Decoded.Type.t t 
         (** [decode ɑ] *)
     | Implication : equations * 'a t -> 'a t 
         (** [E => C] *)
@@ -217,11 +217,11 @@ module Make (Algebra : Algebra) : sig
 
   (** [inst x a] is the constraint that instantiates [x] to [a].
       It returns the type variable substitution. *)
-  val inst : Term_var.t -> variable -> Types.Type.t list t
+  val inst : Term_var.t -> variable -> Decoded.Type.t list t
 
   (** [decode a] is a constraint that evaluates to the decoded
       type of [a]. *)
-  val decode : variable -> Types.Type.t t
+  val decode : variable -> Decoded.Type.t t
 
   (** [exists ~ctx t] binds existential context [ctx] in [t]. *)
   val exists : ctx:existential_context -> 'a t -> 'a t

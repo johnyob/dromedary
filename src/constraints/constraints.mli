@@ -20,6 +20,11 @@ module Make (Algebra : Algebra) : sig
   module Type_var := Types.Var
   module Type_former := Types.Former
 
+  module Decoded :
+    Decoded
+      with type label := Label.t
+       and type 'a former := 'a Type_former.t
+
   (** Constraints require an explicit term algebra for types. 
       
       Which we define by taking the fixpoint of [Type_former.t]
@@ -37,13 +42,9 @@ module Make (Algebra : Algebra) : sig
   *)
 
   type 'a t
-
   and binding = Term_var.t * variable
-
   and def_binding = binding
-
   and 'a let_binding
-
   and 'a let_rec_binding
 
   val sexp_of_t : 'a t -> Sexp.t
@@ -150,16 +151,14 @@ module Make (Algebra : Algebra) : sig
   end
 
   module Solver : sig
-    module Type := Types.Type
-
     type error =
-      [ `Unify of Type.t * Type.t
-      | `Cycle of Type.t
+      [ `Unify of Decoded.Type.t * Decoded.Type.t
+      | `Cycle of Decoded.Type.t
       | `Unbound_term_variable of Term_var.t
       | `Unbound_constraint_variable of variable
       | `Rigid_variable_escape of Type_var.t
       | `Cannot_flexize of Type_var.t
-      | `Scope_escape of Type.t
+      | `Scope_escape of Decoded.Type.t
       | `Non_rigid_equations
       | `Inconsistent_equations
       ]
@@ -191,21 +190,18 @@ module Make (Algebra : Algebra) : sig
   val ( =~= ) : variable -> Shallow_type.t -> unit t
   val ( =~- ) : variable -> Type.t -> unit t
 
-  type 'a bound = Type_var.t list * 'a
-
-  and term_binding = Term_var.t * Types.scheme
-
+  type 'a bound = Decoded.Var.t list * 'a
+  and term_binding = Term_var.t * Decoded.scheme
   and 'a term_let_binding = term_binding list * 'a bound
-
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   (** [inst x a] is the constraint that instantiates [x] to [a].
       It returns the type variable substitution. *)
-  val inst : Term_var.t -> variable -> Types.Type.t list t
+  val inst : Term_var.t -> variable -> Decoded.Type.t list t
 
   (** [decode a] is a constraint that evaluates to the decoded
       type of [a]. *)
-  val decode : variable -> Types.Type.t t
+  val decode : variable -> Decoded.Type.t t
 
   (** [exists ~ctx t] binds existential context [ctx] in [t]. *)
   val exists : ctx:existential_context -> 'a t -> 'a t
@@ -229,11 +225,7 @@ module Make (Algebra : Algebra) : sig
     -> ('a term_let_binding list * 'b) t
 
   val let_0 : in_:'a t -> 'a bound t
-
-  val let_1 
-    :  binding:'a let_binding 
-    -> in_:'b t 
-    -> ('a term_let_binding * 'b) t
+  val let_1 : binding:'a let_binding -> in_:'b t -> ('a term_let_binding * 'b) t
 
   (** [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
       constraint [in_]. *)
@@ -273,7 +265,6 @@ module Make (Algebra : Algebra) : sig
   module Structure : sig
     module Item : sig
       type 'a let_rec_binding
-
       and 'a let_binding
 
       module Binding : sig

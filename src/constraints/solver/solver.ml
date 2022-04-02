@@ -19,15 +19,89 @@ open Structure
 
 module Make (Algebra : Algebra) = struct
   open Algebra
-  module Constraint = Constraint.Make (Algebra)
+
+  module Label = struct
+    include Types.Label
+
+    let sexp_of_t = comparator.sexp_of_t
+  end
+
   module Type_var = Types.Var
   module Type_former = Types.Former
-  module Type = Types.Type
+
+  (* Instantiant the next layered abstraction: Generalization *)
+  module G = Generalization.Make (Types.Label) (Type_former)
+  module U = G.Unifier
+
+  module Decoded = struct
+    (* Bad Performance Hack! *)
+    let state = G.make_state ()
+    let () = G.enter ~state
+
+    module Var = struct
+      type t = U.Type.t
+
+      let make () = G.make_flexible_var ~state
+      let id = U.Type.id
+      let sexp_of_t t = [%sexp (id t : int)]
+    end
+
+    module Type = struct
+      type t = U.Type.t
+
+      type desc =
+        | Var
+        | Former of t Type_former.t
+        | Row_cons of Label.t * t * t
+        | Row_uniform of t
+
+      let id = U.Type.id
+
+      let desc t =
+        match G.Structure.repr (U.Type.structure t) with
+        | Flexible_var -> Var
+        | Rigid_var _rigid_var -> Var
+        | Row_cons (label, t1, t2) -> Row_cons (label, t1, t2)
+        | Row_uniform t -> Row_uniform t
+        | Former former -> Former former
+
+
+      let rec sexp_of_t t = [%sexp Type, (id t : int), (desc t : desc)]
+
+      and sexp_of_desc desc =
+        match desc with
+        | Var -> [%sexp Var]
+        | Former former -> [%sexp Former, (former : t Type_former.t)]
+        | Row_cons (label, t1, t2) ->
+          [%sexp Row_cons, (label : Label.t), (t1 : t), (t2 : t)]
+        | Row_uniform t -> [%sexp Row_uniform, (t : t)]
+
+
+      let var () = G.make_flexible_var ~state
+      let of_var t = t
+
+      let to_var t =
+        match desc t with
+        | Var -> Some t
+        | _ -> None
+
+      let former = G.make_former ~state
+      let row_cons label t1 t2 = G.make_row_cons ~state ~label ~field:t1 ~tl:t2
+      let row_uniform = G.make_row_uniform ~state
+    end
+
+    type scheme = Var.t list * Type.t [@@deriving sexp_of]
+  end
+
+  module Algebra_with_decoded = struct
+    include Algebra
+    module Decoded = Decoded
+  end
+
+  module Constraint = Constraint.Make (Algebra_with_decoded)
 
   (* Aliases *)
   module C = Constraint
-  module G = Generalization.Make (Types.Label) (Type_former)
-  module U = G.Unifier
 
   (* Abbreviation exports *)
 
@@ -60,15 +134,13 @@ module Make (Algebra : Algebra) = struct
   *)
 
   module Decoder = struct
-    type t = U.Type.t -> Type.t
-
     (* [decode_variable var] decodes [var] into a [Type_var] using it's unique identifier. *)
-    let[@landmark] decode_variable var =
+    let[@landmark] decode_variable var : Decoded.Var.t =
       assert (
         match G.Structure.repr (U.Type.structure var) with
         | Flexible_var -> true
         | _ -> false);
-      Type_var.of_int (U.Type.id var)
+      var
 
 
     let[@landmark] decode_rigid_variable (rigid_var : Rigid_var.t) =
@@ -76,29 +148,7 @@ module Make (Algebra : Algebra) = struct
 
 
     (* [decode_type type_] decodes type [type_] (may contain cycles) into a [Type]. *)
-    let decode_type : t =
-      let cache = Hashtbl.create ~size:30 (module U.Type) in
-      fun type_ ->
-        try Hashtbl.find_exn cache type_ with
-        | Not_found_s _ ->
-          let decoded_type =
-            U.Type.fold
-              ~f:(fun type_ structure ->
-                match G.Structure.repr structure with
-                | Flexible_var -> Type.var (decode_variable type_)
-                | Rigid_var rigid_var ->
-                  Type.var (decode_rigid_variable rigid_var)
-                | Row_cons (label, label_type, tl) ->
-                  Type.row_cons (label, label_type) tl
-                | Row_uniform type_ -> Type.row_uniform type_
-                | Former former -> Type.former former)
-              ~var:(fun type_ -> Type.var (decode_variable type_))
-              ~mu:(fun v t -> Type.mu (decode_variable v) t)
-              type_
-          in
-          Hashtbl.add_exn cache ~key:type_ ~data:decoded_type;
-          decoded_type [@landmark "decode_type"]
-
+    let decode_type t : Decoded.Type.t = t
 
     (* [decode_scheme scheme] decodes the graphical scheme [scheme] into a [Type.scheme]. *)
     let[@landmark] decode_scheme scheme =
@@ -138,7 +188,7 @@ module Make (Algebra : Algebra) = struct
   *)
   exception Rigid_variable_escape of Type_var.t
   exception Cannot_flexize of Type_var.t
-  exception Scope_escape of Type.t
+  exception Scope_escape of Decoded.Type.t
 
   let[@landmark] exit state ~rigid_vars ~types =
     try G.exit ~state:state.generalization_state ~rigid_vars ~types with
@@ -345,7 +395,7 @@ module Make (Algebra : Algebra) = struct
      The decoded types are now supplied in the exception [Unify]. 
   *)
 
-  exception Unify of Type.t * Type.t
+  exception Unify of Decoded.Type.t * Decoded.Type.t
 
   let unify ~state ~env type1 type2 =
     try
@@ -732,13 +782,13 @@ module Make (Algebra : Algebra) = struct
 
 
   type error =
-    [ `Unify of Type.t * Type.t
-    | `Cycle of Type.t
+    [ `Unify of Decoded.Type.t * Decoded.Type.t
+    | `Cycle of Decoded.Type.t
     | `Unbound_term_variable of Term_var.t
     | `Unbound_constraint_variable of Constraint.variable
     | `Rigid_variable_escape of Type_var.t
     | `Cannot_flexize of Type_var.t
-    | `Scope_escape of Type.t
+    | `Scope_escape of Decoded.Type.t
     | `Non_rigid_equations
     | `Inconsistent_equations
     ]

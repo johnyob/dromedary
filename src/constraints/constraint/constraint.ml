@@ -18,7 +18,7 @@ open! Base
 module Module_types = Module_types
 open Module_types
 
-module Make (Algebra : Algebra) = struct
+module Make (Algebra : Algebra_with_decoded) = struct
   open Algebra
 
   (* Add relevant modules from [Types]. *)
@@ -140,9 +140,9 @@ module Make (Algebra : Algebra) = struct
   type existential_context = Shallow_type.Ctx.t [@@deriving sexp_of]
   type universal_context = variable list [@@deriving sexp_of]
   type equations = (Type.t * Type.t) list [@@deriving sexp_of]
-  type 'a bound = Type_var.t list * 'a
+  type 'a bound = Decoded.Var.t list * 'a
 
-  type term_binding = Term_var.t * Types.scheme
+  type term_binding = Term_var.t * Decoded.scheme
 
   and 'a term_let_binding = term_binding list * 'a bound
 
@@ -156,14 +156,14 @@ module Make (Algebra : Algebra) = struct
     | Eq : variable * variable -> unit t
     | Exist : existential_context * 'a t -> 'a t
     | Forall : universal_context * 'a t -> 'a t
-    | Instance : Term_var.t * variable -> Types.Type.t list t
+    | Instance : Term_var.t * variable -> Decoded.Type.t list t
     | Def : binding list * 'a t -> 'a t
     | Let : 'a let_binding list * 'b t -> ('a term_let_binding list * 'b) t
     | Let_rec :
         'a let_rec_binding list * 'b t
         -> ('a term_let_rec_binding list * 'b) t
     | Map : 'a t * ('a -> 'b) -> 'b t
-    | Decode : variable -> Types.Type.t t
+    | Decode : variable -> Decoded.Type.t t
     | Implication : equations * 'a t -> 'a t
 
   and binding = Term_var.t * variable
