@@ -492,14 +492,15 @@ let add_elem_mapper env =
             ; label_arg =
                 make
                   (Ttyp_arrow
-                     (make (Ttyp_constr ([ a' ], "key")), make (Ttyp_arrow (a', a'))))
+                     ( make (Ttyp_constr ([ a' ], "key"))
+                     , make (Ttyp_arrow (a', a')) ))
             ; label_type = type_
             }
           ]
     }
 
 
-let t12' = 
+let t12' =
   create_test_infer_exp
     ~name:"dependent associative list map_elem"
     ~env:(Env.empty |> add_key |> add_elem |> add_list |> add_elem_mapper)
@@ -518,12 +519,9 @@ let t12' =
       in () 
     |}
 
+
 let tests = [ t1'; t2'; t3'; t4'; t5'; t6'; t7'; t8'; t9'; t10'; t11'; t12' ]
 let command = Bench.make_command tests
-
-
-
-
 
 let def_id ~in_ =
   Pexp_let
@@ -553,6 +551,23 @@ let id_app_stress_test =
             (def_id ~in_:(loop n))))
 
 
+let def_pair ~in_ =
+  Pexp_let
+    ( Nonrecursive
+    , [ { pvb_forall_vars = []
+        ; pvb_pat = Ppat_var "pair"
+        ; pvb_expr =
+            Pexp_fun
+              ( Ppat_var "x"
+              , Pexp_fun
+                  ( Ppat_var "f"
+                  , Pexp_app
+                      (Pexp_app (Pexp_var "f", Pexp_var "x"), Pexp_var "x") ) )
+        }
+      ]
+    , in_ )
+
+
 let id_let_stress_test = 
   let rec loop n = 
     match n with
@@ -568,7 +583,53 @@ let id_let_stress_test =
             ~env:Env.empty
             ~abbrevs:Abbreviations.empty
             (loop n)))
+let pair_let_stress_test =
+  let def_f0 ~in_ =
+    Pexp_let
+      ( Nonrecursive
+      , [ { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "f0"
+          ; pvb_expr =
+              Pexp_fun (Ppat_var "x", Pexp_app (Pexp_var "pair", Pexp_var "x"))
+          }
+        ]
+      , in_ )
+  in
+  let rec loop i n =
+    if i = n
+    then
+      (* fun z -> fn (fun x -> x) z *)
+      Pexp_fun
+        ( Ppat_var "z"
+        , Pexp_app
+            ( Pexp_app
+                ( Pexp_var ("f" ^ Int.to_string n)
+                , Pexp_fun (Ppat_var "x", Pexp_var "x") )
+            , Pexp_var "z" ) )
+    else (
+      assert (i >= 1);
+      Pexp_let
+        ( Nonrecursive
+        , [ { pvb_forall_vars = []
+            ; pvb_pat = Ppat_var ("f" ^ Int.to_string i)
+            ; pvb_expr =
+                (let f = "f" ^ Int.to_string (i - 1) in
+                 Pexp_fun
+                   ( Ppat_var "x"
+                   , Pexp_app (Pexp_var f, Pexp_app (Pexp_var f, Pexp_var "x"))
+                   ))
+            }
+          ]
+        , loop (i + 1) n ))
+  in
+  Bench.Test.create_indexed
+    ~name:"pair let - stress test"
+    ~args:[ 1;2;3;4;5;6 ]
+    (fun n ->
+      Staged.stage (fun () ->
+          let exp = def_pair ~in_:(def_f0 ~in_:(loop 1 n)) in
+          Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp))
 
-let stress_tests = [ id_app_stress_test; id_let_stress_test ]
 
+let stress_tests = [ pair_let_stress_test ]
 let stress_command = Bench.make_command stress_tests

@@ -14,7 +14,7 @@ let perform_benchmark tests =
   Bench.bench
     ~run_config:
       (Run_config.create
-         ~quota:(Quota.Num_calls 10000)
+         ~quota:(Quota.Num_calls 200)
          ~stabilize_gc_between_runs:true
          ~fork_each_benchmark:true
          ())
@@ -23,7 +23,7 @@ let perform_benchmark tests =
     ~analysis_configs:
       (Analysis_config.default
       |> List.map
-           ~f:(Analysis_config.with_error_estimation ~bootstrap_trials:1000))
+           ~f:(Analysis_config.with_error_estimation ~bootstrap_trials:20))
     tests
 
 
