@@ -694,7 +694,9 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
           let var = make_flexible_var ~state in
           (match Hashtbl.find state.rigid_vars rigid_var with
           | Some rigid_vars ->
-            List.iter rigid_vars ~f:(fun x -> flexize ~state x var);
+            List.iter rigid_vars ~f:(fun x -> 
+              (* if level x < state.current_level then raise (Rigid_variable_escape rigid_var);  *)
+              flexize ~state x var);
             Hashtbl.remove state.rigid_vars rigid_var
           | None -> ());
           generalize_type var;

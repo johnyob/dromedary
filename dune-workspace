@@ -1,12 +1,12 @@
 (lang dune 2.9)
 
 (context default)
-(context 
-  (default 
-    (name profiling)
-    (instrument_with landmarks) 
-    (env 
-      (_ (env-vars ("OCAML_LANDMARKS" "on")))
-    )
-  )
-)
+; (context 
+;   (default 
+;     (name profiling)
+;     (instrument_with landmarks) 
+;     (env 
+;       (_ (env-vars ("OCAML_LANDMARKS" "on")))
+;     )
+;   )
+; )
