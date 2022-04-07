@@ -231,18 +231,18 @@ let%expect_test "function - identity" =
   print_infer_result ~env:Env.empty exp;
   [%expect
     {|
-    Variables: a8427,a8427
+    Variables: a8708,a8708
     Expression:
     └──Expression:
        └──Type expr: Arrow
-          └──Type expr: Variable: a8427
-          └──Type expr: Variable: a8427
+          └──Type expr: Variable: a8708
+          └──Type expr: Variable: a8708
        └──Desc: Function
           └──Pattern:
-             └──Type expr: Variable: a8427
+             └──Type expr: Variable: a8708
              └──Desc: Variable: x
           └──Expression:
-             └──Type expr: Variable: a8427
+             └──Type expr: Variable: a8708
              └──Desc: Variable
                 └──Variable: x |}]
 
@@ -262,68 +262,68 @@ let%expect_test "function - curry" =
   print_infer_result ~env:Env.empty exp;
   [%expect
     {|
-    Variables: a8440
+    Variables: a8721
     Expression:
     └──Expression:
        └──Type expr: Arrow
           └──Type expr: Arrow
              └──Type expr: Tuple
-                └──Type expr: Variable: a8446
-                └──Type expr: Variable: a8447
-             └──Type expr: Variable: a8440
+                └──Type expr: Variable: a8727
+                └──Type expr: Variable: a8728
+             └──Type expr: Variable: a8721
           └──Type expr: Arrow
-             └──Type expr: Variable: a8446
+             └──Type expr: Variable: a8727
              └──Type expr: Arrow
-                └──Type expr: Variable: a8447
-                └──Type expr: Variable: a8440
+                └──Type expr: Variable: a8728
+                └──Type expr: Variable: a8721
        └──Desc: Function
           └──Pattern:
              └──Type expr: Arrow
                 └──Type expr: Tuple
-                   └──Type expr: Variable: a8446
-                   └──Type expr: Variable: a8447
-                └──Type expr: Variable: a8440
+                   └──Type expr: Variable: a8727
+                   └──Type expr: Variable: a8728
+                └──Type expr: Variable: a8721
              └──Desc: Variable: f
           └──Expression:
              └──Type expr: Arrow
-                └──Type expr: Variable: a8446
+                └──Type expr: Variable: a8727
                 └──Type expr: Arrow
-                   └──Type expr: Variable: a8447
-                   └──Type expr: Variable: a8440
+                   └──Type expr: Variable: a8728
+                   └──Type expr: Variable: a8721
              └──Desc: Function
                 └──Pattern:
-                   └──Type expr: Variable: a8446
+                   └──Type expr: Variable: a8727
                    └──Desc: Variable: x
                 └──Expression:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: a8447
-                      └──Type expr: Variable: a8440
+                      └──Type expr: Variable: a8728
+                      └──Type expr: Variable: a8721
                    └──Desc: Function
                       └──Pattern:
-                         └──Type expr: Variable: a8447
+                         └──Type expr: Variable: a8728
                          └──Desc: Variable: y
                       └──Expression:
-                         └──Type expr: Variable: a8440
+                         └──Type expr: Variable: a8721
                          └──Desc: Application
                             └──Expression:
                                └──Type expr: Arrow
                                   └──Type expr: Tuple
-                                     └──Type expr: Variable: a8446
-                                     └──Type expr: Variable: a8447
-                                  └──Type expr: Variable: a8440
+                                     └──Type expr: Variable: a8727
+                                     └──Type expr: Variable: a8728
+                                  └──Type expr: Variable: a8721
                                └──Desc: Variable
                                   └──Variable: f
                             └──Expression:
                                └──Type expr: Tuple
-                                  └──Type expr: Variable: a8446
-                                  └──Type expr: Variable: a8447
+                                  └──Type expr: Variable: a8727
+                                  └──Type expr: Variable: a8728
                                └──Desc: Tuple
                                   └──Expression:
-                                     └──Type expr: Variable: a8446
+                                     └──Type expr: Variable: a8727
                                      └──Desc: Variable
                                         └──Variable: x
                                   └──Expression:
-                                     └──Type expr: Variable: a8447
+                                     └──Type expr: Variable: a8728
                                      └──Desc: Variable
                                         └──Variable: y |}]
 
@@ -339,68 +339,68 @@ let%expect_test "function - uncurry" =
   print_infer_result ~env:Env.empty exp;
   [%expect
     {|
-    Variables: a8456,a8466,a8463,a8463,a8466
+    Variables: a8737,a8747,a8744,a8744,a8747
     Expression:
     └──Expression:
        └──Type expr: Arrow
           └──Type expr: Arrow
-             └──Type expr: Variable: a8466
+             └──Type expr: Variable: a8747
              └──Type expr: Arrow
-                └──Type expr: Variable: a8463
-                └──Type expr: Variable: a8456
+                └──Type expr: Variable: a8744
+                └──Type expr: Variable: a8737
           └──Type expr: Arrow
              └──Type expr: Tuple
-                └──Type expr: Variable: a8466
-                └──Type expr: Variable: a8463
-             └──Type expr: Variable: a8456
+                └──Type expr: Variable: a8747
+                └──Type expr: Variable: a8744
+             └──Type expr: Variable: a8737
        └──Desc: Function
           └──Pattern:
              └──Type expr: Arrow
-                └──Type expr: Variable: a8466
+                └──Type expr: Variable: a8747
                 └──Type expr: Arrow
-                   └──Type expr: Variable: a8463
-                   └──Type expr: Variable: a8456
+                   └──Type expr: Variable: a8744
+                   └──Type expr: Variable: a8737
              └──Desc: Variable: f
           └──Expression:
              └──Type expr: Arrow
                 └──Type expr: Tuple
-                   └──Type expr: Variable: a8466
-                   └──Type expr: Variable: a8463
-                └──Type expr: Variable: a8456
+                   └──Type expr: Variable: a8747
+                   └──Type expr: Variable: a8744
+                └──Type expr: Variable: a8737
              └──Desc: Function
                 └──Pattern:
                    └──Type expr: Tuple
-                      └──Type expr: Variable: a8466
-                      └──Type expr: Variable: a8463
+                      └──Type expr: Variable: a8747
+                      └──Type expr: Variable: a8744
                    └──Desc: Tuple
                       └──Pattern:
-                         └──Type expr: Variable: a8466
+                         └──Type expr: Variable: a8747
                          └──Desc: Variable: x
                       └──Pattern:
-                         └──Type expr: Variable: a8463
+                         └──Type expr: Variable: a8744
                          └──Desc: Variable: y
                 └──Expression:
-                   └──Type expr: Variable: a8456
+                   └──Type expr: Variable: a8737
                    └──Desc: Application
                       └──Expression:
                          └──Type expr: Arrow
-                            └──Type expr: Variable: a8463
-                            └──Type expr: Variable: a8456
+                            └──Type expr: Variable: a8744
+                            └──Type expr: Variable: a8737
                          └──Desc: Application
                             └──Expression:
                                └──Type expr: Arrow
-                                  └──Type expr: Variable: a8466
+                                  └──Type expr: Variable: a8747
                                   └──Type expr: Arrow
-                                     └──Type expr: Variable: a8463
-                                     └──Type expr: Variable: a8456
+                                     └──Type expr: Variable: a8744
+                                     └──Type expr: Variable: a8737
                                └──Desc: Variable
                                   └──Variable: f
                             └──Expression:
-                               └──Type expr: Variable: a8466
+                               └──Type expr: Variable: a8747
                                └──Desc: Variable
                                   └──Variable: x
                       └──Expression:
-                         └──Type expr: Variable: a8463
+                         └──Type expr: Variable: a8744
                          └──Desc: Variable
                             └──Variable: y |}]
 
@@ -419,68 +419,68 @@ let%expect_test "function - compose" =
   print_infer_result ~env:Env.empty exp;
   [%expect
     {|
-    Variables: a8479
+    Variables: a8760
     Expression:
     └──Expression:
        └──Type expr: Arrow
           └──Type expr: Arrow
-             └──Type expr: Variable: a8482
-             └──Type expr: Variable: a8479
+             └──Type expr: Variable: a8763
+             └──Type expr: Variable: a8760
           └──Type expr: Arrow
              └──Type expr: Arrow
-                └──Type expr: Variable: a8485
-                └──Type expr: Variable: a8482
+                └──Type expr: Variable: a8766
+                └──Type expr: Variable: a8763
              └──Type expr: Arrow
-                └──Type expr: Variable: a8485
-                └──Type expr: Variable: a8479
+                └──Type expr: Variable: a8766
+                └──Type expr: Variable: a8760
        └──Desc: Function
           └──Pattern:
              └──Type expr: Arrow
-                └──Type expr: Variable: a8482
-                └──Type expr: Variable: a8479
+                └──Type expr: Variable: a8763
+                └──Type expr: Variable: a8760
              └──Desc: Variable: f
           └──Expression:
              └──Type expr: Arrow
                 └──Type expr: Arrow
-                   └──Type expr: Variable: a8485
-                   └──Type expr: Variable: a8482
+                   └──Type expr: Variable: a8766
+                   └──Type expr: Variable: a8763
                 └──Type expr: Arrow
-                   └──Type expr: Variable: a8485
-                   └──Type expr: Variable: a8479
+                   └──Type expr: Variable: a8766
+                   └──Type expr: Variable: a8760
              └──Desc: Function
                 └──Pattern:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: a8485
-                      └──Type expr: Variable: a8482
+                      └──Type expr: Variable: a8766
+                      └──Type expr: Variable: a8763
                    └──Desc: Variable: g
                 └──Expression:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: a8485
-                      └──Type expr: Variable: a8479
+                      └──Type expr: Variable: a8766
+                      └──Type expr: Variable: a8760
                    └──Desc: Function
                       └──Pattern:
-                         └──Type expr: Variable: a8485
+                         └──Type expr: Variable: a8766
                          └──Desc: Variable: x
                       └──Expression:
-                         └──Type expr: Variable: a8479
+                         └──Type expr: Variable: a8760
                          └──Desc: Application
                             └──Expression:
                                └──Type expr: Arrow
-                                  └──Type expr: Variable: a8482
-                                  └──Type expr: Variable: a8479
+                                  └──Type expr: Variable: a8763
+                                  └──Type expr: Variable: a8760
                                └──Desc: Variable
                                   └──Variable: f
                             └──Expression:
-                               └──Type expr: Variable: a8482
+                               └──Type expr: Variable: a8763
                                └──Desc: Application
                                   └──Expression:
                                      └──Type expr: Arrow
-                                        └──Type expr: Variable: a8485
-                                        └──Type expr: Variable: a8482
+                                        └──Type expr: Variable: a8766
+                                        └──Type expr: Variable: a8763
                                      └──Desc: Variable
                                         └──Variable: g
                                   └──Expression:
-                                     └──Type expr: Variable: a8485
+                                     └──Type expr: Variable: a8766
                                      └──Desc: Variable
                                         └──Variable: x |}]
 
@@ -492,28 +492,28 @@ let%expect_test "function - fst" =
   print_infer_result ~env:Env.empty exp;
   [%expect
     {|
-    Variables: a8493,a8490,a8490
+    Variables: a8774,a8771,a8771
     Expression:
     └──Expression:
        └──Type expr: Arrow
           └──Type expr: Tuple
-             └──Type expr: Variable: a8490
-             └──Type expr: Variable: a8493
-          └──Type expr: Variable: a8490
+             └──Type expr: Variable: a8771
+             └──Type expr: Variable: a8774
+          └──Type expr: Variable: a8771
        └──Desc: Function
           └──Pattern:
              └──Type expr: Tuple
-                └──Type expr: Variable: a8490
-                └──Type expr: Variable: a8493
+                └──Type expr: Variable: a8771
+                └──Type expr: Variable: a8774
              └──Desc: Tuple
                 └──Pattern:
-                   └──Type expr: Variable: a8490
+                   └──Type expr: Variable: a8771
                    └──Desc: Variable: x
                 └──Pattern:
-                   └──Type expr: Variable: a8493
+                   └──Type expr: Variable: a8774
                    └──Desc: Variable: y
           └──Expression:
-             └──Type expr: Variable: a8490
+             └──Type expr: Variable: a8771
              └──Desc: Variable
                 └──Variable: x |}]
 
@@ -525,28 +525,28 @@ let%expect_test "function - snd" =
   print_infer_result ~env:Env.empty exp;
   [%expect
     {|
-    Variables: a8499,a8503,a8499
+    Variables: a8780,a8784,a8780
     Expression:
     └──Expression:
        └──Type expr: Arrow
           └──Type expr: Tuple
-             └──Type expr: Variable: a8503
-             └──Type expr: Variable: a8499
-          └──Type expr: Variable: a8499
+             └──Type expr: Variable: a8784
+             └──Type expr: Variable: a8780
+          └──Type expr: Variable: a8780
        └──Desc: Function
           └──Pattern:
              └──Type expr: Tuple
-                └──Type expr: Variable: a8503
-                └──Type expr: Variable: a8499
+                └──Type expr: Variable: a8784
+                └──Type expr: Variable: a8780
              └──Desc: Tuple
                 └──Pattern:
-                   └──Type expr: Variable: a8503
+                   └──Type expr: Variable: a8784
                    └──Desc: Variable: x
                 └──Pattern:
-                   └──Type expr: Variable: a8499
+                   └──Type expr: Variable: a8780
                    └──Desc: Variable: y
           └──Expression:
-             └──Type expr: Variable: a8499
+             └──Type expr: Variable: a8780
              └──Desc: Variable
                 └──Variable: y |}]
 
@@ -561,46 +561,46 @@ let%expect_test "function - hd" =
   print_infer_result ~env exp;
   [%expect
     {|
-    Variables: a8508,a8508
+    Variables: a8789,a8789
     Expression:
     └──Expression:
        └──Type expr: Arrow
           └──Type expr: Constructor: list
-             └──Type expr: Variable: a8511
-          └──Type expr: Variable: a8508
+             └──Type expr: Variable: a8792
+          └──Type expr: Variable: a8789
        └──Desc: Function
           └──Pattern:
              └──Type expr: Constructor: list
-                └──Type expr: Variable: a8511
+                └──Type expr: Variable: a8792
              └──Desc: Construct
                 └──Constructor description:
                    └──Name: Cons
                    └──Constructor argument type:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: a8511
+                         └──Type expr: Variable: a8792
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: a8511
+                            └──Type expr: Variable: a8792
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: a8511
+                         └──Type expr: Variable: a8792
                 └──Pattern:
                    └──Type expr: Tuple
-                      └──Type expr: Variable: a8511
+                      └──Type expr: Variable: a8792
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: a8511
+                         └──Type expr: Variable: a8792
                    └──Desc: Tuple
                       └──Pattern:
-                         └──Type expr: Variable: a8511
+                         └──Type expr: Variable: a8792
                          └──Desc: Variable: x
                       └──Pattern:
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: a8511
+                            └──Type expr: Variable: a8792
                          └──Desc: Any
           └──Expression:
-             └──Type expr: Variable: a8508
+             └──Type expr: Variable: a8789
              └──Desc: Variable
                 └──Variable: x
-                └──Type expr: Variable: a8508 |}]
+                └──Type expr: Variable: a8789 |}]
 
 let%expect_test "annotation - identity" =
   let exp =
@@ -612,18 +612,18 @@ let%expect_test "annotation - identity" =
   print_infer_result ~env:Env.empty exp;
   [%expect
     {|
-    Variables: a8526,a8526,a8526
+    Variables: a8807,a8807,a8807
     Expression:
     └──Expression:
        └──Type expr: Arrow
-          └──Type expr: Variable: a8526
-          └──Type expr: Variable: a8526
+          └──Type expr: Variable: a8807
+          └──Type expr: Variable: a8807
        └──Desc: Function
           └──Pattern:
-             └──Type expr: Variable: a8526
+             └──Type expr: Variable: a8807
              └──Desc: Variable: x
           └──Expression:
-             └──Type expr: Variable: a8526
+             └──Type expr: Variable: a8807
              └──Desc: Variable
                 └──Variable: x |}]
 
@@ -641,14 +641,14 @@ let%expect_test "annotation - identity" =
     Expression:
     └──Expression:
        └──Type expr: Arrow
-          └──Type expr: Variable: a8540
-          └──Type expr: Variable: a8540
+          └──Type expr: Variable: a8821
+          └──Type expr: Variable: a8821
        └──Desc: Function
           └──Pattern:
-             └──Type expr: Variable: a8535
+             └──Type expr: Variable: a8816
              └──Desc: Variable: x
           └──Expression:
-             └──Type expr: Variable: a8535
+             └──Type expr: Variable: a8816
              └──Desc: Variable
                 └──Variable: x |}]
 
@@ -714,7 +714,7 @@ let%expect_test "annotation - succ" =
   [%expect
     {|
     ("Cannot unify types" (type_expr1 ((desc (Ttyp_constr (() int)))))
-     (type_expr2 ((desc (Ttyp_var a235))))) |}]
+     (type_expr2 ((desc (Ttyp_var a241))))) |}]
 
 let%expect_test "let - identity" =
   let exp =
@@ -741,21 +741,21 @@ let%expect_test "let - identity" =
              └──Value binding:
                 └──Pattern:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: a8593
-                      └──Type expr: Variable: a8593
+                      └──Type expr: Variable: a8874
+                      └──Type expr: Variable: a8874
                    └──Desc: Variable: id
                 └──Abstraction:
-                   └──Variables: a8593,a8593
+                   └──Variables: a8874,a8874
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a8593
-                         └──Type expr: Variable: a8593
+                         └──Type expr: Variable: a8874
+                         └──Type expr: Variable: a8874
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: a8593
+                            └──Type expr: Variable: a8874
                             └──Desc: Variable: x
                          └──Expression:
-                            └──Type expr: Variable: a8593
+                            └──Type expr: Variable: a8874
                             └──Desc: Variable
                                └──Variable: x
           └──Expression:
@@ -862,158 +862,158 @@ let%expect_test "let - map" =
              └──Value binding:
                 └──Variable: map
                 └──Abstraction:
-                   └──Variables: a8636,a8647
+                   └──Variables: a8917,a8928
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Arrow
-                            └──Type expr: Variable: a8647
-                            └──Type expr: Variable: a8636
+                            └──Type expr: Variable: a8928
+                            └──Type expr: Variable: a8917
                          └──Type expr: Arrow
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: a8647
+                               └──Type expr: Variable: a8928
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: a8636
+                               └──Type expr: Variable: a8917
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: a8647
-                               └──Type expr: Variable: a8636
+                               └──Type expr: Variable: a8928
+                               └──Type expr: Variable: a8917
                             └──Desc: Variable: f
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: a8647
+                                  └──Type expr: Variable: a8928
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: a8636
+                                  └──Type expr: Variable: a8917
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: a8647
+                                     └──Type expr: Variable: a8928
                                   └──Desc: Variable: xs
                                └──Expression:
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: a8636
+                                     └──Type expr: Variable: a8917
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: list
-                                           └──Type expr: Variable: a8647
+                                           └──Type expr: Variable: a8928
                                         └──Desc: Variable
                                            └──Variable: xs
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: a8647
+                                        └──Type expr: Variable: a8928
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: a8647
+                                                 └──Type expr: Variable: a8928
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: a8647
+                                                          └──Type expr: Variable: a8928
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: a8636
+                                                 └──Type expr: Variable: a8917
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: a8636
+                                                          └──Type expr: Variable: a8917
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: a8647
+                                                 └──Type expr: Variable: a8928
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Cons
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: a8647
+                                                          └──Type expr: Variable: a8928
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: a8647
+                                                             └──Type expr: Variable: a8928
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: a8647
+                                                          └──Type expr: Variable: a8928
                                                  └──Pattern:
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: a8647
+                                                       └──Type expr: Variable: a8928
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: a8647
+                                                          └──Type expr: Variable: a8928
                                                     └──Desc: Tuple
                                                        └──Pattern:
-                                                          └──Type expr: Variable: a8647
+                                                          └──Type expr: Variable: a8928
                                                           └──Desc: Variable: x
                                                        └──Pattern:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: a8647
+                                                             └──Type expr: Variable: a8928
                                                           └──Desc: Variable: xs
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: a8636
+                                                 └──Type expr: Variable: a8917
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Cons
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: a8636
+                                                          └──Type expr: Variable: a8917
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: a8636
+                                                             └──Type expr: Variable: a8917
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: a8636
+                                                          └──Type expr: Variable: a8917
                                                  └──Expression:
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: a8636
+                                                       └──Type expr: Variable: a8917
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: a8636
+                                                          └──Type expr: Variable: a8917
                                                     └──Desc: Tuple
                                                        └──Expression:
-                                                          └──Type expr: Variable: a8636
+                                                          └──Type expr: Variable: a8917
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
-                                                                   └──Type expr: Variable: a8647
-                                                                   └──Type expr: Variable: a8636
+                                                                   └──Type expr: Variable: a8928
+                                                                   └──Type expr: Variable: a8917
                                                                 └──Desc: Variable
                                                                    └──Variable: f
                                                              └──Expression:
-                                                                └──Type expr: Variable: a8647
+                                                                └──Type expr: Variable: a8928
                                                                 └──Desc: Variable
                                                                    └──Variable: x
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: a8636
+                                                             └──Type expr: Variable: a8917
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: a8647
+                                                                      └──Type expr: Variable: a8928
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: a8636
+                                                                      └──Type expr: Variable: a8917
                                                                 └──Desc: Application
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
                                                                          └──Type expr: Arrow
-                                                                            └──Type expr: Variable: a8647
-                                                                            └──Type expr: Variable: a8636
+                                                                            └──Type expr: Variable: a8928
+                                                                            └──Type expr: Variable: a8917
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: a8647
+                                                                               └──Type expr: Variable: a8928
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: a8636
+                                                                               └──Type expr: Variable: a8917
                                                                       └──Desc: Variable
                                                                          └──Variable: map
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
-                                                                         └──Type expr: Variable: a8647
-                                                                         └──Type expr: Variable: a8636
+                                                                         └──Type expr: Variable: a8928
+                                                                         └──Type expr: Variable: a8917
                                                                       └──Desc: Variable
                                                                          └──Variable: f
                                                              └──Expression:
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: a8647
+                                                                   └──Type expr: Variable: a8928
                                                                 └──Desc: Variable
                                                                    └──Variable: xs
           └──Expression:
@@ -1401,25 +1401,25 @@ let%expect_test "let rec - mutual recursion (polymorphic)" =
   print_infer_result ~env:Env.empty exp;
   [%expect
     {|
-    Variables: a8835
+    Variables: a9116
     Expression:
     └──Expression:
        └──Type expr: Arrow
-          └──Type expr: Variable: a8835
+          └──Type expr: Variable: a9116
           └──Type expr: Constructor: int
        └──Desc: Let rec
           └──Value bindings:
              └──Value binding:
                 └──Variable: bar
                 └──Abstraction:
-                   └──Variables: a8828
+                   └──Variables: a9109
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a8822
+                         └──Type expr: Variable: a9103
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: a8822
+                            └──Type expr: Variable: a9103
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: int
@@ -1427,25 +1427,25 @@ let%expect_test "let rec - mutual recursion (polymorphic)" =
              └──Value binding:
                 └──Variable: foo
                 └──Abstraction:
-                   └──Variables: a8822
+                   └──Variables: a9103
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a8828
+                         └──Type expr: Variable: a9109
                          └──Type expr: Constructor: bool
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: a8828
+                            └──Type expr: Variable: a9109
                             └──Desc: Variable: y
                          └──Expression:
                             └──Type expr: Constructor: bool
                             └──Desc: Constant: true
           └──Expression:
              └──Type expr: Arrow
-                └──Type expr: Variable: a8835
+                └──Type expr: Variable: a9116
                 └──Type expr: Constructor: int
              └──Desc: Variable
                 └──Variable: foo
-                └──Type expr: Variable: a8835 |}]
+                └──Type expr: Variable: a9116 |}]
 
 let%expect_test "f-pottier elaboration 1" =
   let exp =
@@ -1465,7 +1465,7 @@ let%expect_test "f-pottier elaboration 1" =
   print_infer_result ~env:Env.empty exp;
   [%expect
     {|
-    Variables: a8849,a8849
+    Variables: a9130,a9130
     Expression:
     └──Expression:
        └──Type expr: Constructor: unit
@@ -1483,28 +1483,28 @@ let%expect_test "f-pottier elaboration 1" =
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Arrow
-                                  └──Type expr: Variable: a8849
-                                  └──Type expr: Variable: a8849
+                                  └──Type expr: Variable: a9130
+                                  └──Type expr: Variable: a9130
                                └──Type expr: Constructor: unit
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Arrow
-                                     └──Type expr: Variable: a8849
-                                     └──Type expr: Variable: a8849
+                                     └──Type expr: Variable: a9130
+                                     └──Type expr: Variable: a9130
                                   └──Desc: Variable: f
                                └──Expression:
                                   └──Type expr: Constructor: unit
                                   └──Desc: Constant: ()
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: a8849
-                               └──Type expr: Variable: a8849
+                               └──Type expr: Variable: a9130
+                               └──Type expr: Variable: a9130
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: a8849
+                                  └──Type expr: Variable: a9130
                                   └──Desc: Variable: x
                                └──Expression:
-                                  └──Type expr: Variable: a8849
+                                  └──Type expr: Variable: a9130
                                   └──Desc: Variable
                                      └──Variable: x
           └──Expression:
@@ -1540,28 +1540,28 @@ let%expect_test "let rec - polymorphic recursion" =
   print_infer_result ~env exp;
   [%expect
     {|
-    Variables: a8890
+    Variables: a9171
     Expression:
     └──Expression:
        └──Type expr: Arrow
-          └──Type expr: Variable: a8890
-          └──Type expr: Variable: a8890
+          └──Type expr: Variable: a9171
+          └──Type expr: Variable: a9171
        └──Desc: Let rec
           └──Value bindings:
              └──Value binding:
                 └──Variable: id
                 └──Abstraction:
-                   └──Variables: a8855
+                   └──Variables: a9136
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a8879
-                         └──Type expr: Variable: a8879
+                         └──Type expr: Variable: a9160
+                         └──Type expr: Variable: a9160
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: a8879
+                            └──Type expr: Variable: a9160
                             └──Desc: Variable: x
                          └──Expression:
-                            └──Type expr: Variable: a8879
+                            └──Type expr: Variable: a9160
                             └──Desc: Variable
                                └──Variable: x
              └──Value binding:
@@ -1592,11 +1592,11 @@ let%expect_test "let rec - polymorphic recursion" =
                                      └──Variable: x
           └──Expression:
              └──Type expr: Arrow
-                └──Type expr: Variable: a8890
-                └──Type expr: Variable: a8890
+                └──Type expr: Variable: a9171
+                └──Type expr: Variable: a9171
              └──Desc: Variable
                 └──Variable: id
-                └──Type expr: Variable: a8890 |}]
+                └──Type expr: Variable: a9171 |}]
 
 let add_eq env =
   let name = "eq" in
@@ -1656,22 +1656,22 @@ let%expect_test "ambiv-f" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: a8904
+                         └──Type expr: Variable: a9185
                          └──Type expr: Constructor: int
                       └──Type expr: Constructor: int
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: a8904
+                   └──Variables: a9185
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: a8904
+                            └──Type expr: Variable: a9185
                             └──Type expr: Constructor: int
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: a8904
+                               └──Type expr: Variable: a9185
                                └──Type expr: Constructor: int
                             └──Desc: Variable: x
                          └──Expression:
@@ -1679,25 +1679,25 @@ let%expect_test "ambiv-f" =
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: eq
-                                     └──Type expr: Variable: a8904
+                                     └──Type expr: Variable: a9185
                                      └──Type expr: Constructor: int
                                   └──Desc: Variable
                                      └──Variable: x
                                └──Type expr: Constructor: eq
-                                  └──Type expr: Variable: a8904
+                                  └──Type expr: Variable: a9185
                                   └──Type expr: Constructor: int
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: eq
-                                           └──Type expr: Variable: a8904
+                                           └──Type expr: Variable: a9185
                                            └──Type expr: Constructor: int
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Refl
                                               └──Constructor type:
                                                  └──Type expr: Constructor: eq
-                                                    └──Type expr: Variable: a8904
+                                                    └──Type expr: Variable: a9185
                                                     └──Type expr: Constructor: int
                                      └──Expression:
                                         └──Type expr: Constructor: int
@@ -1743,22 +1743,22 @@ let%expect_test "ambiv-f1" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: a8933
+                         └──Type expr: Variable: a9214
                          └──Type expr: Constructor: int
                       └──Type expr: Constructor: bool
                    └──Desc: Variable: f1
                 └──Abstraction:
-                   └──Variables: a8933
+                   └──Variables: a9214
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: a8933
+                            └──Type expr: Variable: a9214
                             └──Type expr: Constructor: int
                          └──Type expr: Constructor: bool
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: a8933
+                               └──Type expr: Variable: a9214
                                └──Type expr: Constructor: int
                             └──Desc: Variable: x
                          └──Expression:
@@ -1766,25 +1766,25 @@ let%expect_test "ambiv-f1" =
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: eq
-                                     └──Type expr: Variable: a8933
+                                     └──Type expr: Variable: a9214
                                      └──Type expr: Constructor: int
                                   └──Desc: Variable
                                      └──Variable: x
                                └──Type expr: Constructor: eq
-                                  └──Type expr: Variable: a8933
+                                  └──Type expr: Variable: a9214
                                   └──Type expr: Constructor: int
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: eq
-                                           └──Type expr: Variable: a8933
+                                           └──Type expr: Variable: a9214
                                            └──Type expr: Constructor: int
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Refl
                                               └──Constructor type:
                                                  └──Type expr: Constructor: eq
-                                                    └──Type expr: Variable: a8933
+                                                    └──Type expr: Variable: a9214
                                                     └──Type expr: Constructor: int
                                      └──Expression:
                                         └──Type expr: Constructor: bool
@@ -1835,60 +1835,60 @@ let%expect_test "ambiv-f2" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: a8962
+                         └──Type expr: Variable: a9243
                          └──Type expr: Constructor: int
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a8962
+                         └──Type expr: Variable: a9243
                          └──Type expr: Constructor: bool
                    └──Desc: Variable: f2
                 └──Abstraction:
-                   └──Variables: a8962
+                   └──Variables: a9243
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: a8962
+                            └──Type expr: Variable: a9243
                             └──Type expr: Constructor: int
                          └──Type expr: Arrow
-                            └──Type expr: Variable: a8962
+                            └──Type expr: Variable: a9243
                             └──Type expr: Constructor: bool
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: a8962
+                               └──Type expr: Variable: a9243
                                └──Type expr: Constructor: int
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: a8962
+                               └──Type expr: Variable: a9243
                                └──Type expr: Constructor: bool
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: a8962
+                                  └──Type expr: Variable: a9243
                                   └──Desc: Variable: y
                                └──Expression:
                                   └──Type expr: Constructor: bool
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: eq
-                                           └──Type expr: Variable: a8962
+                                           └──Type expr: Variable: a9243
                                            └──Type expr: Constructor: int
                                         └──Desc: Variable
                                            └──Variable: x
                                      └──Type expr: Constructor: eq
-                                        └──Type expr: Variable: a8962
+                                        └──Type expr: Variable: a9243
                                         └──Type expr: Constructor: int
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: eq
-                                                 └──Type expr: Variable: a8962
+                                                 └──Type expr: Variable: a9243
                                                  └──Type expr: Constructor: int
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Refl
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: eq
-                                                          └──Type expr: Variable: a8962
+                                                          └──Type expr: Variable: a9243
                                                           └──Type expr: Constructor: int
                                            └──Expression:
                                               └──Type expr: Constructor: bool
@@ -1900,13 +1900,13 @@ let%expect_test "ambiv-f2" =
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
-                                                             └──Type expr: Variable: a8962
+                                                             └──Type expr: Variable: a9243
                                                              └──Type expr: Arrow
                                                                 └──Type expr: Constructor: int
                                                                 └──Type expr: Constructor: bool
                                                           └──Desc: Primitive: (=)
                                                        └──Expression:
-                                                          └──Type expr: Variable: a8962
+                                                          └──Type expr: Variable: a9243
                                                           └──Desc: Variable
                                                              └──Variable: y
                                                  └──Expression:
@@ -1964,63 +1964,63 @@ let%expect_test "ambiv-g" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: a9016
+                         └──Type expr: Variable: a9297
                          └──Type expr: Constructor: int
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a9016
-                         └──Type expr: Variable: a9016
+                         └──Type expr: Variable: a9297
+                         └──Type expr: Variable: a9297
                    └──Desc: Variable: g
                 └──Abstraction:
-                   └──Variables: a9016
+                   └──Variables: a9297
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: a9016
+                            └──Type expr: Variable: a9297
                             └──Type expr: Constructor: int
                          └──Type expr: Arrow
-                            └──Type expr: Variable: a9016
-                            └──Type expr: Variable: a9016
+                            └──Type expr: Variable: a9297
+                            └──Type expr: Variable: a9297
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: a9016
+                               └──Type expr: Variable: a9297
                                └──Type expr: Constructor: int
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: a9016
-                               └──Type expr: Variable: a9016
+                               └──Type expr: Variable: a9297
+                               └──Type expr: Variable: a9297
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: a9016
+                                  └──Type expr: Variable: a9297
                                   └──Desc: Variable: y
                                └──Expression:
-                                  └──Type expr: Variable: a9016
+                                  └──Type expr: Variable: a9297
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: eq
-                                           └──Type expr: Variable: a9016
+                                           └──Type expr: Variable: a9297
                                            └──Type expr: Constructor: int
                                         └──Desc: Variable
                                            └──Variable: x
                                      └──Type expr: Constructor: eq
-                                        └──Type expr: Variable: a9016
+                                        └──Type expr: Variable: a9297
                                         └──Type expr: Constructor: int
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: eq
-                                                 └──Type expr: Variable: a9016
+                                                 └──Type expr: Variable: a9297
                                                  └──Type expr: Constructor: int
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Refl
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: eq
-                                                          └──Type expr: Variable: a9016
+                                                          └──Type expr: Variable: a9297
                                                           └──Type expr: Constructor: int
                                            └──Expression:
-                                              └──Type expr: Variable: a9016
+                                              └──Type expr: Variable: a9297
                                               └──Desc: If
                                                  └──Expression:
                                                     └──Type expr: Constructor: bool
@@ -2032,24 +2032,24 @@ let%expect_test "ambiv-g" =
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
-                                                                   └──Type expr: Variable: a9016
+                                                                   └──Type expr: Variable: a9297
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Constructor: int
                                                                       └──Type expr: Constructor: bool
                                                                 └──Desc: Primitive: (=)
                                                              └──Expression:
-                                                                └──Type expr: Variable: a9016
+                                                                └──Type expr: Variable: a9297
                                                                 └──Desc: Variable
                                                                    └──Variable: y
                                                        └──Expression:
                                                           └──Type expr: Constructor: int
                                                           └──Desc: Constant: 0
                                                  └──Expression:
-                                                    └──Type expr: Variable: a9016
+                                                    └──Type expr: Variable: a9297
                                                     └──Desc: Variable
                                                        └──Variable: y
                                                  └──Expression:
-                                                    └──Type expr: Variable: a9016
+                                                    └──Type expr: Variable: a9297
                                                     └──Desc: Constant: 0
           └──Expression:
              └──Type expr: Constructor: unit
@@ -2102,22 +2102,22 @@ let%expect_test "ambiv-p" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: a9085
+                         └──Type expr: Variable: a9366
                          └──Type expr: Constructor: int
                       └──Type expr: Constructor: int
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: a9085
+                   └──Variables: a9366
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: a9085
+                            └──Type expr: Variable: a9366
                             └──Type expr: Constructor: int
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: a9085
+                               └──Type expr: Variable: a9366
                                └──Type expr: Constructor: int
                             └──Desc: Variable: x
                          └──Expression:
@@ -2135,25 +2135,25 @@ let%expect_test "ambiv-p" =
                                            └──Desc: Match
                                               └──Expression:
                                                  └──Type expr: Constructor: eq
-                                                    └──Type expr: Variable: a9085
+                                                    └──Type expr: Variable: a9366
                                                     └──Type expr: Constructor: int
                                                  └──Desc: Variable
                                                     └──Variable: x
                                               └──Type expr: Constructor: eq
-                                                 └──Type expr: Variable: a9085
+                                                 └──Type expr: Variable: a9366
                                                  └──Type expr: Constructor: int
                                               └──Cases:
                                                  └──Case:
                                                     └──Pattern:
                                                        └──Type expr: Constructor: eq
-                                                          └──Type expr: Variable: a9085
+                                                          └──Type expr: Variable: a9366
                                                           └──Type expr: Constructor: int
                                                        └──Desc: Construct
                                                           └──Constructor description:
                                                              └──Name: Refl
                                                              └──Constructor type:
                                                                 └──Type expr: Constructor: eq
-                                                                   └──Type expr: Variable: a9085
+                                                                   └──Type expr: Variable: a9366
                                                                    └──Type expr: Constructor: int
                                                     └──Expression:
                                                        └──Type expr: Constructor: int
@@ -2226,72 +2226,72 @@ let%expect_test "coerce" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: a9131
-                         └──Type expr: Variable: a9132
+                         └──Type expr: Variable: a9412
+                         └──Type expr: Variable: a9413
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: a9131
+                            └──Type expr: Variable: a9412
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: a9132
+                            └──Type expr: Variable: a9413
                    └──Desc: Variable: coerce
                 └──Abstraction:
-                   └──Variables: a9131,a9132
+                   └──Variables: a9412,a9413
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: a9131
-                            └──Type expr: Variable: a9132
+                            └──Type expr: Variable: a9412
+                            └──Type expr: Variable: a9413
                          └──Type expr: Arrow
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: a9131
+                               └──Type expr: Variable: a9412
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: a9132
+                               └──Type expr: Variable: a9413
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: a9131
-                               └──Type expr: Variable: a9132
+                               └──Type expr: Variable: a9412
+                               └──Type expr: Variable: a9413
                             └──Desc: Variable: eq
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: a9131
+                                  └──Type expr: Variable: a9412
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: a9132
+                                  └──Type expr: Variable: a9413
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: a9131
+                                     └──Type expr: Variable: a9412
                                   └──Desc: Variable: x
                                └──Expression:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: a9132
+                                     └──Type expr: Variable: a9413
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: eq
-                                           └──Type expr: Variable: a9131
-                                           └──Type expr: Variable: a9132
+                                           └──Type expr: Variable: a9412
+                                           └──Type expr: Variable: a9413
                                         └──Desc: Variable
                                            └──Variable: eq
                                      └──Type expr: Constructor: eq
-                                        └──Type expr: Variable: a9131
-                                        └──Type expr: Variable: a9132
+                                        └──Type expr: Variable: a9412
+                                        └──Type expr: Variable: a9413
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: eq
-                                                 └──Type expr: Variable: a9131
-                                                 └──Type expr: Variable: a9132
+                                                 └──Type expr: Variable: a9412
+                                                 └──Type expr: Variable: a9413
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Refl
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: eq
-                                                          └──Type expr: Variable: a9131
-                                                          └──Type expr: Variable: a9132
+                                                          └──Type expr: Variable: a9412
+                                                          └──Type expr: Variable: a9413
                                            └──Expression:
                                               └──Type expr: Constructor: t
-                                                 └──Type expr: Variable: a9132
+                                                 └──Type expr: Variable: a9413
                                               └──Desc: Variable
                                                  └──Variable: x
           └──Expression:
@@ -2720,32 +2720,32 @@ let%expect_test "term - eval" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Tuple
-                         └──Type expr: Variable: a9218
-                         └──Type expr: Variable: a9221
-                      └──Type expr: Variable: a9218
+                         └──Type expr: Variable: a9499
+                         └──Type expr: Variable: a9502
+                      └──Type expr: Variable: a9499
                    └──Desc: Variable: fst
                 └──Abstraction:
-                   └──Variables: a9221,a9218,a9218
+                   └──Variables: a9502,a9499,a9499
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Tuple
-                            └──Type expr: Variable: a9218
-                            └──Type expr: Variable: a9221
-                         └──Type expr: Variable: a9218
+                            └──Type expr: Variable: a9499
+                            └──Type expr: Variable: a9502
+                         └──Type expr: Variable: a9499
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Tuple
-                               └──Type expr: Variable: a9218
-                               └──Type expr: Variable: a9221
+                               └──Type expr: Variable: a9499
+                               └──Type expr: Variable: a9502
                             └──Desc: Tuple
                                └──Pattern:
-                                  └──Type expr: Variable: a9218
+                                  └──Type expr: Variable: a9499
                                   └──Desc: Variable: x
                                └──Pattern:
-                                  └──Type expr: Variable: a9221
+                                  └──Type expr: Variable: a9502
                                   └──Desc: Any
                          └──Expression:
-                            └──Type expr: Variable: a9218
+                            └──Type expr: Variable: a9499
                             └──Desc: Variable
                                └──Variable: x
           └──Expression:
@@ -2756,32 +2756,32 @@ let%expect_test "term - eval" =
                       └──Pattern:
                          └──Type expr: Arrow
                             └──Type expr: Tuple
-                               └──Type expr: Variable: a9231
-                               └──Type expr: Variable: a9227
-                            └──Type expr: Variable: a9227
+                               └──Type expr: Variable: a9512
+                               └──Type expr: Variable: a9508
+                            └──Type expr: Variable: a9508
                          └──Desc: Variable: snd
                       └──Abstraction:
-                         └──Variables: a9227,a9231,a9227
+                         └──Variables: a9508,a9512,a9508
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Tuple
-                                  └──Type expr: Variable: a9231
-                                  └──Type expr: Variable: a9227
-                               └──Type expr: Variable: a9227
+                                  └──Type expr: Variable: a9512
+                                  └──Type expr: Variable: a9508
+                               └──Type expr: Variable: a9508
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Tuple
-                                     └──Type expr: Variable: a9231
-                                     └──Type expr: Variable: a9227
+                                     └──Type expr: Variable: a9512
+                                     └──Type expr: Variable: a9508
                                   └──Desc: Tuple
                                      └──Pattern:
-                                        └──Type expr: Variable: a9231
+                                        └──Type expr: Variable: a9512
                                         └──Desc: Any
                                      └──Pattern:
-                                        └──Type expr: Variable: a9227
+                                        └──Type expr: Variable: a9508
                                         └──Desc: Variable: x
                                └──Expression:
-                                  └──Type expr: Variable: a9227
+                                  └──Type expr: Variable: a9508
                                   └──Desc: Variable
                                      └──Variable: x
                 └──Expression:
@@ -2791,32 +2791,32 @@ let%expect_test "term - eval" =
                          └──Value binding:
                             └──Variable: eval
                             └──Abstraction:
-                               └──Variables: a9238
+                               └──Variables: a9519
                                └──Expression:
                                   └──Type expr: Arrow
                                      └──Type expr: Constructor: term
-                                        └──Type expr: Variable: a9255
-                                     └──Type expr: Variable: a9255
+                                        └──Type expr: Variable: a9536
+                                     └──Type expr: Variable: a9536
                                   └──Desc: Function
                                      └──Pattern:
                                         └──Type expr: Constructor: term
-                                           └──Type expr: Variable: a9255
+                                           └──Type expr: Variable: a9536
                                         └──Desc: Variable: t
                                      └──Expression:
-                                        └──Type expr: Variable: a9255
+                                        └──Type expr: Variable: a9536
                                         └──Desc: Match
                                            └──Expression:
                                               └──Type expr: Constructor: term
-                                                 └──Type expr: Variable: a9255
+                                                 └──Type expr: Variable: a9536
                                               └──Desc: Variable
                                                  └──Variable: t
                                            └──Type expr: Constructor: term
-                                              └──Type expr: Variable: a9255
+                                              └──Type expr: Variable: a9536
                                            └──Cases:
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: term
-                                                       └──Type expr: Variable: a9255
+                                                       └──Type expr: Variable: a9536
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Int
@@ -2824,18 +2824,18 @@ let%expect_test "term - eval" =
                                                              └──Type expr: Constructor: int
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: term
-                                                                └──Type expr: Variable: a9255
+                                                                └──Type expr: Variable: a9536
                                                        └──Pattern:
                                                           └──Type expr: Constructor: int
                                                           └──Desc: Variable: x
                                                  └──Expression:
-                                                    └──Type expr: Variable: a9255
+                                                    └──Type expr: Variable: a9536
                                                     └──Desc: Variable
                                                        └──Variable: x
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: term
-                                                       └──Type expr: Variable: a9255
+                                                       └──Type expr: Variable: a9536
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Bool
@@ -2843,18 +2843,18 @@ let%expect_test "term - eval" =
                                                              └──Type expr: Constructor: bool
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: term
-                                                                └──Type expr: Variable: a9255
+                                                                └──Type expr: Variable: a9536
                                                        └──Pattern:
                                                           └──Type expr: Constructor: bool
                                                           └──Desc: Variable: x
                                                  └──Expression:
-                                                    └──Type expr: Variable: a9255
+                                                    └──Type expr: Variable: a9536
                                                     └──Desc: Variable
                                                        └──Variable: x
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: term
-                                                       └──Type expr: Variable: a9255
+                                                       └──Type expr: Variable: a9536
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Succ
@@ -2863,25 +2863,25 @@ let%expect_test "term - eval" =
                                                                 └──Type expr: Constructor: int
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: term
-                                                                └──Type expr: Variable: a9255
+                                                                └──Type expr: Variable: a9536
                                                        └──Pattern:
                                                           └──Type expr: Constructor: term
                                                              └──Type expr: Constructor: int
                                                           └──Desc: Variable: t
                                                  └──Expression:
-                                                    └──Type expr: Variable: a9255
+                                                    └──Type expr: Variable: a9536
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: int
-                                                             └──Type expr: Variable: a9255
+                                                             └──Type expr: Variable: a9536
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: int
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Constructor: int
-                                                                      └──Type expr: Variable: a9255
+                                                                      └──Type expr: Variable: a9536
                                                                 └──Desc: Primitive: (+)
                                                              └──Expression:
                                                                 └──Type expr: Constructor: int
@@ -2905,7 +2905,7 @@ let%expect_test "term - eval" =
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: term
-                                                       └──Type expr: Variable: a9255
+                                                       └──Type expr: Variable: a9536
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: If
@@ -2914,20 +2914,20 @@ let%expect_test "term - eval" =
                                                                 └──Type expr: Constructor: term
                                                                    └──Type expr: Constructor: bool
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9255
+                                                                   └──Type expr: Variable: a9536
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9255
+                                                                   └──Type expr: Variable: a9536
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: term
-                                                                └──Type expr: Variable: a9255
+                                                                └──Type expr: Variable: a9536
                                                        └──Pattern:
                                                           └──Type expr: Tuple
                                                              └──Type expr: Constructor: term
                                                                 └──Type expr: Constructor: bool
                                                              └──Type expr: Constructor: term
-                                                                └──Type expr: Variable: a9255
+                                                                └──Type expr: Variable: a9536
                                                              └──Type expr: Constructor: term
-                                                                └──Type expr: Variable: a9255
+                                                                └──Type expr: Variable: a9536
                                                           └──Desc: Tuple
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: term
@@ -2935,14 +2935,14 @@ let%expect_test "term - eval" =
                                                                 └──Desc: Variable: t1
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9255
+                                                                   └──Type expr: Variable: a9536
                                                                 └──Desc: Variable: t2
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9255
+                                                                   └──Type expr: Variable: a9536
                                                                 └──Desc: Variable: t3
                                                  └──Expression:
-                                                    └──Type expr: Variable: a9255
+                                                    └──Type expr: Variable: a9536
                                                     └──Desc: If
                                                        └──Expression:
                                                           └──Type expr: Constructor: bool
@@ -2961,221 +2961,221 @@ let%expect_test "term - eval" =
                                                                 └──Desc: Variable
                                                                    └──Variable: t1
                                                        └──Expression:
-                                                          └──Type expr: Variable: a9255
+                                                          └──Type expr: Variable: a9536
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: term
-                                                                      └──Type expr: Variable: a9255
-                                                                   └──Type expr: Variable: a9255
+                                                                      └──Type expr: Variable: a9536
+                                                                   └──Type expr: Variable: a9536
                                                                 └──Desc: Variable
                                                                    └──Variable: eval
-                                                                   └──Type expr: Variable: a9255
+                                                                   └──Type expr: Variable: a9536
                                                              └──Expression:
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9255
+                                                                   └──Type expr: Variable: a9536
                                                                 └──Desc: Variable
                                                                    └──Variable: t2
                                                        └──Expression:
-                                                          └──Type expr: Variable: a9255
+                                                          └──Type expr: Variable: a9536
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: term
-                                                                      └──Type expr: Variable: a9255
-                                                                   └──Type expr: Variable: a9255
+                                                                      └──Type expr: Variable: a9536
+                                                                   └──Type expr: Variable: a9536
                                                                 └──Desc: Variable
                                                                    └──Variable: eval
-                                                                   └──Type expr: Variable: a9255
+                                                                   └──Type expr: Variable: a9536
                                                              └──Expression:
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9255
+                                                                   └──Type expr: Variable: a9536
                                                                 └──Desc: Variable
                                                                    └──Variable: t3
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: term
-                                                       └──Type expr: Variable: a9255
+                                                       └──Type expr: Variable: a9536
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Pair
                                                           └──Constructor argument type:
                                                              └──Type expr: Tuple
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9383
+                                                                   └──Type expr: Variable: a9664
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9381
+                                                                   └──Type expr: Variable: a9662
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: term
-                                                                └──Type expr: Variable: a9255
+                                                                └──Type expr: Variable: a9536
                                                        └──Pattern:
                                                           └──Type expr: Tuple
                                                              └──Type expr: Constructor: term
-                                                                └──Type expr: Variable: a9383
+                                                                └──Type expr: Variable: a9664
                                                              └──Type expr: Constructor: term
-                                                                └──Type expr: Variable: a9381
+                                                                └──Type expr: Variable: a9662
                                                           └──Desc: Tuple
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9383
+                                                                   └──Type expr: Variable: a9664
                                                                 └──Desc: Variable: t1
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9381
+                                                                   └──Type expr: Variable: a9662
                                                                 └──Desc: Variable: t2
                                                  └──Expression:
-                                                    └──Type expr: Variable: a9255
+                                                    └──Type expr: Variable: a9536
                                                     └──Desc: Tuple
                                                        └──Expression:
-                                                          └──Type expr: Variable: a9383
+                                                          └──Type expr: Variable: a9664
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: term
-                                                                      └──Type expr: Variable: a9383
-                                                                   └──Type expr: Variable: a9383
+                                                                      └──Type expr: Variable: a9664
+                                                                   └──Type expr: Variable: a9664
                                                                 └──Desc: Variable
                                                                    └──Variable: eval
-                                                                   └──Type expr: Variable: a9383
+                                                                   └──Type expr: Variable: a9664
                                                              └──Expression:
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9383
+                                                                   └──Type expr: Variable: a9664
                                                                 └──Desc: Variable
                                                                    └──Variable: t1
                                                        └──Expression:
-                                                          └──Type expr: Variable: a9381
+                                                          └──Type expr: Variable: a9662
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: term
-                                                                      └──Type expr: Variable: a9381
-                                                                   └──Type expr: Variable: a9381
+                                                                      └──Type expr: Variable: a9662
+                                                                   └──Type expr: Variable: a9662
                                                                 └──Desc: Variable
                                                                    └──Variable: eval
-                                                                   └──Type expr: Variable: a9381
+                                                                   └──Type expr: Variable: a9662
                                                              └──Expression:
                                                                 └──Type expr: Constructor: term
-                                                                   └──Type expr: Variable: a9381
+                                                                   └──Type expr: Variable: a9662
                                                                 └──Desc: Variable
                                                                    └──Variable: t2
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: term
-                                                       └──Type expr: Variable: a9255
+                                                       └──Type expr: Variable: a9536
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Fst
                                                           └──Constructor argument type:
                                                              └──Type expr: Constructor: term
                                                                 └──Type expr: Tuple
-                                                                   └──Type expr: Variable: a9423
-                                                                   └──Type expr: Variable: a9424
+                                                                   └──Type expr: Variable: a9704
+                                                                   └──Type expr: Variable: a9705
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: term
-                                                                └──Type expr: Variable: a9255
+                                                                └──Type expr: Variable: a9536
                                                        └──Pattern:
                                                           └──Type expr: Constructor: term
                                                              └──Type expr: Tuple
-                                                                └──Type expr: Variable: a9423
-                                                                └──Type expr: Variable: a9424
+                                                                └──Type expr: Variable: a9704
+                                                                └──Type expr: Variable: a9705
                                                           └──Desc: Variable: t
                                                  └──Expression:
-                                                    └──Type expr: Variable: a9255
+                                                    └──Type expr: Variable: a9536
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Tuple
-                                                                └──Type expr: Variable: a9255
-                                                                └──Type expr: Variable: a9424
-                                                             └──Type expr: Variable: a9255
+                                                                └──Type expr: Variable: a9536
+                                                                └──Type expr: Variable: a9705
+                                                             └──Type expr: Variable: a9536
                                                           └──Desc: Variable
                                                              └──Variable: fst
-                                                             └──Type expr: Variable: a9424
-                                                             └──Type expr: Variable: a9255
+                                                             └──Type expr: Variable: a9705
+                                                             └──Type expr: Variable: a9536
                                                        └──Expression:
                                                           └──Type expr: Tuple
-                                                             └──Type expr: Variable: a9255
-                                                             └──Type expr: Variable: a9424
+                                                             └──Type expr: Variable: a9536
+                                                             └──Type expr: Variable: a9705
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: term
                                                                       └──Type expr: Tuple
-                                                                         └──Type expr: Variable: a9255
-                                                                         └──Type expr: Variable: a9424
+                                                                         └──Type expr: Variable: a9536
+                                                                         └──Type expr: Variable: a9705
                                                                    └──Type expr: Tuple
-                                                                      └──Type expr: Variable: a9255
-                                                                      └──Type expr: Variable: a9424
+                                                                      └──Type expr: Variable: a9536
+                                                                      └──Type expr: Variable: a9705
                                                                 └──Desc: Variable
                                                                    └──Variable: eval
                                                                    └──Type expr: Tuple
-                                                                      └──Type expr: Variable: a9255
-                                                                      └──Type expr: Variable: a9424
+                                                                      └──Type expr: Variable: a9536
+                                                                      └──Type expr: Variable: a9705
                                                              └──Expression:
                                                                 └──Type expr: Constructor: term
                                                                    └──Type expr: Tuple
-                                                                      └──Type expr: Variable: a9255
-                                                                      └──Type expr: Variable: a9424
+                                                                      └──Type expr: Variable: a9536
+                                                                      └──Type expr: Variable: a9705
                                                                 └──Desc: Variable
                                                                    └──Variable: t
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: term
-                                                       └──Type expr: Variable: a9255
+                                                       └──Type expr: Variable: a9536
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Snd
                                                           └──Constructor argument type:
                                                              └──Type expr: Constructor: term
                                                                 └──Type expr: Tuple
-                                                                   └──Type expr: Variable: a9457
-                                                                   └──Type expr: Variable: a9458
+                                                                   └──Type expr: Variable: a9738
+                                                                   └──Type expr: Variable: a9739
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: term
-                                                                └──Type expr: Variable: a9255
+                                                                └──Type expr: Variable: a9536
                                                        └──Pattern:
                                                           └──Type expr: Constructor: term
                                                              └──Type expr: Tuple
-                                                                └──Type expr: Variable: a9457
-                                                                └──Type expr: Variable: a9458
+                                                                └──Type expr: Variable: a9738
+                                                                └──Type expr: Variable: a9739
                                                           └──Desc: Variable: t
                                                  └──Expression:
-                                                    └──Type expr: Variable: a9255
+                                                    └──Type expr: Variable: a9536
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Tuple
-                                                                └──Type expr: Variable: a9457
-                                                                └──Type expr: Variable: a9255
-                                                             └──Type expr: Variable: a9255
+                                                                └──Type expr: Variable: a9738
+                                                                └──Type expr: Variable: a9536
+                                                             └──Type expr: Variable: a9536
                                                           └──Desc: Variable
                                                              └──Variable: snd
-                                                             └──Type expr: Variable: a9255
-                                                             └──Type expr: Variable: a9457
+                                                             └──Type expr: Variable: a9536
+                                                             └──Type expr: Variable: a9738
                                                        └──Expression:
                                                           └──Type expr: Tuple
-                                                             └──Type expr: Variable: a9457
-                                                             └──Type expr: Variable: a9255
+                                                             └──Type expr: Variable: a9738
+                                                             └──Type expr: Variable: a9536
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: term
                                                                       └──Type expr: Tuple
-                                                                         └──Type expr: Variable: a9457
-                                                                         └──Type expr: Variable: a9255
+                                                                         └──Type expr: Variable: a9738
+                                                                         └──Type expr: Variable: a9536
                                                                    └──Type expr: Tuple
-                                                                      └──Type expr: Variable: a9457
-                                                                      └──Type expr: Variable: a9255
+                                                                      └──Type expr: Variable: a9738
+                                                                      └──Type expr: Variable: a9536
                                                                 └──Desc: Variable
                                                                    └──Variable: eval
                                                                    └──Type expr: Tuple
-                                                                      └──Type expr: Variable: a9457
-                                                                      └──Type expr: Variable: a9255
+                                                                      └──Type expr: Variable: a9738
+                                                                      └──Type expr: Variable: a9536
                                                              └──Expression:
                                                                 └──Type expr: Constructor: term
                                                                    └──Type expr: Tuple
-                                                                      └──Type expr: Variable: a9457
-                                                                      └──Type expr: Variable: a9255
+                                                                      └──Type expr: Variable: a9738
+                                                                      └──Type expr: Variable: a9536
                                                                 └──Desc: Variable
                                                                    └──Variable: t
                       └──Expression:
@@ -3243,20 +3243,20 @@ let%expect_test "semi-explicit first-class poly-1" =
                             └──Label: f
                             └──Label argument type:
                                └──Type expr: Arrow
-                                  └──Type expr: Variable: a9494
-                                  └──Type expr: Variable: a9494
+                                  └──Type expr: Variable: a9775
+                                  └──Type expr: Variable: a9775
                             └──Label type:
                                └──Type expr: Constructor: boxed_id
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: a9494
-                               └──Type expr: Variable: a9494
+                               └──Type expr: Variable: a9775
+                               └──Type expr: Variable: a9775
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: a9494
+                                  └──Type expr: Variable: a9775
                                   └──Desc: Variable: x
                                └──Expression:
-                                  └──Type expr: Variable: a9494
+                                  └──Type expr: Variable: a9775
                                   └──Desc: Variable
                                      └──Variable: x
           └──Expression:

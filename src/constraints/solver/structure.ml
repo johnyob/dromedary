@@ -343,6 +343,14 @@ module Ambivalent (Structure : S) = struct
       exception Inconsistent = Rigid_type.Structure.Cannot_merge
 
       let add ~ctx t type1 type2 scope =
+        Log.debug (fun m ->
+            let string_of_rigid_type t =
+              Rigid_type.sexp_of_t t |> Sexp.to_string_hum
+            in
+            m
+              "Adding equation between %s\n and\n %s"
+              (string_of_rigid_type type1)
+              (string_of_rigid_type type2));
         let ctx : Rigid_type.t Rigid_type.Structure.ctx =
           { equations_ctx = t
           ; scope
@@ -351,8 +359,8 @@ module Ambivalent (Structure : S) = struct
           ; super_ = ctx
           }
         in
-        (try Rigid_type.Unifier.unify ~ctx type1 type2 with 
-          _ -> raise Inconsistent);
+        (try Rigid_type.Unifier.unify ~ctx type1 type2 with
+        | _ -> raise Inconsistent);
         ctx.equations_ctx
 
 
@@ -444,13 +452,15 @@ module Ambivalent (Structure : S) = struct
       | Rigid_var rigid_var1, Rigid_var rigid_var2 ->
         let rigid_var, rigid_type, scope', t =
           match Equations.Ctx.get_equation ctx.equations_ctx rigid_var1 with
-          | Some (rigid_type, scope') -> 
-            Log.debug (fun m -> m "Using equation for %d with scope %d" rigid_var1 scope');
+          | Some (rigid_type, scope') ->
+            Log.debug (fun m ->
+                m "Using equation for %d with scope %d" rigid_var1 scope');
             rigid_var1, rigid_type, scope', t2
           | None ->
             (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var2 with
-            | Some (rigid_type, scope') -> 
-              Log.debug (fun m -> m "Using equation for %d with scope %d" rigid_var2 scope');
+            | Some (rigid_type, scope') ->
+              Log.debug (fun m ->
+                  m "Using equation for %d with scope %d" rigid_var2 scope');
               rigid_var2, rigid_type, scope', t1
             | None -> raise Cannot_merge)
         in
@@ -459,7 +469,13 @@ module Ambivalent (Structure : S) = struct
         (* Merge [t2'] and [t1]. *)
         t' =~- t;
         (* Update scope *)
-        Log.debug (fun m -> m "Updating scope: %d = %d w/ scopes %d %d" rigid_var1 rigid_var2 !scope scope');
+        Log.debug (fun m ->
+            m
+              "Updating scope: %d = %d w/ scopes %d %d"
+              rigid_var1
+              rigid_var2
+              !scope
+              scope');
         if !scope < scope' then scope := scope';
         (* Representative is the rigid variable *)
         Rigid_var rigid_var
@@ -542,19 +558,16 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
   let merge ~ctx ~equate t1 t2 =
     let ( =~ ) = equate in
     let ( =~- ) a structure = a =~ ctx.make_structure structure in
-
-    let is_row_cons l t = 
+    let is_row_cons l t =
       let t1, t2 = ctx.make_var (), ctx.make_var () in
       t =~- Row_cons (l, t1, t2);
       t1, t2
     in
-
-    let is_row_uniform t = 
+    let is_row_uniform t =
       let t' = ctx.make_var () in
       t =~- Row_uniform t';
       t'
     in
-
     match t1, t2 with
     | Structure structure1, Structure structure2 ->
       Structure (Structure.merge ~ctx:ctx.super_ ~equate structure1 structure2)
@@ -586,15 +599,15 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
     | Structure t2, (Row_cons (l1, t11, t12) as t1) ->
       (* TODO: Understand WHY the distributive property for formers (structures) is required. *)
       (* The children of [t2] must be of the form: [(l1: _; _)] (according to EMLTI). *)
-      let t11', t12' = 
+      let t11', t12' =
         let t11_12 = Structure.map t2 ~f:(is_row_cons l1) in
         Structure.map ~f:fst t11_12, Structure.map ~f:snd t11_12
       in
       t11 =~- Structure t11';
       t12 =~- Structure t12';
       t1
-    | (Row_uniform t as t1), Structure t2
-    | Structure t2, (Row_uniform t as t1) ->
+    | (Row_uniform t as t1), Structure t2 | Structure t2, (Row_uniform t as t1)
+      ->
       let t' = Structure.map t2 ~f:is_row_uniform in
       t =~- Structure t';
       t1
