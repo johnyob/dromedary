@@ -50,54 +50,54 @@ let%expect_test "nested-equations-1" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: a1293
+                         └──Type expr: Variable: a6066
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a1293
+                         └──Type expr: Variable: a6066
                          └──Type expr: Constructor: int
                    └──Desc: Variable: to_int
                 └──Abstraction:
-                   └──Variables: a1293
+                   └──Variables: a6066
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: a1293
+                            └──Type expr: Variable: a6066
                          └──Type expr: Arrow
-                            └──Type expr: Variable: a1293
+                            └──Type expr: Variable: a6066
                             └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: a1293
+                               └──Type expr: Variable: a6066
                             └──Desc: Variable: w
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: a1293
+                               └──Type expr: Variable: a6066
                                └──Type expr: Constructor: int
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: a1293
+                                  └──Type expr: Variable: a6066
                                   └──Desc: Variable: x
                                └──Expression:
                                   └──Type expr: Constructor: int
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: a1293
+                                           └──Type expr: Variable: a6066
                                         └──Desc: Variable
                                            └──Variable: w
                                      └──Type expr: Constructor: t
-                                        └──Type expr: Variable: a1293
+                                        └──Type expr: Variable: a6066
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: t
-                                                 └──Type expr: Variable: a1293
+                                                 └──Type expr: Variable: a6066
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Int
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: t
-                                                          └──Type expr: Variable: a1293
+                                                          └──Type expr: Variable: a6066
                                            └──Expression:
                                               └──Type expr: Constructor: int
                                               └──Desc: Variable
