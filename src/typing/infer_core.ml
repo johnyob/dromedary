@@ -817,9 +817,18 @@ module Expression = struct
       let annotate_case case =
         { case with pc_rhs = Pexp_constraint (case.pc_rhs, exp_type') }
       in
-      infer_exp_desc
-        (Pexp_match (match_exp, List.map ~f:annotate_case cases))
-        exp_type
+      let%bind exp_type' = Convert.core_type exp_type' in
+      let@ exp_type1 = of_type exp_type' in
+      let@ exp_type2 = of_type exp_type' in
+      let%bind exp_desc =  
+        infer_exp_desc
+          (Pexp_match (match_exp, List.map ~f:annotate_case cases))
+          exp_type1
+      in
+      return
+        (let%map () = exp_type =~ exp_type2
+         and exp_desc = exp_desc in
+         exp_desc)
     | Pexp_constraint (exp, exp_type') ->
       let%bind exp_type' = Convert.core_type exp_type' in
       let@ exp_type1 = of_type exp_type' in
@@ -1222,4 +1231,52 @@ module Expression = struct
       infer_exp exp var
     in
     return (let_0 ~in_:exp)
+
+
+  module Structure = struct
+    open Structure.Item
+
+    let infer_value_binding
+        { pvb_forall_vars = forall_vars; pvb_pat = pat; pvb_expr = exp }
+      =
+      let open Computation.Let_syntax in
+      extend_substitution_vars
+        ~vars:forall_vars
+        ~on_duplicate_var:(fun var ->
+          [%message
+            "Duplicate variable in universal quantifier (let)"
+              (exp : Parsetree.expression)
+              (var : string)])
+        ~in_:(fun forall_vars ->
+          (* [var] is the type of the binding *)
+          let var = fresh () in
+          (* [pat] has the type var *)
+          let%bind fragment, pat = infer_pat pat var in
+          let ( universal_ctx
+              , existential_ctx
+              , _equations
+              , bindings
+              , _substitution )
+            =
+            Fragment.to_bindings fragment
+          in
+          (* Do not introduce existential vars using let-bindings *)
+          assert (List.is_empty universal_ctx);
+          (* [exp] has the type var *)
+          let is_non_expansive = is_non_expansive exp in
+          let%bind exp = infer_exp exp var in
+          return
+            (Binding.let_
+               ~ctx:
+                 ( forall_vars
+                 , Shallow_type.Ctx.merge ([ var ], []) existential_ctx )
+               ~is_non_expansive
+               ~bindings
+               ~in_:(pat &~ exp)))
+
+    let infer_value_bindings value_bindings =
+      value_bindings |> List.map ~f:infer_value_binding |> Computation.all
+      
+    let infer_rec_value_bindings = infer_rec_value_bindings
+  end
 end

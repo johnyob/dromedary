@@ -820,7 +820,13 @@ module Make (Algebra : Algebra) = struct
             let value1, env1 = solve ~state ~env t1 in
             let value2, env2 = solve ~state ~env t2 in
             both value1 value2, Env.merge env1 env2
-          | Let let_bindings -> solve_let_bindings ~state ~env let_bindings
+          | Let let_bindings ->
+            Log.debug (fun m ->
+                m
+                  "Solving let bindings: %s"
+                  ([%sexp (let_bindings : let_binding list)]
+                  |> Sexp.to_string_hum));
+            solve_let_bindings ~state ~env let_bindings
           | Def bindings ->
             let env = Env.extend_bindings state env bindings in
             return (), env
@@ -836,12 +842,16 @@ module Make (Algebra : Algebra) = struct
 
     let solve : type a. state:state -> env:Env.t -> a t -> a list Elaborate.t =
      fun ~state ~env t ->
+      (* Enter a new region *)
+      enter state;
       let _env, values =
-        List.fold_right t ~init:(env, []) ~f:(fun item (env, values) ->
+        List.fold_left t ~init:(env, []) ~f:(fun (env, values) item ->
             let value, env = Item.solve ~state ~env item in
             env, value :: values)
       in
-      Elaborate.list values
+      (* Generalize and exit *)
+      ignore (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
+      Elaborate.list (List.rev values)
 
 
     let solve ?(debug = false) ~abbrevs =

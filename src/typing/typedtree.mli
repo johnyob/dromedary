@@ -152,8 +152,10 @@ type type_exception =
 [@@derving sexp_of]
 
 type structure_item = 
-  | Tstr_value of rec_flag * value_binding list
-      (** Structure let binding: [let <rec> P1 = E1 and ... and Pn = En] *)
+  | Tstr_value of value_binding list 
+    (** Let expressions *)
+  | Tstr_value_rec of rec_value_binding list
+    (** Let rec expressions *)
   | Tstr_primitive of value_description
       (** External primitive descriptions *)
   | Tstr_type of type_declaration list
@@ -164,5 +166,6 @@ type structure_item =
 
 type structure = structure_item list [@@deriving sexp_of]
 
+val pp_structure_mach : structure Pretty_printer.t
 
 

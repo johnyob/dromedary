@@ -351,7 +351,8 @@ module Ambivalent (Structure : S) = struct
           ; super_ = ctx
           }
         in
-        Rigid_type.Unifier.unify ~ctx type1 type2;
+        (try Rigid_type.Unifier.unify ~ctx type1 type2 with 
+          _ -> raise Inconsistent);
         ctx.equations_ctx
 
 
@@ -443,10 +444,14 @@ module Ambivalent (Structure : S) = struct
       | Rigid_var rigid_var1, Rigid_var rigid_var2 ->
         let rigid_var, rigid_type, scope', t =
           match Equations.Ctx.get_equation ctx.equations_ctx rigid_var1 with
-          | Some (rigid_type, scope') -> rigid_var1, rigid_type, scope', t2
+          | Some (rigid_type, scope') -> 
+            Log.debug (fun m -> m "Using equation for %d with scope %d" rigid_var1 scope');
+            rigid_var1, rigid_type, scope', t2
           | None ->
             (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var2 with
-            | Some (rigid_type, scope') -> rigid_var2, rigid_type, scope', t1
+            | Some (rigid_type, scope') -> 
+              Log.debug (fun m -> m "Using equation for %d with scope %d" rigid_var2 scope');
+              rigid_var2, rigid_type, scope', t1
             | None -> raise Cannot_merge)
         in
         (* Convert [rigid_type] to ['a] type. *)
@@ -454,6 +459,7 @@ module Ambivalent (Structure : S) = struct
         (* Merge [t2'] and [t1]. *)
         t' =~- t;
         (* Update scope *)
+        Log.debug (fun m -> m "Updating scope: %d = %d w/ scopes %d %d" rigid_var1 rigid_var2 !scope scope');
         if !scope < scope' then scope := scope';
         (* Representative is the rigid variable *)
         Rigid_var rigid_var
@@ -461,6 +467,7 @@ module Ambivalent (Structure : S) = struct
         (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var with
         | None -> raise Cannot_merge
         | Some (rigid_type, scope') ->
+          Log.debug (fun m -> m "Using equation for %d" rigid_var);
           (* Convert [rigid_type] to ['a] type. *)
           let t1' = convert_rigid_type ~ctx rigid_type in
           (* Merge [t2'] and [t1]. *)
@@ -473,6 +480,7 @@ module Ambivalent (Structure : S) = struct
         (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var with
         | None -> raise Cannot_merge
         | Some (rigid_type, scope') ->
+          Log.debug (fun m -> m "Using equation for %d" rigid_var);
           (* Convert [rigid_type] to ['a] type. *)
           let t2' = convert_rigid_type ~ctx rigid_type in
           (* Merge [t2'] and [t1]. *)

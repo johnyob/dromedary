@@ -37,13 +37,9 @@ module Make (Algebra : Algebra) : sig
   *)
 
   type 'a t
-
   and binding = Term_var.t * variable
-
   and def_binding = binding
-
   and 'a let_binding
-
   and 'a let_rec_binding
 
   val sexp_of_t : 'a t -> Sexp.t
@@ -192,11 +188,8 @@ module Make (Algebra : Algebra) : sig
   val ( =~- ) : variable -> Type.t -> unit t
 
   type 'a bound = Type_var.t list * 'a
-
   and term_binding = Term_var.t * Types.scheme
-
   and 'a term_let_binding = term_binding list * 'a bound
-
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   (** [inst x a] is the constraint that instantiates [x] to [a].
@@ -229,11 +222,7 @@ module Make (Algebra : Algebra) : sig
     -> ('a term_let_binding list * 'b) t
 
   val let_0 : in_:'a t -> 'a bound t
-
-  val let_1 
-    :  binding:'a let_binding 
-    -> in_:'b t 
-    -> ('a term_let_binding * 'b) t
+  val let_1 : binding:'a let_binding -> in_:'b t -> ('a term_let_binding * 'b) t
 
   (** [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
       constraint [in_]. *)
@@ -272,8 +261,7 @@ module Make (Algebra : Algebra) : sig
 
   module Structure : sig
     module Item : sig
-      type 'a let_rec_binding
-
+      type nonrec 'a let_rec_binding = 'a let_rec_binding
       and 'a let_binding
 
       module Binding : sig
@@ -308,6 +296,7 @@ module Make (Algebra : Algebra) : sig
       include Applicative.Let_syntax with type 'a t := 'a t
 
       val let_ : bindings:'a let_binding list -> 'a term_let_binding list t
+      val let_1 : binding:'a let_binding -> 'a term_let_binding t
 
       val let_rec
         :  bindings:'a let_rec_binding list

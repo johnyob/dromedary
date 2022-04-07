@@ -492,9 +492,19 @@ atom_pattern:
     ; RIGHT_PAREN
       { pat }  
 
+%inline con_pattern_arg_type_vars:
+  | /* empty */   
+    { [] }
+  | LEFT_PAREN
+    ; TYPE
+    ; type_vars = nonempty_list(type_var)
+    ; RIGHT_PAREN
+      { type_vars }  
+
 %inline con_pattern_arg:
-  | pat = pattern
-      { ([], pat) }
+  | type_vars = con_pattern_arg_type_vars
+    ; pat = pattern
+      { (type_vars, pat) }
 
 %inline core_scheme:
   | type_vars = nonempty_list(type_var)

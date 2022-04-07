@@ -45,7 +45,7 @@ module Algebra = struct
   module Type_var = struct
     type t = string [@@deriving sexp_of]
 
-    let of_int x = "α" ^ Int.to_string x
+    let of_int x = "a" ^ Int.to_string x
   end
 
   module Type_former = struct
@@ -341,18 +341,100 @@ let pp_label_description_mach ~indent ppf label_desc =
 
 
 let pp_label_description _ppf = assert false
-(* 
-let to_pp_mach ~pp ~name ppf t =
-  Format.fprintf ppf "%s:@." name;
-  let indent = "└──" in
-  pp ~indent ppf t
+
+let pp_constraint_mach ~indent ppf (lhs, rhs) =
+  Format.fprintf ppf "%sConstraint:@." indent;
+  let indent = indent_space ^ indent in
+  pp_type_expr_mach ~indent ppf lhs;
+  pp_type_expr_mach ~indent ppf rhs
 
 
-let pp_type_expr_mach = to_pp_mach ~pp:pp_type_expr_mach ~name:"Type expr"
+let pp_constructor_argument_mach ~indent ppf constr_arg =
+  Format.fprintf ppf "%sConstructor argument:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf
+    ppf
+    "%sConstructor betas: %s@."
+    indent
+    (String.concat ~sep:" " constr_arg.constructor_arg_betas);
+  pp_type_expr_mach ~indent ppf constr_arg.constructor_arg_type
 
-let pp_constructor_description_mach =
-  to_pp_mach ~pp:pp_constructor_description_mach ~name:"Constructor description"
+
+let pp_constructor_declaration_mach
+    ~indent
+    ppf
+    (constr_decl : constructor_declaration)
+  =
+  Format.fprintf ppf "%sConstructor declaration:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf
+    ppf
+    "%sConstructor name: %s@."
+    indent
+    constr_decl.constructor_name;
+  Format.fprintf
+    ppf
+    "%sConstructor alphas: %s@."
+    indent
+    (String.concat ~sep:" " constr_decl.constructor_alphas);
+  Format.fprintf ppf "%sConstructor type:@." indent;
+  pp_type_expr_mach
+    ~indent:(indent_space ^ indent)
+    ppf
+    constr_decl.constructor_type;
+  (match constr_decl.constructor_arg with
+  | None -> ()
+  | Some constr_arg -> pp_constructor_argument_mach ~indent ppf constr_arg);
+  List.iter
+    ~f:(pp_constraint_mach ~indent ppf)
+    constr_decl.constructor_constraints
 
 
-let pp_label_description_mach =
-  to_pp_mach ~pp:pp_label_description_mach ~name:"Label description" *)
+let pp_label_declaration_mach ~indent ppf (label_decl : label_declaration) =
+  Format.fprintf ppf "%sLabel declaration:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf ppf "%sLabel name: %s@." indent label_decl.label_name;
+  Format.fprintf
+    ppf
+    "%sLabel alphas: %s@."
+    indent
+    (String.concat ~sep:" " label_decl.label_alphas);
+  Format.fprintf
+    ppf
+    "%sLabel betas: %s@."
+    indent
+    (String.concat ~sep:" " label_decl.label_betas);
+  pp_type_expr_mach ~indent ppf label_decl.label_arg;
+  pp_type_expr_mach ~indent ppf label_decl.label_type
+
+let pp_alias_mach ~indent ppf alias = 
+  Format.fprintf ppf "%sAlias@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf ppf "%sAlias name: %s@." indent alias.alias_name;
+  Format.fprintf
+    ppf
+    "%sAlias alphas: %s@."
+    indent
+    (String.concat ~sep:" " alias.alias_alphas);
+  pp_type_expr_mach ~indent ppf alias.alias_type
+
+let pp_type_decl_kind_mach ~indent ppf type_decl_kind =
+  let print = Format.fprintf ppf "%sType declaration kind: %s@." indent in
+  let indent = indent_space ^ indent in
+  match type_decl_kind with
+  | Type_variant constr_decls ->
+    print "Variant";
+    List.iter constr_decls ~f:(pp_constructor_declaration_mach ~indent ppf)
+  | Type_record label_decls ->
+    print "Record";
+    List.iter label_decls ~f:(pp_label_declaration_mach ~indent ppf)
+  | Type_abstract -> print "Abstract"
+  | Type_alias alias ->
+    print "Alias";
+    pp_alias_mach ~indent ppf alias
+
+let pp_type_declaration_mach ~indent ppf type_decl =
+  Format.fprintf ppf "%sType declaration:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf ppf "%sType name: %s@." indent type_decl.type_name;
+  pp_type_decl_kind_mach ~indent ppf type_decl.type_kind

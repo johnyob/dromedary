@@ -54,4 +54,17 @@ module Expression : sig
   val infer_rec_value_bindings
     :  Parsetree.value_binding list
     -> Typedtree.expression let_rec_binding list Computation.t
+
+  module Structure : sig
+    open Structure.Item
+
+    val infer_value_bindings
+      :  Parsetree.value_binding list
+      -> (Typedtree.pattern * Typedtree.expression) let_binding list
+         Computation.t
+
+    val infer_rec_value_bindings
+      :  Parsetree.value_binding list
+      -> Typedtree.expression let_rec_binding list Computation.t
+  end
 end

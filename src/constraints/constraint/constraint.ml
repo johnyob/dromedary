@@ -429,6 +429,8 @@ module Make (Algebra : Algebra) = struct
         ; in_ : 'a t
         }
 
+      let sexp_of_let_rec_binding = sexp_of_let_rec_binding
+
       let sexp_of_let_binding : type a. a let_binding -> Sexp.t =
        fun t ->
         [%sexp
@@ -489,6 +491,12 @@ module Make (Algebra : Algebra) = struct
       end
 
       let let_ ~bindings = Let bindings
+      let let_1 ~binding =
+        let_ ~bindings:[ binding ]
+        >>| function
+        | [ term_binding ] -> term_binding
+        | _ -> assert false
+
       let let_rec ~bindings = Let_rec bindings
       let def ~bindings = Def bindings
 

@@ -107,6 +107,8 @@ module type Intf = sig
         type t = int
 
         val outermost_scope : t
+
+        val max : t -> t -> t
       end
 
       module Ctx : sig

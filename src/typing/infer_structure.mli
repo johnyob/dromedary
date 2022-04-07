@@ -12,29 +12,9 @@
 (*****************************************************************************)
 
 open! Import
-open Constraint
-open Types
-open Typedtree
+open Constraint.Structure
 
-(** [t] represents the typing environment Ω. *)
-type t
-
-val empty : t
-
-val add_type_decl : t -> type_declaration -> t
-
-val add_ext_constr : t -> extension_constructor -> t
-
-val to_abbrevs : t -> Abbreviations.t
-
-(** [find_constr t constr] returns the constructor declaration w/ constructor name [constr]. *)
-val find_constr
-  :  t
-  -> string
-  -> (constructor_declaration, [> `Unbound_constructor ]) Result.t
-
-(** [find_label t label] returns the label declaration w/ label name [label]. *)
-val find_label
-  :  t
-  -> string
-  -> (label_declaration, [> `Unbound_label ]) Result.t
+val infer_str
+  :  env:Env.t
+  -> Parsetree.structure
+  -> (Env.t * Typedtree.structure_item t, Sexp.t) Result.t

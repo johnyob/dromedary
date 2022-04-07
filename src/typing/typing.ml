@@ -17,8 +17,8 @@ module Types = Types
 module Typedtree = Typedtree
 module Env = Env
 
-let solve ?(debug = false) ~abbrevs cst =
-  solve ~debug ~abbrevs cst
+let with_solver_errors ~f:(f : _ -> (_, [> Solver.error ]) Result.t) t =
+  f t
   |> Result.map_error ~f:(function
          | `Unify (type_expr1, type_expr2) ->
            [%message
@@ -50,6 +50,20 @@ let solve ?(debug = false) ~abbrevs cst =
          | `Non_rigid_equations -> [%message "Non rigid equations"])
 
 
+let solve ?(debug = false) ~abbrevs cst =
+  with_solver_errors ~f:(solve ~debug ~abbrevs) cst
+
+let solve_str ?(debug = false) ~abbrevs str = 
+  with_solver_errors ~f:(Structure.solve ~debug ~abbrevs) str
+
+
+let infer_str ?(debug = false) str =
+  let open Result.Let_syntax in
+  let%bind env, str = Infer_structure.infer_str ~env:Env.empty str in
+  let abbrevs = Env.to_abbrevs env in
+  solve_str ~debug ~abbrevs str
+
+
 let infer_exp ?(debug = false) ~env:env' ~abbrevs exp =
   let open Result.Let_syntax in
   let%bind exp =
@@ -62,6 +76,7 @@ module Private = struct
   module Constraint = Constraint
   module Computation = Computation
   module Infer_core = Infer_core
+  module Infer_structure = Infer_structure
 
   let solve = solve
 end

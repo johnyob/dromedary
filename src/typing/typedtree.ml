@@ -102,7 +102,8 @@ and type_exception = { tyexn_constructor : extension_constructor }
 [@@derving sexp_of]
 
 and structure_item =
-  | Tstr_value of rec_flag * value_binding list
+  | Tstr_value of value_binding list
+  | Tstr_value_rec of rec_value_binding list
   | Tstr_primitive of value_description
   | Tstr_type of type_declaration list
   | Tstr_exception of type_exception
@@ -290,6 +291,79 @@ and pp_case_mach ~indent ppf case =
   pp_expression_mach ~indent ppf case.tc_rhs
 
 
+let pp_scheme_mach ~indent ppf (variables, type_expr) =
+  Format.fprintf ppf "%sScheme:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf
+    ppf
+    "%sVariables: %s@."
+    indent
+    (String.concat ~sep:"," variables);
+  pp_type_expr_mach ~indent ppf type_expr
+
+
+let pp_value_description_mach ~indent ppf value_desc =
+  Format.fprintf ppf "%sValue description:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf ppf "%sName: %s@." indent value_desc.tval_name;
+  pp_scheme_mach ~indent ppf value_desc.tval_type;
+  Format.fprintf ppf "%sPrimitive name: %s@." indent value_desc.tval_prim
+
+
+let pp_extension_constructor_kind_mach ~indent ppf ext_constr_kind =
+  let print = Format.fprintf ppf "%sExtension constructor kind: %s@." indent in
+  let indent = indent_space ^ indent in
+  match ext_constr_kind with
+  | Text_decl constr_decl ->
+    print "Declaration";
+    pp_constructor_declaration_mach ~indent ppf constr_decl
+
+
+let pp_extension_constructor_mach ~indent ppf ext_constr =
+  Format.fprintf ppf "%sExtension constructor:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf ppf "%sExtension name: %s@." indent ext_constr.text_name;
+  Format.fprintf
+    ppf
+    "%sExtension parameters: %s@."
+    indent
+    (String.concat ~sep:" " ext_constr.text_params);
+  pp_extension_constructor_kind_mach ~indent ppf ext_constr.text_kind
+
+
+let pp_type_exception_mach ~indent ppf type_exn =
+  Format.fprintf ppf "%sType exception:@." indent;
+  let indent = indent_space ^ indent in
+  pp_extension_constructor_mach ~indent ppf type_exn.tyexn_constructor
+
+
+let pp_structure_item_mach ~indent ppf str_item =
+  let print = Format.fprintf ppf "%sStructure item: %s@." indent in
+  let indent = indent_space ^ indent in
+  match str_item with
+  | Tstr_value value_bindings ->
+    print "Let";
+    pp_value_bindings_mach ~indent ppf value_bindings
+  | Tstr_value_rec rec_value_bindings ->
+    print "Let";
+    pp_rec_value_bindings_mach ~indent ppf rec_value_bindings
+  | Tstr_primitive value_desc ->
+    print "Primitive";
+    pp_value_description_mach ~indent ppf value_desc
+  | Tstr_type type_decls ->
+    print "Type";
+    List.iter type_decls ~f:(pp_type_declaration_mach ~indent ppf)
+  | Tstr_exception type_exception ->
+    print "Exception";
+    pp_type_exception_mach ~indent ppf type_exception
+
+
+let pp_structure_mach ~indent ppf str =
+  Format.fprintf ppf "%sStructure:@." indent;
+  let indent = indent_space ^ indent in
+  List.iter str ~f:(pp_structure_item_mach ~indent ppf)
+
+
 let to_pp_mach ~pp ~name ppf t =
   Format.fprintf ppf "%s:@." name;
   let indent = "└──" in
@@ -308,6 +382,12 @@ let pp_rec_value_binding_mach =
 
 
 let pp_case_mach = to_pp_mach ~pp:pp_case_mach ~name:"Case"
+
+(* let pp_structure_item_mach =
+  to_pp_mach ~name:"Structure item" ~pp:pp_structure_item_mach *)
+
+
+let pp_structure_mach = to_pp_mach ~name:"Structure" ~pp:pp_structure_mach
 let pp_expression _ppf = assert false
 let pp_value_binding _ppf = assert false
 let pp_rec_value_binding _ppf = assert false

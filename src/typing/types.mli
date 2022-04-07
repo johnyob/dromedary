@@ -148,6 +148,14 @@ and constructor_argument =
   }
 [@@deriving sexp_of]
 
+val pp_constructor_declaration_mach
+  :  indent:string
+  -> constructor_declaration Pretty_printer.t
+
+val pp_type_declaration_mach 
+  :  indent:string 
+  -> type_declaration Pretty_printer.t
+
 (* Constructor and record label descriptions *)
 
 type constructor_description =

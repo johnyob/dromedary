@@ -282,6 +282,7 @@ module Make (Algebra : Algebra) : sig
   module Structure : sig
     module Item : sig
       type nonrec 'a let_rec_binding = 'a let_rec_binding
+      val sexp_of_let_rec_binding : _ let_rec_binding -> Sexp.t
 
       type 'a let_binding =
         { universal_context : universal_context
@@ -290,6 +291,8 @@ module Make (Algebra : Algebra) : sig
         ; bindings : binding list
         ; in_ : 'a t
         }
+      
+      val sexp_of_let_binding : _ let_binding -> Sexp.t
 
       module Binding : sig
         type ctx = universal_context * existential_context [@@deriving sexp_of]
@@ -329,6 +332,8 @@ module Make (Algebra : Algebra) : sig
       include Applicative.Let_syntax with type 'a t := 'a t
 
       val let_ : bindings:'a let_binding list -> 'a term_let_binding list t
+      val let_1 : binding:'a let_binding -> 'a term_let_binding t
+
       val let_rec 
         :  bindings:'a let_rec_binding list 
         -> 'a term_let_rec_binding list t

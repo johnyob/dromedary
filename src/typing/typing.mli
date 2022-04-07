@@ -24,10 +24,16 @@ val infer_exp
   -> Parsetree.expression
   -> (Typedtree.expression bound, Sexp.t) Result.t
 
+val infer_str
+  :  ?debug:bool
+  -> Parsetree.structure
+  -> (Typedtree.structure, Sexp.t) Result.t
+
 module Private : sig
   module Constraint = Constraint
   module Computation = Computation
   module Infer_core = Infer_core
+  module Infer_structure = Infer_structure
 
   val solve
     :  ?debug:bool
