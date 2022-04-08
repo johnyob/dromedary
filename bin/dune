@@ -1,4 +1,6 @@
 (executable
  (public_name main)
  (name main)
- (libraries dromedary))
+ (libraries dromedary)
+ (preprocess
+  (pps ppx_jane)))

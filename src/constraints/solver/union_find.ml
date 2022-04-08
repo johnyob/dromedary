@@ -108,22 +108,24 @@ let rec set node desc =
     | Link _ -> set (root node) desc)
 
 
+
 let link node1 node2 ~f =
   if phys_equal node1 node2
   then ()
   else (
     match !node1, !node2 with
     | Root (rank1, desc1), Root (rank2, desc2) ->
-      (* It is vital that [f] is executed *before* linking, since it may 
-           throw an exception. *)
-      let desc = f desc1 desc2 in
       if rank1 > rank2
       then (
         node2 := Link node1;
+        (* Warning! Evaluation of desc1 here may cause buggy output
+           TODO: Use transactional references for linking src to dst *)
+        let desc = f desc1 desc2 in
         node1 := Root (rank1, desc))
       else (
         let rank = if rank1 < rank2 then rank1 else rank1 + 1 in
         node1 := Link node2;
+        let desc = f desc1 desc2 in
         node2 := Root (rank, desc))
     | _ -> assert false)
 

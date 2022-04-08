@@ -103,45 +103,45 @@ let%expect_test "principality-1" =
                                   └──Constructor argument type:
                                      └──Type expr: Tuple
                                         └──Type expr: Constructor: u
-                                           └──Type expr: Variable: a4590
-                                        └──Type expr: Variable: a4590
+                                           └──Type expr: Variable: a5052
+                                        └──Type expr: Variable: a5052
                                   └──Constructor type:
                                      └──Type expr: Constructor: dyn
                                └──Pattern:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: u
-                                        └──Type expr: Variable: a4590
-                                     └──Type expr: Variable: a4590
+                                        └──Type expr: Variable: a5052
+                                     └──Type expr: Variable: a5052
                                   └──Desc: Tuple
                                      └──Pattern:
                                         └──Type expr: Constructor: u
-                                           └──Type expr: Variable: a4590
+                                           └──Type expr: Variable: a5052
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: M
                                               └──Constructor type:
                                                  └──Type expr: Constructor: u
-                                                    └──Type expr: Variable: a4590
+                                                    └──Type expr: Variable: a5052
                                      └──Pattern:
-                                        └──Type expr: Variable: a4590
+                                        └──Type expr: Variable: a5052
                                         └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: unit
                             └──Desc: Match
                                └──Expression:
-                                  └──Type expr: Variable: a4590
+                                  └──Type expr: Variable: a5052
                                   └──Desc: Variable
                                      └──Variable: x
-                               └──Type expr: Variable: a4590
+                               └──Type expr: Variable: a5052
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
-                                        └──Type expr: Variable: a4590
+                                        └──Type expr: Variable: a5052
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: A
                                               └──Constructor type:
-                                                 └──Type expr: Variable: a4590
+                                                 └──Type expr: Variable: a5052
                                      └──Expression:
                                         └──Type expr: Constructor: unit
                                         └──Desc: Constant: () |}]
@@ -354,55 +354,55 @@ let%expect_test "principality-7" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: a4827
+                         └──Type expr: Variable: a5289
                       └──Type expr: Constructor: bool
                    └──Desc: Variable: f2
                 └──Abstraction:
-                   └──Variables: a4827
+                   └──Variables: a5289
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: a4827
+                            └──Type expr: Variable: a5289
                          └──Type expr: Constructor: bool
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: a4827
+                               └──Type expr: Variable: a5289
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: bool
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: a4827
+                                     └──Type expr: Variable: a5289
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: a4827
+                                  └──Type expr: Variable: a5289
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: a4827
+                                           └──Type expr: Variable: a5289
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Ab
                                               └──Constructor type:
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: a4827
+                                                    └──Type expr: Variable: a5289
                                      └──Expression:
                                         └──Type expr: Constructor: bool
                                         └──Desc: Constant: true
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: a4827
+                                           └──Type expr: Variable: a5289
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Mab
                                               └──Constructor type:
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: a4827
+                                                    └──Type expr: Variable: a5289
                                      └──Expression:
                                         └──Type expr: Constructor: bool
                                         └──Desc: Constant: false
@@ -522,41 +522,41 @@ let%expect_test "principality-8" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: a4889
+                         └──Type expr: Variable: a5351
                          └──Type expr: Constructor: option
                             └──Type expr: Constructor: int
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a4889
+                         └──Type expr: Variable: a5351
                          └──Type expr: Constructor: option
                             └──Type expr: Constructor: int
                    └──Desc: Variable: g1
                 └──Abstraction:
-                   └──Variables: a4889
+                   └──Variables: a5351
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: a4889
+                            └──Type expr: Variable: a5351
                             └──Type expr: Constructor: option
                                └──Type expr: Constructor: int
                          └──Type expr: Arrow
-                            └──Type expr: Variable: a4889
+                            └──Type expr: Variable: a5351
                             └──Type expr: Constructor: option
                                └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: a4889
+                               └──Type expr: Variable: a5351
                                └──Type expr: Constructor: option
                                   └──Type expr: Constructor: int
                             └──Desc: Variable: eq
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: a4889
+                               └──Type expr: Variable: a5351
                                └──Type expr: Constructor: option
                                   └──Type expr: Constructor: int
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: a4889
+                                  └──Type expr: Variable: a5351
                                   └──Desc: Variable: x
                                └──Expression:
                                   └──Type expr: Constructor: option
@@ -564,20 +564,20 @@ let%expect_test "principality-8" =
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: eq
-                                           └──Type expr: Variable: a4889
+                                           └──Type expr: Variable: a5351
                                            └──Type expr: Constructor: option
                                               └──Type expr: Constructor: int
                                         └──Desc: Variable
                                            └──Variable: eq
                                      └──Type expr: Constructor: eq
-                                        └──Type expr: Variable: a4889
+                                        └──Type expr: Variable: a5351
                                         └──Type expr: Constructor: option
                                            └──Type expr: Constructor: int
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: eq
-                                                 └──Type expr: Variable: a4889
+                                                 └──Type expr: Variable: a5351
                                                  └──Type expr: Constructor: option
                                                     └──Type expr: Constructor: int
                                               └──Desc: Construct
@@ -585,7 +585,7 @@ let%expect_test "principality-8" =
                                                     └──Name: Refl
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: eq
-                                                          └──Type expr: Variable: a4889
+                                                          └──Type expr: Variable: a5351
                                                           └──Type expr: Constructor: option
                                                              └──Type expr: Constructor: int
                                            └──Expression:
@@ -597,9 +597,9 @@ let%expect_test "principality-8" =
           └──Value description:
              └──Name: ignore
              └──Scheme:
-                └──Variables: a4929
+                └──Variables: a5391
                 └──Type expr: Arrow
-                   └──Type expr: Variable: a4929
+                   └──Type expr: Variable: a5391
                    └──Type expr: Constructor: unit
              └──Primitive name: %ignore
        └──Structure item: Let
@@ -608,41 +608,41 @@ let%expect_test "principality-8" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: a4947
+                         └──Type expr: Variable: a5409
                          └──Type expr: Constructor: option
                             └──Type expr: Constructor: int
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a4947
+                         └──Type expr: Variable: a5409
                          └──Type expr: Constructor: option
                             └──Type expr: Constructor: int
                    └──Desc: Variable: g1
                 └──Abstraction:
-                   └──Variables: a4947
+                   └──Variables: a5409
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: a4947
+                            └──Type expr: Variable: a5409
                             └──Type expr: Constructor: option
                                └──Type expr: Constructor: int
                          └──Type expr: Arrow
-                            └──Type expr: Variable: a4947
+                            └──Type expr: Variable: a5409
                             └──Type expr: Constructor: option
                                └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: a4947
+                               └──Type expr: Variable: a5409
                                └──Type expr: Constructor: option
                                   └──Type expr: Constructor: int
                             └──Desc: Variable: eq
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: a4947
+                               └──Type expr: Variable: a5409
                                └──Type expr: Constructor: option
                                   └──Type expr: Constructor: int
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: a4947
+                                  └──Type expr: Variable: a5409
                                   └──Desc: Variable: x
                                └──Expression:
                                   └──Type expr: Constructor: option
@@ -654,19 +654,19 @@ let%expect_test "principality-8" =
                                            └──Expression:
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: eq
-                                                    └──Type expr: Variable: a4947
+                                                    └──Type expr: Variable: a5409
                                                     └──Type expr: Constructor: option
                                                        └──Type expr: Constructor: int
                                                  └──Type expr: Constructor: unit
                                               └──Desc: Variable
                                                  └──Variable: ignore
                                                  └──Type expr: Constructor: eq
-                                                    └──Type expr: Variable: a4947
+                                                    └──Type expr: Variable: a5409
                                                     └──Type expr: Constructor: option
                                                        └──Type expr: Constructor: int
                                            └──Expression:
                                               └──Type expr: Constructor: eq
-                                                 └──Type expr: Variable: a4947
+                                                 └──Type expr: Variable: a5409
                                                  └──Type expr: Constructor: option
                                                     └──Type expr: Constructor: int
                                               └──Desc: Variable
@@ -677,20 +677,20 @@ let%expect_test "principality-8" =
                                         └──Desc: Match
                                            └──Expression:
                                               └──Type expr: Constructor: eq
-                                                 └──Type expr: Variable: a4947
+                                                 └──Type expr: Variable: a5409
                                                  └──Type expr: Constructor: option
                                                     └──Type expr: Constructor: int
                                               └──Desc: Variable
                                                  └──Variable: eq
                                            └──Type expr: Constructor: eq
-                                              └──Type expr: Variable: a4947
+                                              └──Type expr: Variable: a5409
                                               └──Type expr: Constructor: option
                                                  └──Type expr: Constructor: int
                                            └──Cases:
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: eq
-                                                       └──Type expr: Variable: a4947
+                                                       └──Type expr: Variable: a5409
                                                        └──Type expr: Constructor: option
                                                           └──Type expr: Constructor: int
                                                     └──Desc: Construct
@@ -698,7 +698,7 @@ let%expect_test "principality-8" =
                                                           └──Name: Refl
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: eq
-                                                                └──Type expr: Variable: a4947
+                                                                └──Type expr: Variable: a5409
                                                                 └──Type expr: Constructor: option
                                                                    └──Type expr: Constructor: int
                                                  └──Expression:

@@ -66,6 +66,7 @@ module Make (Structure : Structure_intf.S) = struct
         }
       [@@deriving sexp_of]
 
+
       let desc t = Union_find.find t
 
       (* [id t] returns the unique identifier of the type [t]. *)
@@ -89,6 +90,9 @@ module Make (Structure : Structure_intf.S) = struct
        Based on it's integer field: id. *)
 
       let hash t = Hashtbl.hash (id t)
+
+      let sexp_of_t_hum = sexp_of_t
+      let sexp_of_t t = [%sexp (id t : int)]
     end
 
     include T

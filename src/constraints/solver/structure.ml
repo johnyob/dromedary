@@ -169,6 +169,7 @@ struct
   let repr t = t
 
   let merge ~ctx ~equate t1 t2 =
+    Log.debug (fun m -> m "Merge Abbrev");
     let ( === ) t1 t2 = Id.id t1 = Id.id t2 in
     let ( =~ ) t1 t2 = Structure.merge ~ctx:ctx.super_ ~equate t1 t2 in
     let ( =~- ) a t =
@@ -427,6 +428,7 @@ module Ambivalent (Structure : S) = struct
   exception Cannot_merge = Structure.Cannot_merge
 
   let merge ~ctx ~equate t1 t2 =
+    Log.debug (fun m -> m "Merge Ambiv");
     (* [type_ =~- structure] "unifies" the structure [structure] with type [type_] *)
     let ( =~- ) type_ structure =
       let type_' = ctx.make structure in
@@ -556,6 +558,7 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
   exception Cannot_merge = Structure.Cannot_merge
 
   let merge ~ctx ~equate t1 t2 =
+    Log.debug (fun m -> m "Merge Rows");
     let ( =~ ) = equate in
     let ( =~- ) a structure = a =~ ctx.make_structure structure in
     let is_row_cons l t =
@@ -570,18 +573,22 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
     in
     match t1, t2 with
     | Structure structure1, Structure structure2 ->
+      Log.debug (fun m -> m "Merge Rows : structures");
       Structure (Structure.merge ~ctx:ctx.super_ ~equate structure1 structure2)
     | Row_uniform t1, Row_uniform t2 ->
+      Log.debug (fun m -> m "Merge Row uniform");
       t1 =~ t2;
       Row_uniform t1
     | Row_cons (label1, t11, t12), Row_cons (label2, t21, t22)
       when Label.compare label1 label2 = 0 ->
+      Log.debug (fun m -> m "Merge Row cons equal labels");
       (* The labels [label1] and [label2] are equal. *)
       t11 =~ t21;
       t12 =~ t22;
       (* We arbitrary return a Row_cons. *)
       t1
     | Row_cons (label1, t11, t12), Row_cons (label2, t21, t22) ->
+      Log.debug (fun m -> m "Merge Row cons");
       (* The labels [label1] and [label2] are not equal. *)
       let t = ctx.make_var () in
       (* Unify the label of t1 with a Row containing (label2) *)
@@ -592,11 +599,13 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
       if Label.compare label1 label2 < 0 then t1 else t2
     | Row_cons (_, t11, t12), (Row_uniform t as t2)
     | (Row_uniform t as t2), Row_cons (_, t11, t12) ->
+      Log.debug (fun m -> m "Merge Row cons and uniform");
       t11 =~ t;
       t12 =~- t2;
       t2
     | (Row_cons (l1, t11, t12) as t1), Structure t2
     | Structure t2, (Row_cons (l1, t11, t12) as t1) ->
+      Log.debug (fun m -> m "Merge Row cons and structure");
       (* TODO: Understand WHY the distributive property for formers (structures) is required. *)
       (* The children of [t2] must be of the form: [(l1: _; _)] (according to EMLTI). *)
       let t11', t12' =
@@ -608,6 +617,7 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
       t1
     | (Row_uniform t as t1), Structure t2 | Structure t2, (Row_uniform t as t1)
       ->
+      Log.debug (fun m -> m "Merge Row uniform and structure");
       let t' = Structure.map t2 ~f:is_row_uniform in
       t =~- Structure t';
       t1

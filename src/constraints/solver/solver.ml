@@ -378,6 +378,13 @@ module Make (Algebra : Algebra) = struct
 
   let unify ~state ~env type1 type2 =
     try
+      (* Log.debug (fun m -> m "Unify method in solve :)"); *)
+      let to_string t =
+        Decoder.decode_type t 
+        |> Type.sexp_of_t
+        |> Sexp.to_string_hum
+      in
+      Log.debug (fun m -> m "Unify\n %s \n%s" (to_string type1) (to_string type2));
       U.unify
         ~state:state.generalization_state
         ~ctx:(Env.ctx env)
