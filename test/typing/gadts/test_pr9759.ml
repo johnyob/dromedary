@@ -70,46 +70,46 @@ let%expect_test "" =
              └──Value binding:
                 └──Variable: foo
                 └──Abstraction:
-                   └──Variables: a5478
+                   └──Variables: a6955
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: general
-                            └──Type expr: Variable: a5497
+                            └──Type expr: Variable: a6974
                          └──Type expr: Constructor: general
-                            └──Type expr: Variable: a5497
+                            └──Type expr: Variable: a6974
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: general
-                               └──Type expr: Variable: a5497
+                               └──Type expr: Variable: a6974
                             └──Desc: Variable: g
                          └──Expression:
                             └──Type expr: Constructor: general
-                               └──Type expr: Variable: a5497
+                               └──Type expr: Variable: a6974
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: desc
-                                     └──Type expr: Variable: a5497
+                                     └──Type expr: Variable: a6974
                                   └──Desc: Field
                                      └──Expression:
                                         └──Type expr: Constructor: general
-                                           └──Type expr: Variable: a5497
+                                           └──Type expr: Variable: a6974
                                         └──Desc: Variable
                                            └──Variable: g
                                      └──Label description:
                                         └──Label: indir
                                         └──Label argument type:
                                            └──Type expr: Constructor: desc
-                                              └──Type expr: Variable: a5497
+                                              └──Type expr: Variable: a6974
                                         └──Label type:
                                            └──Type expr: Constructor: general
-                                              └──Type expr: Variable: a5497
+                                              └──Type expr: Variable: a6974
                                └──Type expr: Constructor: desc
-                                  └──Type expr: Variable: a5497
+                                  └──Type expr: Variable: a6974
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: desc
-                                           └──Type expr: Variable: a5497
+                                           └──Type expr: Variable: a6974
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: C
@@ -118,75 +118,75 @@ let%expect_test "" =
                                                     └──Type expr: Constructor: unit
                                               └──Constructor type:
                                                  └──Type expr: Constructor: desc
-                                                    └──Type expr: Variable: a5497
+                                                    └──Type expr: Variable: a6974
                                            └──Pattern:
                                               └──Type expr: Constructor: general
                                                  └──Type expr: Constructor: unit
                                               └──Desc: Variable: g'
                                      └──Expression:
                                         └──Type expr: Constructor: general
-                                           └──Type expr: Variable: a5497
+                                           └──Type expr: Variable: a6974
                                         └──Desc: Let
                                            └──Value bindings:
                                               └──Value binding:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: general
-                                                       └──Type expr: Variable: a5497
+                                                       └──Type expr: Variable: a6974
                                                     └──Desc: Variable: new_g'
                                                  └──Abstraction:
                                                     └──Variables:
                                                     └──Expression:
                                                        └──Type expr: Constructor: general
-                                                          └──Type expr: Variable: a5497
+                                                          └──Type expr: Variable: a6974
                                                        └──Desc: Application
                                                           └──Expression:
                                                              └──Type expr: Arrow
                                                                 └──Type expr: Constructor: general
-                                                                   └──Type expr: Variable: a5497
+                                                                   └──Type expr: Variable: a6974
                                                                 └──Type expr: Constructor: general
-                                                                   └──Type expr: Variable: a5497
+                                                                   └──Type expr: Variable: a6974
                                                              └──Desc: Variable
                                                                 └──Variable: foo
-                                                                └──Type expr: Variable: a5497
+                                                                └──Type expr: Variable: a6974
                                                           └──Expression:
                                                              └──Type expr: Constructor: general
-                                                                └──Type expr: Variable: a5497
+                                                                └──Type expr: Variable: a6974
                                                              └──Desc: Variable
                                                                 └──Variable: g'
                                            └──Expression:
                                               └──Type expr: Constructor: general
-                                                 └──Type expr: Variable: a5497
+                                                 └──Type expr: Variable: a6974
                                               └──Desc: If
                                                  └──Expression:
                                                     └──Type expr: Constructor: bool
                                                     └──Desc: Constant: true
                                                  └──Expression:
                                                     └──Type expr: Constructor: general
-                                                       └──Type expr: Variable: a5497
+                                                       └──Type expr: Variable: a6974
                                                     └──Desc: Record
                                                        └──Label description:
                                                           └──Label: indir
                                                           └──Label argument type:
                                                              └──Type expr: Constructor: desc
-                                                                └──Type expr: Variable: a5497
+                                                                └──Type expr: Variable: a6974
                                                           └──Label type:
                                                              └──Type expr: Constructor: general
-                                                                └──Type expr: Variable: a5497
+                                                                └──Type expr: Variable: a6974
                                                        └──Expression:
                                                           └──Type expr: Constructor: desc
-                                                             └──Type expr: Variable: a5497
+                                                             └──Type expr: Variable: a6974
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: C
                                                                 └──Constructor argument type:
                                                                    └──Type expr: Constructor: general
-                                                                      └──Type expr: Variable: a5497
+                                                                      └──Type expr: Variable: a6974
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: desc
-                                                                      └──Type expr: Variable: a5497
+                                                                      └──Type expr: Variable: a6974
                                                              └──Expression:
                                                                 └──Type expr: Constructor: general
-                                                                   └──Type expr: Variable: a5497
+                                                                   └──Type expr: Variable: a6974
                                                                 └──Desc: Variable
                                                                    └──Variable: new_g'
                                                        └──Label description:
@@ -195,13 +195,13 @@ let%expect_test "" =
                                                              └──Type expr: Constructor: unit
                                                           └──Label type:
                                                              └──Type expr: Constructor: general
-                                                                └──Type expr: Variable: a5497
+                                                                └──Type expr: Variable: a6974
                                                        └──Expression:
                                                           └──Type expr: Constructor: unit
                                                           └──Desc: Field
                                                              └──Expression:
                                                                 └──Type expr: Constructor: general
-                                                                   └──Type expr: Variable: a5497
+                                                                   └──Type expr: Variable: a6974
                                                                 └──Desc: Variable
                                                                    └──Variable: g
                                                              └──Label description:
@@ -210,32 +210,32 @@ let%expect_test "" =
                                                                    └──Type expr: Constructor: unit
                                                                 └──Label type:
                                                                    └──Type expr: Constructor: general
-                                                                      └──Type expr: Variable: a5497
+                                                                      └──Type expr: Variable: a6974
                                                  └──Expression:
                                                     └──Type expr: Constructor: general
-                                                       └──Type expr: Variable: a5497
+                                                       └──Type expr: Variable: a6974
                                                     └──Desc: Variable
                                                        └──Variable: new_g'
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: desc
-                                           └──Type expr: Variable: a5497
+                                           └──Type expr: Variable: a6974
                                         └──Desc: Variable: indir'
                                      └──Expression:
                                         └──Type expr: Constructor: general
-                                           └──Type expr: Variable: a5497
+                                           └──Type expr: Variable: a6974
                                         └──Desc: Record
                                            └──Label description:
                                               └──Label: indir
                                               └──Label argument type:
                                                  └──Type expr: Constructor: desc
-                                                    └──Type expr: Variable: a5497
+                                                    └──Type expr: Variable: a6974
                                               └──Label type:
                                                  └──Type expr: Constructor: general
-                                                    └──Type expr: Variable: a5497
+                                                    └──Type expr: Variable: a6974
                                            └──Expression:
                                               └──Type expr: Constructor: desc
-                                                 └──Type expr: Variable: a5497
+                                                 └──Type expr: Variable: a6974
                                               └──Desc: Variable
                                                  └──Variable: indir'
                                            └──Label description:
@@ -244,13 +244,13 @@ let%expect_test "" =
                                                  └──Type expr: Constructor: unit
                                               └──Label type:
                                                  └──Type expr: Constructor: general
-                                                    └──Type expr: Variable: a5497
+                                                    └──Type expr: Variable: a6974
                                            └──Expression:
                                               └──Type expr: Constructor: unit
                                               └──Desc: Field
                                                  └──Expression:
                                                     └──Type expr: Constructor: general
-                                                       └──Type expr: Variable: a5497
+                                                       └──Type expr: Variable: a6974
                                                     └──Desc: Variable
                                                        └──Variable: g
                                                  └──Label description:
@@ -259,4 +259,4 @@ let%expect_test "" =
                                                        └──Type expr: Constructor: unit
                                                     └──Label type:
                                                        └──Type expr: Constructor: general
-                                                          └──Type expr: Variable: a5497 |}]
+                                                          └──Type expr: Variable: a6974 |}]
