@@ -29,14 +29,25 @@ type core_type =
           consistency between OCaml and Dromedary code. *)
   | Ptyp_variant of row
       (** Polymorphic variants [ [ ... ] ] *)
-  | Ptyp_row_cons of string * core_type * row
-      (* Row cons [ < tag : T, ... > ] *)
-  | Ptyp_row_empty 
-      (* Empty row [ < > ] *)
+  | Ptyp_mu of string * core_type
+      (** Equi-recursive types [ mu 'a. T ] *)
 [@@deriving sexp_of]
 
-and row = core_type
-[@@dering sexp_of]
+and row = row_field list * closed_flag
+[@@deriving sexp_of]
+
+and row_field = 
+  | Row_tag of string * core_type option
+      (** [ `A ]
+          [ `A of T ] *)
+[@@deriving sexp_of]
+
+and closed_flag = 
+  | Closed
+      (** [(< | =) row ] *)
+  | Open 
+      (** [> row ] *)
+[@@deriving sexp_of]
 
 (** [pp_core_type_mach ppf core_type] pretty prints [core_type] in a "machine format" 
     (an explicit tree structure). *)

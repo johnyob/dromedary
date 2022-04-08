@@ -15,34 +15,67 @@ open! Import
 open Predefined
 open Constraint
 
-(* [core_type core_type] converts core type [core_type] to [Type.t]. *)
+(* [core_type core_type] converts core type [core_type] to [Type.t],
+   generating row variables where applicable *)
 let rec core_type ~substitution t =
   let open Parsetree in
   let open Result in
   let open Let_syntax in
   match t with
-  | Ptyp_var x -> Substitution.find_var substitution x >>| Type.var
+  | Ptyp_var x ->
+    let%bind x = Substitution.find_var substitution x in
+    return ([], Type.var x)
   | Ptyp_arrow (t1, t2) ->
-    let%bind t1 = core_type ~substitution t1 in
-    let%bind t2 = core_type ~substitution t2 in
-    return (t1 @-> t2)
+    let%bind vars1, t1 = core_type ~substitution t1 in
+    let%bind vars2, t2 = core_type ~substitution t2 in
+    return (vars1 @ vars2, t1 @-> t2)
   | Ptyp_tuple ts ->
-    let%bind ts = List.map ts ~f:(core_type ~substitution) |> all in
-    return (tuple ts)
+    let%bind var_ts = List.map ts ~f:(core_type ~substitution) |> all in
+    let vars, ts = List.unzip var_ts in
+    return (List.concat vars, tuple ts)
   | Ptyp_constr (ts, constr') ->
-    let%bind ts = List.map ts ~f:(core_type ~substitution) |> all in
-    return (constr ts constr')
+    let%bind var_ts = List.map ts ~f:(core_type ~substitution) |> all in
+    let vars, ts = List.unzip var_ts in
+    return (List.concat vars, constr ts constr')
   | Ptyp_variant t ->
-    let%bind t = row ~substitution t in
-    return (variant t)
-  | Ptyp_row_cons (tag, t1, t2) ->
-    let%bind t1 = core_type ~substitution t1 in
-    let%bind t2 = row ~substitution t2 in
-    return (row_cons tag (present t1) t2)
-  | Ptyp_row_empty -> return (row_uniform absent)
+    let%bind vars, t = row ~substitution t in
+    return (vars, variant t)
+  | Ptyp_mu (x, t) ->
+    let x' = fresh () in
+    let%bind vars, t = core_type ~substitution:(Substitution.add substitution x x') t in
+    return (vars, Type.mu x' t)
 
 
-and row ~substitution = core_type ~substitution
+and row ~substitution (row_fields, closed_flag) =
+  let open Result.Let_syntax in
+  let vars, tl =
+    match closed_flag with
+    | Closed -> [], row_uniform absent
+    | Open ->
+      let var = fresh () in
+      [ var ], Type.var var
+  in
+  let%bind vars, row =
+    List.fold_right row_fields ~init:(return (vars, tl)) ~f:(fun rf tl ->
+        let%bind vars1, tl = tl in
+        let%bind vars2, row = row_field ~substitution rf tl in
+        return (vars1 @ vars2, row))
+  in
+  return (vars, row)
+
+
+and row_field ~substitution (Row_tag (tag, t)) tl = 
+  let open Result.Let_syntax in
+  let%bind vars, t = 
+    match t with
+    | None -> return ([], present unit)
+    | Some t ->
+      let%bind vars, t = core_type ~substitution t in
+      return (vars, present t)
+  in
+  return (vars, row_cons tag t tl)
+
+
 
 (* [type_expr type_expr] converts type expression [type_expr] to [Type.t]. *)
 let rec type_expr ~substitution t =

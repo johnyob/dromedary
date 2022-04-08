@@ -17,24 +17,74 @@ open Typedtree
 open Constraint
 open Constraint.Structure
 
+module Predefined = struct
+  open Types
+
+  let absent = make_type_expr (Ttyp_constr ([], "absent"))
+  let present x = make_type_expr (Ttyp_constr ([ x ], "present"))
+  let row_cons tag t1 t2 = make_type_expr (Ttyp_row_cons (tag, t1, t2))
+  let row_uniform t = make_type_expr (Ttyp_row_uniform t)
+  let unit = make_type_expr (Ttyp_constr ([], "unit"))
+end
+
 let rec transl_core_type core_type =
   let open Types in
-  make_type_expr
-    (match core_type with
-    | Ptyp_var x -> Ttyp_var x
+  let vars, type_desc =
+    match core_type with
+    | Ptyp_var x -> [], Ttyp_var x
     | Ptyp_arrow (core_type1, core_type2) ->
-      Ttyp_arrow (transl_core_type core_type1, transl_core_type core_type2)
+      let vars1, t1 = transl_core_type core_type1 in
+      let vars2, t2 = transl_core_type core_type2 in
+      vars1 @ vars2, Ttyp_arrow (t1, t2)
     | Ptyp_tuple core_types ->
-      Ttyp_tuple (List.map core_types ~f:transl_core_type)
+      let vars, ts = List.map core_types ~f:transl_core_type |> List.unzip in
+      List.concat vars, Ttyp_tuple ts
     | Ptyp_constr (core_types, constr_name) ->
-      Ttyp_constr (List.map core_types ~f:transl_core_type, constr_name)
-    | Ptyp_variant core_type -> Ttyp_variant (transl_core_type core_type)
-    | Ptyp_row_cons (tag, core_type1, core_type2) ->
-      Ttyp_row_cons
-        (tag, transl_core_type core_type1, transl_core_type core_type2)
-    | Ptyp_row_empty ->
-      (* TODO: redefine elsewhere! Avoid magic strings *)
-      Ttyp_row_uniform (transl_core_type (Ptyp_constr ([], "absent"))))
+      let vars, ts = List.map core_types ~f:transl_core_type |> List.unzip in
+      List.concat vars, Ttyp_constr (ts, constr_name)
+    | Ptyp_variant row ->
+      let vars, t = transl_row row in
+      vars, Ttyp_variant t
+    | Ptyp_mu (var, core_type) ->
+      let vars, t = transl_core_type core_type in
+      vars, Ttyp_alias (t, var)
+  in
+  vars, make_type_expr type_desc
+
+
+and transl_row =
+  let open Types in
+  let fresh_row_var =
+    let next = ref (-1) in
+    fun () ->
+      let next =
+        Int.incr next;
+        !next
+      in
+      "@rho" ^ Int.to_string next
+  in
+  fun (row_fields, closed_flag) ->
+    let vars, tl =
+      match closed_flag with
+      | Closed -> [], Predefined.(row_uniform absent)
+      | Open ->
+        let var = fresh_row_var () in
+        [ var ], make_type_expr (Ttyp_var var)
+    in
+    List.fold_right row_fields ~init:(vars, tl) ~f:(fun rf (vars1, tl) ->
+        let vars2, row = transl_row_field rf tl in
+        vars1 @ vars2, row)
+
+
+and transl_row_field (Row_tag (tag, t)) tl =
+  let vars, t =
+    match t with
+    | None -> [], Predefined.(present unit)
+    | Some t ->
+      let vars, t = transl_core_type t in
+      vars, Predefined.present t
+  in
+  vars, Predefined.row_cons tag t tl
 
 
 let transl_constr_arg constr_arg =
@@ -45,8 +95,9 @@ let transl_constr_arg constr_arg =
     =
     constr_arg
   in
-  { constructor_arg_betas = constr_arg_betas
-  ; constructor_arg_type = transl_core_type constr_arg_type
+  let row_vars, type_expr = transl_core_type constr_arg_type in
+  { constructor_arg_betas = row_vars @ constr_arg_betas
+  ; constructor_arg_type = type_expr
   }
 
 
@@ -56,6 +107,18 @@ let transl_type_constr type_params type_name =
     (Ttyp_constr
        ( List.map type_params ~f:(fun param -> make_type_expr (Ttyp_var param))
        , type_name ))
+
+
+let transl_constraint =
+  let transl_core_type core_type =
+    let row_vars, t = transl_core_type core_type in
+    if not (List.is_empty row_vars)
+    then
+      raise_s [%message "Open polymorphic variant equations are not supported!"];
+    t
+  in
+  fun (core_type1, core_type2) ->
+    transl_core_type core_type1, transl_core_type core_type2
 
 
 let transl_constr_decl constr_decl ~type_params ~type_name =
@@ -74,8 +137,7 @@ let transl_constr_decl constr_decl ~type_params ~type_name =
   ; constructor_arg = constr_arg
   ; constructor_type = constr_type
   ; constructor_constraints =
-      List.map constr_constraints ~f:(fun (t1, t2) ->
-          transl_core_type t1, transl_core_type t2)
+      List.map constr_constraints ~f:transl_constraint
   }
 
 
@@ -88,17 +150,22 @@ let transl_label_decl label_decl ~type_params ~type_name =
     =
     label_decl
   in
-  let label_arg = transl_core_type constr_arg in
+  let row_vars, label_arg = transl_core_type constr_arg in
   let label_type = transl_type_constr type_params type_name in
-  { label_name; label_alphas = type_params; label_betas; label_arg; label_type }
+  { label_name
+  ; label_alphas = type_params
+  ; label_betas = row_vars @ label_betas
+  ; label_arg
+  ; label_type
+  }
 
 
 let transl_alias alias_type ~type_params ~type_name =
   let open Types in
-  { alias_alphas = type_params
-  ; alias_name = type_name
-  ; alias_type = transl_core_type alias_type
-  }
+  let row_vars, alias_type = transl_core_type alias_type in
+  if not (List.is_empty row_vars)
+  then raise_s [%message "Open polymorphic variant aliases not supported!"];
+  { alias_alphas = type_params; alias_name = type_name; alias_type }
 
 
 let transl_type_decl type_decl =
@@ -148,13 +215,13 @@ let convert_core_scheme (vars, core_type) =
     |> map_error ~f:(fun (`Duplicate_type_variable var) ->
            [%message "Duplicate type variable" (var : string)])
   in
-  let%bind core_type =
+  let%bind vars, core_type =
     Convert.core_type ~substitution core_type
     |> map_error ~f:(fun (`Unbound_type_variable var) ->
            [%message
              "Unbound type variable when converting core type" (var : string)])
   in
-  return (Substitution.rng substitution, core_type)
+  return (vars @ Substitution.rng substitution, core_type)
 
 
 let infer_primitive { pval_name; pval_type; pval_prim } =
@@ -239,7 +306,8 @@ let infer_str_item ~env str_item =
       , let%map.Item let_bindings = Item.let_ ~bindings:let_bindings in
         Tstr_value (List.map ~f:to_value_binding let_bindings) )
 
-let rec infer_str ~env str = 
+
+let rec infer_str ~env str =
   let open Result.Let_syntax in
   match str with
   | [] -> return (env, [])
@@ -247,4 +315,3 @@ let rec infer_str ~env str =
     let%bind env, str_item = infer_str_item ~env str_item in
     let%bind env, str = infer_str ~env str in
     return (env, str_item :: str)
-

@@ -489,7 +489,9 @@ module Pattern = struct
            and arg_pat = arg_pat in
            Tpat_construct (constr_desc, arg_pat))
       | Ppat_constraint (pat, pat_type') ->
-        let%bind pat_type' = Convert.core_type pat_type' in
+        let%bind row_vars, pat_type' = Convert.core_type pat_type' in
+        (* testing shows that row vars are existential in annotations *)
+        let@ () = exists_vars row_vars in
         let@ pat_type1 = of_type pat_type' in
         let@ pat_type2 = of_type pat_type' in
         let%bind pat_desc = infer_pat_desc pat pat_type2 in
@@ -817,10 +819,11 @@ module Expression = struct
       let annotate_case case =
         { case with pc_rhs = Pexp_constraint (case.pc_rhs, exp_type') }
       in
-      let%bind exp_type' = Convert.core_type exp_type' in
+      let%bind row_vars, exp_type' = Convert.core_type exp_type' in
+      let@ () = exists_vars row_vars in
       let@ exp_type1 = of_type exp_type' in
       let@ exp_type2 = of_type exp_type' in
-      let%bind exp_desc =  
+      let%bind exp_desc =
         infer_exp_desc
           (Pexp_match (match_exp, List.map ~f:annotate_case cases))
           exp_type1
@@ -830,7 +833,8 @@ module Expression = struct
          and exp_desc = exp_desc in
          exp_desc)
     | Pexp_constraint (exp, exp_type') ->
-      let%bind exp_type' = Convert.core_type exp_type' in
+      let%bind row_vars, exp_type' = Convert.core_type exp_type' in
+      let@ () = exists_vars row_vars in
       let@ exp_type1 = of_type exp_type' in
       let@ exp_type2 = of_type exp_type' in
       let%bind exp_desc = infer_exp_desc exp exp_type1 in
@@ -1194,14 +1198,14 @@ module Expression = struct
             "Duplicate variable in forall quantifier (let)" (var : string)])
         ~in_:(fun forall_vars ->
           (* Convert [annotation] to shallow type *)
-          let%bind annotation = Convert.core_type annotation in
+          let%bind row_vars, annotation = Convert.core_type annotation in
           let ((_, exp_type) as annotation) = Shallow_type.of_type annotation in
           (* [exp] has the annotated type [exp_type] *)
           let%bind exp = infer_exp exp exp_type in
           return
             Binding.(
               let_prec
-                ~universal_ctx:forall_vars
+                ~universal_ctx:(row_vars @ forall_vars)
                 ~annotation
                 ~term_var:f
                 ~in_:exp))
@@ -1274,9 +1278,11 @@ module Expression = struct
                ~bindings
                ~in_:(pat &~ exp)))
 
+
     let infer_value_bindings value_bindings =
       value_bindings |> List.map ~f:infer_value_binding |> Computation.all
-      
+
+
     let infer_rec_value_bindings = infer_rec_value_bindings
   end
 end

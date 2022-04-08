@@ -17,12 +17,12 @@ open Constraint
 val core_type
   :  substitution:Substitution.t
   -> Parsetree.core_type
-  -> (Type.t, [> `Unbound_type_variable of string ]) Result.t
+  -> (variable list * Type.t, [> `Unbound_type_variable of string ]) Result.t
 
 val row
   :  substitution:Substitution.t
   -> Parsetree.row
-  -> (Type.t, [> `Unbound_type_variable of string ]) Result.t
+  -> (variable list * Type.t, [> `Unbound_type_variable of string ]) Result.t
 
 val type_expr
   :  substitution:Substitution.t
@@ -35,7 +35,7 @@ val type_expr
      Result.t
 
 module With_computation (Computation : Computation.S) : sig
-  val core_type : Parsetree.core_type -> Type.t Computation.t
-  val row : Parsetree.row -> Type.t Computation.t
+  val core_type : Parsetree.core_type -> (variable list * Type.t) Computation.t
+  val row : Parsetree.row -> (variable list * Type.t) Computation.t
   val type_expr : Types.type_expr -> Type.t Computation.t
 end
