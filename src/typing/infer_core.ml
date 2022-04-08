@@ -1055,7 +1055,7 @@ module Expression = struct
         cases
         ~init:(Type.var default_pat_type, [])
         ~f:(fun (tag, var, case) (row, cases) ->
-          row_cons tag (Type.var var) row, case :: cases)
+          row_cons tag (present (Type.var var)) row, case :: cases)
     in
     return
       (let%map () = lhs_type =~- variant row

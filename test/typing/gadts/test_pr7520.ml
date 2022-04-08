@@ -60,7 +60,8 @@ let%expect_test "" =
                       └──Type expr: Variant
                          └──Type expr: Row cons
                             └──Label: Foo
-                            └──Type expr: Constructor: empty
+                            └──Type expr: Constructor: present
+                               └──Type expr: Constructor: empty
                             └──Type expr: Row uniform
                                └──Type expr: Constructor: absent
                       └──Type expr: Variable: a5638
@@ -72,7 +73,8 @@ let%expect_test "" =
                          └──Type expr: Variant
                             └──Type expr: Row cons
                                └──Label: Foo
-                               └──Type expr: Constructor: empty
+                               └──Type expr: Constructor: present
+                                  └──Type expr: Constructor: empty
                                └──Type expr: Row uniform
                                   └──Type expr: Constructor: absent
                          └──Type expr: Variable: a5638
@@ -81,7 +83,8 @@ let%expect_test "" =
                             └──Type expr: Variant
                                └──Type expr: Row cons
                                   └──Label: Foo
-                                  └──Type expr: Constructor: empty
+                                  └──Type expr: Constructor: present
+                                     └──Type expr: Constructor: empty
                                   └──Type expr: Row uniform
                                      └──Type expr: Constructor: absent
                             └──Desc: Variable: t
@@ -92,7 +95,8 @@ let%expect_test "" =
                                   └──Type expr: Variant
                                      └──Type expr: Row cons
                                         └──Label: Foo
-                                        └──Type expr: Constructor: empty
+                                        └──Type expr: Constructor: present
+                                           └──Type expr: Constructor: empty
                                         └──Type expr: Row uniform
                                            └──Type expr: Constructor: absent
                                   └──Desc: Variable
@@ -100,7 +104,8 @@ let%expect_test "" =
                                └──Type expr: Variant
                                   └──Type expr: Row cons
                                      └──Label: Foo
-                                     └──Type expr: Constructor: empty
+                                     └──Type expr: Constructor: present
+                                        └──Type expr: Constructor: empty
                                      └──Type expr: Row uniform
                                         └──Type expr: Constructor: absent
                                └──Cases:
@@ -109,7 +114,8 @@ let%expect_test "" =
                                         └──Type expr: Variant
                                            └──Type expr: Row cons
                                               └──Label: Foo
-                                              └──Type expr: Constructor: empty
+                                              └──Type expr: Constructor: present
+                                                 └──Type expr: Constructor: empty
                                               └──Type expr: Row uniform
                                                  └──Type expr: Constructor: absent
                                         └──Desc: Variant
@@ -118,7 +124,8 @@ let%expect_test "" =
                                               └──Variant row:
                                                  └──Type expr: Row cons
                                                     └──Label: Foo
-                                                    └──Type expr: Constructor: empty
+                                                    └──Type expr: Constructor: present
+                                                       └──Type expr: Constructor: empty
                                                     └──Type expr: Row uniform
                                                        └──Type expr: Constructor: absent
                                            └──Pattern:
