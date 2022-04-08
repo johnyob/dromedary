@@ -77,6 +77,8 @@ let pp_token ppf =
   | RIGHT_PAREN -> Format.fprintf ppf "RIGHT_PAREN@."
   | LEFT_BRACE -> Format.fprintf ppf "LEFT_BRACE@."
   | RIGHT_BRACE -> Format.fprintf ppf "RIGHT_BRACE@."
+  | MU -> Format.fprintf ppf "MU@."
+  | WHERE -> Format.fprintf ppf "WHERE@."
   | EOF -> Format.fprintf ppf "EOF@."
 
 let tokens_from_string str =

@@ -82,6 +82,8 @@ rule read =
   | "external"                    { EXTERNAL }
   | "exception"                   { EXCEPTION }
   | "constraint"                  { CONSTRAINT }
+  | "mu"                          { MU }
+  | "where"                       { WHERE }
 
   (* reserved operators *)
   | "->"                          { RIGHT_ARROW }

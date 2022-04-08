@@ -60,7 +60,7 @@ let convert_alias { alias_alphas; alias_name; alias_type } =
     | Ttyp_tuple ts -> Abbrev_type.make_former (Tuple (List.map ts ~f:convert))
     | Ttyp_constr (ts, constr_name) ->
       Abbrev_type.make_former (Constr (List.map ts ~f:convert, constr_name))
-    | Ttyp_variant _ | Ttyp_row_cons _ | Ttyp_row_uniform _ | Ttyp_alias _ ->
+    | Ttyp_variant _ | Ttyp_row_cons _ | Ttyp_row_uniform _ | Ttyp_mu _ | Ttyp_where _ ->
       raise_s
         [%message "Unsupported alias type expression" (type_expr : type_expr)]
   in

@@ -25,6 +25,7 @@ type core_type =
   | Ptyp_constr of core_type list * string
   | Ptyp_variant of row
   | Ptyp_mu of string * core_type
+  | Ptyp_where of core_type * string * core_type
 [@@deriving sexp_of]
 
 and row = row_field list * closed_flag
@@ -197,6 +198,11 @@ let rec pp_core_type_mach ~indent ppf core_type =
     print "Mu";
     Format.fprintf ppf "%sVariable: %s@." indent x;
     pp_core_type_mach ~indent ppf t
+  | Ptyp_where (t1, x, t2) ->
+    print "Where";
+    Format.fprintf ppf "%sVariable: %s@." indent x;
+    pp_core_type_mach ~indent ppf t2;
+    pp_core_type_mach ~indent ppf t1
 
 
 and pp_row_mach ~indent ppf (row_fields, closed_flag) =
@@ -591,7 +597,16 @@ let rec pp_core_type ppf core_type =
         ts
         constr
     | Ptyp_variant row -> Format.fprintf ppf "@[[@;%a@;]@]" pp_row row
-    | Ptyp_mu (x, t) -> Format.fprintf ppf "@[@;mu '%s.@;%a@]" x pp_core_type t
+    | Ptyp_mu (x, t) -> Format.fprintf ppf "@[mu '%s.@;%a@]" x pp_core_type t
+    | Ptyp_where (t1, x, t2) ->
+      Format.fprintf
+        ppf
+        "@[%a@;where@;%s@;=@;%a@]"
+        pp_core_type
+        t1
+        x
+        pp_core_type
+        t2
   in
   loop ppf core_type
 

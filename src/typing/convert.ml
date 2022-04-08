@@ -44,6 +44,11 @@ let rec core_type ~substitution t =
     let x' = fresh () in
     let%bind vars, t = core_type ~substitution:(Substitution.add substitution x x') t in
     return (vars, Type.mu x' t)
+  | Ptyp_where (t1, x, t2) ->
+    let x' = fresh () in
+    let%bind vars1, t2 = core_type ~substitution t2 in
+    let%bind vars2, t1 = core_type ~substitution:(Substitution.add substitution x x') t1 in
+    return (vars1 @ vars2, Type.let_ ~binding:(x', t2) ~in_:t1)
 
 
 and row ~substitution (row_fields, closed_flag) =
@@ -94,7 +99,15 @@ let rec type_expr ~substitution t =
   | Ttyp_constr (ts, constr') ->
     let%bind ts = List.map ts ~f:(type_expr ~substitution) |> all in
     return (constr ts constr')
-  | Ttyp_alias _ -> fail (`Type_expr_contains_alias t)
+  | Ttyp_mu (x, t) -> 
+    let x' = fresh () in
+    let%bind t = type_expr ~substitution:(Substitution.add substitution x x') t in
+    return (Type.mu x' t)
+  | Ttyp_where (t1, x, t2) ->
+    let x' = fresh () in
+    let%bind t2 = type_expr ~substitution t2 in
+    let%bind t1 = type_expr ~substitution:(Substitution.add substitution x x') t1 in
+    return (Type.let_ ~binding:(x', t2) ~in_:t1)
   | Ttyp_variant t ->
     let%bind t = type_expr_row ~substitution t in
     return (variant t)

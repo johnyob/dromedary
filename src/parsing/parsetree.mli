@@ -31,6 +31,8 @@ type core_type =
       (** Polymorphic variants [ [ ... ] ] *)
   | Ptyp_mu of string * core_type
       (** Equi-recursive types [ mu 'a. T ] *)
+  | Ptyp_where of core_type * string * core_type
+      (** where-binding [ T where 'a = T ] *)
 [@@deriving sexp_of]
 
 and row = row_field list * closed_flag

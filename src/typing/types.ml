@@ -23,7 +23,8 @@ and type_desc =
   | Ttyp_arrow of type_expr * type_expr
   | Ttyp_tuple of type_expr list
   | Ttyp_constr of type_constr
-  | Ttyp_alias of type_expr * string
+  | Ttyp_mu of string * type_expr
+  | Ttyp_where of type_expr * string * type_expr
   | Ttyp_variant of type_expr
   | Ttyp_row_cons of tag * type_expr * row
   | Ttyp_row_uniform of type_expr
@@ -145,7 +146,7 @@ module Algebra = struct
         | Type_former.Variant t -> Ttyp_variant t)
 
 
-    let mu x t = make_type_expr (Ttyp_alias (t, x))
+    let mu x t = make_type_expr (Ttyp_mu (x, t))
     let row_cons (label, t1) t2 = make_type_expr (Ttyp_row_cons (label, t1, t2))
     let row_uniform t = make_type_expr (Ttyp_row_uniform t)
   end
@@ -245,10 +246,15 @@ let rec pp_type_expr_mach ~indent ppf type_expr =
   | Ttyp_constr (ts, constr) ->
     print (Format.asprintf "Constructor: %s" constr);
     List.iter ~f:(pp_type_expr_mach ~indent ppf) ts
-  | Ttyp_alias (t, x) ->
-    print "As";
-    pp_type_expr_mach ~indent ppf t;
-    Format.fprintf ppf "%sVariable: %s@." indent x
+  | Ttyp_mu (x, t) ->
+    print "Mu";
+    Format.fprintf ppf "%sVariable: %s@." indent x;
+    pp_type_expr_mach ~indent ppf t
+  | Ttyp_where (t1, x, t2) ->
+    print "Where";
+    pp_type_expr_mach ~indent ppf t1;
+    Format.fprintf ppf "%sVariable: %s@." indent x;
+    pp_type_expr_mach ~indent ppf t2
   | Ttyp_variant t ->
     print "Variant";
     pp_type_expr_mach ~indent ppf t
@@ -286,8 +292,17 @@ let pp_type_expr ppf type_expr =
         (list ~first:"(" ~last:")" ~sep:",@;" (loop ~parens:false))
         ts
         constr
-    | Ttyp_alias (t, x) ->
-      Format.fprintf ppf "@[%a@;as@;%s@]" (loop ~parens:false) t x
+    | Ttyp_mu (x, t) ->
+      Format.fprintf ppf "@[mu@;%s.@;%a@]" x (loop ~parens:false) t
+    | Ttyp_where (t1, x, t2) ->
+      Format.fprintf
+        ppf
+        "@[%a@;where@;%s@;=@;%a@]"
+        (loop ~parens:false)
+        t1
+        x
+        (loop ~parens:false)
+        t2
     | Ttyp_variant t -> Format.fprintf ppf "@[[%a]@]" (loop ~parens:false) t
     | Ttyp_row_cons (label, t1, t2) ->
       Format.fprintf
@@ -407,7 +422,8 @@ let pp_label_declaration_mach ~indent ppf (label_decl : label_declaration) =
   pp_type_expr_mach ~indent ppf label_decl.label_arg;
   pp_type_expr_mach ~indent ppf label_decl.label_type
 
-let pp_alias_mach ~indent ppf alias = 
+
+let pp_alias_mach ~indent ppf alias =
   Format.fprintf ppf "%sAlias@." indent;
   let indent = indent_space ^ indent in
   Format.fprintf ppf "%sAlias name: %s@." indent alias.alias_name;
@@ -417,6 +433,7 @@ let pp_alias_mach ~indent ppf alias =
     indent
     (String.concat ~sep:" " alias.alias_alphas);
   pp_type_expr_mach ~indent ppf alias.alias_type
+
 
 let pp_type_decl_kind_mach ~indent ppf type_decl_kind =
   let print = Format.fprintf ppf "%sType declaration kind: %s@." indent in
@@ -432,6 +449,7 @@ let pp_type_decl_kind_mach ~indent ppf type_decl_kind =
   | Type_alias alias ->
     print "Alias";
     pp_alias_mach ~indent ppf alias
+
 
 let pp_type_declaration_mach ~indent ppf type_decl =
   Format.fprintf ppf "%sType declaration:@." indent;

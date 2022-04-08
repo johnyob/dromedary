@@ -28,8 +28,11 @@ type type_desc =
       (** Product (or "tuple") types. *)
   | Ttyp_constr of type_constr 
       (** Type constructors. *)
-  | Ttyp_alias of type_expr * string
+  | Ttyp_mu of string * type_expr
       (** Alias, required for displaying equi-recursive types. *)
+  | Ttyp_where of type_expr * string * type_expr
+      (** Where, used for translation of core type to type expr 
+          (may be used in future for explicit sharing :) ) *)
   | Ttyp_variant of type_expr 
       (** Polymorphic variant [ [ ... ] ] *)
   | Ttyp_row_cons of tag * type_expr * row 

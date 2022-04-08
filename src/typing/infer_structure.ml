@@ -47,7 +47,11 @@ let rec transl_core_type core_type =
       vars, Ttyp_variant t
     | Ptyp_mu (var, core_type) ->
       let vars, t = transl_core_type core_type in
-      vars, Ttyp_alias (t, var)
+      vars, Ttyp_mu (var, t)
+    | Ptyp_where (core_type1, var, core_type2) ->
+      let vars1, t1 = transl_core_type core_type1 in
+      let vars2, t2 = transl_core_type core_type2 in
+      vars1 @ vars2, Ttyp_where (t1, var, t2)
   in
   vars, make_type_expr type_desc
 

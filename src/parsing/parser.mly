@@ -54,6 +54,8 @@
 %token QUOTE
 %token BACKTICK
 %token BAR
+%token MU
+%token WHERE
 
 // primitives
 %token REF
@@ -245,6 +247,25 @@ constant:
   QUOTE; id = IDENT         { id }
 
 core_type:
+  | core_type = mu_type
+      { core_type }
+  | core_type1 = core_type
+    ; WHERE
+    ; var = type_var
+    ; EQUAL
+    ; core_type2 = mu_type
+      { Ptyp_where (core_type1, var, core_type2) }
+
+mu_type:
+  | core_type = arrow_type
+      { core_type }
+  | MU
+    ; var = type_var
+    ; DOT
+    ; core_type = mu_type
+      { Ptyp_mu (var, core_type) } 
+
+arrow_type:
   | core_type = tuple_type
       { core_type }   
   | core_type1 = tuple_type
