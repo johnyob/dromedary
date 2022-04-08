@@ -64,10 +64,7 @@ module Make (Algebra : Algebra) = struct
 
     (* [decode_variable var] decodes [var] into a [Type_var] using it's unique identifier. *)
     let[@landmark] decode_variable var =
-      assert (
-        match G.Structure.repr (U.Type.structure var) with
-        | Flexible_var -> true
-        | _ -> false);
+      Log.debug (fun m -> m "Decode variable");
       Type_var.of_int (U.Type.id var)
 
 
@@ -75,12 +72,21 @@ module Make (Algebra : Algebra) = struct
       Type_var.of_int (rigid_var :> int)
 
 
-    (* [decode_type type_] decodes type [type_] (may contain cycles) into a [Type]. *)
-    let decode_type : t =
+    (* [decode_type type_] decodes type [type_] (may contain cycles) into a [Type]. 
+       Cache is causing wierd segfault. TODO investigate more...
+    *)
+    (* let decode_type : t =
       let cache = Hashtbl.create ~size:30 (module U.Type) in
       fun type_ ->
-        try Hashtbl.find_exn cache type_ with
+        Log.debug (fun m -> m "Decoding type");
+        try
+          Log.debug (fun m -> m "Finding type in cache...");
+          let type_ = Hashtbl.find_exn cache type_ in
+          Log.debug (fun m -> m "Found type :)");
+          type_
+        with
         | Not_found_s _ ->
+          Log.debug (fun m -> m "Failed to find type in cache, folding now...");
           let decoded_type =
             U.Type.fold
               ~f:(fun type_ structure ->
@@ -96,12 +102,34 @@ module Make (Algebra : Algebra) = struct
               ~mu:(fun v t -> Type.mu (decode_variable v) t)
               type_
           in
-          Hashtbl.add_exn cache ~key:type_ ~data:decoded_type;
-          decoded_type [@landmark "decode_type"]
+          Hashtbl.set cache ~key:type_ ~data:decoded_type;
+          decoded_type [@landmark "decode_type"] *)
+
+    let decode_type : t =
+     fun type_ ->
+      Log.debug (fun m -> m "[decode_type] Decoding type %d" (U.Type.id type_));
+      let decoded_type =
+        U.Type.fold
+          ~f:(fun type_ structure ->
+            Log.debug (fun m -> m "[decode_type] executing f");
+            match G.Structure.repr structure with
+            | Flexible_var -> Type.var (decode_variable type_)
+            | Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
+            | Row_cons (label, label_type, tl) ->
+              Type.row_cons (label, label_type) tl
+            | Row_uniform type_ -> Type.row_uniform type_
+            | Former former -> Type.former former)
+          ~var:(fun type_ -> Type.var (decode_variable type_))
+          ~mu:(fun v t -> Type.mu (decode_variable v) t)
+          type_
+      in
+      Log.debug (fun m -> m "Decoded type");
+      decoded_type
 
 
     (* [decode_scheme scheme] decodes the graphical scheme [scheme] into a [Type.scheme]. *)
     let[@landmark] decode_scheme scheme =
+      Log.debug (fun m -> m "Decoding scheme");
       ( List.map (G.variables scheme) ~f:decode_variable
       , decode_type (G.root scheme) )
   end
@@ -407,7 +435,10 @@ module Make (Algebra : Algebra) = struct
       | Exist (ctx, cst) ->
         Log.debug (fun m -> m "Solving [Exist].");
         bind_existential_ctx state ctx;
-        solve ~state ~env cst
+        let value = solve ~state ~env cst in
+        fun () ->
+          Log.debug (fun m -> m "Elab Exist");
+          value ()
       | Forall (ctx, cst) ->
         Log.debug (fun m -> m "Solving [Forall].");
         (* Enter a new region *)
@@ -418,11 +449,16 @@ module Make (Algebra : Algebra) = struct
         let value = solve ~state ~env cst in
         (* Generalize and exit *)
         ignore (exit state ~rigid_vars ~types:[] : G.variables * G.scheme list);
-        value
+        fun () ->
+          Log.debug (fun m -> m "Elab Forall");
+          value ()
       | Def (bindings, in_) ->
         Log.debug (fun m -> m "Solving [Def].");
         let env = Env.extend_bindings state env bindings in
-        solve ~state ~env in_
+        let value = solve ~state ~env in_ in
+        fun () ->
+          Log.debug (fun m -> m "Elab Def");
+          value ()
       | Instance (x, a) ->
         Log.debug (fun m -> m "Solving [Instance].");
         let scheme = Env.find env x in
@@ -432,7 +468,9 @@ module Make (Algebra : Algebra) = struct
              scheme [@landmark "instantiate"])
         in
         unify ~state ~env (find state a) type_;
-        fun () -> List.map ~f:Decoder.decode_type instance_variables
+        fun () ->
+          Log.debug (fun m -> m "Elab Instance");
+          List.map ~f:Decoder.decode_type instance_variables
       | Let (let_bindings, cst) ->
         Log.debug (fun m -> m "Solving [Let]");
         let term_let_bindings, env, equations =
@@ -443,17 +481,23 @@ module Make (Algebra : Algebra) = struct
         let value = solve ~state ~env cst in
         ignore
           (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
-        both term_let_bindings value
+        fun () ->
+          Log.debug (fun m -> m "Elab Let");
+          both term_let_bindings value ()
       | Let_rec (let_rec_bindings, cst) ->
         Log.debug (fun m -> m "Solving [Let_rec]");
         let term_let_rec_bindings, env =
           solve_let_rec_bindings ~state ~env let_rec_bindings
         in
         let value = solve ~state ~env cst in
-        both term_let_rec_bindings value
+        fun () ->
+          Log.debug (fun m -> m "Elab Let_rec");
+          both term_let_rec_bindings value ()
       | Decode a ->
         let var = find state a in
-        fun () -> Decoder.decode_type var
+        fun () ->
+          Log.debug (fun m -> m "Elab Decode");
+          Decoder.decode_type var
       | Implication (equations, t) ->
         Log.debug (fun m -> m "Solving [Implication].");
         (* Enter a new scope (region) *)
@@ -465,7 +509,9 @@ module Make (Algebra : Algebra) = struct
         (* Exit region *)
         ignore
           (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
-        value
+        fun () ->
+          Log.debug (fun m -> m "Elab Implication");
+          value ()
 
 
   and[@landmark] solve_let_binding
@@ -524,6 +570,7 @@ module Make (Algebra : Algebra) = struct
     in
     (* Return binding and extended environment *)
     ( (fun () ->
+        Log.debug (fun m -> m "Elab Let binding");
         ( List.map ~f:(fun (var, sch) -> var, Decoder.decode_scheme sch) bindings
         , (List.map ~f:Decoder.decode_variable generalizable, value ()) ))
     , env
@@ -629,6 +676,7 @@ module Make (Algebra : Algebra) = struct
           : _ term_let_rec_binding Elaborate.t
         =
        fun () ->
+        Log.debug (fun m -> m "Elab let rec poly");
         ( (var, Decoder.decode_scheme scheme)
         , (List.map generalizable ~f:Decoder.decode_variable, value ()) )
       in
@@ -696,8 +744,13 @@ module Make (Algebra : Algebra) = struct
           : _ term_let_rec_binding Elaborate.t
         =
        fun () ->
+        Log.debug (fun m -> m "Elab let rec mono");
         ( (var, Decoder.decode_scheme scheme)
-        , (List.map generalizable ~f:Decoder.decode_variable, value ()) )
+        , ( List.map generalizable ~f:Decoder.decode_variable
+          , (Log.debug (fun m -> m "Elab let rec mono value");
+             let v = value () in
+             Log.debug (fun m -> m "Elab let rec mono value after");
+             v) ) )
       in
       (* Return recursive bindings and extended environment *)
       ( List.map2_exn bindings values ~f:make_term_let_rec_binding
@@ -861,7 +914,8 @@ module Make (Algebra : Algebra) = struct
           let[@landmark] solved =
             solve ~state:(make_state ()) ~env:(Env.empty abbrevs) t
           in
-          (Elaborate.run solved [@landmark "elaborate-structure"]))
+          Log.debug (fun m -> m "Starting elaboration");
+          Elaborate.run solved [@landmark "elaborate-structure"])
   end
 end
 

@@ -338,7 +338,7 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
       add t ~abbrev:(Abbrev.make abbrev_former abbrev_type)
   end
 
-  let pp_type_explicit ppf type_ =
+  let[@warning "-32"] pp_type_explicit ppf type_ =
     let rec pp_type_explicit type_ =
       U.Type.structure type_ |> Structure.sexp_of_t pp_type_explicit
     in
@@ -358,8 +358,7 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
     Format.fprintf ppf "Region %d\n" i;
     List.iter
       ~f:(fun type_ ->
-        pp_type ppf type_;
-        pp_type_explicit ppf type_)
+        pp_type ppf type_)
       region
 
 
@@ -677,7 +676,9 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
   *)
   let exit ~state ~rigid_vars ~types =
     Log.debug (fun m -> m "Exiting level: %d\n" state.current_level);
+    Log.debug (fun m -> m "Before printing state\n");
     Log.debug (fun m -> m "State before exit:\n%a" pp_state state);
+    Log.debug (fun m -> m "After printing state\n");
     let young_region = young_region ~state in
     (* Now update the lazily updated scopes of every node in the young region *)
     update_scopes young_region;

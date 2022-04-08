@@ -108,6 +108,8 @@ module Make (Structure : Structure_intf.S) = struct
         ~(mu : t -> a -> a)
         : a
       =
+      Log.debug (fun m -> m "Folding over type: %d" (id type_));
+
       (* Hash table records the variables that are grey ([false])
        or black ([true]). *)
       let table = Hashtbl.create (module T) in
@@ -125,9 +127,14 @@ module Make (Structure : Structure_intf.S) = struct
           let result = f type_ (structure type_ |> Structure.map ~f:loop) in
           let status = Hashtbl.find_exn table type_ in
           Hashtbl.remove table type_;
-          if status then mu type_ result else result)
+          Log.debug (fun m -> m "Loop status %b" status);
+          if status then mu type_ result else 
+            (Log.debug (fun m -> m "Returning from loop");
+            result))
       in
-      loop type_
+      let result = loop type_ in
+      Log.debug (fun m -> m "Finished folding");
+      result
 
 
     module To_dot = struct
