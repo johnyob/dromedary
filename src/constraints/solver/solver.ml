@@ -186,6 +186,7 @@ module Make (Algebra : Algebra) = struct
     | Row_uniform t ->
       G.make_row_uniform ~state:state.generalization_state (find state t)
     | Mu t -> find state t
+    | Let t -> find state t
 
 
   (* [bind_flexible state (var, former_opt)] binds the flexible binding 

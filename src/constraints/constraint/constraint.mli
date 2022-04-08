@@ -56,6 +56,7 @@ module Make (Algebra : Algebra) : sig
       | Row_cons of Label.t * t * t
       | Row_uniform of t
       | Mu of variable * t
+      | Let of variable * t * t
     [@@deriving sexp_of]
 
     (** [var 'a] is the representation of the type variable ['a] as the 
@@ -68,6 +69,8 @@ module Make (Algebra : Algebra) : sig
 
     (** [mu 'a t] is the representation of the recursive type [mu 'a. t] *)
     val mu : variable -> t -> t
+
+    val let_ : binding:variable * t -> in_:t -> t
   end
 
   (** The module [Shallow_type] provides the shallow type definition
@@ -87,6 +90,7 @@ module Make (Algebra : Algebra) : sig
       | Row_cons of Label.t * variable * variable
       | Row_uniform of variable
       | Mu of variable
+      | Let of variable
     [@@deriving sexp_of]
 
     (** [binding] represents a shallow type binding defined by the grammar:
