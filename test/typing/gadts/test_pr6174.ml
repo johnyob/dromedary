@@ -16,5 +16,5 @@ let%expect_test "" =
   in
   print_infer_result str;
   [%expect {|
-    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a141))))
-     (type_expr2 ((desc (Ttyp_var a139))))) |}]
+    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a176))))
+     (type_expr2 ((desc (Ttyp_var a174))))) |}]

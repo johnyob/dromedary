@@ -71,25 +71,25 @@ let%expect_test "" =
                    └──Type expr: Arrow
                       └──Type expr: Constructor: cmp
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: a5088
-                         └──Type expr: Variable: a5088
+                            └──Type expr: Variable: a6016
+                         └──Type expr: Variable: a6016
                       └──Type expr: Constructor: unit
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: a5088
+                   └──Variables: a6016
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: cmp
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: a5088
-                            └──Type expr: Variable: a5088
+                               └──Type expr: Variable: a6016
+                            └──Type expr: Variable: a6016
                          └──Type expr: Constructor: unit
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: cmp
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: a5088
-                               └──Type expr: Variable: a5088
+                                  └──Type expr: Variable: a6016
+                               └──Type expr: Variable: a6016
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: unit
@@ -97,29 +97,29 @@ let%expect_test "" =
                                └──Expression:
                                   └──Type expr: Constructor: cmp
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: a5088
-                                     └──Type expr: Variable: a5088
+                                        └──Type expr: Variable: a6016
+                                     └──Type expr: Variable: a6016
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: cmp
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: a5088
-                                  └──Type expr: Variable: a5088
+                                     └──Type expr: Variable: a6016
+                                  └──Type expr: Variable: a6016
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: cmp
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: a5088
-                                           └──Type expr: Variable: a5088
+                                              └──Type expr: Variable: a6016
+                                           └──Type expr: Variable: a6016
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Eq
                                               └──Constructor type:
                                                  └──Type expr: Constructor: cmp
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: a5088
-                                                    └──Type expr: Variable: a5088
+                                                       └──Type expr: Variable: a6016
+                                                    └──Type expr: Variable: a6016
                                      └──Expression:
                                         └──Type expr: Constructor: unit
                                         └──Desc: Constant: ()
@@ -127,8 +127,8 @@ let%expect_test "" =
                                      └──Pattern:
                                         └──Type expr: Constructor: cmp
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: a5088
-                                           └──Type expr: Variable: a5088
+                                              └──Type expr: Variable: a6016
+                                           └──Type expr: Variable: a6016
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Not_eq
@@ -137,8 +137,8 @@ let%expect_test "" =
                                               └──Constructor type:
                                                  └──Type expr: Constructor: cmp
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: a5088
-                                                    └──Type expr: Variable: a5088
+                                                       └──Type expr: Variable: a6016
+                                                    └──Type expr: Variable: a6016
                                            └──Pattern:
                                               └──Type expr: Constructor: string
                                               └──Desc: Variable: s

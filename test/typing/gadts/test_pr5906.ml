@@ -154,136 +154,136 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: bin_op
-                         └──Type expr: Variable: a5215
-                         └──Type expr: Variable: a5216
-                         └──Type expr: Variable: a5217
+                         └──Type expr: Variable: a6632
+                         └──Type expr: Variable: a6633
+                         └──Type expr: Variable: a6634
                       └──Type expr: Arrow
                          └──Type expr: Constructor: constant
-                            └──Type expr: Variable: a5215
+                            └──Type expr: Variable: a6632
                          └──Type expr: Arrow
                             └──Type expr: Constructor: constant
-                               └──Type expr: Variable: a5216
+                               └──Type expr: Variable: a6633
                             └──Type expr: Constructor: constant
-                               └──Type expr: Variable: a5217
+                               └──Type expr: Variable: a6634
                    └──Desc: Variable: eval
                 └──Abstraction:
-                   └──Variables: a5215,a5216,a5217
+                   └──Variables: a6632,a6633,a6634
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: bin_op
-                            └──Type expr: Variable: a5215
-                            └──Type expr: Variable: a5216
-                            └──Type expr: Variable: a5217
+                            └──Type expr: Variable: a6632
+                            └──Type expr: Variable: a6633
+                            └──Type expr: Variable: a6634
                          └──Type expr: Arrow
                             └──Type expr: Constructor: constant
-                               └──Type expr: Variable: a5215
+                               └──Type expr: Variable: a6632
                             └──Type expr: Arrow
                                └──Type expr: Constructor: constant
-                                  └──Type expr: Variable: a5216
+                                  └──Type expr: Variable: a6633
                                └──Type expr: Constructor: constant
-                                  └──Type expr: Variable: a5217
+                                  └──Type expr: Variable: a6634
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: bin_op
-                               └──Type expr: Variable: a5215
-                               └──Type expr: Variable: a5216
-                               └──Type expr: Variable: a5217
+                               └──Type expr: Variable: a6632
+                               └──Type expr: Variable: a6633
+                               └──Type expr: Variable: a6634
                             └──Desc: Variable: bop
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: constant
-                                  └──Type expr: Variable: a5215
+                                  └──Type expr: Variable: a6632
                                └──Type expr: Arrow
                                   └──Type expr: Constructor: constant
-                                     └──Type expr: Variable: a5216
+                                     └──Type expr: Variable: a6633
                                   └──Type expr: Constructor: constant
-                                     └──Type expr: Variable: a5217
+                                     └──Type expr: Variable: a6634
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: constant
-                                     └──Type expr: Variable: a5215
+                                     └──Type expr: Variable: a6632
                                   └──Desc: Variable: x
                                └──Expression:
                                   └──Type expr: Arrow
                                      └──Type expr: Constructor: constant
-                                        └──Type expr: Variable: a5216
+                                        └──Type expr: Variable: a6633
                                      └──Type expr: Constructor: constant
-                                        └──Type expr: Variable: a5217
+                                        └──Type expr: Variable: a6634
                                   └──Desc: Function
                                      └──Pattern:
                                         └──Type expr: Constructor: constant
-                                           └──Type expr: Variable: a5216
+                                           └──Type expr: Variable: a6633
                                         └──Desc: Variable: y
                                      └──Expression:
                                         └──Type expr: Constructor: constant
-                                           └──Type expr: Variable: a5217
+                                           └──Type expr: Variable: a6634
                                         └──Desc: Match
                                            └──Expression:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: bin_op
-                                                    └──Type expr: Variable: a5215
-                                                    └──Type expr: Variable: a5216
-                                                    └──Type expr: Variable: a5217
+                                                    └──Type expr: Variable: a6632
+                                                    └──Type expr: Variable: a6633
+                                                    └──Type expr: Variable: a6634
                                                  └──Type expr: Constructor: constant
-                                                    └──Type expr: Variable: a5215
+                                                    └──Type expr: Variable: a6632
                                                  └──Type expr: Constructor: constant
-                                                    └──Type expr: Variable: a5216
+                                                    └──Type expr: Variable: a6633
                                               └──Desc: Tuple
                                                  └──Expression:
                                                     └──Type expr: Constructor: bin_op
-                                                       └──Type expr: Variable: a5215
-                                                       └──Type expr: Variable: a5216
-                                                       └──Type expr: Variable: a5217
+                                                       └──Type expr: Variable: a6632
+                                                       └──Type expr: Variable: a6633
+                                                       └──Type expr: Variable: a6634
                                                     └──Desc: Variable
                                                        └──Variable: bop
                                                  └──Expression:
                                                     └──Type expr: Constructor: constant
-                                                       └──Type expr: Variable: a5215
+                                                       └──Type expr: Variable: a6632
                                                     └──Desc: Variable
                                                        └──Variable: x
                                                  └──Expression:
                                                     └──Type expr: Constructor: constant
-                                                       └──Type expr: Variable: a5216
+                                                       └──Type expr: Variable: a6633
                                                     └──Desc: Variable
                                                        └──Variable: y
                                            └──Type expr: Tuple
                                               └──Type expr: Constructor: bin_op
-                                                 └──Type expr: Variable: a5215
-                                                 └──Type expr: Variable: a5216
-                                                 └──Type expr: Variable: a5217
+                                                 └──Type expr: Variable: a6632
+                                                 └──Type expr: Variable: a6633
+                                                 └──Type expr: Variable: a6634
                                               └──Type expr: Constructor: constant
-                                                 └──Type expr: Variable: a5215
+                                                 └──Type expr: Variable: a6632
                                               └──Type expr: Constructor: constant
-                                                 └──Type expr: Variable: a5216
+                                                 └──Type expr: Variable: a6633
                                            └──Cases:
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: bin_op
-                                                          └──Type expr: Variable: a5215
-                                                          └──Type expr: Variable: a5216
-                                                          └──Type expr: Variable: a5217
+                                                          └──Type expr: Variable: a6632
+                                                          └──Type expr: Variable: a6633
+                                                          └──Type expr: Variable: a6634
                                                        └──Type expr: Constructor: constant
-                                                          └──Type expr: Variable: a5215
+                                                          └──Type expr: Variable: a6632
                                                        └──Type expr: Constructor: constant
-                                                          └──Type expr: Variable: a5216
+                                                          └──Type expr: Variable: a6633
                                                     └──Desc: Tuple
                                                        └──Pattern:
                                                           └──Type expr: Constructor: bin_op
-                                                             └──Type expr: Variable: a5215
-                                                             └──Type expr: Variable: a5216
-                                                             └──Type expr: Variable: a5217
+                                                             └──Type expr: Variable: a6632
+                                                             └──Type expr: Variable: a6633
+                                                             └──Type expr: Variable: a6634
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Eq
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: bin_op
-                                                                      └──Type expr: Variable: a5215
-                                                                      └──Type expr: Variable: a5216
-                                                                      └──Type expr: Variable: a5217
+                                                                      └──Type expr: Variable: a6632
+                                                                      └──Type expr: Variable: a6633
+                                                                      └──Type expr: Variable: a6634
                                                        └──Pattern:
                                                           └──Type expr: Constructor: constant
-                                                             └──Type expr: Variable: a5215
+                                                             └──Type expr: Variable: a6632
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Bool
@@ -291,13 +291,13 @@ let%expect_test "" =
                                                                    └──Type expr: Constructor: bool
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: constant
-                                                                      └──Type expr: Variable: a5215
+                                                                      └──Type expr: Variable: a6632
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: bool
                                                                 └──Desc: Variable: x
                                                        └──Pattern:
                                                           └──Type expr: Constructor: constant
-                                                             └──Type expr: Variable: a5216
+                                                             └──Type expr: Variable: a6633
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Bool
@@ -305,13 +305,13 @@ let%expect_test "" =
                                                                    └──Type expr: Constructor: bool
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: constant
-                                                                      └──Type expr: Variable: a5216
+                                                                      └──Type expr: Variable: a6633
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: bool
                                                                 └──Desc: Variable: y
                                                  └──Expression:
                                                     └──Type expr: Constructor: constant
-                                                       └──Type expr: Variable: a5217
+                                                       └──Type expr: Variable: a6634
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Bool
@@ -319,7 +319,7 @@ let%expect_test "" =
                                                              └──Type expr: Constructor: bool
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: constant
-                                                                └──Type expr: Variable: a5217
+                                                                └──Type expr: Variable: a6634
                                                        └──Expression:
                                                           └──Type expr: Constructor: bool
                                                           └──Desc: Application
@@ -348,30 +348,30 @@ let%expect_test "" =
                                                  └──Pattern:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: bin_op
-                                                          └──Type expr: Variable: a5215
-                                                          └──Type expr: Variable: a5216
-                                                          └──Type expr: Variable: a5217
+                                                          └──Type expr: Variable: a6632
+                                                          └──Type expr: Variable: a6633
+                                                          └──Type expr: Variable: a6634
                                                        └──Type expr: Constructor: constant
-                                                          └──Type expr: Variable: a5215
+                                                          └──Type expr: Variable: a6632
                                                        └──Type expr: Constructor: constant
-                                                          └──Type expr: Variable: a5216
+                                                          └──Type expr: Variable: a6633
                                                     └──Desc: Tuple
                                                        └──Pattern:
                                                           └──Type expr: Constructor: bin_op
-                                                             └──Type expr: Variable: a5215
-                                                             └──Type expr: Variable: a5216
-                                                             └──Type expr: Variable: a5217
+                                                             └──Type expr: Variable: a6632
+                                                             └──Type expr: Variable: a6633
+                                                             └──Type expr: Variable: a6634
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Eq
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: bin_op
-                                                                      └──Type expr: Variable: a5215
-                                                                      └──Type expr: Variable: a5216
-                                                                      └──Type expr: Variable: a5217
+                                                                      └──Type expr: Variable: a6632
+                                                                      └──Type expr: Variable: a6633
+                                                                      └──Type expr: Variable: a6634
                                                        └──Pattern:
                                                           └──Type expr: Constructor: constant
-                                                             └──Type expr: Variable: a5215
+                                                             └──Type expr: Variable: a6632
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Int
@@ -379,13 +379,13 @@ let%expect_test "" =
                                                                    └──Type expr: Constructor: int
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: constant
-                                                                      └──Type expr: Variable: a5215
+                                                                      └──Type expr: Variable: a6632
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: int
                                                                 └──Desc: Variable: x
                                                        └──Pattern:
                                                           └──Type expr: Constructor: constant
-                                                             └──Type expr: Variable: a5216
+                                                             └──Type expr: Variable: a6633
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Int
@@ -393,13 +393,13 @@ let%expect_test "" =
                                                                    └──Type expr: Constructor: int
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: constant
-                                                                      └──Type expr: Variable: a5216
+                                                                      └──Type expr: Variable: a6633
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: int
                                                                 └──Desc: Variable: y
                                                  └──Expression:
                                                     └──Type expr: Constructor: constant
-                                                       └──Type expr: Variable: a5217
+                                                       └──Type expr: Variable: a6634
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Bool
@@ -407,7 +407,7 @@ let%expect_test "" =
                                                              └──Type expr: Constructor: bool
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: constant
-                                                                └──Type expr: Variable: a5217
+                                                                └──Type expr: Variable: a6634
                                                        └──Expression:
                                                           └──Type expr: Constructor: bool
                                                           └──Desc: Application
@@ -435,30 +435,30 @@ let%expect_test "" =
                                                  └──Pattern:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: bin_op
-                                                          └──Type expr: Variable: a5215
-                                                          └──Type expr: Variable: a5216
-                                                          └──Type expr: Variable: a5217
+                                                          └──Type expr: Variable: a6632
+                                                          └──Type expr: Variable: a6633
+                                                          └──Type expr: Variable: a6634
                                                        └──Type expr: Constructor: constant
-                                                          └──Type expr: Variable: a5215
+                                                          └──Type expr: Variable: a6632
                                                        └──Type expr: Constructor: constant
-                                                          └──Type expr: Variable: a5216
+                                                          └──Type expr: Variable: a6633
                                                     └──Desc: Tuple
                                                        └──Pattern:
                                                           └──Type expr: Constructor: bin_op
-                                                             └──Type expr: Variable: a5215
-                                                             └──Type expr: Variable: a5216
-                                                             └──Type expr: Variable: a5217
+                                                             └──Type expr: Variable: a6632
+                                                             └──Type expr: Variable: a6633
+                                                             └──Type expr: Variable: a6634
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Leq
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: bin_op
-                                                                      └──Type expr: Variable: a5215
-                                                                      └──Type expr: Variable: a5216
-                                                                      └──Type expr: Variable: a5217
+                                                                      └──Type expr: Variable: a6632
+                                                                      └──Type expr: Variable: a6633
+                                                                      └──Type expr: Variable: a6634
                                                        └──Pattern:
                                                           └──Type expr: Constructor: constant
-                                                             └──Type expr: Variable: a5215
+                                                             └──Type expr: Variable: a6632
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Int
@@ -466,13 +466,13 @@ let%expect_test "" =
                                                                    └──Type expr: Constructor: int
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: constant
-                                                                      └──Type expr: Variable: a5215
+                                                                      └──Type expr: Variable: a6632
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: int
                                                                 └──Desc: Variable: x
                                                        └──Pattern:
                                                           └──Type expr: Constructor: constant
-                                                             └──Type expr: Variable: a5216
+                                                             └──Type expr: Variable: a6633
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Int
@@ -480,13 +480,13 @@ let%expect_test "" =
                                                                    └──Type expr: Constructor: int
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: constant
-                                                                      └──Type expr: Variable: a5216
+                                                                      └──Type expr: Variable: a6633
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: int
                                                                 └──Desc: Variable: y
                                                  └──Expression:
                                                     └──Type expr: Constructor: constant
-                                                       └──Type expr: Variable: a5217
+                                                       └──Type expr: Variable: a6634
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Bool
@@ -494,7 +494,7 @@ let%expect_test "" =
                                                              └──Type expr: Constructor: bool
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: constant
-                                                                └──Type expr: Variable: a5217
+                                                                └──Type expr: Variable: a6634
                                                        └──Expression:
                                                           └──Type expr: Constructor: bool
                                                           └──Desc: Application
@@ -523,30 +523,30 @@ let%expect_test "" =
                                                  └──Pattern:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: bin_op
-                                                          └──Type expr: Variable: a5215
-                                                          └──Type expr: Variable: a5216
-                                                          └──Type expr: Variable: a5217
+                                                          └──Type expr: Variable: a6632
+                                                          └──Type expr: Variable: a6633
+                                                          └──Type expr: Variable: a6634
                                                        └──Type expr: Constructor: constant
-                                                          └──Type expr: Variable: a5215
+                                                          └──Type expr: Variable: a6632
                                                        └──Type expr: Constructor: constant
-                                                          └──Type expr: Variable: a5216
+                                                          └──Type expr: Variable: a6633
                                                     └──Desc: Tuple
                                                        └──Pattern:
                                                           └──Type expr: Constructor: bin_op
-                                                             └──Type expr: Variable: a5215
-                                                             └──Type expr: Variable: a5216
-                                                             └──Type expr: Variable: a5217
+                                                             └──Type expr: Variable: a6632
+                                                             └──Type expr: Variable: a6633
+                                                             └──Type expr: Variable: a6634
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Leq
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: bin_op
-                                                                      └──Type expr: Variable: a5215
-                                                                      └──Type expr: Variable: a5216
-                                                                      └──Type expr: Variable: a5217
+                                                                      └──Type expr: Variable: a6632
+                                                                      └──Type expr: Variable: a6633
+                                                                      └──Type expr: Variable: a6634
                                                        └──Pattern:
                                                           └──Type expr: Constructor: constant
-                                                             └──Type expr: Variable: a5215
+                                                             └──Type expr: Variable: a6632
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Bool
@@ -554,13 +554,13 @@ let%expect_test "" =
                                                                    └──Type expr: Constructor: bool
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: constant
-                                                                      └──Type expr: Variable: a5215
+                                                                      └──Type expr: Variable: a6632
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: bool
                                                                 └──Desc: Variable: x
                                                        └──Pattern:
                                                           └──Type expr: Constructor: constant
-                                                             └──Type expr: Variable: a5216
+                                                             └──Type expr: Variable: a6633
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Bool
@@ -568,13 +568,13 @@ let%expect_test "" =
                                                                    └──Type expr: Constructor: bool
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: constant
-                                                                      └──Type expr: Variable: a5216
+                                                                      └──Type expr: Variable: a6633
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: bool
                                                                 └──Desc: Variable: y
                                                  └──Expression:
                                                     └──Type expr: Constructor: constant
-                                                       └──Type expr: Variable: a5217
+                                                       └──Type expr: Variable: a6634
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Bool
@@ -582,7 +582,7 @@ let%expect_test "" =
                                                              └──Type expr: Constructor: bool
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: constant
-                                                                └──Type expr: Variable: a5217
+                                                                └──Type expr: Variable: a6634
                                                        └──Expression:
                                                           └──Type expr: Constructor: bool
                                                           └──Desc: Application
@@ -611,30 +611,30 @@ let%expect_test "" =
                                                  └──Pattern:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: bin_op
-                                                          └──Type expr: Variable: a5215
-                                                          └──Type expr: Variable: a5216
-                                                          └──Type expr: Variable: a5217
+                                                          └──Type expr: Variable: a6632
+                                                          └──Type expr: Variable: a6633
+                                                          └──Type expr: Variable: a6634
                                                        └──Type expr: Constructor: constant
-                                                          └──Type expr: Variable: a5215
+                                                          └──Type expr: Variable: a6632
                                                        └──Type expr: Constructor: constant
-                                                          └──Type expr: Variable: a5216
+                                                          └──Type expr: Variable: a6633
                                                     └──Desc: Tuple
                                                        └──Pattern:
                                                           └──Type expr: Constructor: bin_op
-                                                             └──Type expr: Variable: a5215
-                                                             └──Type expr: Variable: a5216
-                                                             └──Type expr: Variable: a5217
+                                                             └──Type expr: Variable: a6632
+                                                             └──Type expr: Variable: a6633
+                                                             └──Type expr: Variable: a6634
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Add
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: bin_op
-                                                                      └──Type expr: Variable: a5215
-                                                                      └──Type expr: Variable: a5216
-                                                                      └──Type expr: Variable: a5217
+                                                                      └──Type expr: Variable: a6632
+                                                                      └──Type expr: Variable: a6633
+                                                                      └──Type expr: Variable: a6634
                                                        └──Pattern:
                                                           └──Type expr: Constructor: constant
-                                                             └──Type expr: Variable: a5215
+                                                             └──Type expr: Variable: a6632
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Int
@@ -642,13 +642,13 @@ let%expect_test "" =
                                                                    └──Type expr: Constructor: int
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: constant
-                                                                      └──Type expr: Variable: a5215
+                                                                      └──Type expr: Variable: a6632
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: int
                                                                 └──Desc: Variable: x
                                                        └──Pattern:
                                                           └──Type expr: Constructor: constant
-                                                             └──Type expr: Variable: a5216
+                                                             └──Type expr: Variable: a6633
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Int
@@ -656,13 +656,13 @@ let%expect_test "" =
                                                                    └──Type expr: Constructor: int
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: constant
-                                                                      └──Type expr: Variable: a5216
+                                                                      └──Type expr: Variable: a6633
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: int
                                                                 └──Desc: Variable: y
                                                  └──Expression:
                                                     └──Type expr: Constructor: constant
-                                                       └──Type expr: Variable: a5217
+                                                       └──Type expr: Variable: a6634
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Int
@@ -670,7 +670,7 @@ let%expect_test "" =
                                                              └──Type expr: Constructor: int
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: constant
-                                                                └──Type expr: Variable: a5217
+                                                                └──Type expr: Variable: a6634
                                                        └──Expression:
                                                           └──Type expr: Constructor: int
                                                           └──Desc: Application
