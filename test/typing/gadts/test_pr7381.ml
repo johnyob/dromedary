@@ -62,8 +62,8 @@ let%expect_test "" =
           └──Value description:
              └──Name: hole
              └──Scheme:
-                └──Variables: a5168
-                └──Type expr: Variable: a5168
+                └──Variables: a5733
+                └──Type expr: Variable: a5733
              └──Primitive name: %hole
        └──Structure item: Type
           └──Type declaration:
@@ -93,24 +93,24 @@ let%expect_test "" =
                          └──Type expr: Tuple
                             └──Type expr: Constructor: eq
                                └──Type expr: Constructor: int
-                               └──Type expr: Variable: a5199
+                               └──Type expr: Variable: a5764
                             └──Type expr: Constructor: eq
                                └──Type expr: Constructor: string
-                               └──Type expr: Variable: a5199
+                               └──Type expr: Variable: a5764
                       └──Type expr: Constructor: unit
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: a5199
+                   └──Variables: a5764
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: option
                             └──Type expr: Tuple
                                └──Type expr: Constructor: eq
                                   └──Type expr: Constructor: int
-                                  └──Type expr: Variable: a5199
+                                  └──Type expr: Variable: a5764
                                └──Type expr: Constructor: eq
                                   └──Type expr: Constructor: string
-                                  └──Type expr: Variable: a5199
+                                  └──Type expr: Variable: a5764
                          └──Type expr: Constructor: unit
                       └──Desc: Function
                          └──Pattern:
@@ -118,10 +118,10 @@ let%expect_test "" =
                                └──Type expr: Tuple
                                   └──Type expr: Constructor: eq
                                      └──Type expr: Constructor: int
-                                     └──Type expr: Variable: a5199
+                                     └──Type expr: Variable: a5764
                                   └──Type expr: Constructor: eq
                                      └──Type expr: Constructor: string
-                                     └──Type expr: Variable: a5199
+                                     └──Type expr: Variable: a5764
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: unit
@@ -131,20 +131,20 @@ let%expect_test "" =
                                      └──Type expr: Tuple
                                         └──Type expr: Constructor: eq
                                            └──Type expr: Constructor: int
-                                           └──Type expr: Variable: a5199
+                                           └──Type expr: Variable: a5764
                                         └──Type expr: Constructor: eq
                                            └──Type expr: Constructor: string
-                                           └──Type expr: Variable: a5199
+                                           └──Type expr: Variable: a5764
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: option
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: eq
                                         └──Type expr: Constructor: int
-                                        └──Type expr: Variable: a5199
+                                        └──Type expr: Variable: a5764
                                      └──Type expr: Constructor: eq
                                         └──Type expr: Constructor: string
-                                        └──Type expr: Variable: a5199
+                                        └──Type expr: Variable: a5764
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
@@ -152,10 +152,10 @@ let%expect_test "" =
                                            └──Type expr: Tuple
                                               └──Type expr: Constructor: eq
                                                  └──Type expr: Constructor: int
-                                                 └──Type expr: Variable: a5199
+                                                 └──Type expr: Variable: a5764
                                               └──Type expr: Constructor: eq
                                                  └──Type expr: Constructor: string
-                                                 └──Type expr: Variable: a5199
+                                                 └──Type expr: Variable: a5764
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: None
@@ -164,10 +164,10 @@ let%expect_test "" =
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: eq
                                                           └──Type expr: Constructor: int
-                                                          └──Type expr: Variable: a5199
+                                                          └──Type expr: Variable: a5764
                                                        └──Type expr: Constructor: eq
                                                           └──Type expr: Constructor: string
-                                                          └──Type expr: Variable: a5199
+                                                          └──Type expr: Variable: a5764
                                      └──Expression:
                                         └──Type expr: Constructor: unit
                                         └──Desc: Constant: () |}]

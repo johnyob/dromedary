@@ -56,73 +56,73 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: cmp
-                         └──Type expr: Variable: a5082
+                         └──Type expr: Variable: a5797
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: a5082
+                            └──Type expr: Variable: a5797
                       └──Type expr: Constructor: unit
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: a5082
+                   └──Variables: a5797
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: cmp
-                            └──Type expr: Variable: a5082
+                            └──Type expr: Variable: a5797
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: a5082
+                               └──Type expr: Variable: a5797
                          └──Type expr: Constructor: unit
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: cmp
-                               └──Type expr: Variable: a5082
+                               └──Type expr: Variable: a5797
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: a5082
+                                  └──Type expr: Variable: a5797
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: unit
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: cmp
-                                     └──Type expr: Variable: a5082
+                                     └──Type expr: Variable: a5797
                                      └──Type expr: Constructor: t
-                                        └──Type expr: Variable: a5082
+                                        └──Type expr: Variable: a5797
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: cmp
-                                  └──Type expr: Variable: a5082
+                                  └──Type expr: Variable: a5797
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: a5082
+                                     └──Type expr: Variable: a5797
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: cmp
-                                           └──Type expr: Variable: a5082
+                                           └──Type expr: Variable: a5797
                                            └──Type expr: Constructor: t
-                                              └──Type expr: Variable: a5082
+                                              └──Type expr: Variable: a5797
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Eq
                                               └──Constructor type:
                                                  └──Type expr: Constructor: cmp
-                                                    └──Type expr: Variable: a5082
+                                                    └──Type expr: Variable: a5797
                                                     └──Type expr: Constructor: t
-                                                       └──Type expr: Variable: a5082
+                                                       └──Type expr: Variable: a5797
                                      └──Expression:
                                         └──Type expr: Constructor: unit
                                         └──Desc: Constant: ()
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: cmp
-                                           └──Type expr: Variable: a5082
+                                           └──Type expr: Variable: a5797
                                            └──Type expr: Constructor: t
-                                              └──Type expr: Variable: a5082
+                                              └──Type expr: Variable: a5797
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Neq
                                               └──Constructor type:
                                                  └──Type expr: Constructor: cmp
-                                                    └──Type expr: Variable: a5082
+                                                    └──Type expr: Variable: a5797
                                                     └──Type expr: Constructor: t
-                                                       └──Type expr: Variable: a5082
+                                                       └──Type expr: Variable: a5797
                                      └──Expression:
                                         └──Type expr: Constructor: unit
                                         └──Desc: Constant: () |}]

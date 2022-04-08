@@ -56,6 +56,8 @@
 %token BAR
 %token MU
 %token WHERE
+%token LESS
+%token GREATER
 
 // primitives
 %token REF
@@ -95,6 +97,9 @@
 %token RIGHT_PAREN
 %token LEFT_BRACE
 %token RIGHT_BRACE
+%token LEFT_BRACKET
+%token RIGHT_BRACKET
+
 
 // infix syntax
 // %nonassoc IN
@@ -203,6 +208,17 @@ let exn_decl ~con ~arg =
 
 // Generic definitions
 
+// [separated_list(sep, X) parses a list separated by [sep]]
+// separated_list(sep, X):
+//   | /* empty */
+//       { [] }
+//   | x = X
+//       { [x] }
+//   | x = X
+//     ; sep
+//     ; xs = separated_list(sep, X)
+//       { x :: xs }
+
 
 // [seperated_nontrivial_list(sep, X)] parases a list containing 
 // at least two [X]s separated by [sep].
@@ -284,11 +300,38 @@ atom_type:
     ; core_type = core_type
     ; RIGHT_PAREN
       { core_type }
+  | LEFT_BRACKET
+    ; row = row
+    ; RIGHT_BRACKET
+      { Ptyp_variant row }
   | var = type_var
       { Ptyp_var var }
   | core_types = type_argument_list
     ; id = IDENT
       { Ptyp_constr (core_types, id) }
+
+%inline closed_flag:
+  | /* empty */
+      { Closed }
+  | LESS
+      { Closed }
+  | GREATER
+      { Open }
+
+row:
+  | closed_flag = closed_flag
+    ; row_fields = separated_list(BAR, row_field)
+      { (row_fields, closed_flag) }
+
+row_field:
+  | BACKTICK; tag = CON_IDENT
+    ; row_arg = option(row_arg)
+      { Row_tag (tag, row_arg) }
+
+row_arg:
+  | OF; 
+    core_type = core_type
+      { core_type }
 
 %inline type_argument_list:
   | /* empty */   
@@ -488,6 +531,9 @@ construct_pattern:
   | con_id = CON_IDENT
     ; con_pat_arg = con_pattern_arg %prec prec_construct_app
       { Ppat_construct (con_id, Some con_pat_arg) }
+  | BACKTICK; tag = CON_IDENT
+    ; variant_pat_arg = pattern %prec prec_construct_app
+      { Ppat_variant (tag, Some variant_pat_arg) }
 
 atom_pattern:
   | const = constant
@@ -498,6 +544,8 @@ atom_pattern:
       { Ppat_var id }
   | con_id = CON_IDENT
       { Ppat_construct (con_id, None) }
+  | BACKTICK; tag = CON_IDENT
+      { Ppat_variant (tag, None) }
   | LEFT_PAREN 
     ; pats = separated_nontrivial_list(COMMA, pattern)
     ; RIGHT_PAREN
