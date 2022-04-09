@@ -1,67 +1,67 @@
 # Testsuite for GADTs
 
 ## Contents
- - [x] `ambiguity.ml` 13/16
+ - [x] `ambiguity.ml` 13/16. Modules: 3
  - [x] `ambivalent_apply.ml` 4/4
- - [x] `didier.ml` 5/7
+ - [x] `didier.ml` 5/7. Exhaustive pattern checking: 2
  - [x] `dynamic_frisch.ml` 24/24
- - [x] `gadthead.ml` 0/2. Reliance on modules
+ - [x] `gadthead.ml` 0/2. Modules: 2
  - [x] `name_existentials.ml` 12/12
- - [x] `nested_equations.ml` 2/8
- - [x] `omega07.ml` 56/56
- - [x] `or_patterns.ml` 0/58. Or patterns not supported (TODO: See if we can recover some tests here)
+ - [x] `nested_equations.ml` 2/8. Implementation details: 2, Modules: 4
+ - [x] `omega07.ml` 56/56.
+ - [x] `or_patterns.ml` 0/58. Or patterns: 58
  - [x] `term_conv.ml` 5/5
  - [x] `unify_mb.ml` 14/14
- - [x] `principality_and_gadts.ml` 19/38. Modules not supported
+ - [x] `principality_and_gadts.ml` 19/38. Modules: 19
  - [x] `return_type.ml` N/A. Not relevant (syntax-dependent)
- - [x] `yallop_bugs.ml` 0/4. Modules, variance, exhaustive checking and record patterns not supported.
- - [x] `unexpected_existentials.ml` 2/16. Existentials on lets are not supported.
- - [x] `test.ml` 56/84, Do not suport objects, or patterns, modules and first class/local modules
- - [x] `variants_in_mcomp.ml` 0/1. Modules not supported
- - [x] `pr10189.ml` 0/10. Reliance on objects and modules
+ - [x] `yallop_bugs.ml` 0/4. Modules: 1, Objects: 1,  Record patterns: 1, Exhaustive pattern checking: 1
+ - [x] `unexpected_existentials.ml` 2/16. Existentials on lets: 14
+ - [x] `test.ml` 56/84. Exhaustive pattern checking: 1, Objects: 19, Or pattern: 1, Modules: 5, Record patterns: 2
+ - [x] `variants_in_mcomp.ml` 0/1. Modules: 1
+ - [x] `pr10189.ml` 0/10. Objects: 3, Modules: 7
  - [x] `pr10271.ml` 4/4
  - [x] `pr10735.ml` 2/2
  - [x] `pr10907.ml` 7/7
  - [x] `pr5332.ml` 1/1
- - [x] `pr5689.ml` 0/4. Don't support polymorphic variants of the form [< variant > tag]
- - [x] `pr5785.ml` 0/1. Do not support modules/functors. 
+ - [x] `pr5689.ml` 0/4. Adv poly: 4
+ - [x] `pr5785.ml` 0/1. Modules: 1 
  - [x] `pr5848.ml` 1/1
  - [x] `pr5906.ml` 1/1
- - [x] `pr5948.ml` 0/2: Don't support equations between variants
+ - [x] `pr5948.ml` 0/2. Adv poly: 2
  - [x] `pr5981.ml` 2/2
- - [x] `pr5985.ml` 0/14. Tests modules, functors, variance, and objects
- - [x] `pr5989.ml` 0/2. Do not support equations for variants
+ - [x] `pr5985.ml` 0/14. Modules: 4, Objects: 1, Adv poly: 2, Variance: 7 
+ - [x] `pr5989.ml` 0/2. Adv poly: 2
  - [x] `pr5997.ml` 2/2
  - [x] `pr6158.ml` 1/1
- - [x] `pr6163.ml` 0/1 Do not support equations for variants
+ - [x] `pr6163.ml` 0/1. Adv poly: 1
  - [x] `pr6174.ml` 1/1
- - [x] `pr6241.ml` 0/1. first class modules
+ - [x] `pr6241.ml` 0/1. Modules: 1
  - [x] `pr6690.ml` 3/3
  - [x] `pr6817.ml` 1/1
- - [x] `pr6934.ml` 0/1 syntax dependent.
+ - [x] `pr6934.ml` 0/1. Syntax dependent: 1
  - [x] `pr6980.ml`. Polymorphic variants of the form [< ... > ...]
  - [x] `pr6993_bad.ml` 1/1
  - [x] `pr7016.ml` 2/2
  - [x] `pr7160.ml` 1/1
- - [x] `pr7214.ml` 0/2. Do not support loal modules
- - [x] `pr7222.ml` 0/1. Do not support private types and variance. 
+ - [x] `pr7214.ml` 0/2. Modules: 2
+ - [x] `pr7222.ml` 0/1. Modules: 1 
  - [x] `pr7230.ml` 1/1
- - [x] `pr7234.ml` 1/2. Do not support modules and functors
- - [x] `pr7260.ml` 0/1. Do not support classes and objects
- - [x] `pr7269.ml` 0/3. Do not support advanced poly-variants such as & fields, or coercion
- - [x] `pr7298.ml` 0/1. Do not support classes
- - [x] `pr7374.ml` 0/4. Do not support constraint aliases, and modules/functors. 
- - [x] `pr7378.ml` 1/2. Do not support manifest types (modules)
+ - [x] `pr7234.ml` 1/2. Modules: 1
+ - [x] `pr7260.ml` 0/1. Objects: 1
+ - [x] `pr7269.ml` 0/3. Adv poly: 3
+ - [x] `pr7298.ml` 0/1. Objects: 1
+ - [x] `pr7374.ml` 0/4. Modules: 4 
+ - [x] `pr7378.ml` 1/2. Modules 1
  - [x] `pr7381.ml` 3/3. 
  - [x] `pr7390.ml` 2/2
  - [x] `pr7391.ml`. Do not support classes and objects
  - [x] `pr7397.ml` Do not support variance and classes
- - [x] `pr7421.ml`. 1/3. Do not support lazy evaluation
+ - [x] `pr7421.ml`. 1/3. Lazy: 2
  - [x] `pr7432.ml` 0/2. Do not support labels or exhaustive checking 
  - [x] `pr7520.ml`1/1
  - [x] `pr7618.ml` 4/4
- - [x] `pr7747.ml` 0/1. Do not support private types and modules
+ - [x] `pr7747.ml` 0/1. Modules: 1
  - [x] `pr7902.ml` 2/2
  - [x] `pr9019.ml` 7/15. Don't support adv poly-variants + exhaustive checking. 
  - [x] `pr9759.ml` 2/2
- - [x] `pr9799.ml` 1/2. Do not support variant equations
+ - [x] `pr9799.ml` 1/2. Adv poly: 1
