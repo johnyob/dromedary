@@ -49,8 +49,8 @@ let%expect_test "" =
           └──Value description:
              └──Name: hole
              └──Scheme:
-                └──Variables: a7574
-                └──Type expr: Variable: a7574
+                └──Variables: a14792
+                └──Type expr: Variable: a14792
              └──Primitive name: %hole
        └──Structure item: Let
           └──Value bindings:
@@ -64,10 +64,10 @@ let%expect_test "" =
                                └──Type expr: Constructor: empty
                             └──Type expr: Row uniform
                                └──Type expr: Constructor: absent
-                      └──Type expr: Variable: a7577
+                      └──Type expr: Variable: a14795
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: a7577,a7577
+                   └──Variables: a14795,a14795
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Variant
@@ -77,7 +77,7 @@ let%expect_test "" =
                                   └──Type expr: Constructor: empty
                                └──Type expr: Row uniform
                                   └──Type expr: Constructor: absent
-                         └──Type expr: Variable: a7577
+                         └──Type expr: Variable: a14795
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Variant
@@ -89,7 +89,7 @@ let%expect_test "" =
                                      └──Type expr: Constructor: absent
                             └──Desc: Variable: t
                          └──Expression:
-                            └──Type expr: Variable: a7577
+                            └──Type expr: Variable: a14795
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Variant
@@ -132,7 +132,7 @@ let%expect_test "" =
                                               └──Type expr: Constructor: empty
                                               └──Desc: Any
                                      └──Expression:
-                                        └──Type expr: Variable: a7577
+                                        └──Type expr: Variable: a14795
                                         └──Desc: Variable
                                            └──Variable: hole
-                                           └──Type expr: Variable: a7577 |}]
+                                           └──Type expr: Variable: a14795 |}]

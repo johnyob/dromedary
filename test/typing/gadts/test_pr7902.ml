@@ -57,112 +57,112 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: segment
-                         └──Type expr: Variable: a7310
-                         └──Type expr: Variable: a7311
+                         └──Type expr: Variable: a14528
+                         └──Type expr: Variable: a14529
                       └──Type expr: Constructor: int
                    └──Desc: Variable: color
                 └──Abstraction:
-                   └──Variables: a7310,a7311
+                   └──Variables: a14528,a14529
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: segment
-                            └──Type expr: Variable: a7310
-                            └──Type expr: Variable: a7311
+                            └──Type expr: Variable: a14528
+                            └──Type expr: Variable: a14529
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: segment
-                               └──Type expr: Variable: a7310
-                               └──Type expr: Variable: a7311
+                               └──Type expr: Variable: a14528
+                               └──Type expr: Variable: a14529
                             └──Desc: Variable: seg
                          └──Expression:
                             └──Type expr: Constructor: int
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: segment
-                                     └──Type expr: Variable: a7310
-                                     └──Type expr: Variable: a7311
+                                     └──Type expr: Variable: a14528
+                                     └──Type expr: Variable: a14529
                                   └──Desc: Variable
                                      └──Variable: seg
                                └──Type expr: Constructor: segment
-                                  └──Type expr: Variable: a7310
-                                  └──Type expr: Variable: a7311
+                                  └──Type expr: Variable: a14528
+                                  └──Type expr: Variable: a14529
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: segment
-                                           └──Type expr: Variable: a7310
-                                           └──Type expr: Variable: a7311
+                                           └──Type expr: Variable: a14528
+                                           └──Type expr: Variable: a14529
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Seg_nil
                                               └──Constructor type:
                                                  └──Type expr: Constructor: segment
-                                                    └──Type expr: Variable: a7310
-                                                    └──Type expr: Variable: a7311
+                                                    └──Type expr: Variable: a14528
+                                                    └──Type expr: Variable: a14529
                                      └──Expression:
                                         └──Type expr: Constructor: int
                                         └──Desc: Constant: 0
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: segment
-                                           └──Type expr: Variable: a7310
-                                           └──Type expr: Variable: a7311
+                                           └──Type expr: Variable: a14528
+                                           └──Type expr: Variable: a14529
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Seg_cons
                                               └──Constructor argument type:
                                                  └──Type expr: Constructor: segment
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: a7310
-                                                       └──Type expr: Variable: a7310
-                                                    └──Type expr: Variable: a7311
+                                                       └──Type expr: Variable: a14528
+                                                       └──Type expr: Variable: a14528
+                                                    └──Type expr: Variable: a14529
                                               └──Constructor type:
                                                  └──Type expr: Constructor: segment
-                                                    └──Type expr: Variable: a7310
-                                                    └──Type expr: Variable: a7311
+                                                    └──Type expr: Variable: a14528
+                                                    └──Type expr: Variable: a14529
                                            └──Pattern:
                                               └──Type expr: Constructor: segment
                                                  └──Type expr: Tuple
-                                                    └──Type expr: Variable: a7310
-                                                    └──Type expr: Variable: a7310
-                                                 └──Type expr: Variable: a7311
+                                                    └──Type expr: Variable: a14528
+                                                    └──Type expr: Variable: a14528
+                                                 └──Type expr: Variable: a14529
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Seg_nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: segment
                                                           └──Type expr: Tuple
-                                                             └──Type expr: Variable: a7310
-                                                             └──Type expr: Variable: a7310
-                                                          └──Type expr: Variable: a7311
+                                                             └──Type expr: Variable: a14528
+                                                             └──Type expr: Variable: a14528
+                                                          └──Type expr: Variable: a14529
                                      └──Expression:
                                         └──Type expr: Constructor: int
                                         └──Desc: Constant: 0
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: segment
-                                           └──Type expr: Variable: a7310
-                                           └──Type expr: Variable: a7311
+                                           └──Type expr: Variable: a14528
+                                           └──Type expr: Variable: a14529
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Seg_cons
                                               └──Constructor argument type:
                                                  └──Type expr: Constructor: segment
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: a7310
-                                                       └──Type expr: Variable: a7310
-                                                    └──Type expr: Variable: a7311
+                                                       └──Type expr: Variable: a14528
+                                                       └──Type expr: Variable: a14528
+                                                    └──Type expr: Variable: a14529
                                               └──Constructor type:
                                                  └──Type expr: Constructor: segment
-                                                    └──Type expr: Variable: a7310
-                                                    └──Type expr: Variable: a7311
+                                                    └──Type expr: Variable: a14528
+                                                    └──Type expr: Variable: a14529
                                            └──Pattern:
                                               └──Type expr: Constructor: segment
                                                  └──Type expr: Tuple
-                                                    └──Type expr: Variable: a7310
-                                                    └──Type expr: Variable: a7310
-                                                 └──Type expr: Variable: a7311
+                                                    └──Type expr: Variable: a14528
+                                                    └──Type expr: Variable: a14528
+                                                 └──Type expr: Variable: a14529
                                               └──Desc: Any
                                      └──Expression:
                                         └──Type expr: Constructor: int

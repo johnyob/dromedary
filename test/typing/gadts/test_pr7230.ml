@@ -38,10 +38,10 @@ let%expect_test "" =
           └──Value description:
              └──Name: raise
              └──Scheme:
-                └──Variables: a7799
+                └──Variables: a15017
                 └──Type expr: Arrow
                    └──Type expr: Constructor: exn
-                   └──Type expr: Variable: a7799
+                   └──Type expr: Variable: a15017
              └──Primitive name: %raise
        └──Structure item: Exception
           └──Type exception:
@@ -69,12 +69,12 @@ let%expect_test "" =
           └──Value bindings:
              └──Value binding:
                 └──Pattern:
-                   └──Type expr: Variable: a7804
+                   └──Type expr: Variable: a15022
                    └──Desc: Any
                 └──Abstraction:
                    └──Variables:
                    └──Expression:
-                      └──Type expr: Variable: a7804
+                      └──Type expr: Variable: a15022
                       └──Desc: Match
                          └──Expression:
                             └──Type expr: Constructor: t
@@ -105,15 +105,15 @@ let%expect_test "" =
                                      └──Type expr: Constructor: float
                                   └──Desc: Any
                                └──Expression:
-                                  └──Type expr: Variable: a7804
+                                  └──Type expr: Variable: a15022
                                   └──Desc: Application
                                      └──Expression:
                                         └──Type expr: Arrow
                                            └──Type expr: Constructor: exn
-                                           └──Type expr: Variable: a7804
+                                           └──Type expr: Variable: a15022
                                         └──Desc: Variable
                                            └──Variable: raise
-                                           └──Type expr: Variable: a7804
+                                           └──Type expr: Variable: a15022
                                      └──Expression:
                                         └──Type expr: Constructor: exn
                                         └──Desc: Construct
