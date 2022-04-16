@@ -1,0 +1,36 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/2.0/configuration-reference
+version: 2.1
+
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+jobs:
+  build:
+    docker:
+      - image: ocaml/opam2:debian-10-ocaml-4.12 
+    # Add steps to the job
+    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+    steps:
+      - checkout
+      - restore_cache:
+          key: cache-{{ checksum "dromedary.opam" }}
+      - run:
+          name: "Install dependencies"
+          command: sudo apt-get install -y m4  && opam install --yes . --deps-only
+      - save_cache:
+          key: cache-{{ checksum "dromedary.opam" }}
+          paths:
+            - ~/.opam
+      - run:
+          name: "Build"
+          command: opam exec -- BISECT_ENABLE=yes dune build
+      - run:
+          name: "Tests"
+          command: opam exec -- dune runtest
+
+# Invoke jobs via workflows
+# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+workflows:
+  build-workflow:
+    jobs:
+      - build
