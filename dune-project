@@ -53,8 +53,6 @@
    (= 1.4.0))
   (qcheck-alcotest
    (= 0.17))
-  (ppx_deriving_qcheck
-   (= 0.2.0))
   (menhir
    (= 20210419))
   (menhirLib

@@ -15,8 +15,8 @@ jobs:
       - restore_cache:
           key: cache-{{ checksum "dromedary.opam" }}
       - run:
-          name: "Update opam, adding pins"
-          command: opam update && opam pin add ppx_deriving_qcheck git+https://github.com/johnyob/qcheck.git
+          name: "Update opam"
+          command: opam update
       - run:
           name: "Install project dependencies"
           command: opam install --yes . --deps-only && make install
