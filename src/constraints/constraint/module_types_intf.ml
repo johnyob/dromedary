@@ -166,6 +166,9 @@ module type Decoded_type = sig
   val to_var : t -> variable option
 
   val former : t former -> t
+
+  val mu : (t -> t) -> t
+
   val row_cons : label -> t -> t -> t
   val row_uniform : t -> t
 end

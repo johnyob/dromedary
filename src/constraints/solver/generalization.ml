@@ -338,7 +338,7 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
       add t ~abbrev:(Abbrev.make abbrev_former abbrev_type)
   end
 
-  let pp_type_explicit ppf type_ =
+  let[@warning "-32"] pp_type_explicit ppf type_ =
     let rec pp_type_explicit type_ =
       U.Type.structure type_ |> Structure.sexp_of_t pp_type_explicit
     in
@@ -358,8 +358,7 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
     Format.fprintf ppf "Region %d\n" i;
     List.iter
       ~f:(fun type_ ->
-        pp_type ppf type_;
-        pp_type_explicit ppf type_)
+        pp_type ppf type_)
       region
 
 
@@ -542,17 +541,23 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
     (* Hash set records whether we've visited a given 
        graphic type node. Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
-    let rec loop type_ scope =
+    let rec loop type_ scope1 =
       if not (Hash_set.mem visited type_)
       then (
         Log.debug (fun m -> m "Visiting %d.\n" (U.Type.id type_));
         Hash_set.add visited type_;
-        Log.debug (fun m -> m "Updating scope to %d.\n" scope);
-        update_scope type_ scope;
+        Log.debug (fun m -> m "Updating scope to %d.\n" scope1);
+        update_scope type_ scope1;
         if young_region.is_young type_
         then
-          U.Type.structure type_
-          |> Structure.iter ~f:(fun type_ -> loop type_ scope))
+          update_scope
+            type_
+            (U.Type.structure type_
+            |> Structure.fold
+                 ~init:Ambivalent.Equations.Scope.outermost_scope
+                 ~f:(fun type_ scope2 ->
+                   loop type_ scope1;
+                   Ambivalent.Equations.Scope.max (scope type_) scope2)))
     in
     List.iter ~f:(fun type_ -> loop type_ (scope type_)) young_region.region;
     Log.debug (fun m -> m "Finished updating scopes.")
@@ -671,7 +676,9 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
   *)
   let exit ~state ~rigid_vars ~types =
     Log.debug (fun m -> m "Exiting level: %d\n" state.current_level);
+    Log.debug (fun m -> m "Before printing state\n");
     Log.debug (fun m -> m "State before exit:\n%a" pp_state state);
+    Log.debug (fun m -> m "After printing state\n");
     let young_region = young_region ~state in
     (* Now update the lazily updated scopes of every node in the young region *)
     update_scopes young_region;
@@ -688,7 +695,9 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
           let var = make_flexible_var ~state in
           (match Hashtbl.find state.rigid_vars rigid_var with
           | Some rigid_vars ->
-            List.iter rigid_vars ~f:(fun x -> flexize ~state x var);
+            List.iter rigid_vars ~f:(fun x -> 
+              (* if level x < state.current_level then raise (Rigid_variable_escape rigid_var);  *)
+              flexize ~state x var);
             Hashtbl.remove state.rigid_vars rigid_var
           | None -> ());
           generalize_type var;

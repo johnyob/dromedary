@@ -66,6 +66,7 @@ module Make (Structure : Structure_intf.S) = struct
         }
       [@@deriving sexp_of]
 
+
       let desc t = Union_find.find t
 
       (* [id t] returns the unique identifier of the type [t]. *)
@@ -89,6 +90,9 @@ module Make (Structure : Structure_intf.S) = struct
        Based on it's integer field: id. *)
 
       let hash t = Hashtbl.hash (id t)
+
+      let sexp_of_t_hum = sexp_of_t
+      let sexp_of_t t = [%sexp (id t : int)]
     end
 
     include T
@@ -108,6 +112,8 @@ module Make (Structure : Structure_intf.S) = struct
         ~(mu : t -> a -> a)
         : a
       =
+      Log.debug (fun m -> m "Folding over type: %d" (id type_));
+
       (* Hash table records the variables that are grey ([false])
        or black ([true]). *)
       let table = Hashtbl.create (module T) in
@@ -125,9 +131,14 @@ module Make (Structure : Structure_intf.S) = struct
           let result = f type_ (structure type_ |> Structure.map ~f:loop) in
           let status = Hashtbl.find_exn table type_ in
           Hashtbl.remove table type_;
-          if status then mu type_ result else result)
+          Log.debug (fun m -> m "Loop status %b" status);
+          if status then mu type_ result else 
+            (Log.debug (fun m -> m "Returning from loop");
+            result))
       in
-      loop type_
+      let result = loop type_ in
+      Log.debug (fun m -> m "Finished folding");
+      result
 
 
     module To_dot = struct

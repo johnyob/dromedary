@@ -85,7 +85,15 @@ module Make (Algebra : Algebra) = struct
         | Var -> Some t
         | _ -> None
 
+
       let former = G.make_former ~state
+
+      let mu f = 
+        let t1 = G.make_flexible_var ~state in
+        let t2 = f t1 in
+        U.unify ~state ~ctx:U.empty_ctx t1 t2;
+        t1
+
       let row_cons label t1 t2 = G.make_row_cons ~state ~label ~field:t1 ~tl:t2
       let row_uniform = G.make_row_uniform ~state
     end
@@ -136,10 +144,7 @@ module Make (Algebra : Algebra) = struct
   module Decoder = struct
     (* [decode_variable var] decodes [var] into a [Type_var] using it's unique identifier. *)
     let[@landmark] decode_variable var : Decoded.Var.t =
-      assert (
-        match G.Structure.repr (U.Type.structure var) with
-        | Flexible_var -> true
-        | _ -> false);
+      Log.debug (fun m -> m "Decode variable");
       var
 
 
@@ -151,7 +156,8 @@ module Make (Algebra : Algebra) = struct
     let decode_type t : Decoded.Type.t = t
 
     (* [decode_scheme scheme] decodes the graphical scheme [scheme] into a [Type.scheme]. *)
-    let[@landmark] decode_scheme scheme =
+    let[@landmark] decode_scheme scheme : Decoded.scheme =
+      Log.debug (fun m -> m "Decoding scheme");
       ( List.map (G.variables scheme) ~f:decode_variable
       , decode_type (G.root scheme) )
   end
@@ -236,6 +242,7 @@ module Make (Algebra : Algebra) = struct
     | Row_uniform t ->
       G.make_row_uniform ~state:state.generalization_state (find state t)
     | Mu t -> find state t
+    | Let t -> find state t
 
 
   (* [bind_flexible state (var, former_opt)] binds the flexible binding 
@@ -399,6 +406,10 @@ module Make (Algebra : Algebra) = struct
 
   let unify ~state ~env type1 type2 =
     try
+      (* Log.debug (fun m -> m "Unify method in solve :)"); *)
+      let to_string t = U.Type.sexp_of_t t |> Sexp.to_string_hum in
+      Log.debug (fun m ->
+          m "Unify\n %s \n%s" (to_string type1) (to_string type2));
       U.unify
         ~state:state.generalization_state
         ~ctx:(Env.ctx env)
@@ -456,7 +467,10 @@ module Make (Algebra : Algebra) = struct
       | Exist (ctx, cst) ->
         Log.debug (fun m -> m "Solving [Exist].");
         bind_existential_ctx state ctx;
-        solve ~state ~env cst
+        let value = solve ~state ~env cst in
+        fun () ->
+          Log.debug (fun m -> m "Elab Exist");
+          value ()
       | Forall (ctx, cst) ->
         Log.debug (fun m -> m "Solving [Forall].");
         (* Enter a new region *)
@@ -467,11 +481,16 @@ module Make (Algebra : Algebra) = struct
         let value = solve ~state ~env cst in
         (* Generalize and exit *)
         ignore (exit state ~rigid_vars ~types:[] : G.variables * G.scheme list);
-        value
+        fun () ->
+          Log.debug (fun m -> m "Elab Forall");
+          value ()
       | Def (bindings, in_) ->
         Log.debug (fun m -> m "Solving [Def].");
         let env = Env.extend_bindings state env bindings in
-        solve ~state ~env in_
+        let value = solve ~state ~env in_ in
+        fun () ->
+          Log.debug (fun m -> m "Elab Def");
+          value ()
       | Instance (x, a) ->
         Log.debug (fun m -> m "Solving [Instance].");
         let scheme = Env.find env x in
@@ -481,7 +500,9 @@ module Make (Algebra : Algebra) = struct
              scheme [@landmark "instantiate"])
         in
         unify ~state ~env (find state a) type_;
-        fun () -> List.map ~f:Decoder.decode_type instance_variables
+        fun () ->
+          Log.debug (fun m -> m "Elab Instance");
+          List.map ~f:Decoder.decode_type instance_variables
       | Let (let_bindings, cst) ->
         Log.debug (fun m -> m "Solving [Let]");
         let term_let_bindings, env, equations =
@@ -492,17 +513,23 @@ module Make (Algebra : Algebra) = struct
         let value = solve ~state ~env cst in
         ignore
           (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
-        both term_let_bindings value
+        fun () ->
+          Log.debug (fun m -> m "Elab Let");
+          both term_let_bindings value ()
       | Let_rec (let_rec_bindings, cst) ->
         Log.debug (fun m -> m "Solving [Let_rec]");
         let term_let_rec_bindings, env =
           solve_let_rec_bindings ~state ~env let_rec_bindings
         in
         let value = solve ~state ~env cst in
-        both term_let_rec_bindings value
+        fun () ->
+          Log.debug (fun m -> m "Elab Let_rec");
+          both term_let_rec_bindings value ()
       | Decode a ->
         let var = find state a in
-        fun () -> Decoder.decode_type var
+        fun () ->
+          Log.debug (fun m -> m "Elab Decode");
+          Decoder.decode_type var
       | Implication (equations, t) ->
         Log.debug (fun m -> m "Solving [Implication].");
         (* Enter a new scope (region) *)
@@ -514,7 +541,9 @@ module Make (Algebra : Algebra) = struct
         (* Exit region *)
         ignore
           (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
-        value
+        fun () ->
+          Log.debug (fun m -> m "Elab Implication");
+          value ()
 
 
   and[@landmark] solve_let_binding
@@ -573,6 +602,7 @@ module Make (Algebra : Algebra) = struct
     in
     (* Return binding and extended environment *)
     ( (fun () ->
+        Log.debug (fun m -> m "Elab Let binding");
         ( List.map ~f:(fun (var, sch) -> var, Decoder.decode_scheme sch) bindings
         , (List.map ~f:Decoder.decode_variable generalizable, value ()) ))
     , env
@@ -678,6 +708,7 @@ module Make (Algebra : Algebra) = struct
           : _ term_let_rec_binding Elaborate.t
         =
        fun () ->
+        Log.debug (fun m -> m "Elab let rec poly");
         ( (var, Decoder.decode_scheme scheme)
         , (List.map generalizable ~f:Decoder.decode_variable, value ()) )
       in
@@ -745,8 +776,13 @@ module Make (Algebra : Algebra) = struct
           : _ term_let_rec_binding Elaborate.t
         =
        fun () ->
+        Log.debug (fun m -> m "Elab let rec mono");
         ( (var, Decoder.decode_scheme scheme)
-        , (List.map generalizable ~f:Decoder.decode_variable, value ()) )
+        , ( List.map generalizable ~f:Decoder.decode_variable
+          , (Log.debug (fun m -> m "Elab let rec mono value");
+             let v = value () in
+             Log.debug (fun m -> m "Elab let rec mono value after");
+             v) ) )
       in
       (* Return recursive bindings and extended environment *)
       ( List.map2_exn bindings values ~f:make_term_let_rec_binding
@@ -870,7 +906,13 @@ module Make (Algebra : Algebra) = struct
             let value1, env1 = solve ~state ~env t1 in
             let value2, env2 = solve ~state ~env t2 in
             both value1 value2, Env.merge env1 env2
-          | Let let_bindings -> solve_let_bindings ~state ~env let_bindings
+          | Let let_bindings ->
+            Log.debug (fun m ->
+                m
+                  "Solving let bindings: %s"
+                  ([%sexp (let_bindings : let_binding list)]
+                  |> Sexp.to_string_hum));
+            solve_let_bindings ~state ~env let_bindings
           | Def bindings ->
             let env = Env.extend_bindings state env bindings in
             return (), env
@@ -886,12 +928,16 @@ module Make (Algebra : Algebra) = struct
 
     let solve : type a. state:state -> env:Env.t -> a t -> a list Elaborate.t =
      fun ~state ~env t ->
+      (* Enter a new region *)
+      enter state;
       let _env, values =
-        List.fold_right t ~init:(env, []) ~f:(fun item (env, values) ->
+        List.fold_left t ~init:(env, []) ~f:(fun (env, values) item ->
             let value, env = Item.solve ~state ~env item in
             env, value :: values)
       in
-      Elaborate.list values
+      (* Generalize and exit *)
+      ignore (exit state ~rigid_vars:[] ~types:[] : G.variables * G.scheme list);
+      Elaborate.list (List.rev values)
 
 
     let solve ?(debug = false) ~abbrevs =
@@ -900,7 +946,8 @@ module Make (Algebra : Algebra) = struct
           let[@landmark] solved =
             solve ~state:(make_state ()) ~env:(Env.empty abbrevs) t
           in
-          (Elaborate.run solved [@landmark "elaborate-structure"]))
+          Log.debug (fun m -> m "Starting elaboration");
+          Elaborate.run solved [@landmark "elaborate-structure"])
   end
 end
 

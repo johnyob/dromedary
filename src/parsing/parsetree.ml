@@ -24,11 +24,16 @@ type core_type =
   | Ptyp_tuple of core_type list
   | Ptyp_constr of core_type list * string
   | Ptyp_variant of row
-  | Ptyp_row_cons of string * core_type * row
-  | Ptyp_row_empty
+  | Ptyp_mu of string * core_type
+  | Ptyp_where of core_type * string * core_type
 [@@deriving sexp_of]
 
-and row = core_type
+and row = row_field list * closed_flag
+and row_field = Row_tag of string * core_type option
+
+and closed_flag =
+  | Closed
+  | Open
 
 type core_scheme = string list * core_type [@@deriving sexp_of]
 
@@ -162,9 +167,14 @@ type structure = structure_item list [@@deriving sexp_of]
 
 let indent_space = "   "
 
+let string_of_closed_flag closed_flag =
+  match closed_flag with
+  | Open -> "Open"
+  | Closed -> "Closed"
+
+
 let rec pp_core_type_mach ~indent ppf core_type =
   let print = Format.fprintf ppf "%sType: %s@." indent in
-  let print_row = Format.fprintf ppf "%sRow: %s@." indent in
   let indent = indent_space ^ indent in
   match core_type with
   | Ptyp_var x ->
@@ -184,15 +194,32 @@ let rec pp_core_type_mach ~indent ppf core_type =
   | Ptyp_variant row ->
     print "Variant";
     pp_row_mach ~indent ppf row
-  | Ptyp_row_cons (tag, t, row) ->
-    print_row "Cons";
-    Format.fprintf ppf "%sTag: %s@." indent tag;
-    pp_core_type_mach ~indent ppf t;
-    pp_row_mach ~indent ppf row
-  | Ptyp_row_empty -> print_row "Empty"
+  | Ptyp_mu (x, t) ->
+    print "Mu";
+    Format.fprintf ppf "%sVariable: %s@." indent x;
+    pp_core_type_mach ~indent ppf t
+  | Ptyp_where (t1, x, t2) ->
+    print "Where";
+    Format.fprintf ppf "%sVariable: %s@." indent x;
+    pp_core_type_mach ~indent ppf t2;
+    pp_core_type_mach ~indent ppf t1
 
 
-and pp_row_mach ~indent ppf row = pp_core_type_mach ~indent ppf row
+and pp_row_mach ~indent ppf (row_fields, closed_flag) =
+  Format.fprintf ppf "%sRow: %s@." indent (string_of_closed_flag closed_flag);
+  let indent = indent_space ^ indent in
+  List.iter ~f:(pp_row_field_mach ~indent ppf) row_fields
+
+
+and pp_row_field_mach ~indent ppf row_field =
+  let print = Format.fprintf ppf "%sRow field: %s@." indent in
+  let indent = indent_space ^ indent in
+  match row_field with
+  | Row_tag (tag, core_type) ->
+    print "Tag";
+    Format.fprintf ppf "%sField tag: %s@." indent tag;
+    Option.iter core_type ~f:(pp_core_type_mach ~indent ppf)
+
 
 let pp_core_scheme_mach ~indent ppf (variables, core_type) =
   Format.fprintf ppf "%sScheme:@." indent;
@@ -570,19 +597,41 @@ let rec pp_core_type ppf core_type =
         ts
         constr
     | Ptyp_variant row -> Format.fprintf ppf "@[[@;%a@;]@]" pp_row row
-    | row -> pp_row ppf row
+    | Ptyp_mu (x, t) -> Format.fprintf ppf "@[mu '%s.@;%a@]" x pp_core_type t
+    | Ptyp_where (t1, x, t2) ->
+      Format.fprintf
+        ppf
+        "@[%a@;where@;%s@;=@;%a@]"
+        pp_core_type
+        t1
+        x
+        pp_core_type
+        t2
   in
   loop ppf core_type
 
 
-and pp_row ppf row =
-  match row with
-  | Ptyp_row_cons (tag, t, Ptyp_row_empty) ->
-    Format.fprintf ppf "%s@;:@;%a" tag pp_core_type t
-  | Ptyp_row_cons (tag, t, row) ->
-    Format.fprintf ppf "%s@;:@;%a@;|@;%a" tag pp_core_type t pp_row row
-  | Ptyp_row_empty -> Format.fprintf ppf "@;"
-  | core_type -> pp_core_type ppf core_type
+and pp_row ppf (row_fields, closed_flag) =
+  let closed_flag =
+    match closed_flag with
+    | Closed -> "<"
+    | Open -> ">"
+  in
+  Format.fprintf
+    ppf
+    "%s@;%a"
+    closed_flag
+    (list ~sep:"@;|@;" pp_row_field)
+    row_fields
+
+
+and pp_row_field ppf (Row_tag (tag, core_type)) =
+  Format.fprintf
+    ppf
+    "%s%a"
+    tag
+    (fun ppf -> option ~first:"@;of@;" pp_core_type ppf)
+    core_type
 
 
 let pp_core_scheme ppf (variables, core_type) =

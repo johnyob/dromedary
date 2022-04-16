@@ -12,6 +12,7 @@
 (*****************************************************************************)
 
 {
+[@@@coverage exclude_file]
 open Base
 open Parser
 
@@ -82,6 +83,8 @@ rule read =
   | "external"                    { EXTERNAL }
   | "exception"                   { EXCEPTION }
   | "constraint"                  { CONSTRAINT }
+  | "mu"                          { MU }
+  | "where"                       { WHERE }
 
   (* reserved operators *)
   | "->"                          { RIGHT_ARROW }
@@ -103,9 +106,12 @@ rule read =
   | ":="                          { OP_ASSIGN }
   | "!"                           { OP_DEREF }
 
+  | "<"                           { LESS }
+  | ">"                           { GREATER }
+
   (* | "<>"                          { OP_NOT_EQUAL }
   | "<="                          { OP_LESS_EQUAL }
-  | "<"                           { OP_LESS }
+  
   | ">="                          { OP_GREATER_EQUAL }
   | ">"                           { OP_GREATER } *)
 (*   
@@ -154,6 +160,8 @@ rule read =
   | ")"                           { RIGHT_PAREN }
   | "{"                           { LEFT_BRACE }
   | "}"                           { RIGHT_BRACE }
+  | "["                           { LEFT_BRACKET }
+  | "]"                           { RIGHT_BRACKET }
 
   | eof                           { EOF }
   | _                             { raise (Lexer_error ("Unexpected character: " ^ Lexing.lexeme lexbuf)) }

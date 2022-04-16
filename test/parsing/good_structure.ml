@@ -991,3 +991,31 @@ let%expect_test "type definition - abstract types" =
                          └──Constructor: succ
                          └──Type: Variable
                             └──Variable: m |}]
+
+let%expect_test "where" =
+  let str = 
+    {|
+      external length : 'a. ('c -> int) where 'c = 'a list = "%length";;
+    |}
+  in
+  print_structure_parsetree str;
+  [%expect {|
+    Structure:
+    └──Structure:
+       └──Structure item: Primitive
+          └──Value description:
+             └──Name: length
+             └──Scheme:
+                └──Variables: a
+                └──Type: Where
+                   └──Variable: c
+                   └──Type: Constructor
+                      └──Constructor: list
+                      └──Type: Variable
+                         └──Variable: a
+                   └──Type: Arrow
+                      └──Type: Variable
+                         └──Variable: c
+                      └──Type: Constructor
+                         └──Constructor: int
+             └──Primitive name: %length |}]

@@ -1,7 +1,7 @@
 (library
  (public_name dromedary.parsing)
  (name parsing)
- (preprocess (pps ppx_jane))
+ (preprocess (pps ppx_jane bisect_ppx --conditional))
  (libraries core menhirLib dromedary.util))
 
 (ocamllex lexer)

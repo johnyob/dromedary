@@ -63,6 +63,7 @@ module Make (Algebra : Algebra_with_decoded) = struct
       | Row_cons of Label.t * t * t
       | Row_uniform of t
       | Mu of variable * t
+      | Let of variable * t * t
     [@@deriving sexp_of]
 
     (* [var a] returns the representation of the type variable [a]. *)
@@ -71,6 +72,9 @@ module Make (Algebra : Algebra_with_decoded) = struct
     (* [former f] returns the representation of the applied type former [f]. *)
     let former former = Former former
     let mu var t = Mu (var, t)
+
+    let let_ ~binding:(var, t1) ~in_:t2 = 
+      Let (var, t1, t2)
   end
 
   (* The module [Shallow_type] provides the shallow type definition
@@ -88,6 +92,7 @@ module Make (Algebra : Algebra_with_decoded) = struct
       | Row_cons of Label.t * variable * variable
       | Row_uniform of variable
       | Mu of variable
+      | Let of variable
     [@@deriving sexp_of]
 
     type binding = variable * t [@@deriving sexp_of]
@@ -132,6 +137,9 @@ module Make (Algebra : Algebra_with_decoded) = struct
         | Type.Mu (var, t) ->
           bind var (Mu (loop t));
           var
+        | Type.Let (var, t1, t2) ->
+          bind var (Let (loop t1)); 
+          loop t2
       in
       let var = loop type_ in
       (!variables, !bindings), var
@@ -429,6 +437,8 @@ module Make (Algebra : Algebra_with_decoded) = struct
         ; in_ : 'a t
         }
 
+      let sexp_of_let_rec_binding = sexp_of_let_rec_binding
+
       let sexp_of_let_binding : type a. a let_binding -> Sexp.t =
        fun t ->
         [%sexp
@@ -489,6 +499,12 @@ module Make (Algebra : Algebra_with_decoded) = struct
       end
 
       let let_ ~bindings = Let bindings
+      let let_1 ~binding =
+        let_ ~bindings:[ binding ]
+        >>| function
+        | [ term_binding ] -> term_binding
+        | _ -> assert false
+
       let let_rec ~bindings = Let_rec bindings
       let def ~bindings = Def bindings
 

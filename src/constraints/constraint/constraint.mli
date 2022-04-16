@@ -56,6 +56,7 @@ module Make (Algebra : Algebra_with_decoded) : sig
       | Row_cons of Label.t * t * t
       | Row_uniform of t
       | Mu of variable * t
+      | Let of variable * t * t
     [@@deriving sexp_of]
 
     (** [var 'a] is the representation of the type variable ['a] as the 
@@ -68,6 +69,8 @@ module Make (Algebra : Algebra_with_decoded) : sig
 
     (** [mu 'a t] is the representation of the recursive type [mu 'a. t] *)
     val mu : variable -> t -> t
+
+    val let_ : binding:variable * t -> in_:t -> t
   end
 
   (** The module [Shallow_type] provides the shallow type definition
@@ -87,6 +90,7 @@ module Make (Algebra : Algebra_with_decoded) : sig
       | Row_cons of Label.t * variable * variable
       | Row_uniform of variable
       | Mu of variable
+      | Let of variable
     [@@deriving sexp_of]
 
     (** [binding] represents a shallow type binding defined by the grammar:
@@ -282,6 +286,7 @@ module Make (Algebra : Algebra_with_decoded) : sig
   module Structure : sig
     module Item : sig
       type nonrec 'a let_rec_binding = 'a let_rec_binding
+      val sexp_of_let_rec_binding : _ let_rec_binding -> Sexp.t
 
       type 'a let_binding =
         { universal_context : universal_context
@@ -290,6 +295,8 @@ module Make (Algebra : Algebra_with_decoded) : sig
         ; bindings : binding list
         ; in_ : 'a t
         }
+      
+      val sexp_of_let_binding : _ let_binding -> Sexp.t
 
       module Binding : sig
         type ctx = universal_context * existential_context [@@deriving sexp_of]
@@ -329,6 +336,8 @@ module Make (Algebra : Algebra_with_decoded) : sig
       include Applicative.Let_syntax with type 'a t := 'a t
 
       val let_ : bindings:'a let_binding list -> 'a term_let_binding list t
+      val let_1 : binding:'a let_binding -> 'a term_let_binding t
+
       val let_rec 
         :  bindings:'a let_rec_binding list 
         -> 'a term_let_rec_binding list t

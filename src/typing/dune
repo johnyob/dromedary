@@ -1,6 +1,6 @@
 (library
  (public_name dromedary.typing)
  (name typing)
- (preprocess (pps ppx_jane ppx_deriving.eq))
+ (preprocess (pps ppx_jane ppx_deriving.eq bisect_ppx --conditional))
  (instrumentation (backend landmarks))
  (libraries base dromedary.parsing dromedary.constraints dromedary.util))

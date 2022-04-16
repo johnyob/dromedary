@@ -1,5 +1,5 @@
-module P = Parsing
+module Parsing_ = Parsing
 include Core
 
-include P
+include Parsing_
 include Typing

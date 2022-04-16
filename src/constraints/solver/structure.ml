@@ -169,6 +169,7 @@ struct
   let repr t = t
 
   let merge ~ctx ~equate t1 t2 =
+    Log.debug (fun m -> m "Merge Abbrev");
     let ( === ) t1 t2 = Id.id t1 = Id.id t2 in
     let ( =~ ) t1 t2 = Structure.merge ~ctx:ctx.super_ ~equate t1 t2 in
     let ( =~- ) a t =
@@ -343,6 +344,14 @@ module Ambivalent (Structure : S) = struct
       exception Inconsistent = Rigid_type.Structure.Cannot_merge
 
       let add ~ctx t type1 type2 scope =
+        Log.debug (fun m ->
+            let string_of_rigid_type t =
+              Rigid_type.sexp_of_t t |> Sexp.to_string_hum
+            in
+            m
+              "Adding equation between %s\n and\n %s"
+              (string_of_rigid_type type1)
+              (string_of_rigid_type type2));
         let ctx : Rigid_type.t Rigid_type.Structure.ctx =
           { equations_ctx = t
           ; scope
@@ -351,7 +360,8 @@ module Ambivalent (Structure : S) = struct
           ; super_ = ctx
           }
         in
-        Rigid_type.Unifier.unify ~ctx type1 type2;
+        (try Rigid_type.Unifier.unify ~ctx type1 type2 with
+        | _ -> raise Inconsistent);
         ctx.equations_ctx
 
 
@@ -418,6 +428,7 @@ module Ambivalent (Structure : S) = struct
   exception Cannot_merge = Structure.Cannot_merge
 
   let merge ~ctx ~equate t1 t2 =
+    Log.debug (fun m -> m "Merge Ambiv");
     (* [type_ =~- structure] "unifies" the structure [structure] with type [type_] *)
     let ( =~- ) type_ structure =
       let type_' = ctx.make structure in
@@ -443,10 +454,16 @@ module Ambivalent (Structure : S) = struct
       | Rigid_var rigid_var1, Rigid_var rigid_var2 ->
         let rigid_var, rigid_type, scope', t =
           match Equations.Ctx.get_equation ctx.equations_ctx rigid_var1 with
-          | Some (rigid_type, scope') -> rigid_var1, rigid_type, scope', t2
+          | Some (rigid_type, scope') ->
+            Log.debug (fun m ->
+                m "Using equation for %d with scope %d" rigid_var1 scope');
+            rigid_var1, rigid_type, scope', t2
           | None ->
             (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var2 with
-            | Some (rigid_type, scope') -> rigid_var2, rigid_type, scope', t1
+            | Some (rigid_type, scope') ->
+              Log.debug (fun m ->
+                  m "Using equation for %d with scope %d" rigid_var2 scope');
+              rigid_var2, rigid_type, scope', t1
             | None -> raise Cannot_merge)
         in
         (* Convert [rigid_type] to ['a] type. *)
@@ -454,6 +471,13 @@ module Ambivalent (Structure : S) = struct
         (* Merge [t2'] and [t1]. *)
         t' =~- t;
         (* Update scope *)
+        Log.debug (fun m ->
+            m
+              "Updating scope: %d = %d w/ scopes %d %d"
+              rigid_var1
+              rigid_var2
+              !scope
+              scope');
         if !scope < scope' then scope := scope';
         (* Representative is the rigid variable *)
         Rigid_var rigid_var
@@ -461,6 +485,7 @@ module Ambivalent (Structure : S) = struct
         (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var with
         | None -> raise Cannot_merge
         | Some (rigid_type, scope') ->
+          Log.debug (fun m -> m "Using equation for %d" rigid_var);
           (* Convert [rigid_type] to ['a] type. *)
           let t1' = convert_rigid_type ~ctx rigid_type in
           (* Merge [t2'] and [t1]. *)
@@ -473,6 +498,7 @@ module Ambivalent (Structure : S) = struct
         (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var with
         | None -> raise Cannot_merge
         | Some (rigid_type, scope') ->
+          Log.debug (fun m -> m "Using equation for %d" rigid_var);
           (* Convert [rigid_type] to ['a] type. *)
           let t2' = convert_rigid_type ~ctx rigid_type in
           (* Merge [t2'] and [t1]. *)
@@ -532,35 +558,37 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
   exception Cannot_merge = Structure.Cannot_merge
 
   let merge ~ctx ~equate t1 t2 =
+    Log.debug (fun m -> m "Merge Rows");
     let ( =~ ) = equate in
     let ( =~- ) a structure = a =~ ctx.make_structure structure in
-
-    let is_row_cons l t = 
+    let is_row_cons l t =
       let t1, t2 = ctx.make_var (), ctx.make_var () in
       t =~- Row_cons (l, t1, t2);
       t1, t2
     in
-
-    let is_row_uniform t = 
+    let is_row_uniform t =
       let t' = ctx.make_var () in
       t =~- Row_uniform t';
       t'
     in
-
     match t1, t2 with
     | Structure structure1, Structure structure2 ->
+      Log.debug (fun m -> m "Merge Rows : structures");
       Structure (Structure.merge ~ctx:ctx.super_ ~equate structure1 structure2)
     | Row_uniform t1, Row_uniform t2 ->
+      Log.debug (fun m -> m "Merge Row uniform");
       t1 =~ t2;
       Row_uniform t1
     | Row_cons (label1, t11, t12), Row_cons (label2, t21, t22)
       when Label.compare label1 label2 = 0 ->
+      Log.debug (fun m -> m "Merge Row cons equal labels");
       (* The labels [label1] and [label2] are equal. *)
       t11 =~ t21;
       t12 =~ t22;
       (* We arbitrary return a Row_cons. *)
       t1
     | Row_cons (label1, t11, t12), Row_cons (label2, t21, t22) ->
+      Log.debug (fun m -> m "Merge Row cons");
       (* The labels [label1] and [label2] are not equal. *)
       let t = ctx.make_var () in
       (* Unify the label of t1 with a Row containing (label2) *)
@@ -571,22 +599,25 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
       if Label.compare label1 label2 < 0 then t1 else t2
     | Row_cons (_, t11, t12), (Row_uniform t as t2)
     | (Row_uniform t as t2), Row_cons (_, t11, t12) ->
+      Log.debug (fun m -> m "Merge Row cons and uniform");
       t11 =~ t;
       t12 =~- t2;
       t2
     | (Row_cons (l1, t11, t12) as t1), Structure t2
     | Structure t2, (Row_cons (l1, t11, t12) as t1) ->
+      Log.debug (fun m -> m "Merge Row cons and structure");
       (* TODO: Understand WHY the distributive property for formers (structures) is required. *)
       (* The children of [t2] must be of the form: [(l1: _; _)] (according to EMLTI). *)
-      let t11', t12' = 
+      let t11', t12' =
         let t11_12 = Structure.map t2 ~f:(is_row_cons l1) in
         Structure.map ~f:fst t11_12, Structure.map ~f:snd t11_12
       in
       t11 =~- Structure t11';
       t12 =~- Structure t12';
       t1
-    | (Row_uniform t as t1), Structure t2
-    | Structure t2, (Row_uniform t as t1) ->
+    | (Row_uniform t as t1), Structure t2 | Structure t2, (Row_uniform t as t1)
+      ->
+      Log.debug (fun m -> m "Merge Row uniform and structure");
       let t' = Structure.map t2 ~f:is_row_uniform in
       t =~- Structure t';
       t1

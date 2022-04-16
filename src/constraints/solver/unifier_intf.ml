@@ -38,6 +38,9 @@ module type S = sig
     (** [t] represents a type. See "graphical types". *)
     type t [@@deriving sexp_of, compare]
 
+    (* Uses human representation (warning, may print cycles!) *)
+    val sexp_of_t_hum : t -> Sexp.t
+
     (** Each graphical type node consists of:
         - a unique identifier [id] (used to define a total ordering).
         - a mutable [structure], which contains the node structure. *)
