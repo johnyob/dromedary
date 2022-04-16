@@ -2,6 +2,6 @@
  (public_name dromedary.constraints)
  (name constraints)
  (preprocess
-  (pps ppx_jane ppx_deriving.eq))
+  (pps ppx_jane ppx_deriving.eq bisect_ppx --conditional))
  (instrumentation (backend landmarks))
  (libraries dromedary.constraints.constraint dromedary.constraints.solver))

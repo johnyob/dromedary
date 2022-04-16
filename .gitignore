@@ -31,4 +31,8 @@ setup.log
 # Local OPAM switch
 _opam/
 
+# Benchmark results
 benchmark/results/
+
+# bisect coverage reports
+_coverage/
