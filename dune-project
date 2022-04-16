@@ -19,8 +19,6 @@
  (description
   "Dromedary is an experimental subset of OCaml, using constraint-based type inference!")
  (depends
-  (ocaml
-   (= 4.12.0))
   (dune
    (>= 2.9))
   (base
