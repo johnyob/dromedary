@@ -6,11 +6,11 @@
 
 ## What is Dromedary?
 
-Dromedary is a work-in-progress implementation of a constraint-based type checker for a large subset of OCaml. It is largely based on the work of François Pottier's [Hindley-Milner elaboration in an applactive style](http://gallium.inria.fr/~fpottier/publis/fpottier-elaboration.pdf) and the constraint language presented in [The Essence of ML Inference](http://pauillac.inria.fr/~fpottier/publis/emlti-final.pdf).  
+Dromedary is a work-in-progress implementation of a constraint-based type checker for a large subset of OCaml. It is largely based on the work of François Pottier's [Hindley-Milner elaboration in an applactive style](http://gallium.inria.fr/~fpottier/publis/fpottier-elaboration.pdf) and the constraint language presented in [The Essence of ML Type Inference](http://pauillac.inria.fr/~fpottier/publis/emlti-final.pdf).  
 
 ## Features
 
-Dromedary implements *significantly* more features than those presented in Pottier's [paper](http://gallium.inria.fr/~fpottier/publis/fpottier-elaboration.pdf), including:
+Dromedary implements *significantly* more features than the language presented in Pottier's [paper](http://gallium.inria.fr/~fpottier/publis/fpottier-elaboration.pdf), including:
 - Algebraic data types and pattern matching
 - Mutually recursive let bindings
 - Side-effecting primitives and the value restriction
@@ -20,11 +20,11 @@ Dromedary implements *significantly* more features than those presented in Potti
 - Type abbreviations
 - Structures
 
-For a description of the thoery of these extensions in a constraint-based approach, see the **incomplete** [accompanying dissertation](https://www.youtube.com/watch?v=dQw4w9WgXcQ). 
+For a description of the thoery of these extensions in a constraint-based setting, see the (*not released yet*) [accompanying dissertation](https://www.youtube.com/watch?v=dQw4w9WgXcQ). 
 
 ## Installation
 
-Dromedary is wrriten in OCaml. You'll need to install OCaml version 4.12.0 and `opam`. 
+Dromedary is written in OCaml. You'll need to install OCaml version 4.12.0 and `opam`. 
 Once installed, run these commands to get started!
 ```
 make install
