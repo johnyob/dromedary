@@ -10,14 +10,14 @@ homepage: "https://github.com/johnyob/dromedary"
 bug-reports: "https://github.com/johnyob/dromedary/issues"
 depends: [
   "dune" {>= "2.9" & >= "2.9"}
-  "base" {= "v0.14.0"}
+  "base" {= "v0.14.1"}
   "core" {= "v0.14.1"}
   "core_bench" {= "v0.14.0"}
   "core_unix" {= "v0.14.0"}
   "ppx_jane" {= "v0.14.0"}
-  "ppx_sexp_conv" {= "v0.14.1"}
+  "ppx_sexp_conv" {= "v0.14.3"}
   "ppx_compare" {= "v0.14.0"}
-  "ppx_deriving" {= "4.5"}
+  "ppx_deriving" {= "5.2.1"}
   "ppx_let" {= "v0.14.0"}
   "vec" {= "0.3.0"}
   "logs" {= "0.7.0"}

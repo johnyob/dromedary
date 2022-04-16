@@ -22,7 +22,7 @@
   (dune
    (>= 2.9))
   (base
-   (= v0.14.0))
+   (= v0.14.1))
   (core
    (= v0.14.1))
   (core_bench
@@ -32,11 +32,11 @@
   (ppx_jane
    (= v0.14.0))
   (ppx_sexp_conv
-   (= v0.14.1))
+   (= v0.14.3))
   (ppx_compare
    (= v0.14.0))
   (ppx_deriving
-   (= 4.5))
+   (= 5.2.1))
   (ppx_let
    (= v0.14.0))
   (vec
