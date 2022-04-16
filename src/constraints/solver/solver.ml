@@ -34,7 +34,6 @@ module Make (Algebra : Algebra) = struct
   module U = G.Unifier
 
   module Decoded = struct
-    (* Bad Performance Hack! *)
     let state = G.make_state ()
     let () = G.enter ~state
 
@@ -50,7 +49,7 @@ module Make (Algebra : Algebra) = struct
       type t = U.Type.t
 
       type desc =
-        | Var
+        | Var of Var.t
         | Former of t Type_former.t
         | Row_cons of Label.t * t * t
         | Row_uniform of t
@@ -59,8 +58,8 @@ module Make (Algebra : Algebra) = struct
 
       let desc t =
         match G.Structure.repr (U.Type.structure t) with
-        | Flexible_var -> Var
-        | Rigid_var _rigid_var -> Var
+        | Flexible_var -> Var t
+        | Rigid_var _rigid_var -> Var t
         | Row_cons (label, t1, t2) -> Row_cons (label, t1, t2)
         | Row_uniform t -> Row_uniform t
         | Former former -> Former former
@@ -70,32 +69,19 @@ module Make (Algebra : Algebra) = struct
 
       and sexp_of_desc desc =
         match desc with
-        | Var -> [%sexp Var]
+        | Var t -> [%sexp Var (t : Var.t)]
         | Former former -> [%sexp Former, (former : t Type_former.t)]
         | Row_cons (label, t1, t2) ->
           [%sexp Row_cons, (label : Label.t), (t1 : t), (t2 : t)]
         | Row_uniform t -> [%sexp Row_uniform, (t : t)]
 
-
-      let var () = G.make_flexible_var ~state
-      let of_var t = t
-
-      let to_var t =
-        match desc t with
-        | Var -> Some t
-        | _ -> None
-
-
-      let former = G.make_former ~state
-
-      let mu f = 
-        let t1 = G.make_flexible_var ~state in
-        let t2 = f t1 in
-        U.unify ~state ~ctx:U.empty_ctx t1 t2;
-        t1
-
-      let row_cons label t1 t2 = G.make_row_cons ~state ~label ~field:t1 ~tl:t2
-      let row_uniform = G.make_row_uniform ~state
+      let make desc = 
+        match desc with
+        | Var t -> t
+        | Former former -> G.make_former ~state former
+        | Row_cons (label, t1, t2) ->
+          G.make_row_cons ~state ~label ~field:t1 ~tl:t2
+        | Row_uniform t -> G.make_row_uniform ~state t
     end
 
     type scheme = Var.t list * Type.t [@@deriving sexp_of]

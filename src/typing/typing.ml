@@ -17,16 +17,18 @@ module Types = Types
 module Typedtree = Typedtree
 module Env = Env
 
-let with_solver_errors ~f:(f : _ -> (_, [> Solver.error ]) Result.t) t =
+let with_solver_errors ~(f : _ -> (_, [> Solver.error ]) Result.t) t =
+  let open Types in
   f t
   |> Result.map_error ~f:(function
          | `Unify (type_expr1, type_expr2) ->
            [%message
              "Cannot unify types"
-               (type_expr1 : Types.type_expr)
-               (type_expr2 : Types.type_expr)]
+               (Type_expr.decode type_expr1 : type_expr)
+               (Type_expr.decode type_expr2 : type_expr)]
          | `Cycle type_expr ->
-           [%message "Cycle occurs" (type_expr : Types.type_expr)]
+           [%message
+             "Cycle occurs" (Type_expr.decode type_expr : Types.type_expr)]
          | `Unbound_term_variable term_var ->
            [%message
              "Term variable is unbound when solving constraint"
@@ -44,7 +46,8 @@ let with_solver_errors ~f:(f : _ -> (_, [> Solver.error ]) Result.t) t =
                (var : string)]
          | `Scope_escape type_expr ->
            [%message
-             "Type escape it's equational scope" (type_expr : Types.type_expr)]
+             "Type escape it's equational scope"
+               (Type_expr.decode type_expr : Types.type_expr)]
          | `Inconsistent_equations ->
            [%message "Inconsistent equations added by local branches"]
          | `Non_rigid_equations -> [%message "Non rigid equations"])
@@ -53,7 +56,8 @@ let with_solver_errors ~f:(f : _ -> (_, [> Solver.error ]) Result.t) t =
 let solve ?(debug = false) ~abbrevs cst =
   with_solver_errors ~f:(solve ~debug ~abbrevs) cst
 
-let solve_str ?(debug = false) ~abbrevs str = 
+
+let solve_str ?(debug = false) ~abbrevs str =
   with_solver_errors ~f:(Structure.solve ~debug ~abbrevs) str
 
 

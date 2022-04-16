@@ -33,7 +33,7 @@ module Env = struct
 
     let substitution_of_vars vars =
       match
-        Types.Var.Map.of_alist (List.map ~f:(fun x -> x, fresh ()) vars)
+        Types.Type_var.Map.of_alist (List.map ~f:(fun x -> x, fresh ()) vars)
       with
       | `Ok substitution -> return substitution
       | `Duplicate_key var ->
@@ -41,11 +41,11 @@ module Env = struct
 
 
     let rng substitution =
-      Types.Var.Map.to_alist substitution |> List.map ~f:snd
+      Types.Type_var.Map.to_alist substitution |> List.map ~f:snd
 
 
     let merge substitution1 substitution2 =
-      Types.Var.Map.merge
+      Types.Type_var.Map.merge
         substitution1
         substitution2
         ~f:(fun ~key:_type_var var ->
@@ -107,7 +107,7 @@ module Env = struct
               List.find
                 ~f:
                   (List.mem
-                     ~equal:(fun t1 t2 -> Types.Var.compare t1 t2 = 0)
+                     ~equal:(fun t1 t2 -> Types.Type_var.compare t1 t2 = 0)
                      constr_betas)
                 constr_alphas
             with
@@ -282,10 +282,10 @@ let make_constr_desc constr_name constr_arg constr_type =
     | None -> return None
     | Some constr_arg ->
       let%map constr_arg = decode constr_arg in
-      Some constr_arg
+      Some (Type_expr.decode constr_arg)
   in
   { constructor_name = constr_name
-  ; constructor_type = constr_type
+  ; constructor_type = Type_expr.decode constr_type
   ; constructor_arg = constr_arg
   }
 
@@ -295,14 +295,17 @@ let make_label_desc label_name label_arg label_type =
   let open Constraint.Let_syntax in
   let%map label_type = decode label_type
   and label_arg = decode label_arg in
-  { label_name; label_type; label_arg }
+  { label_name
+  ; label_type = Type_expr.decode label_type
+  ; label_arg = Type_expr.decode label_arg
+  }
 
 
 let make_variant_desc variant_tag variant_row =
   let open Types in
   let open Constraint.Let_syntax in
   let%map variant_row = decode variant_row in
-  { variant_tag; variant_row }
+  { variant_tag; variant_row = Type_expr.decode variant_row }
 
 
 (** {5 : Value restriction} *)
@@ -461,7 +464,7 @@ module Pattern = struct
       return
         (let%map pat_desc = pat_desc
          and pat_type = decode pat_type in
-         { pat_desc; pat_type })
+         { pat_desc; pat_type = Types.Type_expr.decode pat_type })
     and infer_pat_desc pat pat_type =
       let open Computation.Let_syntax in
       match pat with
@@ -551,7 +554,7 @@ module Pattern = struct
       return
         (let%map pat_desc = pat_desc
          and pat_type = decode pat_type in
-         { pat_desc; pat_type })
+         { pat_desc; pat_type = Types.Type_expr.decode pat_type })
     and infer_pat_desc pat =
       let open Computation.Let_syntax in
       match pat with
@@ -712,7 +715,10 @@ module Expression = struct
       , let%map variant_desc = make_variant_desc tag variant_pat_row
         and arg_pat, in_ = arg_pat_in_
         and pat_type = decode pat_type in
-        { pat_desc = Tpat_variant (variant_desc, arg_pat); pat_type }, in_ )
+        ( { pat_desc = Tpat_variant (variant_desc, arg_pat)
+          ; pat_type = Types.Type_expr.decode pat_type
+          }
+        , in_ ) )
 
 
   let bind_variant_default_pat
@@ -797,7 +803,7 @@ module Expression = struct
     return
       (let%map exp_desc = exp_desc
        and exp_type = decode exp_type in
-       { exp_desc; exp_type })
+       { exp_desc; exp_type = Types.Type_expr.decode exp_type })
 
 
   and infer_exp_desc exp exp_type =
@@ -806,7 +812,7 @@ module Expression = struct
     | Pexp_var x ->
       return
         (let%map instances = inst x exp_type in
-         Texp_var (x, instances))
+         Texp_var (x, List.map ~f:Types.Type_expr.decode instances))
     | Pexp_prim prim ->
       let@ prim_type = infer_primitive prim in
       return
@@ -878,7 +884,7 @@ module Expression = struct
         (let%map match_exp = match_exp
          and match_exp_type = decode var
          and cases = cases in
-         Texp_match (match_exp, match_exp_type, cases))
+         Texp_match (match_exp, Types.Type_expr.decode match_exp_type, cases))
     | Pexp_ifthenelse (if_exp, then_exp, else_exp) ->
       let%bind if_exp = lift (infer_exp if_exp) (Former Type_former.bool) in
       let%bind then_exp = infer_exp then_exp exp_type in
@@ -1002,7 +1008,9 @@ module Expression = struct
       let%bind let_bindings = infer_value_bindings value_bindings in
       let%bind exp = infer_exp exp exp_type in
       let to_value_binding (_, (variables, (pat, exp))) =
-        { tvb_pat = pat; tvb_expr = variables, exp }
+        { tvb_pat = pat
+        ; tvb_expr = List.map ~f:Types.Type_var.decode variables, exp
+        }
       in
       return
         (let%map let_bindings, exp = let_ ~bindings:let_bindings ~in_:exp in
@@ -1011,7 +1019,9 @@ module Expression = struct
       let%bind let_bindings = infer_rec_value_bindings rec_value_bindings in
       let%bind exp = infer_exp exp exp_type in
       let to_rec_value_binding ((var, (variables, _)), (_, exp)) =
-        { trvb_var = var; trvb_expr = variables, exp }
+        { trvb_var = var
+        ; trvb_expr = List.map ~f:Types.Type_var.decode variables, exp
+        }
       in
       return
         (let%map let_bindings, exp = let_rec ~bindings:let_bindings ~in_:exp in
@@ -1256,7 +1266,9 @@ module Expression = struct
       let@ var = exists () in
       infer_exp exp var
     in
-    return (let_0 ~in_:exp)
+    return
+      (let%map vars, exp = let_0 ~in_:exp in
+       List.map ~f:Types.Type_var.decode vars, exp)
 
 
   module Structure = struct

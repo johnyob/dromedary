@@ -17,7 +17,7 @@ open Types
 
 type 'a instance = 'a * type_expr list [@@deriving sexp_of]
 
-and 'a abstraction = Decoded.Var.t list * 'a [@@deriving sexp_of]
+and 'a abstraction = type_var list * 'a [@@deriving sexp_of]
 
 type pattern =
   { pat_desc : pattern_desc

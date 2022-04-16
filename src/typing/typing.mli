@@ -17,12 +17,13 @@ module Types = Types
 module Typedtree = Typedtree
 module Env = Env
 
+
 val infer_exp
   :  ?debug:bool
   -> env:Env.t
   -> abbrevs:Abbreviations.t
   -> Parsetree.expression
-  -> (Typedtree.expression bound, Sexp.t) Result.t
+  -> (Types.Type_var.t list * Typedtree.expression, Sexp.t) Result.t
 
 val infer_str
   :  ?debug:bool

@@ -12,19 +12,18 @@
 (*****************************************************************************)
 
 open! Import
+open Types
 open Parsetree
 open Typedtree
 open Constraint
 open Constraint.Structure
 
 module Predefined = struct
-  open Types
-
-  let absent = Types.make (Ttyp_constr ([], "absent"))
-  let present x = Types.make (Ttyp_constr ([ x ], "present"))
-  let row_cons tag t1 t2 = Types.make (Ttyp_row_cons (tag, t1, t2))
-  let row_uniform t = Types.make (Ttyp_row_uniform t)
-  let unit = Types.make (Ttyp_constr ([], "unit"))
+  let absent = Type_expr.make (Ttyp_constr ([], "absent"))
+  let present x = Type_expr.make (Ttyp_constr ([ x ], "present"))
+  let row_cons tag t1 t2 = Type_expr.make (Ttyp_row_cons (tag, t1, t2))
+  let row_uniform t = Type_expr.make (Ttyp_row_uniform t)
+  let unit = Type_expr.make (Ttyp_constr ([], "unit"))
 end
 
 let rec transl_core_type ~substitution core_type =
@@ -34,20 +33,20 @@ let rec transl_core_type ~substitution core_type =
   | Ptyp_arrow (core_type1, core_type2) ->
     let vars1, t1 = transl_core_type ~substitution core_type1 in
     let vars2, t2 = transl_core_type ~substitution core_type2 in
-    vars1 @ vars2, make (Ttyp_arrow (t1, t2))
+    vars1 @ vars2, Type_expr.make (Ttyp_arrow (t1, t2))
   | Ptyp_tuple core_types ->
     let vars, ts =
       List.map core_types ~f:(transl_core_type ~substitution) |> List.unzip
     in
-    List.concat vars, make (Ttyp_tuple ts)
+    List.concat vars, Type_expr.make (Ttyp_tuple ts)
   | Ptyp_constr (core_types, constr_name) ->
     let vars, ts =
       List.map core_types ~f:(transl_core_type ~substitution) |> List.unzip
     in
-    List.concat vars, make (Ttyp_constr (ts, constr_name))
+    List.concat vars, Type_expr.make (Ttyp_constr (ts, constr_name))
   | Ptyp_variant row ->
     let vars, t = transl_row ~substitution row in
-    vars, make (Ttyp_variant t)
+    vars, Type_expr.make (Ttyp_variant t)
   | Ptyp_mu (_var, _core_type) -> raise_s [%message "Mu types are unsupported"]
   | Ptyp_where (core_type1, var, core_type2) ->
     let vars2, t2 = transl_core_type ~substitution core_type2 in
@@ -61,8 +60,8 @@ and transl_row ~substitution (row_fields, closed_flag) =
     match closed_flag with
     | Closed -> [], Predefined.(row_uniform absent)
     | Open ->
-      let var = Types.Var.make () in
-      [ var ], Types.of_var var
+      let var = Type_var.make () in
+      [ var ], Type_expr.make (Ttyp_var var)
   in
   List.fold_right row_fields ~init:(vars, tl) ~f:(fun rf (vars1, tl) ->
       let vars2, row = transl_row_field ~substitution rf tl in
@@ -95,8 +94,11 @@ let transl_constr_arg ~substitution constr_arg =
       List.fold_left
         ~init:(substitution, [])
         ~f:(fun (substitution, betas) beta ->
-          let var = Types.Var.make () in
-          ( String.Map.set substitution ~key:beta ~data:(Types.of_var var)
+          let var = Type_var.make () in
+          ( String.Map.set
+              substitution
+              ~key:beta
+              ~data:(Type_expr.make (Ttyp_var var))
           , var :: betas ))
         constr_arg_betas
     in
@@ -109,8 +111,10 @@ let transl_constr_arg ~substitution constr_arg =
 
 
 let transl_type_constr type_params type_name =
-  let open Types in
-  make (Ttyp_constr (List.map type_params ~f:Types.of_var, type_name))
+  Type_expr.make
+    (Ttyp_constr
+       ( List.map type_params ~f:(fun var -> Type_expr.make (Ttyp_var var))
+       , type_name ))
 
 
 let transl_constraint ~substitution =
@@ -158,8 +162,11 @@ let transl_label_decl label_decl ~substitution ~type_params ~type_name =
     List.fold_left
       ~init:(substitution, [])
       ~f:(fun (substitution, betas) beta ->
-        let var = Types.Var.make () in
-        ( String.Map.set substitution ~key:beta ~data:(Types.of_var var)
+        let var = Type_var.make () in
+        ( String.Map.set
+            substitution
+            ~key:beta
+            ~data:(Type_expr.make (Ttyp_var var))
         , var :: betas ))
       label_betas
   in
@@ -186,10 +193,12 @@ let transl_type_decl type_decl =
   let { ptype_name = type_name; ptype_params = type_params; ptype_kind } =
     type_decl
   in
-  let type_vars = List.map ~f:(fun _ -> Types.Var.make ()) type_params in
+  let type_vars = List.map ~f:(fun _ -> Type_var.make ()) type_params in
   let substitution =
     String.Map.of_alist_exn
-      (List.zip_exn type_params (List.map ~f:Types.of_var type_vars))
+      (List.zip_exn
+         type_params
+         (List.map ~f:(fun var -> Type_expr.make (Ttyp_var var)) type_vars))
   in
   let type_kind =
     match ptype_kind with
@@ -224,13 +233,17 @@ let transl_ext_constr ext_constr =
   let { pext_name; pext_params; pext_kind = Pext_decl constr_decl } =
     ext_constr
   in
-  let type_vars = List.map ~f:(fun _ -> Types.Var.make ()) pext_params in
+  let type_vars = List.map ~f:(fun _ -> Type_var.make ()) pext_params in
   let substitution =
     String.Map.of_alist_exn
-      (List.zip_exn pext_params (List.map ~f:Types.of_var type_vars))
+      (List.zip_exn pext_params (List.map ~f:(fun var -> Type_expr.make (Ttyp_var var)) type_vars))
   in
   let constr_decl =
-    transl_constr_decl constr_decl ~substitution ~type_params:type_vars ~type_name:pext_name
+    transl_constr_decl
+      constr_decl
+      ~substitution
+      ~type_params:type_vars
+      ~type_name:pext_name
   in
   { text_name = pext_name
   ; text_params = type_vars
@@ -268,7 +281,7 @@ let infer_primitive { pval_name; pval_type; pval_prim } =
   let ctx = [], Shallow_type.Ctx.merge (vars, []) ctx in
   return
     (let open Item in
-    let%map.Item scheme =
+    let%map.Item vars, type_ =
       let_1
         ~binding:
           Binding.(
@@ -281,7 +294,7 @@ let infer_primitive { pval_name; pval_type; pval_prim } =
       | [ (_, scheme) ], _ -> scheme
       | _ -> assert false
     in
-    { tval_name = pval_name; tval_type = scheme; tval_prim = pval_prim })
+    { tval_name = pval_name; tval_type = (List.map ~f:Type_var.decode vars, Type_expr.decode type_); tval_prim = pval_prim })
 
 
 let infer_exception ~env type_exn =
@@ -327,7 +340,7 @@ let infer_str_item ~env str_item =
   | Pstr_value (Recursive, rec_value_bindings) ->
     let%bind let_bindings = infer_rec_value_bindings ~env rec_value_bindings in
     let to_rec_value_binding ((var, (variables, _)), (_, exp)) =
-      { trvb_var = var; trvb_expr = variables, exp }
+      { trvb_var = var; trvb_expr = List.map ~f:Type_var.decode variables, exp }
     in
     return
       ( env
@@ -336,7 +349,7 @@ let infer_str_item ~env str_item =
   | Pstr_value (Nonrecursive, value_bindings) ->
     let%bind let_bindings = infer_value_bindings ~env value_bindings in
     let to_value_binding (_, (variables, (pat, exp))) =
-      { tvb_pat = pat; tvb_expr = variables, exp }
+      { tvb_pat = pat; tvb_expr = List.map ~f:Type_var.decode  variables, exp }
     in
     return
       ( env

@@ -70,53 +70,6 @@ module Type_former = struct
   end
 end
 
-(* module type Type = sig
-  (* Abstract types to be substituted by functor arguments. *)
-
-  type label
-  type variable
-  type 'a former
-
-  (** A concrete representation of types. This is the *free monad* of
-      [Former.t] with variables [Var.t], defined by the grammar:
-        t ::= 'a | t F
-  
-      We could define [t] using an *explicit fixpoint*: 
-      type t = 
-        | Var of Var.t
-        | Former of t Former.t
-
-      However, we leave [t] abstract, since OCaml doesn't have pattern 
-      synonyms, making explicit fixpoints unwieldy.
-
-      For constructors of [t]. See {!var}, {!former}. 
-  *)
-
-  type t [@@deriving sexp_of]
-
-  (** [var 'a] is the representation of the type variable ['a] as the 
-      type [t]. *)
-
-  val var : variable -> t
-
-  (** [former f] is the representation of the concrete type former [f] in
-      type [t]. *)
-  val former : t former -> t
-
-  (** [mu a t] is the representation of the recursive type [μ a. t].
-      While Dromedary doesn't support recursive types, we use them for
-      printing cyclic types (e.g. when using [Cycle]).  
-  *)
-  val mu : variable -> t -> t
-
-  (** [row_cons (label, label_type) tl] is the representation of the
-      row [(label : label_type; tl)]. *)
-  val row_cons : label * t -> t -> t
-
-  (** [row_uniform t] is the representation of the row [∂t]. *)
-  val row_uniform : t -> t
-end *)
-
 module type Types = sig
   (** Type variables, used for type recon *)
   module Var : Type_var
@@ -136,8 +89,8 @@ module type Decoded_var = sig
 end
 
 module type Decoded_type = sig
-  type label
   type variable
+  type label
   type 'a former
 
   (** [t] describes the decoded type *)
@@ -146,7 +99,7 @@ module type Decoded_type = sig
   (** [desc] is an "external" descriptor -- which may be used 
       to decode the type. *)
   type desc =
-    | Var
+    | Var of variable
     | Former of t former
     | Row_cons of label * t * t
     | Row_uniform of t
@@ -158,19 +111,8 @@ module type Decoded_type = sig
   (** [desc t] returns the descriptor of [t] *)
   val desc : t -> desc
 
-  (** External constructors for the decoded type [t] *)
-  val var : unit -> t
-
-  val of_var : variable -> t
-
-  val to_var : t -> variable option
-
-  val former : t former -> t
-
-  val mu : (t -> t) -> t
-
-  val row_cons : label -> t -> t -> t
-  val row_uniform : t -> t
+  (** [make desc] creates the decoded type with descriptor [desc] *)
+  val make : desc -> t
 end
 
 module type Decoded = sig

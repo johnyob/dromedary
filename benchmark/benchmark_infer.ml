@@ -11,10 +11,10 @@ open Constraint
 
 let add_list env =
   let name = "list" in
-  let a = Var.make () in
+  let a = Type_var.make () in
   let params = [ a ] in
-  let a' = Types.of_var a in
-  let type_ = make (Ttyp_constr ([ a' ], name)) in
+  let a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -31,7 +31,7 @@ let add_list env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type = make (Ttyp_tuple [ a'; type_ ])
+                  ; constructor_arg_type = Type_expr.make (Ttyp_tuple [ a'; type_ ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -42,16 +42,16 @@ let add_list env =
 
 let add_term env =
   let name = "term" in
-  let a = Var.make () in
-  let a' = Types.of_var a in
+  let a = Type_var.make () in
+  let a' = Type_expr.make (Ttyp_var a) in
   let alphas = [ a ] in
-  let type_ = make (Ttyp_constr ([ a' ], name)) in
-  let int = make (Ttyp_constr ([], "int")) in
-  let bool = make (Ttyp_constr ([], "bool")) in
-  let b1 = Var.make () in
-  let b2 = Var.make () in
-  let b1' = Types.of_var b1 in
-  let b2' = Types.of_var b2 in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
+  let int = Type_expr.make (Ttyp_constr ([], "int")) in
+  let bool = Type_expr.make (Ttyp_constr ([], "bool")) in
+  let b1 = Type_var.make () in
+  let b2 = Type_var.make () in
+  let b1' = Type_expr.make (Ttyp_var b1) in
+  let b2' = Type_expr.make (Ttyp_var b2) in
   Env.add_type_decl
     env
     { type_name = name
@@ -69,7 +69,7 @@ let add_term env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type = make (Ttyp_constr ([ int ], name))
+                  ; constructor_arg_type = Type_expr.make (Ttyp_constr ([ int ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', int ]
@@ -87,11 +87,11 @@ let add_term env =
                 Some
                   { constructor_arg_betas = []
                   ; constructor_arg_type =
-                      make
+                      Type_expr.make
                         (Ttyp_tuple
-                           [ make (Ttyp_constr ([ bool ], name))
-                           ; make (Ttyp_constr ([ a' ], name))
-                           ; make (Ttyp_constr ([ a' ], name))
+                           [ Type_expr.make (Ttyp_constr ([ bool ], name))
+                           ; Type_expr.make (Ttyp_constr ([ a' ], name))
+                           ; Type_expr.make (Ttyp_constr ([ a' ], name))
                            ])
                   }
             ; constructor_type = type_
@@ -103,14 +103,14 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make
+                      Type_expr.make
                         (Ttyp_tuple
-                           [ make (Ttyp_constr ([ b1' ], name))
-                           ; make (Ttyp_constr ([ b2' ], name))
+                           [ Type_expr.make (Ttyp_constr ([ b1' ], name))
+                           ; Type_expr.make (Ttyp_constr ([ b2' ], name))
                            ])
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ a', make (Ttyp_tuple [ b1'; b2' ]) ]
+            ; constructor_constraints = [ a', Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ]
             }
           ; { constructor_name = "Fst"
             ; constructor_alphas = alphas
@@ -118,8 +118,8 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make
-                        (Ttyp_constr ([ make (Ttyp_tuple [ b1'; b2' ]) ], name))
+                      Type_expr.make
+                        (Ttyp_constr ([ Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', b1' ]
@@ -130,8 +130,8 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make
-                        (Ttyp_constr ([ make (Ttyp_tuple [ b1'; b2' ]) ], name))
+                      Type_expr.make
+                        (Ttyp_constr ([ Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', b2' ]
@@ -224,10 +224,10 @@ let t6' =
 
 let add_tree env =
   let name = "tree" in
-  let a = Var.make () in
+  let a = Type_var.make () in
   let params = [ a ]
-  and a' = Types.of_var a in
-  let type_ = make (Ttyp_constr ([ a' ], name)) in
+  and a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -244,7 +244,7 @@ let add_tree env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type = make (Ttyp_tuple [ a'; type_; a' ])
+                  ; constructor_arg_type = Type_expr.make (Ttyp_tuple [ a'; type_; a' ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -255,10 +255,10 @@ let add_tree env =
 
 let add_option env =
   let name = "option" in
-  let a = Var.make () in
+  let a = Type_var.make () in
   let params = [ a ]
-  and a' = Types.of_var a in
-  let type_ = make (Ttyp_constr ([ a' ], name)) in
+  and a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -333,10 +333,10 @@ let t9' =
 
 let add_perfect_tree env =
   let name = "perfect_tree" in
-  let a = Var.make () in
+  let a = Type_var.make () in
   let params = [ a ]
-  and a' = Types.of_var a in
-  let type_ = make (Ttyp_constr ([ a' ], name)) in
+  and a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -354,12 +354,12 @@ let add_perfect_tree env =
                 Some
                   { constructor_arg_betas = []
                   ; constructor_arg_type =
-                      make
+                      Type_expr.make
                         (Ttyp_tuple
                            [ a'
-                           ; make
+                           ; Type_expr.make
                                (Ttyp_constr
-                                  ([ make (Ttyp_tuple [ a'; a' ]) ], name))
+                                  ([ Type_expr.make (Ttyp_tuple [ a'; a' ]) ], name))
                            ])
                   }
             ; constructor_type = type_
@@ -407,14 +407,14 @@ let t11' =
 
 
 let add_key env =
-  let a = Var.make () in
+  let a = Type_var.make () in
   let params = [ a ]
-  and a' = Types.of_var a in
+  and a' = Type_expr.make (Ttyp_var a) in
   let name = "key" in
-  let type_ = make (Ttyp_constr ([ a' ], name)) in
-  let int = make (Ttyp_constr ([], "int"))
-  and string = make (Ttyp_constr ([], "string"))
-  and bool = make (Ttyp_constr ([], "bool")) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
+  let int = Type_expr.make (Ttyp_constr ([], "int"))
+  and string = Type_expr.make (Ttyp_constr ([], "string"))
+  and bool = Type_expr.make (Ttyp_constr ([], "bool")) in
   Env.add_type_decl
     env
     { type_name = name
@@ -441,9 +441,9 @@ let add_key env =
 let add_elem env =
   let name = "elem" in
   let params = [] in
-  let type_ = make (Ttyp_constr ([], name)) in
-  let value = Var.make () in
-  let value' = Types.of_var value in
+  let type_ = Type_expr.make (Ttyp_constr ([], name)) in
+  let value = Type_var.make () in
+  let value' = Type_expr.make (Ttyp_var value) in
   Env.add_type_decl
     env
     { type_name = name
@@ -455,9 +455,9 @@ let add_elem env =
                 Some
                   { constructor_arg_betas = [ value ]
                   ; constructor_arg_type =
-                      make
+                      Type_expr.make
                         (Ttyp_tuple
-                           [ make (Ttyp_constr ([ value' ], "key")); value' ])
+                           [ Type_expr.make (Ttyp_constr ([ value' ], "key")); value' ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -478,9 +478,9 @@ let add_dependent_assoc_list abbrevs =
 
 let add_elem_mapper env =
   let name = "elem_mapper" in
-  let a = Var.make () in
-  let a' = Types.of_var a in
-  let type_ = make (Ttyp_constr ([], name)) in
+  let a = Type_var.make () in
+  let a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -490,10 +490,10 @@ let add_elem_mapper env =
             ; label_alphas = []
             ; label_betas = [ a ]
             ; label_arg =
-                make
+                Type_expr.make
                   (Ttyp_arrow
-                     ( make (Ttyp_constr ([ a' ], "key"))
-                     , make (Ttyp_arrow (a', a')) ))
+                     ( Type_expr.make (Ttyp_constr ([ a' ], "key"))
+                     , Type_expr.make (Ttyp_arrow (a', a')) ))
             ; label_type = type_
             }
           ]

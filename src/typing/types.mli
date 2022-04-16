@@ -14,52 +14,64 @@
 open! Import
 open Util
 
-
 (** Representation of types and declarations  *)
 
 type tag = string
 
-module Var : sig
-  type t = Decoded.Var.t [@@deriving sexp_of]
+module Type_var : sig
+  type t [@@deriving sexp_of]
   include Comparable with type t := t
   
   val make : unit -> t
   val id : t -> int
+
+  val decode : Decoded.Var.t -> t
 end
 
-type type_var = Var.t [@@deriving sexp_of]
+module Type_expr : sig
+  type t [@@deriving sexp_of]
 
-type type_expr = Decoded.Type.t [@@deriving sexp_of]
+  type desc =
+    | Ttyp_var of Type_var.t
+        (** Type variables ['a]. *)
+    | Ttyp_arrow of t * t 
+        (** Function types [T1 -> T2]. *)
+    | Ttyp_tuple of t list 
+        (** Product (or "tuple") types. *)
+    | Ttyp_constr of type_constr 
+        (** Type constructors. *)
+    | Ttyp_variant of row 
+        (** Polymorphic variant [ [ ... ] ] *)
+    | Ttyp_row_cons of tag * t * row 
+        (** Row cons [< `A : T :: row >] *)
+    | Ttyp_row_uniform of t 
+        (** Uniform row [ ∂<T> ] *)
+  [@@deriving sexp_of]
 
-type type_desc =
-  | Ttyp_var
-      (** Type variables ['a]. *)
-  | Ttyp_arrow of type_expr * type_expr 
-      (** Function types [T1 -> T2]. *)
-  | Ttyp_tuple of type_expr list 
-      (** Product (or "tuple") types. *)
-  | Ttyp_constr of type_constr 
-      (** Type constructors. *)
-  | Ttyp_variant of type_expr 
-      (** Polymorphic variant [ [ ... ] ] *)
-  | Ttyp_row_cons of tag * type_expr * row 
-      (** Row cons [< `A : T, row >] *)
-  | Ttyp_row_uniform of type_expr 
-      (** Uniform row [ ∂<T> ] *)
-[@@deriving sexp_of]
+  and row = t 
+  and type_constr = t list * string 
 
-and row = type_expr
-and type_constr = type_expr list * string [@@deriving sexp_of]
+  include Comparable with type t := t
 
-and scheme = type_var list * type_expr [@@deriving sexp_of]
+  (** [make desc] creates a type expr w/ descriptor [desc] *)
+  val make : desc -> t
 
+  (** [desc type_expr] returns the descriptor of [type_expr] *)
+  val desc : t -> desc
 
-val make : type_desc -> type_expr
-val desc : type_expr -> type_desc
-val id : type_expr -> int
-val of_var : type_var -> type_expr
-val to_var : type_expr -> type_var option
+  (** [id type_expr] returns the id of [type_expr] -- used to prevent cyclic traversals *)
+  val id : t -> int
 
+  val decode : Decoded.Type.t -> t
+end
+
+type type_expr = Type_expr.t [@@deriving sexp_of]
+type row = Type_expr.row [@@deriving sexp_of]
+type type_var = Type_var.t [@@derving sexp_of]
+type scheme = type_var list * type_expr [@@deriving sexp_of]
+
+(* TODO: Fix the duplication of [sexp_of_type_var], report this as a bug! *)
+val sexp_of_type_var : type_var -> Sexp.t
 
 (** [pp_type_expr_mach ppf type_expr] pretty prints an explicit tree of the 
     type expression [type_expr]. *)
@@ -68,7 +80,6 @@ val pp_type_expr_mach : indent:string -> type_expr Pretty_printer.t
 (** [pp_type_expr ppf type_expr] pretty prints the syntactic representation of the
     type expression [type_expr]. *)
 val pp_type_expr : type_expr Pretty_printer.t
-
 
 (* Type definitions *)
 

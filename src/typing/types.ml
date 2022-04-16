@@ -16,12 +16,12 @@ open Util.Pretty_printer
 
 type tag = string [@@deriving sexp_of]
 
-module Var = struct
+module Type_var = struct
   module T = struct
     type t = Decoded.Var.t [@@deriving sexp_of]
 
     let compare t1 t2 = Int.compare (Decoded.Var.id t1) (Decoded.Var.id t2)
-    let t_of_sexp _ = Decoded.Var.make ()
+    let t_of_sexp _ = raise_s [%message "Var.t_of_sexp is not supported"]
   end
 
   include T
@@ -29,51 +29,67 @@ module Var = struct
 
   let make = Decoded.Var.make
   let id = Decoded.Var.id
+  let decode t = t
 end
 
-type type_var = Var.t [@@deriving sexp_of]
+module Type_expr = struct
+  module T = struct
+    type t = Decoded.Type.t [@@deriving sexp_of]
 
-type type_expr = Decoded.Type.t [@@deriving sexp_of]
+    and desc =
+      | Ttyp_var of Type_var.t
+      | Ttyp_arrow of t * t
+      | Ttyp_tuple of t list
+      | Ttyp_constr of type_constr
+      | Ttyp_variant of t
+      | Ttyp_row_cons of tag * t * row
+      | Ttyp_row_uniform of t
 
-and type_desc =
-  | Ttyp_var
-  | Ttyp_arrow of type_expr * type_expr
-  | Ttyp_tuple of type_expr list
-  | Ttyp_constr of type_constr
-  | Ttyp_variant of type_expr
-  | Ttyp_row_cons of tag * type_expr * row
-  | Ttyp_row_uniform of type_expr
+    and row = t
+    and type_constr = t list * string
 
-and row = type_expr
-and type_constr = type_expr list * string [@@deriving sexp_of]
-and scheme = type_var list * type_expr [@@deriving sexp_of]
+    let compare t1 t2 = Int.compare (Decoded.Type.id t1) (Decoded.Type.id t2)
+    let t_of_sexp _ = raise_s [%message "Type_expr.t_of_sexp is not supported"]
+  end
 
-let make (desc' : type_desc) =
-  let open Decoded.Type in
-  match desc' with
-  | Ttyp_var -> var ()
-  | Ttyp_arrow (t1, t2) -> former (Arrow (t1, t2))
-  | Ttyp_tuple ts -> former (Tuple ts)
-  | Ttyp_constr (ts, constr_name) -> former (Constr (ts, constr_name))
-  | Ttyp_variant t -> former (Variant t)
-  | Ttyp_row_cons (tag, t1, t2) -> row_cons tag t1 t2
-  | Ttyp_row_uniform t -> row_uniform t
+  include T
+  include Comparable.Make (T)
 
-
-let desc type_expr =
-  match Decoded.Type.desc type_expr with
-  | Var -> Ttyp_var
-  | Former (Arrow (t1, t2)) -> Ttyp_arrow (t1, t2)
-  | Former (Tuple ts) -> Ttyp_tuple ts
-  | Former (Constr (ts, constr_name)) -> Ttyp_constr (ts, constr_name)
-  | Former (Variant t) -> Ttyp_variant t
-  | Row_cons (tag, t1, t2) -> Ttyp_row_cons (tag, t1, t2)
-  | Row_uniform t -> Ttyp_row_uniform t
+  let make desc =
+    let make = Decoded.Type.make in
+    match desc with
+    | Ttyp_var var -> make (Var var)
+    | Ttyp_arrow (t1, t2) -> make (Former (Arrow (t1, t2)))
+    | Ttyp_tuple ts -> make (Former (Tuple ts))
+    | Ttyp_constr (ts, constr_name) -> make (Former (Constr (ts, constr_name)))
+    | Ttyp_variant t -> make (Former (Variant t))
+    | Ttyp_row_cons (tag, t1, t2) -> make (Row_cons (tag, t1, t2))
+    | Ttyp_row_uniform t -> make (Row_uniform t)
 
 
-let id t = Decoded.Type.id t
-let of_var var = Decoded.Type.of_var var
-let to_var = Decoded.Type.to_var
+  let desc type_expr =
+    match Decoded.Type.desc type_expr with
+    | Var var -> Ttyp_var var
+    | Former (Arrow (t1, t2)) -> Ttyp_arrow (t1, t2)
+    | Former (Tuple ts) -> Ttyp_tuple ts
+    | Former (Constr (ts, constr_name)) -> Ttyp_constr (ts, constr_name)
+    | Former (Variant t) -> Ttyp_variant t
+    | Row_cons (tag, t1, t2) -> Ttyp_row_cons (tag, t1, t2)
+    | Row_uniform t -> Ttyp_row_uniform t
+
+  let id t = Decoded.Type.id t
+  let decode t = t
+end
+
+type type_expr = Type_expr.t [@@deriving sexp_of]
+
+type row = Type_expr.row [@@deriving sexp_of]
+
+type type_var = Type_var.t [@@derving sexp_of]
+
+let sexp_of_type_var = Type_var.sexp_of_t
+
+type scheme = type_var list * type_expr [@@deriving sexp_of]
 
 (* Type definitions *)
 
@@ -148,9 +164,8 @@ let indent_space = "   "
 let rec pp_type_expr_mach ~indent ppf type_expr =
   let print = Format.fprintf ppf "%sType expr: %s@." indent in
   let indent = indent_space ^ indent in
-  match desc type_expr with
-  | Ttyp_var ->
-    print (Format.asprintf "Variable: %d" (Decoded.Type.id type_expr))
+  match Type_expr.desc type_expr with
+  | Ttyp_var var -> print (Format.asprintf "Variable: %d" (Type_var.id var))
   | Ttyp_arrow (t1, t2) ->
     print "Arrow";
     pp_type_expr_mach ~indent ppf t1;
@@ -176,8 +191,8 @@ let rec pp_type_expr_mach ~indent ppf type_expr =
 
 let pp_type_expr ppf type_expr =
   let rec loop ?(parens = false) ppf type_expr =
-    match desc type_expr with
-    | Ttyp_var -> Format.fprintf ppf "%d" (Decoded.Type.id type_expr)
+    match Type_expr.desc type_expr with
+    | Ttyp_var var -> Format.fprintf ppf "%d" (Type_var.id var)
     | Ttyp_arrow (t1, t2) ->
       let pp ppf (t1, t2) =
         Format.fprintf
@@ -266,7 +281,11 @@ let pp_constructor_argument_mach ~indent ppf constr_arg =
     ppf
     "%sConstructor betas: %s@."
     indent
-    (String.concat ~sep:" " (List.map ~f:(fun t -> Decoded.Var.id t |> Int.to_string) constr_arg.constructor_arg_betas));
+    (String.concat
+       ~sep:" "
+       (List.map
+          ~f:(fun t -> Decoded.Var.id t |> Int.to_string)
+          constr_arg.constructor_arg_betas));
   pp_type_expr_mach ~indent ppf constr_arg.constructor_arg_type
 
 
@@ -286,7 +305,11 @@ let pp_constructor_declaration_mach
     ppf
     "%sConstructor alphas: %s@."
     indent
-    (String.concat ~sep:" " (List.map ~f:(fun t -> Decoded.Var.id t |> Int.to_string) constr_decl.constructor_alphas));
+    (String.concat
+       ~sep:" "
+       (List.map
+          ~f:(fun t -> Decoded.Var.id t |> Int.to_string)
+          constr_decl.constructor_alphas));
   Format.fprintf ppf "%sConstructor type:@." indent;
   pp_type_expr_mach
     ~indent:(indent_space ^ indent)
@@ -308,12 +331,20 @@ let pp_label_declaration_mach ~indent ppf (label_decl : label_declaration) =
     ppf
     "%sLabel alphas: %s@."
     indent
-    (String.concat ~sep:" " (List.map ~f:(fun t -> Decoded.Var.id t |> Int.to_string) label_decl.label_alphas));
+    (String.concat
+       ~sep:" "
+       (List.map
+          ~f:(fun t -> Decoded.Var.id t |> Int.to_string)
+          label_decl.label_alphas));
   Format.fprintf
     ppf
     "%sLabel betas: %s@."
     indent
-    (String.concat ~sep:" " (List.map ~f:(fun t -> Decoded.Var.id t |> Int.to_string) label_decl.label_betas));
+    (String.concat
+       ~sep:" "
+       (List.map
+          ~f:(fun t -> Decoded.Var.id t |> Int.to_string)
+          label_decl.label_betas));
   pp_type_expr_mach ~indent ppf label_decl.label_arg;
   pp_type_expr_mach ~indent ppf label_decl.label_type
 
@@ -326,7 +357,11 @@ let pp_alias_mach ~indent ppf alias =
     ppf
     "%sAlias alphas: %s@."
     indent
-    (String.concat ~sep:" " (List.map ~f:(fun t -> Decoded.Var.id t |> Int.to_string) alias.alias_alphas));
+    (String.concat
+       ~sep:" "
+       (List.map
+          ~f:(fun t -> Decoded.Var.id t |> Int.to_string)
+          alias.alias_alphas));
   pp_type_expr_mach ~indent ppf alias.alias_type
 
 

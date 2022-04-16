@@ -18,7 +18,7 @@ open Types
 (** Abstract syntax tree after typing *)
 
 type 'a instance = 'a * type_expr list [@@deriving sexp_of]
-and 'a abstraction = Decoded.Var.t list * 'a [@@deriving sexp_of]
+and 'a abstraction = Type_var.t list * 'a [@@deriving sexp_of]
 
 type pattern =
   { pat_desc : pattern_desc
@@ -260,7 +260,7 @@ and pp_abstraction_mach ~indent ~pp ppf ((variables, t) : _ abstraction) =
     ppf
     "%sVariables: %s@."
     indent
-    (List.map variables ~f:(fun var -> var |> Types.Var.id |> Int.to_string)
+    (List.map variables ~f:(fun var -> var |> Type_var.id |> Int.to_string)
     |> String.concat ~sep:",");
   pp ~indent ppf t
 
@@ -299,7 +299,7 @@ let pp_scheme_mach ~indent ppf (variables, type_expr) =
     ppf
     "%sVariables: %s@."
     indent
-    (String.concat ~sep:"," (List.map ~f:(fun t -> Decoded.Var.id t |> Int.to_string) variables));
+    (String.concat ~sep:"," (List.map ~f:(fun t -> Type_var.id t |> Int.to_string) variables));
   pp_type_expr_mach ~indent ppf type_expr
 
 
@@ -328,7 +328,7 @@ let pp_extension_constructor_mach ~indent ppf ext_constr =
     ppf
     "%sExtension parameters: %s@."
     indent
-    (String.concat ~sep:" " (List.map ~f:(fun t -> Decoded.Var.id t |> Int.to_string) ext_constr.text_params));
+    (String.concat ~sep:" " (List.map ~f:(fun t -> Type_var.id t |> Int.to_string) ext_constr.text_params));
   pp_extension_constructor_kind_mach ~indent ppf ext_constr.text_kind
 
 

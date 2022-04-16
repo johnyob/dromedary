@@ -23,7 +23,7 @@ module Algebra = struct
   module Type_var = struct
     type t = string [@@deriving sexp_of]
 
-    let of_int x = "α" ^ Int.to_string x
+    let of_int x = "a" ^ Int.to_string x
   end
 
   module Type_former = struct

@@ -39,7 +39,7 @@ let print_infer_result
       "Variables: %s@."
       (String.concat
          ~sep:","
-         (List.map ~f:(fun var -> Var.id var |> Int.to_string) variables));
+         (List.map ~f:(fun var -> Type_var.id var |> Int.to_string) variables));
     Typedtree.pp_expression_mach ppf texp
   | Error err -> Sexp.to_string_hum err |> print_endline
 
@@ -62,10 +62,10 @@ let print_infer_result'
 
 let add_list env =
   let name = "list" in
-  let a = Var.make () in
+  let a = Type_var.make () in
   let params = [ a ] in
-  let a' = Types.of_var a in
-  let type_ = make (Ttyp_constr ([ a' ], name)) in
+  let a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -82,7 +82,8 @@ let add_list env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type = make (Ttyp_tuple [ a'; type_ ])
+                  ; constructor_arg_type =
+                      Type_expr.make (Ttyp_tuple [ a'; type_ ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -1621,12 +1622,12 @@ let%expect_test "let rec - polymorphic recursion" =
 
 let add_eq env =
   let name = "eq" in
-  let a = Var.make () in
-  let b = Var.make () in
+  let a = Type_var.make () in
+  let b = Type_var.make () in
   let params = [ a; b ] in
-  let a' = Types.of_var a
-  and b' = Types.of_var b in
-  let type_ = make (Ttyp_constr ([ a'; b' ], name)) in
+  let a' = Type_expr.make (Ttyp_var a)
+  and b' = Type_expr.make (Ttyp_var b) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a'; b' ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -2492,16 +2493,16 @@ let%expect_test "abbrev - morel" =
 
 let add_term env =
   let name = "term" in
-  let a = Var.make () in
-  let a' = Types.of_var a in
+  let a = Type_var.make () in
+  let a' = Type_expr.make (Ttyp_var a) in
   let alphas = [ a ] in
-  let type_ = make (Ttyp_constr ([ a' ], name)) in
-  let int = make (Ttyp_constr ([], "int")) in
-  let bool = make (Ttyp_constr ([], "bool")) in
-  let b1 = Var.make () in
-  let b2 = Var.make () in
-  let b1' = Types.of_var b1 in
-  let b2' = Types.of_var b2 in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
+  let int = Type_expr.make (Ttyp_constr ([], "int")) in
+  let bool = Type_expr.make (Ttyp_constr ([], "bool")) in
+  let b1 = Type_var.make () in
+  let b2 = Type_var.make () in
+  let b1' = Type_expr.make (Ttyp_var b1) in
+  let b2' = Type_expr.make (Ttyp_var b2) in
   Env.add_type_decl
     env
     { type_name = name
@@ -2519,7 +2520,8 @@ let add_term env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type = make (Ttyp_constr ([ int ], name))
+                  ; constructor_arg_type =
+                      Type_expr.make (Ttyp_constr ([ int ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', int ]
@@ -2537,11 +2539,11 @@ let add_term env =
                 Some
                   { constructor_arg_betas = []
                   ; constructor_arg_type =
-                      make
+                      Type_expr.make
                         (Ttyp_tuple
-                           [ make (Ttyp_constr ([ bool ], name))
-                           ; make (Ttyp_constr ([ a' ], name))
-                           ; make (Ttyp_constr ([ a' ], name))
+                           [ Type_expr.make (Ttyp_constr ([ bool ], name))
+                           ; Type_expr.make (Ttyp_constr ([ a' ], name))
+                           ; Type_expr.make (Ttyp_constr ([ a' ], name))
                            ])
                   }
             ; constructor_type = type_
@@ -2553,14 +2555,15 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make
+                      Type_expr.make
                         (Ttyp_tuple
-                           [ make (Ttyp_constr ([ b1' ], name))
-                           ; make (Ttyp_constr ([ b2' ], name))
+                           [ Type_expr.make (Ttyp_constr ([ b1' ], name))
+                           ; Type_expr.make (Ttyp_constr ([ b2' ], name))
                            ])
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ a', make (Ttyp_tuple [ b1'; b2' ]) ]
+            ; constructor_constraints =
+                [ a', Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ]
             }
           ; { constructor_name = "Fst"
             ; constructor_alphas = alphas
@@ -2568,8 +2571,9 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make
-                        (Ttyp_constr ([ make (Ttyp_tuple [ b1'; b2' ]) ], name))
+                      Type_expr.make
+                        (Ttyp_constr
+                           ([ Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', b1' ]
@@ -2580,8 +2584,9 @@ let add_term env =
                 Some
                   { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make
-                        (Ttyp_constr ([ make (Ttyp_tuple [ b1'; b2' ]) ], name))
+                      Type_expr.make
+                        (Ttyp_constr
+                           ([ Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', b2' ]
@@ -3207,9 +3212,9 @@ let%expect_test "term - eval" =
 let add_boxed_id env =
   let name = "boxed_id" in
   let alphas = [] in
-  let type_ = make (Ttyp_constr ([], name)) in
-  let a = Var.make () in
-  let a' = Types.of_var a in
+  let type_ = Type_expr.make (Ttyp_constr ([], name)) in
+  let a = Type_var.make () in
+  let a' = Type_expr.make (Ttyp_var a) in
   Env.add_type_decl
     env
     { type_name = name
@@ -3218,7 +3223,7 @@ let add_boxed_id env =
           [ { label_name = "f"
             ; label_alphas = alphas
             ; label_betas = [ a ]
-            ; label_arg = make (Ttyp_arrow (a', a'))
+            ; label_arg = Type_expr.make (Ttyp_arrow (a', a'))
             ; label_type = type_
             }
           ]
@@ -3336,10 +3341,10 @@ let%expect_test "semi-explicit first-class poly-1" =
 
 let add_tree env =
   let name = "tree" in
-  let a = Var.make () in
+  let a = Type_var.make () in
   let params = [ a ]
-  and a' = Types.of_var a in
-  let type_ = make (Ttyp_constr ([ a' ], name)) in
+  and a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -3356,7 +3361,8 @@ let add_tree env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type = make (Ttyp_tuple [ a'; type_; a' ])
+                  ; constructor_arg_type =
+                      Type_expr.make (Ttyp_tuple [ a'; type_; a' ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -3367,10 +3373,10 @@ let add_tree env =
 
 let add_option env =
   let name = "option" in
-  let a = Var.make () in
+  let a = Type_var.make () in
   let params = [ a ]
-  and a' = Types.of_var a in
-  let type_ = make (Ttyp_constr ([ a' ], name)) in
+  and a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -3392,18 +3398,20 @@ let add_option env =
           ]
     }
 
-let%expect_test "is even, is odd" = 
-   let exp = 
-      {| 
+
+let%expect_test "is even, is odd" =
+  let exp =
+    {| 
          let rec is_even = fun n -> 
             if n = 0 then true else is_odd (n - 1)
          and is_odd = fun n -> 
             if n = 1 then true else is_even (n - 1)
          in ()
       |}
-   in
-   print_infer_result' ~env:Env.empty exp;
-   [%expect {|
+  in
+  print_infer_result' ~env:Env.empty exp;
+  [%expect
+    {|
      Variables:
      Expression:
      └──Expression:
