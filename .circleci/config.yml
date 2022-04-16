@@ -15,6 +15,9 @@ jobs:
       - restore_cache:
           key: cache-{{ checksum "dromedary.opam" }}
       - run:
+          name: "Opam update"
+          command: opam update
+      - run:
           name: "Install dependencies"
           command: sudo apt-get install -y m4  && opam install --yes . --deps-only
       - save_cache:
