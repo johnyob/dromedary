@@ -9,7 +9,8 @@ build:
 install:
 	opam update
 	opam install . --deps-only
-	
+	sudo apt-get install -y libgraph-easy-perl
+
 test:
 	dune runtest
 
