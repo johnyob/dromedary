@@ -19,12 +19,10 @@
  (description
   "Dromedary is an experimental subset of OCaml, using constraint-based type inference!")
  (depends
-  (ocaml
-   (= 4.12.0))
   (dune
    (>= 2.9))
   (base
-   (= v0.14.0))
+   (= v0.14.1))
   (core
    (= v0.14.1))
   (core_bench
@@ -34,11 +32,11 @@
   (ppx_jane
    (= v0.14.0))
   (ppx_sexp_conv
-   (= v0.14.1))
+   (= v0.14.3))
   (ppx_compare
    (= v0.14.0))
   (ppx_deriving
-   (= 4.5))
+   (= 5.2.1))
   (ppx_let
    (= v0.14.0))
   (vec
@@ -55,8 +53,6 @@
    (= 1.4.0))
   (qcheck-alcotest
    (= 0.17))
-  (ppx_deriving_qcheck
-   (= 0.2.0))
   (menhir
    (= 20210419))
   (menhirLib
