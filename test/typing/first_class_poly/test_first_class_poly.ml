@@ -80,19 +80,19 @@ let%expect_test "poly-1" =
           └──Value description:
              └──Name: fold_left
              └──Scheme:
-                └──Variables: a12720,a12719
+                └──Variables: a26297,a26296
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: a12719
+                      └──Type expr: Variable: a26296
                    └──Type expr: Arrow
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a12720
+                         └──Type expr: Variable: a26297
                          └──Type expr: Arrow
-                            └──Type expr: Variable: a12719
-                            └──Type expr: Variable: a12720
+                            └──Type expr: Variable: a26296
+                            └──Type expr: Variable: a26297
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a12720
-                         └──Type expr: Variable: a12720
+                         └──Type expr: Variable: a26297
+                         └──Type expr: Variable: a26297
              └──Primitive name: %fold_left
        └──Structure item: Let
           └──Value bindings:
@@ -100,73 +100,73 @@ let%expect_test "poly-1" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: a12738
+                         └──Type expr: Variable: a26315
                       └──Type expr: Constructor: fold
-                         └──Type expr: Variable: a12738
+                         └──Type expr: Variable: a26315
                    └──Desc: Variable: f
                 └──Abstraction:
                    └──Variables:
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: a12738
+                            └──Type expr: Variable: a26315
                          └──Type expr: Constructor: fold
-                            └──Type expr: Variable: a12738
+                            └──Type expr: Variable: a26315
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: a12738
+                               └──Type expr: Variable: a26315
                             └──Desc: Variable: xs
                          └──Expression:
                             └──Type expr: Constructor: fold
-                               └──Type expr: Variable: a12738
+                               └──Type expr: Variable: a26315
                             └──Desc: Record
                                └──Label description:
                                   └──Label: fold
                                   └──Label argument type:
                                      └──Type expr: Arrow
                                         └──Type expr: Arrow
-                                           └──Type expr: Variable: a12746
+                                           └──Type expr: Variable: a26323
                                            └──Type expr: Arrow
-                                              └──Type expr: Variable: a12738
-                                              └──Type expr: Variable: a12746
+                                              └──Type expr: Variable: a26315
+                                              └──Type expr: Variable: a26323
                                         └──Type expr: Arrow
-                                           └──Type expr: Variable: a12746
-                                           └──Type expr: Variable: a12746
+                                           └──Type expr: Variable: a26323
+                                           └──Type expr: Variable: a26323
                                   └──Label type:
                                      └──Type expr: Constructor: fold
-                                        └──Type expr: Variable: a12738
+                                        └──Type expr: Variable: a26315
                                └──Expression:
                                   └──Type expr: Arrow
                                      └──Type expr: Arrow
-                                        └──Type expr: Variable: a12746
+                                        └──Type expr: Variable: a26323
                                         └──Type expr: Arrow
-                                           └──Type expr: Variable: a12738
-                                           └──Type expr: Variable: a12746
+                                           └──Type expr: Variable: a26315
+                                           └──Type expr: Variable: a26323
                                      └──Type expr: Arrow
-                                        └──Type expr: Variable: a12746
-                                        └──Type expr: Variable: a12746
+                                        └──Type expr: Variable: a26323
+                                        └──Type expr: Variable: a26323
                                   └──Desc: Application
                                      └──Expression:
                                         └──Type expr: Arrow
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: a12738
+                                              └──Type expr: Variable: a26315
                                            └──Type expr: Arrow
                                               └──Type expr: Arrow
-                                                 └──Type expr: Variable: a12746
+                                                 └──Type expr: Variable: a26323
                                                  └──Type expr: Arrow
-                                                    └──Type expr: Variable: a12738
-                                                    └──Type expr: Variable: a12746
+                                                    └──Type expr: Variable: a26315
+                                                    └──Type expr: Variable: a26323
                                               └──Type expr: Arrow
-                                                 └──Type expr: Variable: a12746
-                                                 └──Type expr: Variable: a12746
+                                                 └──Type expr: Variable: a26323
+                                                 └──Type expr: Variable: a26323
                                         └──Desc: Variable
                                            └──Variable: fold_left
-                                           └──Type expr: Variable: a12746
-                                           └──Type expr: Variable: a12738
+                                           └──Type expr: Variable: a26323
+                                           └──Type expr: Variable: a26315
                                      └──Expression:
                                         └──Type expr: Constructor: list
-                                           └──Type expr: Variable: a12738
+                                           └──Type expr: Variable: a26315
                                         └──Desc: Variable
                                            └──Variable: xs
        └──Structure item: Let
@@ -395,21 +395,21 @@ let%expect_test "poly-2" =
              └──Value binding:
                 └──Pattern:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: a12865
-                      └──Type expr: Variable: a12865
+                      └──Type expr: Variable: a26442
+                      └──Type expr: Variable: a26442
                    └──Desc: Variable: id
                 └──Abstraction:
-                   └──Variables: a12865,a12865
+                   └──Variables: a26442,a26442
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a12865
-                         └──Type expr: Variable: a12865
+                         └──Type expr: Variable: a26442
+                         └──Type expr: Variable: a26442
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: a12865
+                            └──Type expr: Variable: a26442
                             └──Desc: Variable: x
                          └──Expression:
-                            └──Type expr: Variable: a12865
+                            └──Type expr: Variable: a26442
                             └──Desc: Variable
                                └──Variable: x
        └──Structure item: Let
@@ -417,15 +417,15 @@ let%expect_test "poly-2" =
              └──Value binding:
                 └──Pattern:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: a12885
-                      └──Type expr: Variable: a12885
+                      └──Type expr: Variable: a26462
+                      └──Type expr: Variable: a26462
                    └──Desc: Variable: id
                 └──Abstraction:
                    └──Variables:
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a12885
-                         └──Type expr: Variable: a12885
+                         └──Type expr: Variable: a26462
+                         └──Type expr: Variable: a26462
                       └──Desc: Let
                          └──Value bindings:
                             └──Value binding:
@@ -451,21 +451,21 @@ let%expect_test "poly-2" =
                                                  └──Label: id
                                                  └──Label argument type:
                                                     └──Type expr: Arrow
-                                                       └──Type expr: Variable: a12878
-                                                       └──Type expr: Variable: a12878
+                                                       └──Type expr: Variable: a26455
+                                                       └──Type expr: Variable: a26455
                                                  └──Label type:
                                                     └──Type expr: Constructor: id
                                               └──Expression:
                                                  └──Type expr: Arrow
-                                                    └──Type expr: Variable: a12878
-                                                    └──Type expr: Variable: a12878
+                                                    └──Type expr: Variable: a26455
+                                                    └──Type expr: Variable: a26455
                                                  └──Desc: Variable
                                                     └──Variable: id
-                                                    └──Type expr: Variable: a12878
+                                                    └──Type expr: Variable: a26455
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: a12885
-                               └──Type expr: Variable: a12885
+                               └──Type expr: Variable: a26462
+                               └──Type expr: Variable: a26462
                             └──Desc: Field
                                └──Expression:
                                   └──Type expr: Constructor: id
@@ -475,8 +475,8 @@ let%expect_test "poly-2" =
                                   └──Label: id
                                   └──Label argument type:
                                      └──Type expr: Arrow
-                                        └──Type expr: Variable: a12885
-                                        └──Type expr: Variable: a12885
+                                        └──Type expr: Variable: a26462
+                                        └──Type expr: Variable: a26462
                                   └──Label type:
                                      └──Type expr: Constructor: id |}]
 
@@ -545,18 +545,18 @@ let%expect_test "poly-3" =
                             └──Label: pv
                             └──Label argument type:
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: a12896
+                                  └──Type expr: Variable: a26473
                             └──Label type:
                                └──Type expr: Constructor: pty
                          └──Expression:
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: a12896
+                               └──Type expr: Variable: a26473
                             └──Desc: Construct
                                └──Constructor description:
                                   └──Name: Nil
                                   └──Constructor type:
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: a12896 |}]
+                                        └──Type expr: Variable: a26473 |}]
 
 let%expect_test "poly-4" =
   let str = 
@@ -628,18 +628,18 @@ let%expect_test "poly-4" =
                             └──Label: pv
                             └──Label argument type:
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: a12906
+                                  └──Type expr: Variable: a26483
                             └──Label type:
                                └──Type expr: Constructor: pty
                          └──Expression:
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: a12906
+                               └──Type expr: Variable: a26483
                             └──Desc: Construct
                                └──Constructor description:
                                   └──Name: Nil
                                   └──Constructor type:
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: a12906
+                                        └──Type expr: Variable: a26483
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -783,14 +783,14 @@ let%expect_test "poly-5" =
              └──Value binding:
                 └──Variable: g
                 └──Abstraction:
-                   └──Variables: a12963
+                   └──Variables: a26540
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a12963
+                         └──Type expr: Variable: a26540
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: a12963
+                            └──Type expr: Variable: a26540
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: int
@@ -798,26 +798,26 @@ let%expect_test "poly-5" =
              └──Value binding:
                 └──Variable: f
                 └──Abstraction:
-                   └──Variables: a12963
+                   └──Variables: a26540
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a12963
+                         └──Type expr: Variable: a26540
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: a12963
+                            └──Type expr: Variable: a26540
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: int
                             └──Desc: Application
                                └──Expression:
                                   └──Type expr: Arrow
-                                     └──Type expr: Variable: a12963
+                                     └──Type expr: Variable: a26540
                                      └──Type expr: Constructor: int
                                   └──Desc: Variable
                                      └──Variable: f
                                └──Expression:
-                                  └──Type expr: Variable: a12963
+                                  └──Type expr: Variable: a26540
                                   └──Desc: Variable
                                      └──Variable: x
        └──Structure item: Type
@@ -850,42 +850,42 @@ let%expect_test "poly-5" =
              └──Value binding:
                 └──Variable: depth
                 └──Abstraction:
-                   └──Variables: a12980
+                   └──Variables: a26557
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: perfect_tree
-                            └──Type expr: Variable: a12998
+                            └──Type expr: Variable: a26575
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: perfect_tree
-                               └──Type expr: Variable: a12998
+                               └──Type expr: Variable: a26575
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: int
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: perfect_tree
-                                     └──Type expr: Variable: a12998
+                                     └──Type expr: Variable: a26575
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: perfect_tree
-                                  └──Type expr: Variable: a12998
+                                  └──Type expr: Variable: a26575
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: perfect_tree
-                                           └──Type expr: Variable: a12998
+                                           └──Type expr: Variable: a26575
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Leaf
                                               └──Constructor argument type:
-                                                 └──Type expr: Variable: a12998
+                                                 └──Type expr: Variable: a26575
                                               └──Constructor type:
                                                  └──Type expr: Constructor: perfect_tree
-                                                    └──Type expr: Variable: a12998
+                                                    └──Type expr: Variable: a26575
                                            └──Pattern:
-                                              └──Type expr: Variable: a12998
+                                              └──Type expr: Variable: a26575
                                               └──Desc: Any
                                      └──Expression:
                                         └──Type expr: Constructor: int
@@ -893,23 +893,23 @@ let%expect_test "poly-5" =
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: perfect_tree
-                                           └──Type expr: Variable: a12998
+                                           └──Type expr: Variable: a26575
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Node
                                               └──Constructor argument type:
                                                  └──Type expr: Constructor: perfect_tree
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: a12998
-                                                       └──Type expr: Variable: a12998
+                                                       └──Type expr: Variable: a26575
+                                                       └──Type expr: Variable: a26575
                                               └──Constructor type:
                                                  └──Type expr: Constructor: perfect_tree
-                                                    └──Type expr: Variable: a12998
+                                                    └──Type expr: Variable: a26575
                                            └──Pattern:
                                               └──Type expr: Constructor: perfect_tree
                                                  └──Type expr: Tuple
-                                                    └──Type expr: Variable: a12998
-                                                    └──Type expr: Variable: a12998
+                                                    └──Type expr: Variable: a26575
+                                                    └──Type expr: Variable: a26575
                                               └──Desc: Variable: x
                                      └──Expression:
                                         └──Type expr: Constructor: int
@@ -936,19 +936,19 @@ let%expect_test "poly-5" =
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: perfect_tree
                                                           └──Type expr: Tuple
-                                                             └──Type expr: Variable: a12998
-                                                             └──Type expr: Variable: a12998
+                                                             └──Type expr: Variable: a26575
+                                                             └──Type expr: Variable: a26575
                                                        └──Type expr: Constructor: int
                                                     └──Desc: Variable
                                                        └──Variable: depth
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: a12998
-                                                          └──Type expr: Variable: a12998
+                                                          └──Type expr: Variable: a26575
+                                                          └──Type expr: Variable: a26575
                                                  └──Expression:
                                                     └──Type expr: Constructor: perfect_tree
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: a12998
-                                                          └──Type expr: Variable: a12998
+                                                          └──Type expr: Variable: a26575
+                                                          └──Type expr: Variable: a26575
                                                     └──Desc: Variable
                                                        └──Variable: x |}]
 
@@ -1006,42 +1006,42 @@ let%expect_test "poly-6" =
              └──Value binding:
                 └──Variable: depth
                 └──Abstraction:
-                   └──Variables: a13060
+                   └──Variables: a26637
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: perfect_tree
-                            └──Type expr: Variable: a13090
+                            └──Type expr: Variable: a26667
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: perfect_tree
-                               └──Type expr: Variable: a13090
+                               └──Type expr: Variable: a26667
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: int
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: perfect_tree
-                                     └──Type expr: Variable: a13090
+                                     └──Type expr: Variable: a26667
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: perfect_tree
-                                  └──Type expr: Variable: a13090
+                                  └──Type expr: Variable: a26667
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: perfect_tree
-                                           └──Type expr: Variable: a13090
+                                           └──Type expr: Variable: a26667
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Leaf
                                               └──Constructor argument type:
-                                                 └──Type expr: Variable: a13090
+                                                 └──Type expr: Variable: a26667
                                               └──Constructor type:
                                                  └──Type expr: Constructor: perfect_tree
-                                                    └──Type expr: Variable: a13090
+                                                    └──Type expr: Variable: a26667
                                            └──Pattern:
-                                              └──Type expr: Variable: a13090
+                                              └──Type expr: Variable: a26667
                                               └──Desc: Any
                                      └──Expression:
                                         └──Type expr: Constructor: int
@@ -1049,23 +1049,23 @@ let%expect_test "poly-6" =
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: perfect_tree
-                                           └──Type expr: Variable: a13090
+                                           └──Type expr: Variable: a26667
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Node
                                               └──Constructor argument type:
                                                  └──Type expr: Constructor: perfect_tree
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: a13090
-                                                       └──Type expr: Variable: a13090
+                                                       └──Type expr: Variable: a26667
+                                                       └──Type expr: Variable: a26667
                                               └──Constructor type:
                                                  └──Type expr: Constructor: perfect_tree
-                                                    └──Type expr: Variable: a13090
+                                                    └──Type expr: Variable: a26667
                                            └──Pattern:
                                               └──Type expr: Constructor: perfect_tree
                                                  └──Type expr: Tuple
-                                                    └──Type expr: Variable: a13090
-                                                    └──Type expr: Variable: a13090
+                                                    └──Type expr: Variable: a26667
+                                                    └──Type expr: Variable: a26667
                                               └──Desc: Variable: x
                                      └──Expression:
                                         └──Type expr: Constructor: int
@@ -1092,34 +1092,34 @@ let%expect_test "poly-6" =
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: perfect_tree
                                                           └──Type expr: Tuple
-                                                             └──Type expr: Variable: a13090
-                                                             └──Type expr: Variable: a13090
+                                                             └──Type expr: Variable: a26667
+                                                             └──Type expr: Variable: a26667
                                                        └──Type expr: Constructor: int
                                                     └──Desc: Variable
                                                        └──Variable: d
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: a13090
-                                                          └──Type expr: Variable: a13090
+                                                          └──Type expr: Variable: a26667
+                                                          └──Type expr: Variable: a26667
                                                  └──Expression:
                                                     └──Type expr: Constructor: perfect_tree
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: a13090
-                                                          └──Type expr: Variable: a13090
+                                                          └──Type expr: Variable: a26667
+                                                          └──Type expr: Variable: a26667
                                                     └──Desc: Variable
                                                        └──Variable: x
              └──Value binding:
                 └──Variable: d
                 └──Abstraction:
-                   └──Variables: a13073
+                   └──Variables: a26650
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: perfect_tree
-                            └──Type expr: Variable: a13073
+                            └──Type expr: Variable: a26650
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: perfect_tree
-                               └──Type expr: Variable: a13073
+                               └──Type expr: Variable: a26650
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: int
@@ -1127,14 +1127,14 @@ let%expect_test "poly-6" =
                                └──Expression:
                                   └──Type expr: Arrow
                                      └──Type expr: Constructor: perfect_tree
-                                        └──Type expr: Variable: a13073
+                                        └──Type expr: Variable: a26650
                                      └──Type expr: Constructor: int
                                   └──Desc: Variable
                                      └──Variable: depth
-                                     └──Type expr: Variable: a13073
+                                     └──Type expr: Variable: a26650
                                └──Expression:
                                   └──Type expr: Constructor: perfect_tree
-                                     └──Type expr: Variable: a13073
+                                     └──Type expr: Variable: a26650
                                   └──Desc: Variable
                                      └──Variable: x |}]
 
@@ -1245,17 +1245,17 @@ let%expect_test "poly-11" =
              └──Value binding:
                 └──Variable: id
                 └──Abstraction:
-                   └──Variables: a13258
+                   └──Variables: a26835
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a13316
-                         └──Type expr: Variable: a13316
+                         └──Type expr: Variable: a26893
+                         └──Type expr: Variable: a26893
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: a13316
+                            └──Type expr: Variable: a26893
                             └──Desc: Variable: x
                          └──Expression:
-                            └──Type expr: Variable: a13316
+                            └──Type expr: Variable: a26893
                             └──Desc: Variable
                                └──Variable: x
              └──Value binding:

@@ -130,6 +130,7 @@
 
 
 %{
+[@@@coverage exclude_file]
 open Ast_types
 open Parsetree
 

@@ -28,7 +28,7 @@ let%expect_test "ambiguity-1" =
   print_infer_result str;
   [%expect
     {|
-    ("Type escape it's equational scope" (type_expr ((desc (Ttyp_var a297))))) |}]
+    ("Type escape it's equational scope" (type_expr ((desc (Ttyp_var a358))))) |}]
 
 let%expect_test "ambiguity-2" =
   let str =
@@ -49,7 +49,7 @@ let%expect_test "ambiguity-2" =
   print_infer_result str;
   [%expect
     {|
-    ("Type escape it's equational scope" (type_expr ((desc (Ttyp_var a299))))) |}]
+    ("Type escape it's equational scope" (type_expr ((desc (Ttyp_var a360))))) |}]
 
 let%expect_test "ambiguity-3" =
   let str =
@@ -72,7 +72,7 @@ let%expect_test "ambiguity-3" =
   print_infer_result str;
   [%expect
     {|
-    ("Type escape it's equational scope" (type_expr ((desc (Ttyp_var a301))))) |}]
+    ("Type escape it's equational scope" (type_expr ((desc (Ttyp_var a362))))) |}]
 
 let%expect_test "ambiguity-4" =
   let str =
@@ -99,7 +99,7 @@ let%expect_test "ambiguity-4" =
   [%expect
     {|
     ("Type escape it's equational scope"
-     (type_expr ((desc (Ttyp_constr ((((desc (Ttyp_var a302)))) list)))))) |}]
+     (type_expr ((desc (Ttyp_constr ((((desc (Ttyp_var a363)))) list)))))) |}]
 
 let%expect_test "ambiguity-5" =
   let str =
@@ -126,7 +126,7 @@ let%expect_test "ambiguity-5" =
   [%expect
     {|
     ("Type escape it's equational scope"
-     (type_expr ((desc (Ttyp_constr ((((desc (Ttyp_var a304)))) list)))))) |}]
+     (type_expr ((desc (Ttyp_constr ((((desc (Ttyp_var a365)))) list)))))) |}]
 
 let%expect_test "ambiguity-6" =
   let str =
@@ -153,8 +153,8 @@ let%expect_test "ambiguity-6" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a306))))
-     (type_expr2 ((desc (Ttyp_var a307))))) |}]
+    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a367))))
+     (type_expr2 ((desc (Ttyp_var a368))))) |}]
 
 let%expect_test "ambiguity-6" =
   let str =
@@ -181,8 +181,8 @@ let%expect_test "ambiguity-6" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a308))))
-     (type_expr2 ((desc (Ttyp_var a309))))) |}]
+    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a369))))
+     (type_expr2 ((desc (Ttyp_var a370))))) |}]
 
 let%expect_test "ambiguity-7" =
   let str =
@@ -209,8 +209,8 @@ let%expect_test "ambiguity-7" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a311))))
-     (type_expr2 ((desc (Ttyp_var a310))))) |}]
+    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a372))))
+     (type_expr2 ((desc (Ttyp_var a371))))) |}]
 
 let%expect_test "ambiguity-8" =
   let str =
@@ -237,8 +237,8 @@ let%expect_test "ambiguity-8" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a312))))
-     (type_expr2 ((desc (Ttyp_var a313))))) |}]
+    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a373))))
+     (type_expr2 ((desc (Ttyp_var a374))))) |}]
 
 let%expect_test "ambiguity-9" =
   let str =
@@ -265,8 +265,8 @@ let%expect_test "ambiguity-9" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a315))))
-     (type_expr2 ((desc (Ttyp_var a314))))) |}]
+    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a376))))
+     (type_expr2 ((desc (Ttyp_var a375))))) |}]
 
 let%expect_test "ambiguity-10" =
   let str =
@@ -293,5 +293,5 @@ let%expect_test "ambiguity-10" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a316))))
-     (type_expr2 ((desc (Ttyp_var a317))))) |}]
+    ("Cannot unify types" (type_expr1 ((desc (Ttyp_var a377))))
+     (type_expr2 ((desc (Ttyp_var a378))))) |}]

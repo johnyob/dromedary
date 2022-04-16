@@ -24,17 +24,17 @@ let%expect_test "" =
                          └──Label: Apple
                          └──Type expr: Constructor: present
                             └──Type expr: Constructor: unit
-                         └──Type expr: Variable: a12121
+                         └──Type expr: Variable: a22837
                    └──Desc: Variable: a
                 └──Abstraction:
-                   └──Variables: a12121
+                   └──Variables: a22837
                    └──Expression:
                       └──Type expr: Variant
                          └──Type expr: Row cons
                             └──Label: Apple
                             └──Type expr: Constructor: present
                                └──Type expr: Constructor: unit
-                            └──Type expr: Variable: a12121
+                            └──Type expr: Variable: a22837
                       └──Desc: Variant
                          └──Variant description:
                             └──Tag: Apple
@@ -43,7 +43,7 @@ let%expect_test "" =
                                   └──Label: Apple
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: unit
-                                  └──Type expr: Variable: a12121
+                                  └──Type expr: Variable: a22837
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -53,17 +53,17 @@ let%expect_test "" =
                          └──Label: Orange
                          └──Type expr: Constructor: present
                             └──Type expr: Constructor: string
-                         └──Type expr: Variable: a12133
+                         └──Type expr: Variable: a22849
                    └──Desc: Variable: b
                 └──Abstraction:
-                   └──Variables: a12133
+                   └──Variables: a22849
                    └──Expression:
                       └──Type expr: Variant
                          └──Type expr: Row cons
                             └──Label: Orange
                             └──Type expr: Constructor: present
                                └──Type expr: Constructor: string
-                            └──Type expr: Variable: a12133
+                            └──Type expr: Variable: a22849
                       └──Desc: Variant
                          └──Variant description:
                             └──Tag: Orange
@@ -72,7 +72,7 @@ let%expect_test "" =
                                   └──Label: Orange
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: string
-                                  └──Type expr: Variable: a12133
+                                  └──Type expr: Variable: a22849
                          └──Expression:
                             └──Type expr: Constructor: string
                             └──Desc: Constant: spain |}]
@@ -104,17 +104,17 @@ let%expect_test "" =
                          └──Label: Apple
                          └──Type expr: Constructor: present
                             └──Type expr: Constructor: unit
-                         └──Type expr: Variable: a12145
+                         └──Type expr: Variable: a22861
                    └──Desc: Variable: a
                 └──Abstraction:
-                   └──Variables: a12145
+                   └──Variables: a22861
                    └──Expression:
                       └──Type expr: Variant
                          └──Type expr: Row cons
                             └──Label: Apple
                             └──Type expr: Constructor: present
                                └──Type expr: Constructor: unit
-                            └──Type expr: Variable: a12145
+                            └──Type expr: Variable: a22861
                       └──Desc: Variant
                          └──Variant description:
                             └──Tag: Apple
@@ -123,7 +123,7 @@ let%expect_test "" =
                                   └──Label: Apple
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: unit
-                                  └──Type expr: Variable: a12145
+                                  └──Type expr: Variable: a22861
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -133,17 +133,17 @@ let%expect_test "" =
                          └──Label: Orange
                          └──Type expr: Constructor: present
                             └──Type expr: Constructor: string
-                         └──Type expr: Variable: a12157
+                         └──Type expr: Variable: a22873
                    └──Desc: Variable: b
                 └──Abstraction:
-                   └──Variables: a12157
+                   └──Variables: a22873
                    └──Expression:
                       └──Type expr: Variant
                          └──Type expr: Row cons
                             └──Label: Orange
                             └──Type expr: Constructor: present
                                └──Type expr: Constructor: string
-                            └──Type expr: Variable: a12157
+                            └──Type expr: Variable: a22873
                       └──Desc: Variant
                          └──Variant description:
                             └──Tag: Orange
@@ -152,7 +152,7 @@ let%expect_test "" =
                                   └──Label: Orange
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: string
-                                  └──Type expr: Variable: a12157
+                                  └──Type expr: Variable: a22873
                          └──Expression:
                             └──Type expr: Constructor: string
                             └──Desc: Constant: spain
@@ -192,10 +192,10 @@ let%expect_test "" =
                                └──Label: Orange
                                └──Type expr: Constructor: present
                                   └──Type expr: Constructor: string
-                               └──Type expr: Variable: a12200
+                               └──Type expr: Variable: a22916
                    └──Desc: Variable: l
                 └──Abstraction:
-                   └──Variables: a12200
+                   └──Variables: a22916
                    └──Expression:
                       └──Type expr: Constructor: list
                          └──Type expr: Variant
@@ -207,7 +207,7 @@ let%expect_test "" =
                                   └──Label: Orange
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: string
-                                  └──Type expr: Variable: a12200
+                                  └──Type expr: Variable: a22916
                       └──Desc: Construct
                          └──Constructor description:
                             └──Name: Cons
@@ -222,7 +222,7 @@ let%expect_test "" =
                                            └──Label: Orange
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: string
-                                           └──Type expr: Variable: a12200
+                                           └──Type expr: Variable: a22916
                                   └──Type expr: Constructor: list
                                      └──Type expr: Variant
                                         └──Type expr: Row cons
@@ -233,7 +233,7 @@ let%expect_test "" =
                                               └──Label: Orange
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: string
-                                              └──Type expr: Variable: a12200
+                                              └──Type expr: Variable: a22916
                             └──Constructor type:
                                └──Type expr: Constructor: list
                                   └──Type expr: Variant
@@ -245,7 +245,7 @@ let%expect_test "" =
                                            └──Label: Orange
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: string
-                                           └──Type expr: Variable: a12200
+                                           └──Type expr: Variable: a22916
                          └──Expression:
                             └──Type expr: Tuple
                                └──Type expr: Variant
@@ -257,7 +257,7 @@ let%expect_test "" =
                                         └──Label: Orange
                                         └──Type expr: Constructor: present
                                            └──Type expr: Constructor: string
-                                        └──Type expr: Variable: a12200
+                                        └──Type expr: Variable: a22916
                                └──Type expr: Constructor: list
                                   └──Type expr: Variant
                                      └──Type expr: Row cons
@@ -268,7 +268,7 @@ let%expect_test "" =
                                            └──Label: Orange
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: string
-                                           └──Type expr: Variable: a12200
+                                           └──Type expr: Variable: a22916
                             └──Desc: Tuple
                                └──Expression:
                                   └──Type expr: Variant
@@ -280,14 +280,14 @@ let%expect_test "" =
                                            └──Label: Orange
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: string
-                                           └──Type expr: Variable: a12200
+                                           └──Type expr: Variable: a22916
                                   └──Desc: Variable
                                      └──Variable: a
                                      └──Type expr: Row cons
                                         └──Label: Orange
                                         └──Type expr: Constructor: present
                                            └──Type expr: Constructor: string
-                                        └──Type expr: Variable: a12200
+                                        └──Type expr: Variable: a22916
                                └──Expression:
                                   └──Type expr: Constructor: list
                                      └──Type expr: Variant
@@ -299,7 +299,7 @@ let%expect_test "" =
                                               └──Label: Orange
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: string
-                                              └──Type expr: Variable: a12200
+                                              └──Type expr: Variable: a22916
                                   └──Desc: Construct
                                      └──Constructor description:
                                         └──Name: Cons
@@ -314,7 +314,7 @@ let%expect_test "" =
                                                        └──Label: Orange
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: string
-                                                       └──Type expr: Variable: a12200
+                                                       └──Type expr: Variable: a22916
                                               └──Type expr: Constructor: list
                                                  └──Type expr: Variant
                                                     └──Type expr: Row cons
@@ -325,7 +325,7 @@ let%expect_test "" =
                                                           └──Label: Orange
                                                           └──Type expr: Constructor: present
                                                              └──Type expr: Constructor: string
-                                                          └──Type expr: Variable: a12200
+                                                          └──Type expr: Variable: a22916
                                         └──Constructor type:
                                            └──Type expr: Constructor: list
                                               └──Type expr: Variant
@@ -337,7 +337,7 @@ let%expect_test "" =
                                                        └──Label: Orange
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: string
-                                                       └──Type expr: Variable: a12200
+                                                       └──Type expr: Variable: a22916
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Variant
@@ -349,7 +349,7 @@ let%expect_test "" =
                                                     └──Label: Orange
                                                     └──Type expr: Constructor: present
                                                        └──Type expr: Constructor: string
-                                                    └──Type expr: Variable: a12200
+                                                    └──Type expr: Variable: a22916
                                            └──Type expr: Constructor: list
                                               └──Type expr: Variant
                                                  └──Type expr: Row cons
@@ -360,7 +360,7 @@ let%expect_test "" =
                                                        └──Label: Orange
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: string
-                                                       └──Type expr: Variable: a12200
+                                                       └──Type expr: Variable: a22916
                                         └──Desc: Tuple
                                            └──Expression:
                                               └──Type expr: Variant
@@ -372,14 +372,14 @@ let%expect_test "" =
                                                        └──Label: Orange
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: string
-                                                       └──Type expr: Variable: a12200
+                                                       └──Type expr: Variable: a22916
                                               └──Desc: Variable
                                                  └──Variable: b
                                                  └──Type expr: Row cons
                                                     └──Label: Apple
                                                     └──Type expr: Constructor: present
                                                        └──Type expr: Constructor: unit
-                                                    └──Type expr: Variable: a12200
+                                                    └──Type expr: Variable: a22916
                                            └──Expression:
                                               └──Type expr: Constructor: list
                                                  └──Type expr: Variant
@@ -391,7 +391,7 @@ let%expect_test "" =
                                                           └──Label: Orange
                                                           └──Type expr: Constructor: present
                                                              └──Type expr: Constructor: string
-                                                          └──Type expr: Variable: a12200
+                                                          └──Type expr: Variable: a22916
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
@@ -406,7 +406,7 @@ let%expect_test "" =
                                                                    └──Label: Orange
                                                                    └──Type expr: Constructor: present
                                                                       └──Type expr: Constructor: string
-                                                                   └──Type expr: Variable: a12200 |}]
+                                                                   └──Type expr: Variable: a22916 |}]
 
 let%expect_test "" =
   let str =
@@ -671,11 +671,11 @@ let%expect_test "" =
                └──Value binding:
                   └──Variable: map
                   └──Abstraction:
-                     └──Variables: a12489,a12493
+                     └──Variables: a23205,a23209
                      └──Expression:
                         └──Type expr: Arrow
                            └──Type expr: Mu
-                              └──Variable: a12499
+                              └──Variable: a23215
                               └──Type expr: Variant
                                  └──Type expr: Row cons
                                     └──Label: Nil
@@ -685,32 +685,32 @@ let%expect_test "" =
                                        └──Label: Cons
                                        └──Type expr: Constructor: present
                                           └──Type expr: Tuple
-                                             └──Type expr: Variable: a12493
-                                             └──Type expr: Variable: a12499
+                                             └──Type expr: Variable: a23209
+                                             └──Type expr: Variable: a23215
                                        └──Type expr: Row uniform
                                           └──Type expr: Constructor: absent
                            └──Type expr: Arrow
                               └──Type expr: Arrow
-                                 └──Type expr: Variable: a12493
-                                 └──Type expr: Variable: a12489
+                                 └──Type expr: Variable: a23209
+                                 └──Type expr: Variable: a23205
                               └──Type expr: Mu
-                                 └──Variable: a12490
+                                 └──Variable: a23206
                                  └──Type expr: Variant
                                     └──Type expr: Row cons
                                        └──Label: Cons
                                        └──Type expr: Constructor: present
                                           └──Type expr: Tuple
-                                             └──Type expr: Variable: a12489
-                                             └──Type expr: Variable: a12490
+                                             └──Type expr: Variable: a23205
+                                             └──Type expr: Variable: a23206
                                        └──Type expr: Row cons
                                           └──Label: Nil
                                           └──Type expr: Constructor: present
                                              └──Type expr: Constructor: unit
-                                          └──Type expr: Variable: a12504
+                                          └──Type expr: Variable: a23220
                         └──Desc: Function
                            └──Pattern:
                               └──Type expr: Mu
-                                 └──Variable: a12499
+                                 └──Variable: a23215
                                  └──Type expr: Variant
                                     └──Type expr: Row cons
                                        └──Label: Nil
@@ -720,55 +720,55 @@ let%expect_test "" =
                                           └──Label: Cons
                                           └──Type expr: Constructor: present
                                              └──Type expr: Tuple
-                                                └──Type expr: Variable: a12493
-                                                └──Type expr: Variable: a12499
+                                                └──Type expr: Variable: a23209
+                                                └──Type expr: Variable: a23215
                                           └──Type expr: Row uniform
                                              └──Type expr: Constructor: absent
                               └──Desc: Variable: t
                            └──Expression:
                               └──Type expr: Arrow
                                  └──Type expr: Arrow
-                                    └──Type expr: Variable: a12493
-                                    └──Type expr: Variable: a12489
+                                    └──Type expr: Variable: a23209
+                                    └──Type expr: Variable: a23205
                                  └──Type expr: Mu
-                                    └──Variable: a12490
+                                    └──Variable: a23206
                                     └──Type expr: Variant
                                        └──Type expr: Row cons
                                           └──Label: Cons
                                           └──Type expr: Constructor: present
                                              └──Type expr: Tuple
-                                                └──Type expr: Variable: a12489
-                                                └──Type expr: Variable: a12490
+                                                └──Type expr: Variable: a23205
+                                                └──Type expr: Variable: a23206
                                           └──Type expr: Row cons
                                              └──Label: Nil
                                              └──Type expr: Constructor: present
                                                 └──Type expr: Constructor: unit
-                                             └──Type expr: Variable: a12504
+                                             └──Type expr: Variable: a23220
                               └──Desc: Function
                                  └──Pattern:
                                     └──Type expr: Arrow
-                                       └──Type expr: Variable: a12493
-                                       └──Type expr: Variable: a12489
+                                       └──Type expr: Variable: a23209
+                                       └──Type expr: Variable: a23205
                                     └──Desc: Variable: f
                                  └──Expression:
                                     └──Type expr: Mu
-                                       └──Variable: a12490
+                                       └──Variable: a23206
                                        └──Type expr: Variant
                                           └──Type expr: Row cons
                                              └──Label: Cons
                                              └──Type expr: Constructor: present
                                                 └──Type expr: Tuple
-                                                   └──Type expr: Variable: a12489
-                                                   └──Type expr: Variable: a12490
+                                                   └──Type expr: Variable: a23205
+                                                   └──Type expr: Variable: a23206
                                              └──Type expr: Row cons
                                                 └──Label: Nil
                                                 └──Type expr: Constructor: present
                                                    └──Type expr: Constructor: unit
-                                                └──Type expr: Variable: a12504
+                                                └──Type expr: Variable: a23220
                                     └──Desc: Match
                                        └──Expression:
                                           └──Type expr: Mu
-                                             └──Variable: a12499
+                                             └──Variable: a23215
                                              └──Type expr: Variant
                                                 └──Type expr: Row cons
                                                    └──Label: Nil
@@ -778,14 +778,14 @@ let%expect_test "" =
                                                       └──Label: Cons
                                                       └──Type expr: Constructor: present
                                                          └──Type expr: Tuple
-                                                            └──Type expr: Variable: a12493
-                                                            └──Type expr: Variable: a12499
+                                                            └──Type expr: Variable: a23209
+                                                            └──Type expr: Variable: a23215
                                                       └──Type expr: Row uniform
                                                          └──Type expr: Constructor: absent
                                           └──Desc: Variable
                                              └──Variable: t
                                        └──Type expr: Mu
-                                          └──Variable: a12499
+                                          └──Variable: a23215
                                           └──Type expr: Variant
                                              └──Type expr: Row cons
                                                 └──Label: Nil
@@ -795,8 +795,8 @@ let%expect_test "" =
                                                    └──Label: Cons
                                                    └──Type expr: Constructor: present
                                                       └──Type expr: Tuple
-                                                         └──Type expr: Variable: a12493
-                                                         └──Type expr: Variable: a12499
+                                                         └──Type expr: Variable: a23209
+                                                         └──Type expr: Variable: a23215
                                                    └──Type expr: Row uniform
                                                       └──Type expr: Constructor: absent
                                        └──Cases:
@@ -811,9 +811,9 @@ let%expect_test "" =
                                                          └──Label: Cons
                                                          └──Type expr: Constructor: present
                                                             └──Type expr: Mu
-                                                               └──Variable: a12443
+                                                               └──Variable: a23159
                                                                └──Type expr: Tuple
-                                                                  └──Type expr: Variable: a12493
+                                                                  └──Type expr: Variable: a23209
                                                                   └──Type expr: Variant
                                                                      └──Type expr: Row cons
                                                                         └──Label: Nil
@@ -822,7 +822,7 @@ let%expect_test "" =
                                                                         └──Type expr: Row cons
                                                                            └──Label: Cons
                                                                            └──Type expr: Constructor: present
-                                                                              └──Type expr: Variable: a12443
+                                                                              └──Type expr: Variable: a23159
                                                                            └──Type expr: Row uniform
                                                                               └──Type expr: Constructor: absent
                                                          └──Type expr: Row uniform
@@ -839,9 +839,9 @@ let%expect_test "" =
                                                                └──Label: Cons
                                                                └──Type expr: Constructor: present
                                                                   └──Type expr: Mu
-                                                                     └──Variable: a12443
+                                                                     └──Variable: a23159
                                                                      └──Type expr: Tuple
-                                                                        └──Type expr: Variable: a12493
+                                                                        └──Type expr: Variable: a23209
                                                                         └──Type expr: Variant
                                                                            └──Type expr: Row cons
                                                                               └──Label: Nil
@@ -850,44 +850,44 @@ let%expect_test "" =
                                                                               └──Type expr: Row cons
                                                                                  └──Label: Cons
                                                                                  └──Type expr: Constructor: present
-                                                                                    └──Type expr: Variable: a12443
+                                                                                    └──Type expr: Variable: a23159
                                                                                  └──Type expr: Row uniform
                                                                                     └──Type expr: Constructor: absent
                                                                └──Type expr: Row uniform
                                                                   └──Type expr: Constructor: absent
                                              └──Expression:
                                                 └──Type expr: Mu
-                                                   └──Variable: a12490
+                                                   └──Variable: a23206
                                                    └──Type expr: Variant
                                                       └──Type expr: Row cons
                                                          └──Label: Cons
                                                          └──Type expr: Constructor: present
                                                             └──Type expr: Tuple
-                                                               └──Type expr: Variable: a12489
-                                                               └──Type expr: Variable: a12490
+                                                               └──Type expr: Variable: a23205
+                                                               └──Type expr: Variable: a23206
                                                          └──Type expr: Row cons
                                                             └──Label: Nil
                                                             └──Type expr: Constructor: present
                                                                └──Type expr: Constructor: unit
-                                                            └──Type expr: Variable: a12504
+                                                            └──Type expr: Variable: a23220
                                                 └──Desc: Variant
                                                    └──Variant description:
                                                       └──Tag: Nil
                                                       └──Variant row:
                                                          └──Type expr: Mu
-                                                            └──Variable: a12467
+                                                            └──Variable: a23183
                                                             └──Type expr: Row cons
                                                                └──Label: Cons
                                                                └──Type expr: Constructor: present
                                                                   └──Type expr: Tuple
-                                                                     └──Type expr: Variable: a12489
+                                                                     └──Type expr: Variable: a23205
                                                                      └──Type expr: Variant
-                                                                        └──Type expr: Variable: a12467
+                                                                        └──Type expr: Variable: a23183
                                                                └──Type expr: Row cons
                                                                   └──Label: Nil
                                                                   └──Type expr: Constructor: present
                                                                      └──Type expr: Constructor: unit
-                                                                  └──Type expr: Variable: a12504
+                                                                  └──Type expr: Variable: a23220
                                           └──Case:
                                              └──Pattern:
                                                 └──Type expr: Variant
@@ -899,9 +899,9 @@ let%expect_test "" =
                                                          └──Label: Cons
                                                          └──Type expr: Constructor: present
                                                             └──Type expr: Mu
-                                                               └──Variable: a12443
+                                                               └──Variable: a23159
                                                                └──Type expr: Tuple
-                                                                  └──Type expr: Variable: a12493
+                                                                  └──Type expr: Variable: a23209
                                                                   └──Type expr: Variant
                                                                      └──Type expr: Row cons
                                                                         └──Label: Nil
@@ -910,7 +910,7 @@ let%expect_test "" =
                                                                         └──Type expr: Row cons
                                                                            └──Label: Cons
                                                                            └──Type expr: Constructor: present
-                                                                              └──Type expr: Variable: a12443
+                                                                              └──Type expr: Variable: a23159
                                                                            └──Type expr: Row uniform
                                                                               └──Type expr: Constructor: absent
                                                          └──Type expr: Row uniform
@@ -927,9 +927,9 @@ let%expect_test "" =
                                                                └──Label: Cons
                                                                └──Type expr: Constructor: present
                                                                   └──Type expr: Mu
-                                                                     └──Variable: a12443
+                                                                     └──Variable: a23159
                                                                      └──Type expr: Tuple
-                                                                        └──Type expr: Variable: a12493
+                                                                        └──Type expr: Variable: a23209
                                                                         └──Type expr: Variant
                                                                            └──Type expr: Row cons
                                                                               └──Label: Nil
@@ -938,16 +938,16 @@ let%expect_test "" =
                                                                               └──Type expr: Row cons
                                                                                  └──Label: Cons
                                                                                  └──Type expr: Constructor: present
-                                                                                    └──Type expr: Variable: a12443
+                                                                                    └──Type expr: Variable: a23159
                                                                                  └──Type expr: Row uniform
                                                                                     └──Type expr: Constructor: absent
                                                                └──Type expr: Row uniform
                                                                   └──Type expr: Constructor: absent
                                                    └──Pattern:
                                                       └──Type expr: Mu
-                                                         └──Variable: a12443
+                                                         └──Variable: a23159
                                                          └──Type expr: Tuple
-                                                            └──Type expr: Variable: a12493
+                                                            └──Type expr: Variable: a23209
                                                             └──Type expr: Variant
                                                                └──Type expr: Row cons
                                                                   └──Label: Nil
@@ -956,16 +956,16 @@ let%expect_test "" =
                                                                   └──Type expr: Row cons
                                                                      └──Label: Cons
                                                                      └──Type expr: Constructor: present
-                                                                        └──Type expr: Variable: a12443
+                                                                        └──Type expr: Variable: a23159
                                                                      └──Type expr: Row uniform
                                                                         └──Type expr: Constructor: absent
                                                       └──Desc: Tuple
                                                          └──Pattern:
-                                                            └──Type expr: Variable: a12493
+                                                            └──Type expr: Variable: a23209
                                                             └──Desc: Variable: x
                                                          └──Pattern:
                                                             └──Type expr: Mu
-                                                               └──Variable: a12499
+                                                               └──Variable: a23215
                                                                └──Type expr: Variant
                                                                   └──Type expr: Row cons
                                                                      └──Label: Nil
@@ -975,113 +975,113 @@ let%expect_test "" =
                                                                         └──Label: Cons
                                                                         └──Type expr: Constructor: present
                                                                            └──Type expr: Tuple
-                                                                              └──Type expr: Variable: a12493
-                                                                              └──Type expr: Variable: a12499
+                                                                              └──Type expr: Variable: a23209
+                                                                              └──Type expr: Variable: a23215
                                                                         └──Type expr: Row uniform
                                                                            └──Type expr: Constructor: absent
                                                             └──Desc: Variable: t
                                              └──Expression:
                                                 └──Type expr: Mu
-                                                   └──Variable: a12490
+                                                   └──Variable: a23206
                                                    └──Type expr: Variant
                                                       └──Type expr: Row cons
                                                          └──Label: Cons
                                                          └──Type expr: Constructor: present
                                                             └──Type expr: Tuple
-                                                               └──Type expr: Variable: a12489
-                                                               └──Type expr: Variable: a12490
+                                                               └──Type expr: Variable: a23205
+                                                               └──Type expr: Variable: a23206
                                                          └──Type expr: Row cons
                                                             └──Label: Nil
                                                             └──Type expr: Constructor: present
                                                                └──Type expr: Constructor: unit
-                                                            └──Type expr: Variable: a12504
+                                                            └──Type expr: Variable: a23220
                                                 └──Desc: Variant
                                                    └──Variant description:
                                                       └──Tag: Cons
                                                       └──Variant row:
                                                          └──Type expr: Mu
-                                                            └──Variable: a12467
+                                                            └──Variable: a23183
                                                             └──Type expr: Row cons
                                                                └──Label: Cons
                                                                └──Type expr: Constructor: present
                                                                   └──Type expr: Tuple
-                                                                     └──Type expr: Variable: a12489
+                                                                     └──Type expr: Variable: a23205
                                                                      └──Type expr: Variant
-                                                                        └──Type expr: Variable: a12467
+                                                                        └──Type expr: Variable: a23183
                                                                └──Type expr: Row cons
                                                                   └──Label: Nil
                                                                   └──Type expr: Constructor: present
                                                                      └──Type expr: Constructor: unit
-                                                                  └──Type expr: Variable: a12504
+                                                                  └──Type expr: Variable: a23220
                                                    └──Expression:
                                                       └──Type expr: Mu
-                                                         └──Variable: a12484
+                                                         └──Variable: a23200
                                                          └──Type expr: Tuple
-                                                            └──Type expr: Variable: a12489
+                                                            └──Type expr: Variable: a23205
                                                             └──Type expr: Variant
                                                                └──Type expr: Row cons
                                                                   └──Label: Cons
                                                                   └──Type expr: Constructor: present
-                                                                     └──Type expr: Variable: a12484
+                                                                     └──Type expr: Variable: a23200
                                                                   └──Type expr: Row cons
                                                                      └──Label: Nil
                                                                      └──Type expr: Constructor: present
                                                                         └──Type expr: Constructor: unit
-                                                                     └──Type expr: Variable: a12504
+                                                                     └──Type expr: Variable: a23220
                                                       └──Desc: Tuple
                                                          └──Expression:
-                                                            └──Type expr: Variable: a12489
+                                                            └──Type expr: Variable: a23205
                                                             └──Desc: Application
                                                                └──Expression:
                                                                   └──Type expr: Arrow
-                                                                     └──Type expr: Variable: a12493
-                                                                     └──Type expr: Variable: a12489
+                                                                     └──Type expr: Variable: a23209
+                                                                     └──Type expr: Variable: a23205
                                                                   └──Desc: Variable
                                                                      └──Variable: f
                                                                └──Expression:
-                                                                  └──Type expr: Variable: a12493
+                                                                  └──Type expr: Variable: a23209
                                                                   └──Desc: Variable
                                                                      └──Variable: x
                                                          └──Expression:
                                                             └──Type expr: Mu
-                                                               └──Variable: a12490
+                                                               └──Variable: a23206
                                                                └──Type expr: Variant
                                                                   └──Type expr: Row cons
                                                                      └──Label: Cons
                                                                      └──Type expr: Constructor: present
                                                                         └──Type expr: Tuple
-                                                                           └──Type expr: Variable: a12489
-                                                                           └──Type expr: Variable: a12490
+                                                                           └──Type expr: Variable: a23205
+                                                                           └──Type expr: Variable: a23206
                                                                      └──Type expr: Row cons
                                                                         └──Label: Nil
                                                                         └──Type expr: Constructor: present
                                                                            └──Type expr: Constructor: unit
-                                                                        └──Type expr: Variable: a12504
+                                                                        └──Type expr: Variable: a23220
                                                             └──Desc: Application
                                                                └──Expression:
                                                                   └──Type expr: Arrow
                                                                      └──Type expr: Arrow
-                                                                        └──Type expr: Variable: a12493
-                                                                        └──Type expr: Variable: a12489
+                                                                        └──Type expr: Variable: a23209
+                                                                        └──Type expr: Variable: a23205
                                                                      └──Type expr: Mu
-                                                                        └──Variable: a12490
+                                                                        └──Variable: a23206
                                                                         └──Type expr: Variant
                                                                            └──Type expr: Row cons
                                                                               └──Label: Cons
                                                                               └──Type expr: Constructor: present
                                                                                  └──Type expr: Tuple
-                                                                                    └──Type expr: Variable: a12489
-                                                                                    └──Type expr: Variable: a12490
+                                                                                    └──Type expr: Variable: a23205
+                                                                                    └──Type expr: Variable: a23206
                                                                               └──Type expr: Row cons
                                                                                  └──Label: Nil
                                                                                  └──Type expr: Constructor: present
                                                                                     └──Type expr: Constructor: unit
-                                                                                 └──Type expr: Variable: a12504
+                                                                                 └──Type expr: Variable: a23220
                                                                   └──Desc: Application
                                                                      └──Expression:
                                                                         └──Type expr: Arrow
                                                                            └──Type expr: Mu
-                                                                              └──Variable: a12499
+                                                                              └──Variable: a23215
                                                                               └──Type expr: Variant
                                                                                  └──Type expr: Row cons
                                                                                     └──Label: Nil
@@ -1091,33 +1091,33 @@ let%expect_test "" =
                                                                                        └──Label: Cons
                                                                                        └──Type expr: Constructor: present
                                                                                           └──Type expr: Tuple
-                                                                                             └──Type expr: Variable: a12493
-                                                                                             └──Type expr: Variable: a12499
+                                                                                             └──Type expr: Variable: a23209
+                                                                                             └──Type expr: Variable: a23215
                                                                                        └──Type expr: Row uniform
                                                                                           └──Type expr: Constructor: absent
                                                                            └──Type expr: Arrow
                                                                               └──Type expr: Arrow
-                                                                                 └──Type expr: Variable: a12493
-                                                                                 └──Type expr: Variable: a12489
+                                                                                 └──Type expr: Variable: a23209
+                                                                                 └──Type expr: Variable: a23205
                                                                               └──Type expr: Mu
-                                                                                 └──Variable: a12490
+                                                                                 └──Variable: a23206
                                                                                  └──Type expr: Variant
                                                                                     └──Type expr: Row cons
                                                                                        └──Label: Cons
                                                                                        └──Type expr: Constructor: present
                                                                                           └──Type expr: Tuple
-                                                                                             └──Type expr: Variable: a12489
-                                                                                             └──Type expr: Variable: a12490
+                                                                                             └──Type expr: Variable: a23205
+                                                                                             └──Type expr: Variable: a23206
                                                                                        └──Type expr: Row cons
                                                                                           └──Label: Nil
                                                                                           └──Type expr: Constructor: present
                                                                                              └──Type expr: Constructor: unit
-                                                                                          └──Type expr: Variable: a12504
+                                                                                          └──Type expr: Variable: a23220
                                                                         └──Desc: Variable
                                                                            └──Variable: map
                                                                      └──Expression:
                                                                         └──Type expr: Mu
-                                                                           └──Variable: a12499
+                                                                           └──Variable: a23215
                                                                            └──Type expr: Variant
                                                                               └──Type expr: Row cons
                                                                                  └──Label: Nil
@@ -1127,16 +1127,16 @@ let%expect_test "" =
                                                                                     └──Label: Cons
                                                                                     └──Type expr: Constructor: present
                                                                                        └──Type expr: Tuple
-                                                                                          └──Type expr: Variable: a12493
-                                                                                          └──Type expr: Variable: a12499
+                                                                                          └──Type expr: Variable: a23209
+                                                                                          └──Type expr: Variable: a23215
                                                                                     └──Type expr: Row uniform
                                                                                        └──Type expr: Constructor: absent
                                                                         └──Desc: Variable
                                                                            └──Variable: t
                                                                └──Expression:
                                                                   └──Type expr: Arrow
-                                                                     └──Type expr: Variable: a12493
-                                                                     └──Type expr: Variable: a12489
+                                                                     └──Type expr: Variable: a23209
+                                                                     └──Type expr: Variable: a23205
                                                                   └──Desc: Variable
                                                                      └──Variable: f |}]
 
@@ -1184,7 +1184,7 @@ let%expect_test "" =
                                └──Label: Orange
                                └──Type expr: Constructor: present
                                   └──Type expr: Constructor: string
-                               └──Type expr: Variable: a12528
+                               └──Type expr: Variable: a23244
                       └──Type expr: Constructor: string
                    └──Desc: Variable: show
                 └──Abstraction:
@@ -1200,7 +1200,7 @@ let%expect_test "" =
                                   └──Label: Orange
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: string
-                                  └──Type expr: Variable: a12528
+                                  └──Type expr: Variable: a23244
                          └──Type expr: Constructor: string
                       └──Desc: Function
                          └──Pattern:
@@ -1213,7 +1213,7 @@ let%expect_test "" =
                                      └──Label: Orange
                                      └──Type expr: Constructor: present
                                         └──Type expr: Constructor: string
-                                     └──Type expr: Variable: a12528
+                                     └──Type expr: Variable: a23244
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: string
@@ -1228,7 +1228,7 @@ let%expect_test "" =
                                            └──Label: Orange
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: string
-                                           └──Type expr: Variable: a12528
+                                           └──Type expr: Variable: a23244
                                   └──Desc: Variable
                                      └──Variable: x
                                └──Type expr: Variant
@@ -1240,7 +1240,7 @@ let%expect_test "" =
                                         └──Label: Orange
                                         └──Type expr: Constructor: present
                                            └──Type expr: Constructor: string
-                                        └──Type expr: Variable: a12528
+                                        └──Type expr: Variable: a23244
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
@@ -1253,7 +1253,7 @@ let%expect_test "" =
                                                  └──Label: Orange
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: string
-                                                 └──Type expr: Variable: a12528
+                                                 └──Type expr: Variable: a23244
                                         └──Desc: Variant
                                            └──Variant description:
                                               └──Tag: Apple
@@ -1266,7 +1266,7 @@ let%expect_test "" =
                                                        └──Label: Orange
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: string
-                                                       └──Type expr: Variable: a12528
+                                                       └──Type expr: Variable: a23244
                                      └──Expression:
                                         └──Type expr: Constructor: string
                                         └──Desc: Constant: apple
@@ -1281,7 +1281,7 @@ let%expect_test "" =
                                                  └──Label: Orange
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: string
-                                                 └──Type expr: Variable: a12528
+                                                 └──Type expr: Variable: a23244
                                         └──Desc: Variant
                                            └──Variant description:
                                               └──Tag: Orange
@@ -1294,7 +1294,7 @@ let%expect_test "" =
                                                        └──Label: Orange
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: string
-                                                       └──Type expr: Variable: a12528
+                                                       └──Type expr: Variable: a23244
                                            └──Pattern:
                                               └──Type expr: Constructor: string
                                               └──Desc: Variable: s
@@ -1332,7 +1332,7 @@ let%expect_test "" =
                                                  └──Label: Orange
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: string
-                                                 └──Type expr: Variable: a12528
+                                                 └──Type expr: Variable: a23244
                                         └──Desc: Any
                                      └──Expression:
                                         └──Type expr: Constructor: string
@@ -1383,15 +1383,15 @@ let%expect_test "" =
           └──Value description:
              └──Name: append
              └──Scheme:
-                └──Variables: a12572
+                └──Variables: a23288
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: a12572
+                      └──Type expr: Variable: a23288
                    └──Type expr: Arrow
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: a12572
+                         └──Type expr: Variable: a23288
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: a12572
+                         └──Type expr: Variable: a23288
              └──Primitive name: %append
        └──Structure item: Let
           └──Value bindings:
@@ -1407,10 +1407,10 @@ let%expect_test "" =
                                └──Label: Orange
                                └──Type expr: Constructor: present
                                   └──Type expr: Constructor: string
-                               └──Type expr: Variable: a12628
+                               └──Type expr: Variable: a23344
                    └──Desc: Variable: a
                 └──Abstraction:
-                   └──Variables: a12628
+                   └──Variables: a23344
                    └──Expression:
                       └──Type expr: Constructor: list
                          └──Type expr: Variant
@@ -1422,7 +1422,7 @@ let%expect_test "" =
                                   └──Label: Orange
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: string
-                                  └──Type expr: Variable: a12628
+                                  └──Type expr: Variable: a23344
                       └──Desc: Construct
                          └──Constructor description:
                             └──Name: Cons
@@ -1437,7 +1437,7 @@ let%expect_test "" =
                                            └──Label: Orange
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: string
-                                           └──Type expr: Variable: a12628
+                                           └──Type expr: Variable: a23344
                                   └──Type expr: Constructor: list
                                      └──Type expr: Variant
                                         └──Type expr: Row cons
@@ -1448,7 +1448,7 @@ let%expect_test "" =
                                               └──Label: Orange
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: string
-                                              └──Type expr: Variable: a12628
+                                              └──Type expr: Variable: a23344
                             └──Constructor type:
                                └──Type expr: Constructor: list
                                   └──Type expr: Variant
@@ -1460,7 +1460,7 @@ let%expect_test "" =
                                            └──Label: Orange
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: string
-                                           └──Type expr: Variable: a12628
+                                           └──Type expr: Variable: a23344
                          └──Expression:
                             └──Type expr: Tuple
                                └──Type expr: Variant
@@ -1472,7 +1472,7 @@ let%expect_test "" =
                                         └──Label: Orange
                                         └──Type expr: Constructor: present
                                            └──Type expr: Constructor: string
-                                        └──Type expr: Variable: a12628
+                                        └──Type expr: Variable: a23344
                                └──Type expr: Constructor: list
                                   └──Type expr: Variant
                                      └──Type expr: Row cons
@@ -1483,7 +1483,7 @@ let%expect_test "" =
                                            └──Label: Orange
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: string
-                                           └──Type expr: Variable: a12628
+                                           └──Type expr: Variable: a23344
                             └──Desc: Tuple
                                └──Expression:
                                   └──Type expr: Variant
@@ -1495,7 +1495,7 @@ let%expect_test "" =
                                            └──Label: Orange
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: string
-                                           └──Type expr: Variable: a12628
+                                           └──Type expr: Variable: a23344
                                   └──Desc: Variant
                                      └──Variant description:
                                         └──Tag: Orange
@@ -1508,7 +1508,7 @@ let%expect_test "" =
                                                  └──Label: Orange
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: string
-                                                 └──Type expr: Variable: a12628
+                                                 └──Type expr: Variable: a23344
                                      └──Expression:
                                         └──Type expr: Constructor: string
                                         └──Desc: Constant: morocco
@@ -1523,7 +1523,7 @@ let%expect_test "" =
                                               └──Label: Orange
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: string
-                                              └──Type expr: Variable: a12628
+                                              └──Type expr: Variable: a23344
                                   └──Desc: Construct
                                      └──Constructor description:
                                         └──Name: Cons
@@ -1538,7 +1538,7 @@ let%expect_test "" =
                                                        └──Label: Orange
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: string
-                                                       └──Type expr: Variable: a12628
+                                                       └──Type expr: Variable: a23344
                                               └──Type expr: Constructor: list
                                                  └──Type expr: Variant
                                                     └──Type expr: Row cons
@@ -1549,7 +1549,7 @@ let%expect_test "" =
                                                           └──Label: Orange
                                                           └──Type expr: Constructor: present
                                                              └──Type expr: Constructor: string
-                                                          └──Type expr: Variable: a12628
+                                                          └──Type expr: Variable: a23344
                                         └──Constructor type:
                                            └──Type expr: Constructor: list
                                               └──Type expr: Variant
@@ -1561,7 +1561,7 @@ let%expect_test "" =
                                                        └──Label: Orange
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: string
-                                                       └──Type expr: Variable: a12628
+                                                       └──Type expr: Variable: a23344
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Variant
@@ -1573,7 +1573,7 @@ let%expect_test "" =
                                                     └──Label: Orange
                                                     └──Type expr: Constructor: present
                                                        └──Type expr: Constructor: string
-                                                    └──Type expr: Variable: a12628
+                                                    └──Type expr: Variable: a23344
                                            └──Type expr: Constructor: list
                                               └──Type expr: Variant
                                                  └──Type expr: Row cons
@@ -1584,7 +1584,7 @@ let%expect_test "" =
                                                        └──Label: Orange
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: string
-                                                       └──Type expr: Variable: a12628
+                                                       └──Type expr: Variable: a23344
                                         └──Desc: Tuple
                                            └──Expression:
                                               └──Type expr: Variant
@@ -1596,7 +1596,7 @@ let%expect_test "" =
                                                        └──Label: Orange
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: string
-                                                       └──Type expr: Variable: a12628
+                                                       └──Type expr: Variable: a23344
                                               └──Desc: Variant
                                                  └──Variant description:
                                                     └──Tag: Apple
@@ -1609,7 +1609,7 @@ let%expect_test "" =
                                                              └──Label: Orange
                                                              └──Type expr: Constructor: present
                                                                 └──Type expr: Constructor: string
-                                                             └──Type expr: Variable: a12628
+                                                             └──Type expr: Variable: a23344
                                            └──Expression:
                                               └──Type expr: Constructor: list
                                                  └──Type expr: Variant
@@ -1621,7 +1621,7 @@ let%expect_test "" =
                                                           └──Label: Orange
                                                           └──Type expr: Constructor: present
                                                              └──Type expr: Constructor: string
-                                                          └──Type expr: Variable: a12628
+                                                          └──Type expr: Variable: a23344
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
@@ -1636,7 +1636,7 @@ let%expect_test "" =
                                                                    └──Label: Orange
                                                                    └──Type expr: Constructor: present
                                                                       └──Type expr: Constructor: string
-                                                                   └──Type expr: Variable: a12628
+                                                                   └──Type expr: Variable: a23344
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -1651,10 +1651,10 @@ let%expect_test "" =
                                └──Label: Pear
                                └──Type expr: Constructor: present
                                   └──Type expr: Constructor: unit
-                               └──Type expr: Variable: a12679
+                               └──Type expr: Variable: a23395
                    └──Desc: Variable: b
                 └──Abstraction:
-                   └──Variables: a12679
+                   └──Variables: a23395
                    └──Expression:
                       └──Type expr: Constructor: list
                          └──Type expr: Variant
@@ -1666,7 +1666,7 @@ let%expect_test "" =
                                   └──Label: Pear
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: unit
-                                  └──Type expr: Variable: a12679
+                                  └──Type expr: Variable: a23395
                       └──Desc: Construct
                          └──Constructor description:
                             └──Name: Cons
@@ -1681,7 +1681,7 @@ let%expect_test "" =
                                            └──Label: Pear
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: unit
-                                           └──Type expr: Variable: a12679
+                                           └──Type expr: Variable: a23395
                                   └──Type expr: Constructor: list
                                      └──Type expr: Variant
                                         └──Type expr: Row cons
@@ -1692,7 +1692,7 @@ let%expect_test "" =
                                               └──Label: Pear
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: unit
-                                              └──Type expr: Variable: a12679
+                                              └──Type expr: Variable: a23395
                             └──Constructor type:
                                └──Type expr: Constructor: list
                                   └──Type expr: Variant
@@ -1704,7 +1704,7 @@ let%expect_test "" =
                                            └──Label: Pear
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: unit
-                                           └──Type expr: Variable: a12679
+                                           └──Type expr: Variable: a23395
                          └──Expression:
                             └──Type expr: Tuple
                                └──Type expr: Variant
@@ -1716,7 +1716,7 @@ let%expect_test "" =
                                         └──Label: Pear
                                         └──Type expr: Constructor: present
                                            └──Type expr: Constructor: unit
-                                        └──Type expr: Variable: a12679
+                                        └──Type expr: Variable: a23395
                                └──Type expr: Constructor: list
                                   └──Type expr: Variant
                                      └──Type expr: Row cons
@@ -1727,7 +1727,7 @@ let%expect_test "" =
                                            └──Label: Pear
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: unit
-                                           └──Type expr: Variable: a12679
+                                           └──Type expr: Variable: a23395
                             └──Desc: Tuple
                                └──Expression:
                                   └──Type expr: Variant
@@ -1739,7 +1739,7 @@ let%expect_test "" =
                                            └──Label: Pear
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: unit
-                                           └──Type expr: Variable: a12679
+                                           └──Type expr: Variable: a23395
                                   └──Desc: Variant
                                      └──Variant description:
                                         └──Tag: Apple
@@ -1752,7 +1752,7 @@ let%expect_test "" =
                                                  └──Label: Pear
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: unit
-                                                 └──Type expr: Variable: a12679
+                                                 └──Type expr: Variable: a23395
                                └──Expression:
                                   └──Type expr: Constructor: list
                                      └──Type expr: Variant
@@ -1764,7 +1764,7 @@ let%expect_test "" =
                                               └──Label: Pear
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: unit
-                                              └──Type expr: Variable: a12679
+                                              └──Type expr: Variable: a23395
                                   └──Desc: Construct
                                      └──Constructor description:
                                         └──Name: Cons
@@ -1779,7 +1779,7 @@ let%expect_test "" =
                                                        └──Label: Pear
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: unit
-                                                       └──Type expr: Variable: a12679
+                                                       └──Type expr: Variable: a23395
                                               └──Type expr: Constructor: list
                                                  └──Type expr: Variant
                                                     └──Type expr: Row cons
@@ -1790,7 +1790,7 @@ let%expect_test "" =
                                                           └──Label: Pear
                                                           └──Type expr: Constructor: present
                                                              └──Type expr: Constructor: unit
-                                                          └──Type expr: Variable: a12679
+                                                          └──Type expr: Variable: a23395
                                         └──Constructor type:
                                            └──Type expr: Constructor: list
                                               └──Type expr: Variant
@@ -1802,7 +1802,7 @@ let%expect_test "" =
                                                        └──Label: Pear
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: unit
-                                                       └──Type expr: Variable: a12679
+                                                       └──Type expr: Variable: a23395
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Variant
@@ -1814,7 +1814,7 @@ let%expect_test "" =
                                                     └──Label: Pear
                                                     └──Type expr: Constructor: present
                                                        └──Type expr: Constructor: unit
-                                                    └──Type expr: Variable: a12679
+                                                    └──Type expr: Variable: a23395
                                            └──Type expr: Constructor: list
                                               └──Type expr: Variant
                                                  └──Type expr: Row cons
@@ -1825,7 +1825,7 @@ let%expect_test "" =
                                                        └──Label: Pear
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: unit
-                                                       └──Type expr: Variable: a12679
+                                                       └──Type expr: Variable: a23395
                                         └──Desc: Tuple
                                            └──Expression:
                                               └──Type expr: Variant
@@ -1837,7 +1837,7 @@ let%expect_test "" =
                                                        └──Label: Pear
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: unit
-                                                       └──Type expr: Variable: a12679
+                                                       └──Type expr: Variable: a23395
                                               └──Desc: Variant
                                                  └──Variant description:
                                                     └──Tag: Pear
@@ -1850,7 +1850,7 @@ let%expect_test "" =
                                                              └──Label: Pear
                                                              └──Type expr: Constructor: present
                                                                 └──Type expr: Constructor: unit
-                                                             └──Type expr: Variable: a12679
+                                                             └──Type expr: Variable: a23395
                                            └──Expression:
                                               └──Type expr: Constructor: list
                                                  └──Type expr: Variant
@@ -1862,7 +1862,7 @@ let%expect_test "" =
                                                           └──Label: Pear
                                                           └──Type expr: Constructor: present
                                                              └──Type expr: Constructor: unit
-                                                          └──Type expr: Variable: a12679
+                                                          └──Type expr: Variable: a23395
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
@@ -1877,7 +1877,7 @@ let%expect_test "" =
                                                                    └──Label: Pear
                                                                    └──Type expr: Constructor: present
                                                                       └──Type expr: Constructor: unit
-                                                                   └──Type expr: Variable: a12679
+                                                                   └──Type expr: Variable: a23395
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -1896,7 +1896,7 @@ let%expect_test "" =
                                   └──Label: Pear
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: unit
-                                  └──Type expr: Variable: a12716
+                                  └──Type expr: Variable: a23432
                    └──Desc: Variable: c
                 └──Abstraction:
                    └──Variables:
@@ -1915,7 +1915,7 @@ let%expect_test "" =
                                      └──Label: Pear
                                      └──Type expr: Constructor: present
                                         └──Type expr: Constructor: unit
-                                     └──Type expr: Variable: a12716
+                                     └──Type expr: Variable: a23432
                       └──Desc: Application
                          └──Expression:
                             └──Type expr: Arrow
@@ -1933,7 +1933,7 @@ let%expect_test "" =
                                               └──Label: Pear
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: unit
-                                              └──Type expr: Variable: a12716
+                                              └──Type expr: Variable: a23432
                                └──Type expr: Constructor: list
                                   └──Type expr: Variant
                                      └──Type expr: Row cons
@@ -1948,7 +1948,7 @@ let%expect_test "" =
                                               └──Label: Pear
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: unit
-                                              └──Type expr: Variable: a12716
+                                              └──Type expr: Variable: a23432
                             └──Desc: Application
                                └──Expression:
                                   └──Type expr: Arrow
@@ -1966,7 +1966,7 @@ let%expect_test "" =
                                                     └──Label: Pear
                                                     └──Type expr: Constructor: present
                                                        └──Type expr: Constructor: unit
-                                                    └──Type expr: Variable: a12716
+                                                    └──Type expr: Variable: a23432
                                      └──Type expr: Arrow
                                         └──Type expr: Constructor: list
                                            └──Type expr: Variant
@@ -1982,7 +1982,7 @@ let%expect_test "" =
                                                        └──Label: Pear
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: unit
-                                                       └──Type expr: Variable: a12716
+                                                       └──Type expr: Variable: a23432
                                         └──Type expr: Constructor: list
                                            └──Type expr: Variant
                                               └──Type expr: Row cons
@@ -1997,7 +1997,7 @@ let%expect_test "" =
                                                        └──Label: Pear
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: unit
-                                                       └──Type expr: Variable: a12716
+                                                       └──Type expr: Variable: a23432
                                   └──Desc: Variable
                                      └──Variable: append
                                      └──Type expr: Variant
@@ -2013,7 +2013,7 @@ let%expect_test "" =
                                                  └──Label: Pear
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: unit
-                                                 └──Type expr: Variable: a12716
+                                                 └──Type expr: Variable: a23432
                                └──Expression:
                                   └──Type expr: Constructor: list
                                      └──Type expr: Variant
@@ -2029,14 +2029,14 @@ let%expect_test "" =
                                                  └──Label: Pear
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: unit
-                                                 └──Type expr: Variable: a12716
+                                                 └──Type expr: Variable: a23432
                                   └──Desc: Variable
                                      └──Variable: a
                                      └──Type expr: Row cons
                                         └──Label: Pear
                                         └──Type expr: Constructor: present
                                            └──Type expr: Constructor: unit
-                                        └──Type expr: Variable: a12716
+                                        └──Type expr: Variable: a23432
                          └──Expression:
                             └──Type expr: Constructor: list
                                └──Type expr: Variant
@@ -2052,11 +2052,11 @@ let%expect_test "" =
                                            └──Label: Pear
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: unit
-                                           └──Type expr: Variable: a12716
+                                           └──Type expr: Variable: a23432
                             └──Desc: Variable
                                └──Variable: b
                                └──Type expr: Row cons
                                   └──Label: Orange
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: string
-                                  └──Type expr: Variable: a12716 |}]
+                                  └──Type expr: Variable: a23432 |}]
