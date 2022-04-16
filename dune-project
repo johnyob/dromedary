@@ -1,4 +1,5 @@
 (lang dune 2.9)
+
 (name dromedary)
 
 (generate_opam_files true)
@@ -22,6 +23,43 @@
    (= 4.12.0))
   (dune
    (>= 2.9))
+  (base
+   (= v0.14.0))
+  (core
+   (= v0.14.1))
+  (core_bench
+   (= v0.14.0))
+  (core_unix
+   (= v0.14.0))
+  (ppx_jane
+   (= v0.14.0))
+  (ppx_sexp_conv
+   (= v0.14.1))
+  (ppx_compare
+   (= v0.14.0))
+  (ppx_deriving
+   (= 4.5))
+  (ppx_let
+   (= v0.14.0))
   (vec
-   (>= 0.3.0))))
+   (= 0.3.0))
+  (logs
+   (= 0.7.0))
+  (landmarks
+   (= 1.4))
+  (bisect_ppx
+   (= 2.6.0))
+  (qcheck
+   (= 0.17))
+  (alcotest
+   (= 1.4.0))
+  (qcheck-alcotest
+   (= 0.17))
+  (ppx_deriving_qcheck
+   (= 0.2.0))
+  (menhir
+   (= 20210419))
+  (menhirLib
+   (= 20210419))))
+
 (using menhir 2.1)
