@@ -64,13 +64,14 @@ let make_rigid_var =
 
 let ( @ ) f ts = Unifier.Type.make (Structure (Constr (ts, f)))
 
-let print_type t =
-  let content = Type.to_dot t in
+let print_type _t =
+  ()
+  (* let content = Type.to_dot t in
   let out = Stdlib.open_out "/tmp/foo" in
   Stdlib.output_string out content;
   Stdlib.flush out;
   assert (
-    Stdlib.Sys.command "graph-easy /tmp/foo --from graphviz --as boxart" = 0)
+    Stdlib.Sys.command "graph-easy /tmp/foo --from graphviz --as boxart" = 0) *)
 
 
 let%expect_test "Test unify : correctness 1" =
