@@ -15,8 +15,11 @@ jobs:
       - restore_cache:
           key: cache-{{ checksum "dromedary.opam" }}
       - run:
-          name: "Install dependencies"
-          command: sudo apt-get install -y m4 && opam update && opam upgrade && eval $(opam env) && opam install --yes . --deps-only
+          name: "Install system dependencies and update opam w/ pins"
+          command: sudo apt-get install -y m4 && opam update && opam upgrade && eval $(opam env) && opam pin add ppx_deriving_qcheck git+https://github.com/vch9/qcheck.git
+      - run:
+          name: "Instal project dependencies"
+          command: opam install --yes . --deps-only
       - save_cache:
           key: cache-{{ checksum "dromedary.opam" }}
           paths:
