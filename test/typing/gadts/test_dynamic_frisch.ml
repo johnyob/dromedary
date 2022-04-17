@@ -110,90 +110,90 @@ let%expect_test "dynamic-frisch" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 28357
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 28357
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 28357
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 28357
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 28357
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: a
+                            └──Type expr: Variable: 28357
        └──Structure item: Primitive
           └──Value description:
              └──Name: raise
              └──Scheme:
-                └──Variables: a26899
+                └──Variables: 28428
                 └──Type expr: Arrow
                    └──Type expr: Constructor: exn
-                   └──Type expr: Variable: a26899
+                   └──Type expr: Variable: 28428
              └──Primitive name: %raise
        └──Structure item: Primitive
           └──Value description:
              └──Name: map
              └──Scheme:
-                └──Variables: a26905,a26904
+                └──Variables: 28434,28433
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: a26904
+                      └──Type expr: Variable: 28433
                    └──Type expr: Arrow
                       └──Type expr: Arrow
-                         └──Type expr: Variable: a26904
-                         └──Type expr: Variable: a26905
+                         └──Type expr: Variable: 28433
+                         └──Type expr: Variable: 28434
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: a26905
+                         └──Type expr: Variable: 28434
              └──Primitive name: %map
        └──Structure item: Primitive
           └──Value description:
              └──Name: hole
              └──Scheme:
-                └──Variables: a26916
-                └──Type expr: Variable: a26916
+                └──Variables: 28445
+                └──Type expr: Variable: 28445
              └──Primitive name: %hole
        └──Structure item: Primitive
           └──Value description:
              └──Name: length
              └──Scheme:
-                └──Variables: a26917
+                └──Variables: 28446
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: a26917
+                      └──Type expr: Variable: 28446
                    └──Type expr: Constructor: int
              └──Primitive name: %length
        └──Structure item: Primitive
           └──Value description:
              └──Name: not_eq
              └──Scheme:
-                └──Variables: a26924
+                └──Variables: 28453
                 └──Type expr: Arrow
-                   └──Type expr: Variable: a26924
+                   └──Type expr: Variable: 28453
                    └──Type expr: Arrow
-                      └──Type expr: Variable: a26924
+                      └──Type expr: Variable: 28453
                       └──Type expr: Constructor: bool
              └──Primitive name: %not_equal
        └──Structure item: Primitive
           └──Value description:
              └──Name: iter2
              └──Scheme:
-                └──Variables: a26932,a26931
+                └──Variables: 28461,28460
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: a26931
+                      └──Type expr: Variable: 28460
                    └──Type expr: Arrow
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: a26932
+                         └──Type expr: Variable: 28461
                       └──Type expr: Arrow
                          └──Type expr: Arrow
-                            └──Type expr: Variable: a26931
+                            └──Type expr: Variable: 28460
                             └──Type expr: Arrow
-                               └──Type expr: Variable: a26932
+                               └──Type expr: Variable: 28461
                                └──Type expr: Constructor: unit
                          └──Type expr: Constructor: unit
              └──Primitive name: %iter2
@@ -203,169 +203,169 @@ let%expect_test "dynamic-frisch" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 28362
                    └──Constructor type:
                       └──Type expr: Constructor: ty
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 28362
                    └──Constraint:
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 28362
                       └──Type expr: Constructor: int
                 └──Constructor declaration:
                    └──Constructor name: String
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 28362
                    └──Constructor type:
                       └──Type expr: Constructor: ty
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 28362
                    └──Constraint:
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 28362
                       └──Type expr: Constructor: string
                 └──Constructor declaration:
                    └──Constructor name: List
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 28362
                    └──Constructor type:
                       └──Type expr: Constructor: ty
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 28362
                    └──Constructor argument:
-                      └──Constructor betas: b
+                      └──Constructor betas: 28367
                       └──Type expr: Constructor: ty
-                         └──Type expr: Variable: b
+                         └──Type expr: Variable: 28367
                    └──Constraint:
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 28362
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: b
+                         └──Type expr: Variable: 28367
                 └──Constructor declaration:
                    └──Constructor name: Pair
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 28362
                    └──Constructor type:
                       └──Type expr: Constructor: ty
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 28362
                    └──Constructor argument:
-                      └──Constructor betas: b c
+                      └──Constructor betas: 28372 28371
                       └──Type expr: Tuple
                          └──Type expr: Constructor: ty
-                            └──Type expr: Variable: b
+                            └──Type expr: Variable: 28371
                          └──Type expr: Constructor: ty
-                            └──Type expr: Variable: c
+                            └──Type expr: Variable: 28372
                    └──Constraint:
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 28362
                       └──Type expr: Tuple
-                         └──Type expr: Variable: b
-                         └──Type expr: Variable: c
+                         └──Type expr: Variable: 28371
+                         └──Type expr: Variable: 28372
                 └──Constructor declaration:
                    └──Constructor name: Record
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 28362
                    └──Constructor type:
                       └──Type expr: Constructor: ty
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 28362
                    └──Constructor argument:
-                      └──Constructor betas: builder
+                      └──Constructor betas: 28378
                       └──Type expr: Constructor: record
-                         └──Type expr: Variable: a
-                         └──Type expr: Variable: builder
+                         └──Type expr: Variable: 28362
+                         └──Type expr: Variable: 28378
           └──Type declaration:
              └──Type name: record
              └──Type declaration kind: Record
                 └──Label declaration:
                    └──Label name: path
-                   └──Label alphas: a builder
+                   └──Label alphas: 28381 28382
                    └──Label betas:
                    └──Type expr: Constructor: string
                    └──Type expr: Constructor: record
-                      └──Type expr: Variable: a
-                      └──Type expr: Variable: builder
+                      └──Type expr: Variable: 28381
+                      └──Type expr: Variable: 28382
                 └──Label declaration:
                    └──Label name: fields
-                   └──Label alphas: a builder
+                   └──Label alphas: 28381 28382
                    └──Label betas:
                    └──Type expr: Constructor: list
                       └──Type expr: Constructor: packed_field
-                         └──Type expr: Variable: a
-                         └──Type expr: Variable: builder
+                         └──Type expr: Variable: 28381
+                         └──Type expr: Variable: 28382
                    └──Type expr: Constructor: record
-                      └──Type expr: Variable: a
-                      └──Type expr: Variable: builder
+                      └──Type expr: Variable: 28381
+                      └──Type expr: Variable: 28382
                 └──Label declaration:
                    └──Label name: create_builder
-                   └──Label alphas: a builder
+                   └──Label alphas: 28381 28382
                    └──Label betas:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: unit
-                      └──Type expr: Variable: builder
+                      └──Type expr: Variable: 28382
                    └──Type expr: Constructor: record
-                      └──Type expr: Variable: a
-                      └──Type expr: Variable: builder
+                      └──Type expr: Variable: 28381
+                      └──Type expr: Variable: 28382
                 └──Label declaration:
                    └──Label name: of_builder
-                   └──Label alphas: a builder
+                   └──Label alphas: 28381 28382
                    └──Label betas:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: builder
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 28382
+                      └──Type expr: Variable: 28381
                    └──Type expr: Constructor: record
-                      └──Type expr: Variable: a
-                      └──Type expr: Variable: builder
+                      └──Type expr: Variable: 28381
+                      └──Type expr: Variable: 28382
           └──Type declaration:
              └──Type name: packed_field
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Field
-                   └──Constructor alphas: a builder
+                   └──Constructor alphas: 28393 28394
                    └──Constructor type:
                       └──Type expr: Constructor: packed_field
-                         └──Type expr: Variable: a
-                         └──Type expr: Variable: builder
+                         └──Type expr: Variable: 28393
+                         └──Type expr: Variable: 28394
                    └──Constructor argument:
-                      └──Constructor betas: b
+                      └──Constructor betas: 28395
                       └──Type expr: Constructor: field
-                         └──Type expr: Variable: a
-                         └──Type expr: Variable: builder
-                         └──Type expr: Variable: b
+                         └──Type expr: Variable: 28393
+                         └──Type expr: Variable: 28394
+                         └──Type expr: Variable: 28395
           └──Type declaration:
              └──Type name: field
              └──Type declaration kind: Record
                 └──Label declaration:
                    └──Label name: label
-                   └──Label alphas: a builder b
+                   └──Label alphas: 28398 28399 28400
                    └──Label betas:
                    └──Type expr: Constructor: string
                    └──Type expr: Constructor: field
-                      └──Type expr: Variable: a
-                      └──Type expr: Variable: builder
-                      └──Type expr: Variable: b
+                      └──Type expr: Variable: 28398
+                      └──Type expr: Variable: 28399
+                      └──Type expr: Variable: 28400
                 └──Label declaration:
                    └──Label name: type_
-                   └──Label alphas: a builder b
+                   └──Label alphas: 28398 28399 28400
                    └──Label betas:
                    └──Type expr: Constructor: ty
-                      └──Type expr: Variable: b
+                      └──Type expr: Variable: 28400
                    └──Type expr: Constructor: field
-                      └──Type expr: Variable: a
-                      └──Type expr: Variable: builder
-                      └──Type expr: Variable: b
+                      └──Type expr: Variable: 28398
+                      └──Type expr: Variable: 28399
+                      └──Type expr: Variable: 28400
                 └──Label declaration:
                    └──Label name: get
-                   └──Label alphas: a builder b
+                   └──Label alphas: 28398 28399 28400
                    └──Label betas:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: a
-                      └──Type expr: Variable: b
+                      └──Type expr: Variable: 28398
+                      └──Type expr: Variable: 28400
                    └──Type expr: Constructor: field
-                      └──Type expr: Variable: a
-                      └──Type expr: Variable: builder
-                      └──Type expr: Variable: b
+                      └──Type expr: Variable: 28398
+                      └──Type expr: Variable: 28399
+                      └──Type expr: Variable: 28400
                 └──Label declaration:
                    └──Label name: set
-                   └──Label alphas: a builder b
+                   └──Label alphas: 28398 28399 28400
                    └──Label betas:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: builder
+                      └──Type expr: Variable: 28399
                       └──Type expr: Arrow
-                         └──Type expr: Variable: b
+                         └──Type expr: Variable: 28400
                          └──Type expr: Constructor: unit
                    └──Type expr: Constructor: field
-                      └──Type expr: Variable: a
-                      └──Type expr: Variable: builder
-                      └──Type expr: Variable: b
+                      └──Type expr: Variable: 28398
+                      └──Type expr: Variable: 28399
+                      └──Type expr: Variable: 28400
        └──Structure item: Type
           └──Type declaration:
              └──Type name: variant
@@ -420,108 +420,108 @@ let%expect_test "dynamic-frisch" =
           └──Value description:
              └──Name: hole
              └──Scheme:
-                └──Variables: a26951
-                └──Type expr: Variable: a26951
+                └──Variables: 28480
+                └──Type expr: Variable: 28480
              └──Primitive name: %hole
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Variable: variantize
                 └──Abstraction:
-                   └──Variables: a26960
+                   └──Variables: 28489
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: ty
-                            └──Type expr: Variable: a26981
+                            └──Type expr: Variable: 28510
                          └──Type expr: Arrow
-                            └──Type expr: Variable: a26981
+                            └──Type expr: Variable: 28510
                             └──Type expr: Constructor: variant
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: ty
-                               └──Type expr: Variable: a26981
+                               └──Type expr: Variable: 28510
                             └──Desc: Variable: ty
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: a26981
+                               └──Type expr: Variable: 28510
                                └──Type expr: Constructor: variant
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: a26981
+                                  └──Type expr: Variable: 28510
                                   └──Desc: Variable: x
                                └──Expression:
                                   └──Type expr: Constructor: variant
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: ty
-                                           └──Type expr: Variable: a26981
+                                           └──Type expr: Variable: 28510
                                         └──Desc: Variable
                                            └──Variable: ty
                                      └──Type expr: Constructor: ty
-                                        └──Type expr: Variable: a26981
+                                        └──Type expr: Variable: 28510
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: ty
-                                                 └──Type expr: Variable: a26981
+                                                 └──Type expr: Variable: 28510
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Int
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: ty
-                                                          └──Type expr: Variable: a26981
+                                                          └──Type expr: Variable: 28510
                                            └──Expression:
                                               └──Type expr: Constructor: variant
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Var_int
                                                     └──Constructor argument type:
-                                                       └──Type expr: Variable: a26981
+                                                       └──Type expr: Variable: 28510
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: variant
                                                  └──Expression:
-                                                    └──Type expr: Variable: a26981
+                                                    └──Type expr: Variable: 28510
                                                     └──Desc: Variable
                                                        └──Variable: x
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: ty
-                                                 └──Type expr: Variable: a26981
+                                                 └──Type expr: Variable: 28510
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: String
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: ty
-                                                          └──Type expr: Variable: a26981
+                                                          └──Type expr: Variable: 28510
                                            └──Expression:
                                               └──Type expr: Constructor: variant
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Var_string
                                                     └──Constructor argument type:
-                                                       └──Type expr: Variable: a26981
+                                                       └──Type expr: Variable: 28510
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: variant
                                                  └──Expression:
-                                                    └──Type expr: Variable: a26981
+                                                    └──Type expr: Variable: 28510
                                                     └──Desc: Variable
                                                        └──Variable: x
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: ty
-                                                 └──Type expr: Variable: a26981
+                                                 └──Type expr: Variable: 28510
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: List
                                                     └──Constructor argument type:
                                                        └──Type expr: Constructor: ty
-                                                          └──Type expr: Variable: a27027
+                                                          └──Type expr: Variable: 28556
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: ty
-                                                          └──Type expr: Variable: a26981
+                                                          └──Type expr: Variable: 28510
                                                  └──Pattern:
                                                     └──Type expr: Constructor: ty
-                                                       └──Type expr: Variable: a27027
+                                                       └──Type expr: Variable: 28556
                                                     └──Desc: Variable: ty
                                            └──Expression:
                                               └──Type expr: Constructor: variant
@@ -540,78 +540,78 @@ let%expect_test "dynamic-frisch" =
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Arrow
-                                                                └──Type expr: Variable: a27027
+                                                                └──Type expr: Variable: 28556
                                                                 └──Type expr: Constructor: variant
                                                              └──Type expr: Constructor: list
                                                                 └──Type expr: Constructor: variant
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
-                                                                   └──Type expr: Variable: a26981
+                                                                   └──Type expr: Variable: 28510
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Arrow
-                                                                         └──Type expr: Variable: a27027
+                                                                         └──Type expr: Variable: 28556
                                                                          └──Type expr: Constructor: variant
                                                                       └──Type expr: Constructor: list
                                                                          └──Type expr: Constructor: variant
                                                                 └──Desc: Variable
                                                                    └──Variable: map
                                                                    └──Type expr: Constructor: variant
-                                                                   └──Type expr: Variable: a27027
+                                                                   └──Type expr: Variable: 28556
                                                              └──Expression:
-                                                                └──Type expr: Variable: a26981
+                                                                └──Type expr: Variable: 28510
                                                                 └──Desc: Variable
                                                                    └──Variable: x
                                                        └──Expression:
                                                           └──Type expr: Arrow
-                                                             └──Type expr: Variable: a27027
+                                                             └──Type expr: Variable: 28556
                                                              └──Type expr: Constructor: variant
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: ty
-                                                                      └──Type expr: Variable: a27027
+                                                                      └──Type expr: Variable: 28556
                                                                    └──Type expr: Arrow
-                                                                      └──Type expr: Variable: a27027
+                                                                      └──Type expr: Variable: 28556
                                                                       └──Type expr: Constructor: variant
                                                                 └──Desc: Variable
                                                                    └──Variable: variantize
-                                                                   └──Type expr: Variable: a27027
+                                                                   └──Type expr: Variable: 28556
                                                              └──Expression:
                                                                 └──Type expr: Constructor: ty
-                                                                   └──Type expr: Variable: a27027
+                                                                   └──Type expr: Variable: 28556
                                                                 └──Desc: Variable
                                                                    └──Variable: ty
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: ty
-                                                 └──Type expr: Variable: a26981
+                                                 └──Type expr: Variable: 28510
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Pair
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
                                                           └──Type expr: Constructor: ty
-                                                             └──Type expr: Variable: a27078
+                                                             └──Type expr: Variable: 28607
                                                           └──Type expr: Constructor: ty
-                                                             └──Type expr: Variable: a27076
+                                                             └──Type expr: Variable: 28605
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: ty
-                                                          └──Type expr: Variable: a26981
+                                                          └──Type expr: Variable: 28510
                                                  └──Pattern:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: ty
-                                                          └──Type expr: Variable: a27078
+                                                          └──Type expr: Variable: 28607
                                                        └──Type expr: Constructor: ty
-                                                          └──Type expr: Variable: a27076
+                                                          └──Type expr: Variable: 28605
                                                     └──Desc: Tuple
                                                        └──Pattern:
                                                           └──Type expr: Constructor: ty
-                                                             └──Type expr: Variable: a27078
+                                                             └──Type expr: Variable: 28607
                                                           └──Desc: Variable: ty1
                                                        └──Pattern:
                                                           └──Type expr: Constructor: ty
-                                                             └──Type expr: Variable: a27076
+                                                             └──Type expr: Variable: 28605
                                                           └──Desc: Variable: ty2
                                            └──Expression:
                                               └──Type expr: Constructor: variant
@@ -619,18 +619,18 @@ let%expect_test "dynamic-frisch" =
                                                  └──Value bindings:
                                                     └──Value binding:
                                                        └──Pattern:
-                                                          └──Type expr: Variable: a26981
+                                                          └──Type expr: Variable: 28510
                                                           └──Desc: Tuple
                                                              └──Pattern:
-                                                                └──Type expr: Variable: a27078
+                                                                └──Type expr: Variable: 28607
                                                                 └──Desc: Variable: x1
                                                              └──Pattern:
-                                                                └──Type expr: Variable: a27076
+                                                                └──Type expr: Variable: 28605
                                                                 └──Desc: Variable: x2
                                                        └──Abstraction:
                                                           └──Variables:
                                                           └──Expression:
-                                                             └──Type expr: Variable: a26981
+                                                             └──Type expr: Variable: 28510
                                                              └──Desc: Variable
                                                                 └──Variable: x
                                                  └──Expression:
@@ -654,26 +654,26 @@ let%expect_test "dynamic-frisch" =
                                                                 └──Desc: Application
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
-                                                                         └──Type expr: Variable: a27078
+                                                                         └──Type expr: Variable: 28607
                                                                          └──Type expr: Constructor: variant
                                                                       └──Desc: Application
                                                                          └──Expression:
                                                                             └──Type expr: Arrow
                                                                                └──Type expr: Constructor: ty
-                                                                                  └──Type expr: Variable: a27078
+                                                                                  └──Type expr: Variable: 28607
                                                                                └──Type expr: Arrow
-                                                                                  └──Type expr: Variable: a27078
+                                                                                  └──Type expr: Variable: 28607
                                                                                   └──Type expr: Constructor: variant
                                                                             └──Desc: Variable
                                                                                └──Variable: variantize
-                                                                               └──Type expr: Variable: a27078
+                                                                               └──Type expr: Variable: 28607
                                                                          └──Expression:
                                                                             └──Type expr: Constructor: ty
-                                                                               └──Type expr: Variable: a27078
+                                                                               └──Type expr: Variable: 28607
                                                                             └──Desc: Variable
                                                                                └──Variable: ty1
                                                                    └──Expression:
-                                                                      └──Type expr: Variable: a27078
+                                                                      └──Type expr: Variable: 28607
                                                                       └──Desc: Variable
                                                                          └──Variable: x1
                                                              └──Expression:
@@ -681,46 +681,46 @@ let%expect_test "dynamic-frisch" =
                                                                 └──Desc: Application
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
-                                                                         └──Type expr: Variable: a27076
+                                                                         └──Type expr: Variable: 28605
                                                                          └──Type expr: Constructor: variant
                                                                       └──Desc: Application
                                                                          └──Expression:
                                                                             └──Type expr: Arrow
                                                                                └──Type expr: Constructor: ty
-                                                                                  └──Type expr: Variable: a27076
+                                                                                  └──Type expr: Variable: 28605
                                                                                └──Type expr: Arrow
-                                                                                  └──Type expr: Variable: a27076
+                                                                                  └──Type expr: Variable: 28605
                                                                                   └──Type expr: Constructor: variant
                                                                             └──Desc: Variable
                                                                                └──Variable: variantize
-                                                                               └──Type expr: Variable: a27076
+                                                                               └──Type expr: Variable: 28605
                                                                          └──Expression:
                                                                             └──Type expr: Constructor: ty
-                                                                               └──Type expr: Variable: a27076
+                                                                               └──Type expr: Variable: 28605
                                                                             └──Desc: Variable
                                                                                └──Variable: ty2
                                                                    └──Expression:
-                                                                      └──Type expr: Variable: a27076
+                                                                      └──Type expr: Variable: 28605
                                                                       └──Desc: Variable
                                                                          └──Variable: x2
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: ty
-                                                 └──Type expr: Variable: a26981
+                                                 └──Type expr: Variable: 28510
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Record
                                                     └──Constructor argument type:
                                                        └──Type expr: Constructor: record
-                                                          └──Type expr: Variable: a26981
-                                                          └──Type expr: Variable: a27142
+                                                          └──Type expr: Variable: 28510
+                                                          └──Type expr: Variable: 28671
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: ty
-                                                          └──Type expr: Variable: a26981
+                                                          └──Type expr: Variable: 28510
                                                  └──Pattern:
                                                     └──Type expr: Constructor: record
-                                                       └──Type expr: Variable: a26981
-                                                       └──Type expr: Variable: a27142
+                                                       └──Type expr: Variable: 28510
+                                                       └──Type expr: Variable: 28671
                                                     └──Desc: Variable: record
                                            └──Expression:
                                               └──Type expr: Constructor: variant
@@ -730,44 +730,44 @@ let%expect_test "dynamic-frisch" =
                                                        └──Pattern:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: packed_field
-                                                                └──Type expr: Variable: a26981
-                                                                └──Type expr: Variable: a27155
+                                                                └──Type expr: Variable: 28510
+                                                                └──Type expr: Variable: 28684
                                                              └──Type expr: Tuple
                                                                 └──Type expr: Constructor: string
                                                                 └──Type expr: Constructor: variant
                                                           └──Desc: Variable: f
                                                        └──Abstraction:
-                                                          └──Variables: a27155,a27155,a27155,a27155
+                                                          └──Variables: 28684,28684,28684,28684
                                                           └──Expression:
                                                              └──Type expr: Arrow
                                                                 └──Type expr: Constructor: packed_field
-                                                                   └──Type expr: Variable: a26981
-                                                                   └──Type expr: Variable: a27155
+                                                                   └──Type expr: Variable: 28510
+                                                                   └──Type expr: Variable: 28684
                                                                 └──Type expr: Tuple
                                                                    └──Type expr: Constructor: string
                                                                    └──Type expr: Constructor: variant
                                                              └──Desc: Function
                                                                 └──Pattern:
                                                                    └──Type expr: Constructor: packed_field
-                                                                      └──Type expr: Variable: a26981
-                                                                      └──Type expr: Variable: a27155
+                                                                      └──Type expr: Variable: 28510
+                                                                      └──Type expr: Variable: 28684
                                                                    └──Desc: Construct
                                                                       └──Constructor description:
                                                                          └──Name: Field
                                                                          └──Constructor argument type:
                                                                             └──Type expr: Constructor: field
-                                                                               └──Type expr: Variable: a26981
-                                                                               └──Type expr: Variable: a27155
-                                                                               └──Type expr: Variable: a27158
+                                                                               └──Type expr: Variable: 28510
+                                                                               └──Type expr: Variable: 28684
+                                                                               └──Type expr: Variable: 28687
                                                                          └──Constructor type:
                                                                             └──Type expr: Constructor: packed_field
-                                                                               └──Type expr: Variable: a26981
-                                                                               └──Type expr: Variable: a27155
+                                                                               └──Type expr: Variable: 28510
+                                                                               └──Type expr: Variable: 28684
                                                                       └──Pattern:
                                                                          └──Type expr: Constructor: field
-                                                                            └──Type expr: Variable: a26981
-                                                                            └──Type expr: Variable: a27155
-                                                                            └──Type expr: Variable: a27158
+                                                                            └──Type expr: Variable: 28510
+                                                                            └──Type expr: Variable: 28684
+                                                                            └──Type expr: Variable: 28687
                                                                          └──Desc: Variable: field
                                                                 └──Expression:
                                                                    └──Type expr: Tuple
@@ -779,9 +779,9 @@ let%expect_test "dynamic-frisch" =
                                                                          └──Desc: Field
                                                                             └──Expression:
                                                                                └──Type expr: Constructor: field
-                                                                                  └──Type expr: Variable: a26981
-                                                                                  └──Type expr: Variable: a27155
-                                                                                  └──Type expr: Variable: a27158
+                                                                                  └──Type expr: Variable: 28510
+                                                                                  └──Type expr: Variable: 28684
+                                                                                  └──Type expr: Variable: 28687
                                                                                └──Desc: Variable
                                                                                   └──Variable: field
                                                                             └──Label description:
@@ -790,76 +790,76 @@ let%expect_test "dynamic-frisch" =
                                                                                   └──Type expr: Constructor: string
                                                                                └──Label type:
                                                                                   └──Type expr: Constructor: field
-                                                                                     └──Type expr: Variable: a26981
-                                                                                     └──Type expr: Variable: a27155
-                                                                                     └──Type expr: Variable: a27158
+                                                                                     └──Type expr: Variable: 28510
+                                                                                     └──Type expr: Variable: 28684
+                                                                                     └──Type expr: Variable: 28687
                                                                       └──Expression:
                                                                          └──Type expr: Constructor: variant
                                                                          └──Desc: Application
                                                                             └──Expression:
                                                                                └──Type expr: Arrow
-                                                                                  └──Type expr: Variable: a27158
+                                                                                  └──Type expr: Variable: 28687
                                                                                   └──Type expr: Constructor: variant
                                                                                └──Desc: Application
                                                                                   └──Expression:
                                                                                      └──Type expr: Arrow
                                                                                         └──Type expr: Constructor: ty
-                                                                                           └──Type expr: Variable: a27158
+                                                                                           └──Type expr: Variable: 28687
                                                                                         └──Type expr: Arrow
-                                                                                           └──Type expr: Variable: a27158
+                                                                                           └──Type expr: Variable: 28687
                                                                                            └──Type expr: Constructor: variant
                                                                                      └──Desc: Variable
                                                                                         └──Variable: variantize
-                                                                                        └──Type expr: Variable: a27158
+                                                                                        └──Type expr: Variable: 28687
                                                                                   └──Expression:
                                                                                      └──Type expr: Constructor: ty
-                                                                                        └──Type expr: Variable: a27158
+                                                                                        └──Type expr: Variable: 28687
                                                                                      └──Desc: Field
                                                                                         └──Expression:
                                                                                            └──Type expr: Constructor: field
-                                                                                              └──Type expr: Variable: a26981
-                                                                                              └──Type expr: Variable: a27155
-                                                                                              └──Type expr: Variable: a27158
+                                                                                              └──Type expr: Variable: 28510
+                                                                                              └──Type expr: Variable: 28684
+                                                                                              └──Type expr: Variable: 28687
                                                                                            └──Desc: Variable
                                                                                               └──Variable: field
                                                                                         └──Label description:
                                                                                            └──Label: type_
                                                                                            └──Label argument type:
                                                                                               └──Type expr: Constructor: ty
-                                                                                                 └──Type expr: Variable: a27158
+                                                                                                 └──Type expr: Variable: 28687
                                                                                            └──Label type:
                                                                                               └──Type expr: Constructor: field
-                                                                                                 └──Type expr: Variable: a26981
-                                                                                                 └──Type expr: Variable: a27155
-                                                                                                 └──Type expr: Variable: a27158
+                                                                                                 └──Type expr: Variable: 28510
+                                                                                                 └──Type expr: Variable: 28684
+                                                                                                 └──Type expr: Variable: 28687
                                                                             └──Expression:
-                                                                               └──Type expr: Variable: a27158
+                                                                               └──Type expr: Variable: 28687
                                                                                └──Desc: Application
                                                                                   └──Expression:
                                                                                      └──Type expr: Arrow
-                                                                                        └──Type expr: Variable: a26981
-                                                                                        └──Type expr: Variable: a27158
+                                                                                        └──Type expr: Variable: 28510
+                                                                                        └──Type expr: Variable: 28687
                                                                                      └──Desc: Field
                                                                                         └──Expression:
                                                                                            └──Type expr: Constructor: field
-                                                                                              └──Type expr: Variable: a26981
-                                                                                              └──Type expr: Variable: a27155
-                                                                                              └──Type expr: Variable: a27158
+                                                                                              └──Type expr: Variable: 28510
+                                                                                              └──Type expr: Variable: 28684
+                                                                                              └──Type expr: Variable: 28687
                                                                                            └──Desc: Variable
                                                                                               └──Variable: field
                                                                                         └──Label description:
                                                                                            └──Label: get
                                                                                            └──Label argument type:
                                                                                               └──Type expr: Arrow
-                                                                                                 └──Type expr: Variable: a26981
-                                                                                                 └──Type expr: Variable: a27158
+                                                                                                 └──Type expr: Variable: 28510
+                                                                                                 └──Type expr: Variable: 28687
                                                                                            └──Label type:
                                                                                               └──Type expr: Constructor: field
-                                                                                                 └──Type expr: Variable: a26981
-                                                                                                 └──Type expr: Variable: a27155
-                                                                                                 └──Type expr: Variable: a27158
+                                                                                                 └──Type expr: Variable: 28510
+                                                                                                 └──Type expr: Variable: 28684
+                                                                                                 └──Type expr: Variable: 28687
                                                                                   └──Expression:
-                                                                                     └──Type expr: Variable: a26981
+                                                                                     └──Type expr: Variable: 28510
                                                                                      └──Desc: Variable
                                                                                         └──Variable: x
                                                  └──Expression:
@@ -884,8 +884,8 @@ let%expect_test "dynamic-frisch" =
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Constructor: packed_field
-                                                                         └──Type expr: Variable: a26981
-                                                                         └──Type expr: Variable: a27142
+                                                                         └──Type expr: Variable: 28510
+                                                                         └──Type expr: Variable: 28671
                                                                       └──Type expr: Tuple
                                                                          └──Type expr: Constructor: string
                                                                          └──Type expr: Constructor: variant
@@ -898,13 +898,13 @@ let%expect_test "dynamic-frisch" =
                                                                       └──Type expr: Arrow
                                                                          └──Type expr: Constructor: list
                                                                             └──Type expr: Constructor: packed_field
-                                                                               └──Type expr: Variable: a26981
-                                                                               └──Type expr: Variable: a27142
+                                                                               └──Type expr: Variable: 28510
+                                                                               └──Type expr: Variable: 28671
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Arrow
                                                                                └──Type expr: Constructor: packed_field
-                                                                                  └──Type expr: Variable: a26981
-                                                                                  └──Type expr: Variable: a27142
+                                                                                  └──Type expr: Variable: 28510
+                                                                                  └──Type expr: Variable: 28671
                                                                                └──Type expr: Tuple
                                                                                   └──Type expr: Constructor: string
                                                                                   └──Type expr: Constructor: variant
@@ -918,18 +918,18 @@ let%expect_test "dynamic-frisch" =
                                                                             └──Type expr: Constructor: string
                                                                             └──Type expr: Constructor: variant
                                                                          └──Type expr: Constructor: packed_field
-                                                                            └──Type expr: Variable: a26981
-                                                                            └──Type expr: Variable: a27142
+                                                                            └──Type expr: Variable: 28510
+                                                                            └──Type expr: Variable: 28671
                                                                    └──Expression:
                                                                       └──Type expr: Constructor: list
                                                                          └──Type expr: Constructor: packed_field
-                                                                            └──Type expr: Variable: a26981
-                                                                            └──Type expr: Variable: a27142
+                                                                            └──Type expr: Variable: 28510
+                                                                            └──Type expr: Variable: 28671
                                                                       └──Desc: Field
                                                                          └──Expression:
                                                                             └──Type expr: Constructor: record
-                                                                               └──Type expr: Variable: a26981
-                                                                               └──Type expr: Variable: a27142
+                                                                               └──Type expr: Variable: 28510
+                                                                               └──Type expr: Variable: 28671
                                                                             └──Desc: Variable
                                                                                └──Variable: record
                                                                          └──Label description:
@@ -937,23 +937,23 @@ let%expect_test "dynamic-frisch" =
                                                                             └──Label argument type:
                                                                                └──Type expr: Constructor: list
                                                                                   └──Type expr: Constructor: packed_field
-                                                                                     └──Type expr: Variable: a26981
-                                                                                     └──Type expr: Variable: a27142
+                                                                                     └──Type expr: Variable: 28510
+                                                                                     └──Type expr: Variable: 28671
                                                                             └──Label type:
                                                                                └──Type expr: Constructor: record
-                                                                                  └──Type expr: Variable: a26981
-                                                                                  └──Type expr: Variable: a27142
+                                                                                  └──Type expr: Variable: 28510
+                                                                                  └──Type expr: Variable: 28671
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: packed_field
-                                                                      └──Type expr: Variable: a26981
-                                                                      └──Type expr: Variable: a27142
+                                                                      └──Type expr: Variable: 28510
+                                                                      └──Type expr: Variable: 28671
                                                                    └──Type expr: Tuple
                                                                       └──Type expr: Constructor: string
                                                                       └──Type expr: Constructor: variant
                                                                 └──Desc: Variable
                                                                    └──Variable: f
-                                                                   └──Type expr: Variable: a27142
+                                                                   └──Type expr: Variable: 28671
        └──Structure item: Exception
           └──Type exception:
              └──Extension constructor:
@@ -970,39 +970,39 @@ let%expect_test "dynamic-frisch" =
              └──Value binding:
                 └──Variable: devariantize
                 └──Abstraction:
-                   └──Variables: a27262
+                   └──Variables: 28791
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: ty
-                            └──Type expr: Variable: a27283
+                            └──Type expr: Variable: 28812
                          └──Type expr: Arrow
                             └──Type expr: Constructor: variant
-                            └──Type expr: Variable: a27283
+                            └──Type expr: Variable: 28812
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: ty
-                               └──Type expr: Variable: a27283
+                               └──Type expr: Variable: 28812
                             └──Desc: Variable: ty
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: variant
-                               └──Type expr: Variable: a27283
+                               └──Type expr: Variable: 28812
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: variant
                                   └──Desc: Variable: v
                                └──Expression:
-                                  └──Type expr: Variable: a27283
+                                  └──Type expr: Variable: 28812
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: ty
-                                              └──Type expr: Variable: a27283
+                                              └──Type expr: Variable: 28812
                                            └──Type expr: Constructor: variant
                                         └──Desc: Tuple
                                            └──Expression:
                                               └──Type expr: Constructor: ty
-                                                 └──Type expr: Variable: a27283
+                                                 └──Type expr: Variable: 28812
                                               └──Desc: Variable
                                                  └──Variable: ty
                                            └──Expression:
@@ -1011,25 +1011,25 @@ let%expect_test "dynamic-frisch" =
                                                  └──Variable: v
                                      └──Type expr: Tuple
                                         └──Type expr: Constructor: ty
-                                           └──Type expr: Variable: a27283
+                                           └──Type expr: Variable: 28812
                                         └──Type expr: Constructor: variant
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: ty
-                                                    └──Type expr: Variable: a27283
+                                                    └──Type expr: Variable: 28812
                                                  └──Type expr: Constructor: variant
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: ty
-                                                       └──Type expr: Variable: a27283
+                                                       └──Type expr: Variable: 28812
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Int
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: ty
-                                                                └──Type expr: Variable: a27283
+                                                                └──Type expr: Variable: 28812
                                                  └──Pattern:
                                                     └──Type expr: Constructor: variant
                                                     └──Desc: Construct
@@ -1043,25 +1043,25 @@ let%expect_test "dynamic-frisch" =
                                                           └──Type expr: Constructor: int
                                                           └──Desc: Variable: x
                                            └──Expression:
-                                              └──Type expr: Variable: a27283
+                                              └──Type expr: Variable: 28812
                                               └──Desc: Variable
                                                  └──Variable: x
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: ty
-                                                    └──Type expr: Variable: a27283
+                                                    └──Type expr: Variable: 28812
                                                  └──Type expr: Constructor: variant
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: ty
-                                                       └──Type expr: Variable: a27283
+                                                       └──Type expr: Variable: 28812
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: String
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: ty
-                                                                └──Type expr: Variable: a27283
+                                                                └──Type expr: Variable: 28812
                                                  └──Pattern:
                                                     └──Type expr: Constructor: variant
                                                     └──Desc: Construct
@@ -1075,31 +1075,31 @@ let%expect_test "dynamic-frisch" =
                                                           └──Type expr: Constructor: string
                                                           └──Desc: Variable: x
                                            └──Expression:
-                                              └──Type expr: Variable: a27283
+                                              └──Type expr: Variable: 28812
                                               └──Desc: Variable
                                                  └──Variable: x
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: ty
-                                                    └──Type expr: Variable: a27283
+                                                    └──Type expr: Variable: 28812
                                                  └──Type expr: Constructor: variant
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: ty
-                                                       └──Type expr: Variable: a27283
+                                                       └──Type expr: Variable: 28812
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: List
                                                           └──Constructor argument type:
                                                              └──Type expr: Constructor: ty
-                                                                └──Type expr: Variable: a27349
+                                                                └──Type expr: Variable: 28878
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: ty
-                                                                └──Type expr: Variable: a27283
+                                                                └──Type expr: Variable: 28812
                                                        └──Pattern:
                                                           └──Type expr: Constructor: ty
-                                                             └──Type expr: Variable: a27349
+                                                             └──Type expr: Variable: 28878
                                                           └──Desc: Variable: ty
                                                  └──Pattern:
                                                     └──Type expr: Constructor: variant
@@ -1116,14 +1116,14 @@ let%expect_test "dynamic-frisch" =
                                                              └──Type expr: Constructor: variant
                                                           └──Desc: Variable: vs
                                            └──Expression:
-                                              └──Type expr: Variable: a27283
+                                              └──Type expr: Variable: 28812
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Arrow
                                                           └──Type expr: Constructor: variant
-                                                          └──Type expr: Variable: a27349
-                                                       └──Type expr: Variable: a27283
+                                                          └──Type expr: Variable: 28878
+                                                       └──Type expr: Variable: 28812
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
@@ -1132,11 +1132,11 @@ let%expect_test "dynamic-frisch" =
                                                              └──Type expr: Arrow
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: variant
-                                                                   └──Type expr: Variable: a27349
-                                                                └──Type expr: Variable: a27283
+                                                                   └──Type expr: Variable: 28878
+                                                                └──Type expr: Variable: 28812
                                                           └──Desc: Variable
                                                              └──Variable: map
-                                                             └──Type expr: Variable: a27349
+                                                             └──Type expr: Variable: 28878
                                                              └──Type expr: Constructor: variant
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
@@ -1146,59 +1146,59 @@ let%expect_test "dynamic-frisch" =
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: variant
-                                                       └──Type expr: Variable: a27349
+                                                       └──Type expr: Variable: 28878
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: ty
-                                                                └──Type expr: Variable: a27349
+                                                                └──Type expr: Variable: 28878
                                                              └──Type expr: Arrow
                                                                 └──Type expr: Constructor: variant
-                                                                └──Type expr: Variable: a27349
+                                                                └──Type expr: Variable: 28878
                                                           └──Desc: Variable
                                                              └──Variable: devariantize
-                                                             └──Type expr: Variable: a27349
+                                                             └──Type expr: Variable: 28878
                                                        └──Expression:
                                                           └──Type expr: Constructor: ty
-                                                             └──Type expr: Variable: a27349
+                                                             └──Type expr: Variable: 28878
                                                           └──Desc: Variable
                                                              └──Variable: ty
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: ty
-                                                    └──Type expr: Variable: a27283
+                                                    └──Type expr: Variable: 28812
                                                  └──Type expr: Constructor: variant
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: ty
-                                                       └──Type expr: Variable: a27283
+                                                       └──Type expr: Variable: 28812
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Pair
                                                           └──Constructor argument type:
                                                              └──Type expr: Tuple
                                                                 └──Type expr: Constructor: ty
-                                                                   └──Type expr: Variable: a27409
+                                                                   └──Type expr: Variable: 28938
                                                                 └──Type expr: Constructor: ty
-                                                                   └──Type expr: Variable: a27407
+                                                                   └──Type expr: Variable: 28936
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: ty
-                                                                └──Type expr: Variable: a27283
+                                                                └──Type expr: Variable: 28812
                                                        └──Pattern:
                                                           └──Type expr: Tuple
                                                              └──Type expr: Constructor: ty
-                                                                └──Type expr: Variable: a27409
+                                                                └──Type expr: Variable: 28938
                                                              └──Type expr: Constructor: ty
-                                                                └──Type expr: Variable: a27407
+                                                                └──Type expr: Variable: 28936
                                                           └──Desc: Tuple
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: ty
-                                                                   └──Type expr: Variable: a27409
+                                                                   └──Type expr: Variable: 28938
                                                                 └──Desc: Variable: ty1
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: ty
-                                                                   └──Type expr: Variable: a27407
+                                                                   └──Type expr: Variable: 28936
                                                                 └──Desc: Variable: ty2
                                                  └──Pattern:
                                                     └──Type expr: Constructor: variant
@@ -1223,29 +1223,29 @@ let%expect_test "dynamic-frisch" =
                                                                 └──Type expr: Constructor: variant
                                                                 └──Desc: Variable: v2
                                            └──Expression:
-                                              └──Type expr: Variable: a27283
+                                              └──Type expr: Variable: 28812
                                               └──Desc: Tuple
                                                  └──Expression:
-                                                    └──Type expr: Variable: a27409
+                                                    └──Type expr: Variable: 28938
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: variant
-                                                             └──Type expr: Variable: a27409
+                                                             └──Type expr: Variable: 28938
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: ty
-                                                                      └──Type expr: Variable: a27409
+                                                                      └──Type expr: Variable: 28938
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Constructor: variant
-                                                                      └──Type expr: Variable: a27409
+                                                                      └──Type expr: Variable: 28938
                                                                 └──Desc: Variable
                                                                    └──Variable: devariantize
-                                                                   └──Type expr: Variable: a27409
+                                                                   └──Type expr: Variable: 28938
                                                              └──Expression:
                                                                 └──Type expr: Constructor: ty
-                                                                   └──Type expr: Variable: a27409
+                                                                   └──Type expr: Variable: 28938
                                                                 └──Desc: Variable
                                                                    └──Variable: ty1
                                                        └──Expression:
@@ -1253,26 +1253,26 @@ let%expect_test "dynamic-frisch" =
                                                           └──Desc: Variable
                                                              └──Variable: v1
                                                  └──Expression:
-                                                    └──Type expr: Variable: a27407
+                                                    └──Type expr: Variable: 28936
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: variant
-                                                             └──Type expr: Variable: a27407
+                                                             └──Type expr: Variable: 28936
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: ty
-                                                                      └──Type expr: Variable: a27407
+                                                                      └──Type expr: Variable: 28936
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Constructor: variant
-                                                                      └──Type expr: Variable: a27407
+                                                                      └──Type expr: Variable: 28936
                                                                 └──Desc: Variable
                                                                    └──Variable: devariantize
-                                                                   └──Type expr: Variable: a27407
+                                                                   └──Type expr: Variable: 28936
                                                              └──Expression:
                                                                 └──Type expr: Constructor: ty
-                                                                   └──Type expr: Variable: a27407
+                                                                   └──Type expr: Variable: 28936
                                                                 └──Desc: Variable
                                                                    └──Variable: ty2
                                                        └──Expression:
@@ -1283,26 +1283,26 @@ let%expect_test "dynamic-frisch" =
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: ty
-                                                    └──Type expr: Variable: a27283
+                                                    └──Type expr: Variable: 28812
                                                  └──Type expr: Constructor: variant
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: ty
-                                                       └──Type expr: Variable: a27283
+                                                       └──Type expr: Variable: 28812
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Record
                                                           └──Constructor argument type:
                                                              └──Type expr: Constructor: record
-                                                                └──Type expr: Variable: a27283
-                                                                └──Type expr: Variable: a27475
+                                                                └──Type expr: Variable: 28812
+                                                                └──Type expr: Variable: 29004
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: ty
-                                                                └──Type expr: Variable: a27283
+                                                                └──Type expr: Variable: 28812
                                                        └──Pattern:
                                                           └──Type expr: Constructor: record
-                                                             └──Type expr: Variable: a27283
-                                                             └──Type expr: Variable: a27475
+                                                             └──Type expr: Variable: 28812
+                                                             └──Type expr: Variable: 29004
                                                           └──Desc: Variable: record
                                                  └──Pattern:
                                                     └──Type expr: Constructor: variant
@@ -1323,7 +1323,7 @@ let%expect_test "dynamic-frisch" =
                                                                 └──Type expr: Constructor: variant
                                                           └──Desc: Variable: vfields
                                            └──Expression:
-                                              └──Type expr: Variable: a27283
+                                              └──Type expr: Variable: 28812
                                               └──Desc: Sequence
                                                  └──Expression:
                                                     └──Type expr: Constructor: unit
@@ -1352,24 +1352,24 @@ let%expect_test "dynamic-frisch" =
                                                                             └──Type expr: Arrow
                                                                                └──Type expr: Constructor: list
                                                                                   └──Type expr: Constructor: packed_field
-                                                                                     └──Type expr: Variable: a27283
-                                                                                     └──Type expr: Variable: a27475
+                                                                                     └──Type expr: Variable: 28812
+                                                                                     └──Type expr: Variable: 29004
                                                                                └──Type expr: Constructor: int
                                                                             └──Desc: Variable
                                                                                └──Variable: length
                                                                                └──Type expr: Constructor: packed_field
-                                                                                  └──Type expr: Variable: a27283
-                                                                                  └──Type expr: Variable: a27475
+                                                                                  └──Type expr: Variable: 28812
+                                                                                  └──Type expr: Variable: 29004
                                                                          └──Expression:
                                                                             └──Type expr: Constructor: list
                                                                                └──Type expr: Constructor: packed_field
-                                                                                  └──Type expr: Variable: a27283
-                                                                                  └──Type expr: Variable: a27475
+                                                                                  └──Type expr: Variable: 28812
+                                                                                  └──Type expr: Variable: 29004
                                                                             └──Desc: Field
                                                                                └──Expression:
                                                                                   └──Type expr: Constructor: record
-                                                                                     └──Type expr: Variable: a27283
-                                                                                     └──Type expr: Variable: a27475
+                                                                                     └──Type expr: Variable: 28812
+                                                                                     └──Type expr: Variable: 29004
                                                                                   └──Desc: Variable
                                                                                      └──Variable: record
                                                                                └──Label description:
@@ -1377,12 +1377,12 @@ let%expect_test "dynamic-frisch" =
                                                                                   └──Label argument type:
                                                                                      └──Type expr: Constructor: list
                                                                                         └──Type expr: Constructor: packed_field
-                                                                                           └──Type expr: Variable: a27283
-                                                                                           └──Type expr: Variable: a27475
+                                                                                           └──Type expr: Variable: 28812
+                                                                                           └──Type expr: Variable: 29004
                                                                                   └──Label type:
                                                                                      └──Type expr: Constructor: record
-                                                                                        └──Type expr: Variable: a27283
-                                                                                        └──Type expr: Variable: a27475
+                                                                                        └──Type expr: Variable: 28812
+                                                                                        └──Type expr: Variable: 29004
                                                              └──Expression:
                                                                 └──Type expr: Constructor: int
                                                                 └──Desc: Application
@@ -1426,27 +1426,27 @@ let%expect_test "dynamic-frisch" =
                                                           └──Type expr: Constructor: unit
                                                           └──Desc: Constant: ()
                                                  └──Expression:
-                                                    └──Type expr: Variable: a27283
+                                                    └──Type expr: Variable: 28812
                                                     └──Desc: Let
                                                        └──Value bindings:
                                                           └──Value binding:
                                                              └──Pattern:
-                                                                └──Type expr: Variable: a27475
+                                                                └──Type expr: Variable: 29004
                                                                 └──Desc: Variable: builder
                                                              └──Abstraction:
                                                                 └──Variables:
                                                                 └──Expression:
-                                                                   └──Type expr: Variable: a27475
+                                                                   └──Type expr: Variable: 29004
                                                                    └──Desc: Application
                                                                       └──Expression:
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Constructor: unit
-                                                                            └──Type expr: Variable: a27475
+                                                                            └──Type expr: Variable: 29004
                                                                          └──Desc: Field
                                                                             └──Expression:
                                                                                └──Type expr: Constructor: record
-                                                                                  └──Type expr: Variable: a27283
-                                                                                  └──Type expr: Variable: a27475
+                                                                                  └──Type expr: Variable: 28812
+                                                                                  └──Type expr: Variable: 29004
                                                                                └──Desc: Variable
                                                                                   └──Variable: record
                                                                             └──Label description:
@@ -1454,24 +1454,24 @@ let%expect_test "dynamic-frisch" =
                                                                                └──Label argument type:
                                                                                   └──Type expr: Arrow
                                                                                      └──Type expr: Constructor: unit
-                                                                                     └──Type expr: Variable: a27475
+                                                                                     └──Type expr: Variable: 29004
                                                                                └──Label type:
                                                                                   └──Type expr: Constructor: record
-                                                                                     └──Type expr: Variable: a27283
-                                                                                     └──Type expr: Variable: a27475
+                                                                                     └──Type expr: Variable: 28812
+                                                                                     └──Type expr: Variable: 29004
                                                                       └──Expression:
                                                                          └──Type expr: Constructor: unit
                                                                          └──Desc: Constant: ()
                                                        └──Expression:
-                                                          └──Type expr: Variable: a27283
+                                                          └──Type expr: Variable: 28812
                                                           └──Desc: Let
                                                              └──Value bindings:
                                                                 └──Value binding:
                                                                    └──Pattern:
                                                                       └──Type expr: Arrow
                                                                          └──Type expr: Constructor: packed_field
-                                                                            └──Type expr: Variable: a27557
-                                                                            └──Type expr: Variable: a27475
+                                                                            └──Type expr: Variable: 29086
+                                                                            └──Type expr: Variable: 29004
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Tuple
                                                                                └──Type expr: Constructor: string
@@ -1479,12 +1479,12 @@ let%expect_test "dynamic-frisch" =
                                                                             └──Type expr: Constructor: unit
                                                                       └──Desc: Variable: f
                                                                    └──Abstraction:
-                                                                      └──Variables: a27557,a27557,a27557,a27557
+                                                                      └──Variables: 29086,29086,29086,29086
                                                                       └──Expression:
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Constructor: packed_field
-                                                                               └──Type expr: Variable: a27557
-                                                                               └──Type expr: Variable: a27475
+                                                                               └──Type expr: Variable: 29086
+                                                                               └──Type expr: Variable: 29004
                                                                             └──Type expr: Arrow
                                                                                └──Type expr: Tuple
                                                                                   └──Type expr: Constructor: string
@@ -1493,25 +1493,25 @@ let%expect_test "dynamic-frisch" =
                                                                          └──Desc: Function
                                                                             └──Pattern:
                                                                                └──Type expr: Constructor: packed_field
-                                                                                  └──Type expr: Variable: a27557
-                                                                                  └──Type expr: Variable: a27475
+                                                                                  └──Type expr: Variable: 29086
+                                                                                  └──Type expr: Variable: 29004
                                                                                └──Desc: Construct
                                                                                   └──Constructor description:
                                                                                      └──Name: Field
                                                                                      └──Constructor argument type:
                                                                                         └──Type expr: Constructor: field
-                                                                                           └──Type expr: Variable: a27557
-                                                                                           └──Type expr: Variable: a27475
-                                                                                           └──Type expr: Variable: a27561
+                                                                                           └──Type expr: Variable: 29086
+                                                                                           └──Type expr: Variable: 29004
+                                                                                           └──Type expr: Variable: 29090
                                                                                      └──Constructor type:
                                                                                         └──Type expr: Constructor: packed_field
-                                                                                           └──Type expr: Variable: a27557
-                                                                                           └──Type expr: Variable: a27475
+                                                                                           └──Type expr: Variable: 29086
+                                                                                           └──Type expr: Variable: 29004
                                                                                   └──Pattern:
                                                                                      └──Type expr: Constructor: field
-                                                                                        └──Type expr: Variable: a27557
-                                                                                        └──Type expr: Variable: a27475
-                                                                                        └──Type expr: Variable: a27561
+                                                                                        └──Type expr: Variable: 29086
+                                                                                        └──Type expr: Variable: 29004
+                                                                                        └──Type expr: Variable: 29090
                                                                                      └──Desc: Variable: field
                                                                             └──Expression:
                                                                                └──Type expr: Arrow
@@ -1559,9 +1559,9 @@ let%expect_test "dynamic-frisch" =
                                                                                                              └──Desc: Field
                                                                                                                 └──Expression:
                                                                                                                    └──Type expr: Constructor: field
-                                                                                                                      └──Type expr: Variable: a27557
-                                                                                                                      └──Type expr: Variable: a27475
-                                                                                                                      └──Type expr: Variable: a27561
+                                                                                                                      └──Type expr: Variable: 29086
+                                                                                                                      └──Type expr: Variable: 29004
+                                                                                                                      └──Type expr: Variable: 29090
                                                                                                                    └──Desc: Variable
                                                                                                                       └──Variable: field
                                                                                                                 └──Label description:
@@ -1570,9 +1570,9 @@ let%expect_test "dynamic-frisch" =
                                                                                                                       └──Type expr: Constructor: string
                                                                                                                    └──Label type:
                                                                                                                       └──Type expr: Constructor: field
-                                                                                                                         └──Type expr: Variable: a27557
-                                                                                                                         └──Type expr: Variable: a27475
-                                                                                                                         └──Type expr: Variable: a27561
+                                                                                                                         └──Type expr: Variable: 29086
+                                                                                                                         └──Type expr: Variable: 29004
+                                                                                                                         └──Type expr: Variable: 29090
                                                                                                     └──Expression:
                                                                                                        └──Type expr: Constructor: string
                                                                                                        └──Desc: Variable
@@ -1602,85 +1602,85 @@ let%expect_test "dynamic-frisch" =
                                                                                            └──Desc: Application
                                                                                               └──Expression:
                                                                                                  └──Type expr: Arrow
-                                                                                                    └──Type expr: Variable: a27561
+                                                                                                    └──Type expr: Variable: 29090
                                                                                                     └──Type expr: Constructor: unit
                                                                                                  └──Desc: Application
                                                                                                     └──Expression:
                                                                                                        └──Type expr: Arrow
-                                                                                                          └──Type expr: Variable: a27475
+                                                                                                          └──Type expr: Variable: 29004
                                                                                                           └──Type expr: Arrow
-                                                                                                             └──Type expr: Variable: a27561
+                                                                                                             └──Type expr: Variable: 29090
                                                                                                              └──Type expr: Constructor: unit
                                                                                                        └──Desc: Field
                                                                                                           └──Expression:
                                                                                                              └──Type expr: Constructor: field
-                                                                                                                └──Type expr: Variable: a27557
-                                                                                                                └──Type expr: Variable: a27475
-                                                                                                                └──Type expr: Variable: a27561
+                                                                                                                └──Type expr: Variable: 29086
+                                                                                                                └──Type expr: Variable: 29004
+                                                                                                                └──Type expr: Variable: 29090
                                                                                                              └──Desc: Variable
                                                                                                                 └──Variable: field
                                                                                                           └──Label description:
                                                                                                              └──Label: set
                                                                                                              └──Label argument type:
                                                                                                                 └──Type expr: Arrow
-                                                                                                                   └──Type expr: Variable: a27475
+                                                                                                                   └──Type expr: Variable: 29004
                                                                                                                    └──Type expr: Arrow
-                                                                                                                      └──Type expr: Variable: a27561
+                                                                                                                      └──Type expr: Variable: 29090
                                                                                                                       └──Type expr: Constructor: unit
                                                                                                              └──Label type:
                                                                                                                 └──Type expr: Constructor: field
-                                                                                                                   └──Type expr: Variable: a27557
-                                                                                                                   └──Type expr: Variable: a27475
-                                                                                                                   └──Type expr: Variable: a27561
+                                                                                                                   └──Type expr: Variable: 29086
+                                                                                                                   └──Type expr: Variable: 29004
+                                                                                                                   └──Type expr: Variable: 29090
                                                                                                     └──Expression:
-                                                                                                       └──Type expr: Variable: a27475
+                                                                                                       └──Type expr: Variable: 29004
                                                                                                        └──Desc: Variable
                                                                                                           └──Variable: builder
                                                                                               └──Expression:
-                                                                                                 └──Type expr: Variable: a27561
+                                                                                                 └──Type expr: Variable: 29090
                                                                                                  └──Desc: Application
                                                                                                     └──Expression:
                                                                                                        └──Type expr: Arrow
                                                                                                           └──Type expr: Constructor: variant
-                                                                                                          └──Type expr: Variable: a27561
+                                                                                                          └──Type expr: Variable: 29090
                                                                                                        └──Desc: Application
                                                                                                           └──Expression:
                                                                                                              └──Type expr: Arrow
                                                                                                                 └──Type expr: Constructor: ty
-                                                                                                                   └──Type expr: Variable: a27561
+                                                                                                                   └──Type expr: Variable: 29090
                                                                                                                 └──Type expr: Arrow
                                                                                                                    └──Type expr: Constructor: variant
-                                                                                                                   └──Type expr: Variable: a27561
+                                                                                                                   └──Type expr: Variable: 29090
                                                                                                              └──Desc: Variable
                                                                                                                 └──Variable: devariantize
-                                                                                                                └──Type expr: Variable: a27561
+                                                                                                                └──Type expr: Variable: 29090
                                                                                                           └──Expression:
                                                                                                              └──Type expr: Constructor: ty
-                                                                                                                └──Type expr: Variable: a27561
+                                                                                                                └──Type expr: Variable: 29090
                                                                                                              └──Desc: Field
                                                                                                                 └──Expression:
                                                                                                                    └──Type expr: Constructor: field
-                                                                                                                      └──Type expr: Variable: a27557
-                                                                                                                      └──Type expr: Variable: a27475
-                                                                                                                      └──Type expr: Variable: a27561
+                                                                                                                      └──Type expr: Variable: 29086
+                                                                                                                      └──Type expr: Variable: 29004
+                                                                                                                      └──Type expr: Variable: 29090
                                                                                                                    └──Desc: Variable
                                                                                                                       └──Variable: field
                                                                                                                 └──Label description:
                                                                                                                    └──Label: type_
                                                                                                                    └──Label argument type:
                                                                                                                       └──Type expr: Constructor: ty
-                                                                                                                         └──Type expr: Variable: a27561
+                                                                                                                         └──Type expr: Variable: 29090
                                                                                                                    └──Label type:
                                                                                                                       └──Type expr: Constructor: field
-                                                                                                                         └──Type expr: Variable: a27557
-                                                                                                                         └──Type expr: Variable: a27475
-                                                                                                                         └──Type expr: Variable: a27561
+                                                                                                                         └──Type expr: Variable: 29086
+                                                                                                                         └──Type expr: Variable: 29004
+                                                                                                                         └──Type expr: Variable: 29090
                                                                                                     └──Expression:
                                                                                                        └──Type expr: Constructor: variant
                                                                                                        └──Desc: Variable
                                                                                                           └──Variable: v
                                                              └──Expression:
-                                                                └──Type expr: Variable: a27283
+                                                                └──Type expr: Variable: 28812
                                                                 └──Desc: Sequence
                                                                    └──Expression:
                                                                       └──Type expr: Constructor: unit
@@ -1689,8 +1689,8 @@ let%expect_test "dynamic-frisch" =
                                                                             └──Type expr: Arrow
                                                                                └──Type expr: Arrow
                                                                                   └──Type expr: Constructor: packed_field
-                                                                                     └──Type expr: Variable: a27283
-                                                                                     └──Type expr: Variable: a27475
+                                                                                     └──Type expr: Variable: 28812
+                                                                                     └──Type expr: Variable: 29004
                                                                                   └──Type expr: Arrow
                                                                                      └──Type expr: Tuple
                                                                                         └──Type expr: Constructor: string
@@ -1707,8 +1707,8 @@ let%expect_test "dynamic-frisch" =
                                                                                      └──Type expr: Arrow
                                                                                         └──Type expr: Arrow
                                                                                            └──Type expr: Constructor: packed_field
-                                                                                              └──Type expr: Variable: a27283
-                                                                                              └──Type expr: Variable: a27475
+                                                                                              └──Type expr: Variable: 28812
+                                                                                              └──Type expr: Variable: 29004
                                                                                            └──Type expr: Arrow
                                                                                               └──Type expr: Tuple
                                                                                                  └──Type expr: Constructor: string
@@ -1720,8 +1720,8 @@ let%expect_test "dynamic-frisch" =
                                                                                         └──Type expr: Arrow
                                                                                            └──Type expr: Constructor: list
                                                                                               └──Type expr: Constructor: packed_field
-                                                                                                 └──Type expr: Variable: a27283
-                                                                                                 └──Type expr: Variable: a27475
+                                                                                                 └──Type expr: Variable: 28812
+                                                                                                 └──Type expr: Variable: 29004
                                                                                            └──Type expr: Arrow
                                                                                               └──Type expr: Constructor: list
                                                                                                  └──Type expr: Tuple
@@ -1730,8 +1730,8 @@ let%expect_test "dynamic-frisch" =
                                                                                               └──Type expr: Arrow
                                                                                                  └──Type expr: Arrow
                                                                                                     └──Type expr: Constructor: packed_field
-                                                                                                       └──Type expr: Variable: a27283
-                                                                                                       └──Type expr: Variable: a27475
+                                                                                                       └──Type expr: Variable: 28812
+                                                                                                       └──Type expr: Variable: 29004
                                                                                                     └──Type expr: Arrow
                                                                                                        └──Type expr: Tuple
                                                                                                           └──Type expr: Constructor: string
@@ -1744,18 +1744,18 @@ let%expect_test "dynamic-frisch" =
                                                                                               └──Type expr: Constructor: string
                                                                                               └──Type expr: Constructor: variant
                                                                                            └──Type expr: Constructor: packed_field
-                                                                                              └──Type expr: Variable: a27283
-                                                                                              └──Type expr: Variable: a27475
+                                                                                              └──Type expr: Variable: 28812
+                                                                                              └──Type expr: Variable: 29004
                                                                                      └──Expression:
                                                                                         └──Type expr: Constructor: list
                                                                                            └──Type expr: Constructor: packed_field
-                                                                                              └──Type expr: Variable: a27283
-                                                                                              └──Type expr: Variable: a27475
+                                                                                              └──Type expr: Variable: 28812
+                                                                                              └──Type expr: Variable: 29004
                                                                                         └──Desc: Field
                                                                                            └──Expression:
                                                                                               └──Type expr: Constructor: record
-                                                                                                 └──Type expr: Variable: a27283
-                                                                                                 └──Type expr: Variable: a27475
+                                                                                                 └──Type expr: Variable: 28812
+                                                                                                 └──Type expr: Variable: 29004
                                                                                               └──Desc: Variable
                                                                                                  └──Variable: record
                                                                                            └──Label description:
@@ -1763,12 +1763,12 @@ let%expect_test "dynamic-frisch" =
                                                                                               └──Label argument type:
                                                                                                  └──Type expr: Constructor: list
                                                                                                     └──Type expr: Constructor: packed_field
-                                                                                                       └──Type expr: Variable: a27283
-                                                                                                       └──Type expr: Variable: a27475
+                                                                                                       └──Type expr: Variable: 28812
+                                                                                                       └──Type expr: Variable: 29004
                                                                                               └──Label type:
                                                                                                  └──Type expr: Constructor: record
-                                                                                                    └──Type expr: Variable: a27283
-                                                                                                    └──Type expr: Variable: a27475
+                                                                                                    └──Type expr: Variable: 28812
+                                                                                                    └──Type expr: Variable: 29004
                                                                                └──Expression:
                                                                                   └──Type expr: Constructor: list
                                                                                      └──Type expr: Tuple
@@ -1779,8 +1779,8 @@ let%expect_test "dynamic-frisch" =
                                                                          └──Expression:
                                                                             └──Type expr: Arrow
                                                                                └──Type expr: Constructor: packed_field
-                                                                                  └──Type expr: Variable: a27283
-                                                                                  └──Type expr: Variable: a27475
+                                                                                  └──Type expr: Variable: 28812
+                                                                                  └──Type expr: Variable: 29004
                                                                                └──Type expr: Arrow
                                                                                   └──Type expr: Tuple
                                                                                      └──Type expr: Constructor: string
@@ -1788,52 +1788,52 @@ let%expect_test "dynamic-frisch" =
                                                                                   └──Type expr: Constructor: unit
                                                                             └──Desc: Variable
                                                                                └──Variable: f
-                                                                               └──Type expr: Variable: a27283
+                                                                               └──Type expr: Variable: 28812
                                                                    └──Expression:
-                                                                      └──Type expr: Variable: a27283
+                                                                      └──Type expr: Variable: 28812
                                                                       └──Desc: Application
                                                                          └──Expression:
                                                                             └──Type expr: Arrow
-                                                                               └──Type expr: Variable: a27475
-                                                                               └──Type expr: Variable: a27283
+                                                                               └──Type expr: Variable: 29004
+                                                                               └──Type expr: Variable: 28812
                                                                             └──Desc: Field
                                                                                └──Expression:
                                                                                   └──Type expr: Constructor: record
-                                                                                     └──Type expr: Variable: a27283
-                                                                                     └──Type expr: Variable: a27475
+                                                                                     └──Type expr: Variable: 28812
+                                                                                     └──Type expr: Variable: 29004
                                                                                   └──Desc: Variable
                                                                                      └──Variable: record
                                                                                └──Label description:
                                                                                   └──Label: of_builder
                                                                                   └──Label argument type:
                                                                                      └──Type expr: Arrow
-                                                                                        └──Type expr: Variable: a27475
-                                                                                        └──Type expr: Variable: a27283
+                                                                                        └──Type expr: Variable: 29004
+                                                                                        └──Type expr: Variable: 28812
                                                                                   └──Label type:
                                                                                      └──Type expr: Constructor: record
-                                                                                        └──Type expr: Variable: a27283
-                                                                                        └──Type expr: Variable: a27475
+                                                                                        └──Type expr: Variable: 28812
+                                                                                        └──Type expr: Variable: 29004
                                                                          └──Expression:
-                                                                            └──Type expr: Variable: a27475
+                                                                            └──Type expr: Variable: 29004
                                                                             └──Desc: Variable
                                                                                └──Variable: builder
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: ty
-                                                    └──Type expr: Variable: a27283
+                                                    └──Type expr: Variable: 28812
                                                  └──Type expr: Constructor: variant
                                               └──Desc: Any
                                            └──Expression:
-                                              └──Type expr: Variable: a27283
+                                              └──Type expr: Variable: 28812
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: exn
-                                                       └──Type expr: Variable: a27283
+                                                       └──Type expr: Variable: 28812
                                                     └──Desc: Variable
                                                        └──Variable: raise
-                                                       └──Type expr: Variable: a27283
+                                                       └──Type expr: Variable: 28812
                                                  └──Expression:
                                                     └──Type expr: Constructor: exn
                                                     └──Desc: Construct

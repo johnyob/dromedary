@@ -26,23 +26,23 @@ let%expect_test "pr7637-1" =
              └──Type declaration kind: Alias
                 └──Alias
                    └──Alias name: elt
-                   └──Alias alphas: a b
-                   └──Type expr: Variable: a
+                   └──Alias alphas: 15058 15059
+                   └──Type expr: Variable: 15058
        └──Structure item: Type
           └──Type declaration:
              └──Type name: iter
              └──Type declaration kind: Record
                 └──Label declaration:
                    └──Label name: f
-                   └──Label alphas: a
-                   └──Label betas: b
+                   └──Label alphas: 15060
+                   └──Label betas: 15061
                    └──Type expr: Arrow
                       └──Type expr: Constructor: elt
-                         └──Type expr: Variable: a
-                         └──Type expr: Variable: b
+                         └──Type expr: Variable: 15060
+                         └──Type expr: Variable: 15061
                       └──Type expr: Constructor: unit
                    └──Type expr: Constructor: iter
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 15060
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -50,11 +50,11 @@ let%expect_test "pr7637-1" =
                    └──Type expr: Arrow
                       └──Type expr: Arrow
                          └──Type expr: Constructor: elt
-                            └──Type expr: Variable: a14601
-                            └──Type expr: Variable: a14608
+                            └──Type expr: Variable: 15090
+                            └──Type expr: Variable: 15097
                          └──Type expr: Constructor: unit
                       └──Type expr: Constructor: iter
-                         └──Type expr: Variable: a14601
+                         └──Type expr: Variable: 15090
                    └──Desc: Variable: promote
                 └──Abstraction:
                    └──Variables:
@@ -62,30 +62,30 @@ let%expect_test "pr7637-1" =
                       └──Type expr: Arrow
                          └──Type expr: Arrow
                             └──Type expr: Constructor: elt
-                               └──Type expr: Variable: a14601
-                               └──Type expr: Variable: a14608
+                               └──Type expr: Variable: 15090
+                               └──Type expr: Variable: 15097
                             └──Type expr: Constructor: unit
                          └──Type expr: Constructor: iter
-                            └──Type expr: Variable: a14601
+                            └──Type expr: Variable: 15090
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: elt
-                                  └──Type expr: Variable: a14601
-                                  └──Type expr: Variable: a14608
+                                  └──Type expr: Variable: 15090
+                                  └──Type expr: Variable: 15097
                                └──Type expr: Constructor: unit
                             └──Desc: Variable: f
                          └──Expression:
                             └──Type expr: Constructor: iter
-                               └──Type expr: Variable: a14601
+                               └──Type expr: Variable: 15090
                             └──Desc: Let
                                └──Value bindings:
                                   └──Value binding:
                                      └──Pattern:
                                         └──Type expr: Arrow
                                            └──Type expr: Constructor: elt
-                                              └──Type expr: Variable: a14601
-                                              └──Type expr: Variable: a14608
+                                              └──Type expr: Variable: 15090
+                                              └──Type expr: Variable: 15097
                                            └──Type expr: Constructor: unit
                                         └──Desc: Variable: g
                                      └──Abstraction:
@@ -93,14 +93,14 @@ let%expect_test "pr7637-1" =
                                         └──Expression:
                                            └──Type expr: Arrow
                                               └──Type expr: Constructor: elt
-                                                 └──Type expr: Variable: a14601
-                                                 └──Type expr: Variable: a14608
+                                                 └──Type expr: Variable: 15090
+                                                 └──Type expr: Variable: 15097
                                               └──Type expr: Constructor: unit
                                            └──Desc: Function
                                               └──Pattern:
                                                  └──Type expr: Constructor: elt
-                                                    └──Type expr: Variable: a14601
-                                                    └──Type expr: Variable: a14608
+                                                    └──Type expr: Variable: 15090
+                                                    └──Type expr: Variable: 15097
                                                  └──Desc: Variable: x
                                               └──Expression:
                                                  └──Type expr: Constructor: unit
@@ -108,37 +108,37 @@ let%expect_test "pr7637-1" =
                                                     └──Expression:
                                                        └──Type expr: Arrow
                                                           └──Type expr: Constructor: elt
-                                                             └──Type expr: Variable: a14601
-                                                             └──Type expr: Variable: a14608
+                                                             └──Type expr: Variable: 15090
+                                                             └──Type expr: Variable: 15097
                                                           └──Type expr: Constructor: unit
                                                        └──Desc: Variable
                                                           └──Variable: f
                                                     └──Expression:
                                                        └──Type expr: Constructor: elt
-                                                          └──Type expr: Variable: a14601
-                                                          └──Type expr: Variable: a14608
+                                                          └──Type expr: Variable: 15090
+                                                          └──Type expr: Variable: 15097
                                                        └──Desc: Variable
                                                           └──Variable: x
                                └──Expression:
                                   └──Type expr: Constructor: iter
-                                     └──Type expr: Variable: a14601
+                                     └──Type expr: Variable: 15090
                                   └──Desc: Record
                                      └──Label description:
                                         └──Label: f
                                         └──Label argument type:
                                            └──Type expr: Arrow
                                               └──Type expr: Constructor: elt
-                                                 └──Type expr: Variable: a14601
-                                                 └──Type expr: Variable: a14608
+                                                 └──Type expr: Variable: 15090
+                                                 └──Type expr: Variable: 15097
                                               └──Type expr: Constructor: unit
                                         └──Label type:
                                            └──Type expr: Constructor: iter
-                                              └──Type expr: Variable: a14601
+                                              └──Type expr: Variable: 15090
                                      └──Expression:
                                         └──Type expr: Arrow
                                            └──Type expr: Constructor: elt
-                                              └──Type expr: Variable: a14601
-                                              └──Type expr: Variable: a14608
+                                              └──Type expr: Variable: 15090
+                                              └──Type expr: Variable: 15097
                                            └──Type expr: Constructor: unit
                                         └──Desc: Variable
                                            └──Variable: g |}]
@@ -163,7 +163,7 @@ let%expect_test "pr7637-2" =
              └──Type declaration kind: Alias
                 └──Alias
                    └──Alias name: t
-                   └──Alias alphas: a
+                   └──Alias alphas: 15103
                    └──Type expr: Constructor: int
        └──Structure item: Let
           └──Value bindings:
@@ -172,21 +172,21 @@ let%expect_test "pr7637-2" =
                    └──Type expr: Arrow
                       └──Type expr: Constructor: int
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: a14625
+                         └──Type expr: Variable: 15116
                    └──Desc: Variable: test
                 └──Abstraction:
-                   └──Variables: a14625
+                   └──Variables: 15116
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: int
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: a14625
+                            └──Type expr: Variable: 15116
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: int
                             └──Desc: Variable: i
                          └──Expression:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: a14625
+                               └──Type expr: Variable: 15116
                             └──Desc: Variable
                                └──Variable: i |}]

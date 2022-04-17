@@ -9,67 +9,12 @@ open Types
 module Constraint = Typing.Private.Constraint
 open Constraint
 
-let t1 =
-  Bench.Test.create
-    ~name:"constant: int"
-    (let exp = Pexp_const (Const_int 1) in
-     fun () -> Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
-
-
-let t2 =
-  Bench.Test.create
-    ~name:"primitives"
-    (let exp =
-       let lhs =
-         let rhs =
-           let lhs =
-             Pexp_app
-               ( Pexp_app (Pexp_prim Prim_div, Pexp_const (Const_int 2))
-               , Pexp_const (Const_int 1) )
-           in
-           let rhs =
-             Pexp_app
-               ( Pexp_app (Pexp_prim Prim_mul, Pexp_const (Const_int 0))
-               , Pexp_const (Const_int 1) )
-           in
-           Pexp_app (Pexp_app (Pexp_prim Prim_sub, lhs), rhs)
-         in
-         Pexp_app (Pexp_app (Pexp_prim Prim_add, Pexp_const (Const_int 1)), rhs)
-       in
-       Pexp_app (Pexp_app (Pexp_prim Prim_eq, lhs), Pexp_const (Const_int 12))
-     in
-     fun () -> Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
-
-
-let t3 =
-  Bench.Test.create
-    ~name:"function - identity"
-    (let exp = Pexp_fun (Ppat_var "x", Pexp_var "x") in
-     fun () -> Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
-
-
-let t4 =
-  Bench.Test.create
-    ~name:"function - curry"
-    (let exp =
-       Pexp_fun
-         ( Ppat_var "f"
-         , Pexp_fun
-             ( Ppat_var "x"
-             , Pexp_fun
-                 ( Ppat_var "y"
-                 , Pexp_app
-                     (Pexp_var "f", Pexp_tuple [ Pexp_var "x"; Pexp_var "y" ])
-                 ) ) )
-     in
-     fun () -> Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
-
-
 let add_list env =
   let name = "list" in
-  let params = [ "a" ] in
-  let a = make_type_expr (Ttyp_var "a") in
-  let type_ = make_type_expr (Ttyp_constr ([ a ], name)) in
+  let a = Type_var.make () in
+  let params = [ a ] in
+  let a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
   Env.add_type_decl
     env
     { type_name = name
@@ -86,8 +31,7 @@ let add_list env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type =
-                      make_type_expr (Ttyp_tuple [ a; type_ ])
+                  ; constructor_arg_type = Type_expr.make (Ttyp_tuple [ a'; type_ ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -96,119 +40,18 @@ let add_list env =
     }
 
 
-let t5 =
-  Bench.Test.create
-    ~name:"function - hd"
-    (let exp =
-       Pexp_fun
-         ( Ppat_construct
-             ("Cons", Some ([], Ppat_tuple [ Ppat_var "x"; Ppat_any ]))
-         , Pexp_var "x" )
-     in
-     let env = add_list Env.empty in
-     fun () -> Typing.infer_exp ~env ~abbrevs:Abbreviations.empty exp)
-
-
-let t6 =
-  Bench.Test.create
-    ~name:"let - map"
-    (let exp =
-       Pexp_let
-         ( Recursive
-         , [ { pvb_forall_vars = []
-             ; pvb_pat = Ppat_var "map"
-             ; pvb_expr =
-                 Pexp_fun
-                   ( Ppat_var "f"
-                   , Pexp_fun
-                       ( Ppat_var "xs"
-                       , Pexp_match
-                           ( Pexp_var "xs"
-                           , [ { pc_lhs = Ppat_construct ("Nil", None)
-                               ; pc_rhs = Pexp_construct ("Nil", None)
-                               }
-                             ; { pc_lhs =
-                                   Ppat_construct
-                                     ( "Cons"
-                                     , Some
-                                         ( []
-                                         , Ppat_tuple
-                                             [ Ppat_var "x"; Ppat_var "xs" ] )
-                                     )
-                               ; pc_rhs =
-                                   Pexp_construct
-                                     ( "Cons"
-                                     , Some
-                                         (Pexp_tuple
-                                            [ Pexp_app
-                                                (Pexp_var "f", Pexp_var "x")
-                                            ; Pexp_app
-                                                ( Pexp_app
-                                                    ( Pexp_var "map"
-                                                    , Pexp_var "f" )
-                                                , Pexp_var "xs" )
-                                            ]) )
-                               }
-                             ] ) ) )
-             }
-           ]
-         , Pexp_let
-             ( Nonrecursive
-             , [ { pvb_forall_vars = []
-                 ; pvb_pat = Ppat_var "f"
-                 ; pvb_expr =
-                     Pexp_fun
-                       ( Ppat_var "x"
-                       , Pexp_app
-                           ( Pexp_app (Pexp_prim Prim_add, Pexp_var "x")
-                           , Pexp_const (Const_int 1) ) )
-                 }
-               ]
-             , Pexp_app
-                 ( Pexp_app (Pexp_var "map", Pexp_var "f")
-                 , Pexp_construct ("Nil", None) ) ) )
-     in
-     let env = add_list Env.empty in
-     fun () -> Typing.infer_exp ~env ~abbrevs:Abbreviations.empty exp)
-
-
-let t7 =
-  Bench.Test.create
-    ~name:"let rec - polymorphic recursion"
-    (let exp =
-       Pexp_let
-         ( Recursive
-         , [ { pvb_forall_vars = [ "a" ]
-             ; pvb_pat =
-                 Ppat_constraint
-                   (Ppat_var "id", Ptyp_arrow (Ptyp_var "a", Ptyp_var "a"))
-             ; pvb_expr = Pexp_fun (Ppat_var "x", Pexp_var "x")
-             }
-           ; { pvb_forall_vars = []
-             ; pvb_pat = Ppat_var "id_int"
-             ; pvb_expr =
-                 Pexp_fun
-                   ( Ppat_var "x"
-                   , Pexp_app
-                       ( Pexp_var "id"
-                       , Pexp_constraint (Pexp_var "x", Ptyp_constr ([], "int"))
-                       ) )
-             }
-           ]
-         , Pexp_var "id" )
-     in
-     fun () -> Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp)
-
-
 let add_term env =
   let name = "term" in
-  let alphas = [ "a" ] in
-  let a = make_type_expr (Ttyp_var "a") in
-  let type_ = make_type_expr (Ttyp_constr ([ a ], name)) in
-  let int = make_type_expr (Ttyp_constr ([], "int")) in
-  let bool = make_type_expr (Ttyp_constr ([], "bool")) in
-  let b1 = make_type_expr (Ttyp_var "b1") in
-  let b2 = make_type_expr (Ttyp_var "b2") in
+  let a = Type_var.make () in
+  let a' = Type_expr.make (Ttyp_var a) in
+  let alphas = [ a ] in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
+  let int = Type_expr.make (Ttyp_constr ([], "int")) in
+  let bool = Type_expr.make (Ttyp_constr ([], "bool")) in
+  let b1 = Type_var.make () in
+  let b2 = Type_var.make () in
+  let b1' = Type_expr.make (Ttyp_var b1) in
+  let b2' = Type_expr.make (Ttyp_var b2) in
   Env.add_type_decl
     env
     { type_name = name
@@ -219,25 +62,24 @@ let add_term env =
             ; constructor_arg =
                 Some { constructor_arg_betas = []; constructor_arg_type = int }
             ; constructor_type = type_
-            ; constructor_constraints = [ a, int ]
+            ; constructor_constraints = [ a', int ]
             }
           ; { constructor_name = "Succ"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type =
-                      make_type_expr (Ttyp_constr ([ int ], name))
+                  ; constructor_arg_type = Type_expr.make (Ttyp_constr ([ int ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ a, int ]
+            ; constructor_constraints = [ a', int ]
             }
           ; { constructor_name = "Bool"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some { constructor_arg_betas = []; constructor_arg_type = bool }
             ; constructor_type = type_
-            ; constructor_constraints = [ a, bool ]
+            ; constructor_constraints = [ a', bool ]
             }
           ; { constructor_name = "If"
             ; constructor_alphas = alphas
@@ -245,11 +87,11 @@ let add_term env =
                 Some
                   { constructor_arg_betas = []
                   ; constructor_arg_type =
-                      make_type_expr
+                      Type_expr.make
                         (Ttyp_tuple
-                           [ make_type_expr (Ttyp_constr ([ bool ], name))
-                           ; make_type_expr (Ttyp_constr ([ a ], name))
-                           ; make_type_expr (Ttyp_constr ([ a ], name))
+                           [ Type_expr.make (Ttyp_constr ([ bool ], name))
+                           ; Type_expr.make (Ttyp_constr ([ a' ], name))
+                           ; Type_expr.make (Ttyp_constr ([ a' ], name))
                            ])
                   }
             ; constructor_type = type_
@@ -259,184 +101,427 @@ let add_term env =
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some
-                  { constructor_arg_betas = [ "b1"; "b2" ]
+                  { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make_type_expr
+                      Type_expr.make
                         (Ttyp_tuple
-                           [ make_type_expr (Ttyp_constr ([ b1 ], name))
-                           ; make_type_expr (Ttyp_constr ([ b2 ], name))
+                           [ Type_expr.make (Ttyp_constr ([ b1' ], name))
+                           ; Type_expr.make (Ttyp_constr ([ b2' ], name))
                            ])
                   }
             ; constructor_type = type_
-            ; constructor_constraints =
-                [ a, make_type_expr (Ttyp_tuple [ b1; b2 ]) ]
+            ; constructor_constraints = [ a', Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ]
             }
           ; { constructor_name = "Fst"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some
-                  { constructor_arg_betas = [ "b1"; "b2" ]
+                  { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make_type_expr
-                        (Ttyp_constr
-                           ([ make_type_expr (Ttyp_tuple [ b1; b2 ]) ], name))
+                      Type_expr.make
+                        (Ttyp_constr ([ Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ a, b1 ]
+            ; constructor_constraints = [ a', b1' ]
             }
           ; { constructor_name = "Snd"
             ; constructor_alphas = alphas
             ; constructor_arg =
                 Some
-                  { constructor_arg_betas = [ "b1"; "b2" ]
+                  { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
-                      make_type_expr
-                        (Ttyp_constr
-                           ([ make_type_expr (Ttyp_tuple [ b1; b2 ]) ], name))
+                      Type_expr.make
+                        (Ttyp_constr ([ Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ a, b2 ]
+            ; constructor_constraints = [ a', b2' ]
             }
           ]
     }
 
 
-let def_fst ~in_ =
-  Pexp_let
-    ( Nonrecursive
-    , [ { pvb_forall_vars = []
-        ; pvb_pat = Ppat_var "fst"
-        ; pvb_expr =
-            Pexp_fun (Ppat_tuple [ Ppat_var "x"; Ppat_any ], Pexp_var "x")
-        }
-      ]
-    , in_ )
-
-
-let def_snd ~in_ =
-  Pexp_let
-    ( Nonrecursive
-    , [ { pvb_forall_vars = []
-        ; pvb_pat = Ppat_var "snd"
-        ; pvb_expr =
-            Pexp_fun (Ppat_tuple [ Ppat_any; Ppat_var "x" ], Pexp_var "x")
-        }
-      ]
-    , in_ )
-
-
-let t8 =
+let create_test_infer_exp
+    ~name
+    ?(env = Env.empty)
+    ?(abbrevs = Abbreviations.empty)
+    exp
+  =
   Bench.Test.create
-    ~name:"gadt - eval"
-    (let env = add_term Env.empty in
-     let exp =
-       def_fst
-         ~in_:
-           (def_snd
-              ~in_:
-                (Pexp_let
-                   ( Recursive
-                   , [ { pvb_forall_vars = [ "a" ]
-                       ; pvb_pat = Ppat_var "eval"
-                       ; pvb_expr =
-                           Pexp_fun
-                             ( Ppat_constraint
-                                 ( Ppat_var "t"
-                                 , Ptyp_constr ([ Ptyp_var "a" ], "term") )
-                             , Pexp_constraint
-                                 ( Pexp_match
-                                     ( Pexp_var "t"
-                                     , [ { pc_lhs =
-                                             Ppat_construct
-                                               ("Int", Some ([], Ppat_var "x"))
-                                         ; pc_rhs = Pexp_var "x"
-                                         }
-                                       ; { pc_lhs =
-                                             Ppat_construct
-                                               ("Bool", Some ([], Ppat_var "x"))
-                                         ; pc_rhs = Pexp_var "x"
-                                         }
-                                       ; { pc_lhs =
-                                             Ppat_construct
-                                               ("Succ", Some ([], Ppat_var "t"))
-                                         ; pc_rhs =
-                                             Pexp_app
-                                               ( Pexp_app
-                                                   ( Pexp_prim Prim_add
-                                                   , Pexp_app
-                                                       ( Pexp_var "eval"
-                                                       , Pexp_var "t" ) )
-                                               , Pexp_const (Const_int 1) )
-                                         }
-                                       ; { pc_lhs =
-                                             Ppat_construct
-                                               ( "If"
-                                               , Some
-                                                   ( []
-                                                   , Ppat_tuple
-                                                       [ Ppat_var "t1"
-                                                       ; Ppat_var "t2"
-                                                       ; Ppat_var "t3"
-                                                       ] ) )
-                                         ; pc_rhs =
-                                             Pexp_ifthenelse
-                                               ( Pexp_app
-                                                   ( Pexp_var "eval"
-                                                   , Pexp_var "t1" )
-                                               , Pexp_app
-                                                   ( Pexp_var "eval"
-                                                   , Pexp_var "t2" )
-                                               , Pexp_app
-                                                   ( Pexp_var "eval"
-                                                   , Pexp_var "t3" ) )
-                                         }
-                                       ; { pc_lhs =
-                                             Ppat_construct
-                                               ( "Pair"
-                                               , Some
-                                                   ( []
-                                                   , Ppat_tuple
-                                                       [ Ppat_var "t1"
-                                                       ; Ppat_var "t2"
-                                                       ] ) )
-                                         ; pc_rhs =
-                                             Pexp_tuple
-                                               [ Pexp_app
-                                                   ( Pexp_var "eval"
-                                                   , Pexp_var "t1" )
-                                               ; Pexp_app
-                                                   ( Pexp_var "eval"
-                                                   , Pexp_var "t2" )
-                                               ]
-                                         }
-                                       ; { pc_lhs =
-                                             Ppat_construct
-                                               ("Fst", Some ([], Ppat_var "t"))
-                                         ; pc_rhs =
-                                             Pexp_app
-                                               ( Pexp_var "fst"
-                                               , Pexp_app
-                                                   ( Pexp_var "eval"
-                                                   , Pexp_var "t" ) )
-                                         }
-                                       ; { pc_lhs =
-                                             Ppat_construct
-                                               ("Snd", Some ([], Ppat_var "t"))
-                                         ; pc_rhs =
-                                             Pexp_app
-                                               ( Pexp_var "snd"
-                                               , Pexp_app
-                                                   ( Pexp_var "eval"
-                                                   , Pexp_var "t" ) )
-                                         }
-                                       ] )
-                                 , Ptyp_var "a" ) )
-                       }
-                     ]
-                   , Pexp_const Const_unit )))
+    ~name
+    (let exp =
+       match Parsing.parse_expression_from_string exp with
+       | Ok exp -> exp
+       | Error _err -> raise_s [%sexp "Parsing error"]
      in
-     fun () -> Typing.infer_exp ~env ~abbrevs:Abbreviations.empty exp)
+     fun () -> Typing.infer_exp ~env ~abbrevs exp)
 
+
+let t1' =
+  create_test_infer_exp
+    ~name:"gcd"
+    "let mod = fun (m : int) (n : int) -> 0 \n\
+    \ in \n\
+    \ let rec gcd = fun m n -> \n\
+    \   if n = 0 then m else gcd n (mod m n)\n\
+    \ in \n\
+    \ gcd 55 200"
+
+
+let t2' =
+  create_test_infer_exp
+    ~name:"fact"
+    "let rec fact = fun n ->\n\
+    \   if n = 0 then 1 else n * fact (n - 1)\n\
+    \ in\n\
+    \ fact 1000"
+
+
+let t3' = create_test_infer_exp ~name:"arith" "1 + (2 / 1 - 0 * 1) = 12"
+
+let t4' =
+  create_test_infer_exp
+    ~name:"making change"
+    ~env:(add_list Env.empty)
+    "let le = fun (m : int) (n : int) -> true in\n\
+    \ let raise = fun () -> Nil in\n\
+    \ let rec change = fun till amt -> \n\
+    \   match (till, amt) with\n\
+    \   ( (_, 0) -> Nil\n\
+    \   | (Nil, _) -> raise ()\n\
+    \   | (Cons (c, till), amt) ->\n\
+    \       if le amt c then change till amt\n\
+    \       else Cons (c, change (Cons (c, till)) (amt - c))\n\
+    \   )\n\
+    \ in ()"
+
+
+let t5' =
+  create_test_infer_exp
+    ~name:"map"
+    ~env:(add_list Env.empty)
+    "let rec map = fun t f ->\n\
+    \   match t with\n\
+    \   ( Nil -> Nil\n\
+    \   | Cons (x, t) -> Cons (f x, map t f)\n\
+    \   )\n\
+    \ in\n\
+    \ let f = fun x -> x + 1 in\n\
+    \ map Nil f"
+
+
+let t6' =
+  create_test_infer_exp
+    ~name:"iter"
+    ~env:(add_list Env.empty)
+    "let rec iter = fun t f ->\n\
+    \   match t with\n\
+    \   ( Nil -> Nil\n\
+    \   | Cons (x, t) -> f x; iter t f\n\
+    \   )\n\
+    \ in\n\
+    \ iter Nil (fun _ -> ())"
+
+
+let add_tree env =
+  let name = "tree" in
+  let a = Type_var.make () in
+  let params = [ a ]
+  and a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
+  Env.add_type_decl
+    env
+    { type_name = name
+    ; type_kind =
+        Type_variant
+          [ { constructor_name = "Empty_tree"
+            ; constructor_alphas = params
+            ; constructor_arg = None
+            ; constructor_type = type_
+            ; constructor_constraints = []
+            }
+          ; { constructor_name = "Node"
+            ; constructor_alphas = params
+            ; constructor_arg =
+                Some
+                  { constructor_arg_betas = []
+                  ; constructor_arg_type = Type_expr.make (Ttyp_tuple [ a'; type_; a' ])
+                  }
+            ; constructor_type = type_
+            ; constructor_constraints = []
+            }
+          ]
+    }
+
+
+let add_option env =
+  let name = "option" in
+  let a = Type_var.make () in
+  let params = [ a ]
+  and a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
+  Env.add_type_decl
+    env
+    { type_name = name
+    ; type_kind =
+        Type_variant
+          [ { constructor_name = "None"
+            ; constructor_alphas = params
+            ; constructor_arg = None
+            ; constructor_type = type_
+            ; constructor_constraints = []
+            }
+          ; { constructor_name = "Some"
+            ; constructor_alphas = params
+            ; constructor_arg =
+                Some { constructor_arg_betas = []; constructor_arg_type = a' }
+            ; constructor_type = type_
+            ; constructor_constraints = []
+            }
+          ]
+    }
+
+
+let t7' =
+  create_test_infer_exp
+    ~name:"lookup (tree)"
+    ~env:(Env.empty |> add_tree |> add_option)
+    "let le = fun (m : int) (n : int) -> true\n\
+    \ \n\
+    \     in let rec lookup = fun t key ->\n\
+    \  match t with\n\
+    \  ( Empty_tree -> None\n\
+    \  | Node (l, (key', x), r) -> \n\
+    \      if key = key' then Some x else \n\
+    \      if le key key' then lookup l key else\n\
+    \      lookup r key\n\
+    \  )\n\
+    \ in ()"
+
+
+let t8' =
+  create_test_infer_exp
+    ~name:"insertion sort"
+    ~env:(Env.empty |> add_list)
+    "let leq = fun (m : int) (n : int) -> true in\n\
+    \ let rec insert = fun x t ->\n\
+    \   match t with\n\
+    \   ( Nil -> Cons (x, Nil)\n\
+    \   | Cons (y, t) -> \n\
+    \       if leq x y then Cons (x, Cons (y, t))\n\
+    \       else Cons (y, insert x t)\n\
+    \   )\n\
+    \ in \n\
+    \ let rec insertion_sort = fun t ->\n\
+    \   match t with\n\
+    \   ( Nil -> Nil\n\
+    \   | Cons (x, t) -> insert x (insertion_sort t)\n\
+    \   )\n\
+    \ in\n\
+    \ ()"
+
+
+let t9' =
+  create_test_infer_exp
+    ~name:"is_even, is_odd"
+    "let rec is_even = fun n -> \n\
+    \   if n = 0 then true else is_odd (n - 1)\n\
+    \ and is_odd = fun n -> \n\
+    \   if n = 1 then true else is_even (n - 1)\n\
+    \ in\n\
+    \ ()"
+
+
+let add_perfect_tree env =
+  let name = "perfect_tree" in
+  let a = Type_var.make () in
+  let params = [ a ]
+  and a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
+  Env.add_type_decl
+    env
+    { type_name = name
+    ; type_kind =
+        Type_variant
+          [ { constructor_name = "Empty"
+            ; constructor_alphas = params
+            ; constructor_arg = None
+            ; constructor_type = type_
+            ; constructor_constraints = []
+            }
+          ; { constructor_name = "Cons"
+            ; constructor_alphas = params
+            ; constructor_arg =
+                Some
+                  { constructor_arg_betas = []
+                  ; constructor_arg_type =
+                      Type_expr.make
+                        (Ttyp_tuple
+                           [ a'
+                           ; Type_expr.make
+                               (Ttyp_constr
+                                  ([ Type_expr.make (Ttyp_tuple [ a'; a' ]) ], name))
+                           ])
+                  }
+            ; constructor_type = type_
+            ; constructor_constraints = []
+            }
+          ]
+    }
+
+
+let t10' =
+  create_test_infer_exp
+    ~name:"perfect_tree length"
+    ~env:(Env.empty |> add_perfect_tree)
+    "let rec (type 'a) length = fun (t : 'a perfect_tree) -> \n\
+    \   (\n\
+    \     (match t with\n\
+    \       ( Empty -> 0\n\
+    \       | Cons (_, t) -> 1 + 2 * length t\n\
+    \       )\n\
+    \     ) : int\n\
+    \   )\n\
+    \ in ()"
+
+
+let t11' =
+  create_test_infer_exp
+    ~name:"term eval"
+    ~env:(Env.empty |> add_term)
+    {|
+      let fst = fun (x, y) -> x in
+      let snd = fun (x, y) -> y in
+      let rec (type 'a) eval = fun (t : 'a term) ->
+        ((match t with 
+            ( Int n -> n
+            | Bool b -> b
+            | Succ t -> (eval t) + 1
+            | If (t1, t2, t3) -> if eval t1 then eval t2 else eval t3
+            | Pair (t1, t2) -> (eval t1, eval t2)
+            | Fst t -> fst (eval t)
+            | Snd t -> snd (eval t)
+            )) 
+        : 'a)
+      in ()
+    |}
+
+
+let add_key env =
+  let a = Type_var.make () in
+  let params = [ a ]
+  and a' = Type_expr.make (Ttyp_var a) in
+  let name = "key" in
+  let type_ = Type_expr.make (Ttyp_constr ([ a' ], name)) in
+  let int = Type_expr.make (Ttyp_constr ([], "int"))
+  and string = Type_expr.make (Ttyp_constr ([], "string"))
+  and bool = Type_expr.make (Ttyp_constr ([], "bool")) in
+  Env.add_type_decl
+    env
+    { type_name = name
+    ; type_kind =
+        Type_variant
+          [ { constructor_name = "String"
+            ; constructor_alphas = params
+            ; constructor_arg =
+                Some { constructor_arg_betas = []; constructor_arg_type = int }
+            ; constructor_type = type_
+            ; constructor_constraints = [ a', string ]
+            }
+          ; { constructor_name = "Bool"
+            ; constructor_alphas = params
+            ; constructor_arg =
+                Some { constructor_arg_betas = []; constructor_arg_type = int }
+            ; constructor_type = type_
+            ; constructor_constraints = [ a', bool ]
+            }
+          ]
+    }
+
+
+let add_elem env =
+  let name = "elem" in
+  let params = [] in
+  let type_ = Type_expr.make (Ttyp_constr ([], name)) in
+  let value = Type_var.make () in
+  let value' = Type_expr.make (Ttyp_var value) in
+  Env.add_type_decl
+    env
+    { type_name = name
+    ; type_kind =
+        Type_variant
+          [ { constructor_name = "Elem"
+            ; constructor_alphas = params
+            ; constructor_arg =
+                Some
+                  { constructor_arg_betas = [ value ]
+                  ; constructor_arg_type =
+                      Type_expr.make
+                        (Ttyp_tuple
+                           [ Type_expr.make (Ttyp_constr ([ value' ], "key")); value' ])
+                  }
+            ; constructor_type = type_
+            ; constructor_constraints = []
+            }
+          ]
+    }
+
+
+let add_dependent_assoc_list abbrevs =
+  let open Typing.Private.Algebra.Type_former in
+  let name = "dep_assoc_list" in
+  let elem = Abbrev_type.make_former (Constr ([], "elem")) in
+  Abbreviations.add
+    abbrevs
+    ~abbrev:
+      (Constr ([], name), Abbrev_type.make_former (Constr ([ elem ], "list")))
+
+
+let add_elem_mapper env =
+  let name = "elem_mapper" in
+  let a = Type_var.make () in
+  let a' = Type_expr.make (Ttyp_var a) in
+  let type_ = Type_expr.make (Ttyp_constr ([], name)) in
+  Env.add_type_decl
+    env
+    { type_name = name
+    ; type_kind =
+        Type_record
+          [ { label_name = "f"
+            ; label_alphas = []
+            ; label_betas = [ a ]
+            ; label_arg =
+                Type_expr.make
+                  (Ttyp_arrow
+                     ( Type_expr.make (Ttyp_constr ([ a' ], "key"))
+                     , Type_expr.make (Ttyp_arrow (a', a')) ))
+            ; label_type = type_
+            }
+          ]
+    }
+
+
+let t12' =
+  create_test_infer_exp
+    ~name:"dependent associative list map_elem"
+    ~env:(Env.empty |> add_key |> add_elem |> add_list |> add_elem_mapper)
+    {|
+      let rec map = fun t f ->
+        match t with
+        ( Nil -> Nil
+        | Cons (x, t) -> Cons (f x, map t f)
+        )
+      in
+      let map_elem = fun (Elem (key, value)) mapper ->
+        Elem (key, mapper.f key value)
+      in
+      let map_assoc_list = fun t mapper ->
+        map t (fun elem -> map_elem elem mapper)
+      in () 
+    |}
+
+
+let tests = [ t1'; t2'; t3'; t4'; t5'; t6'; t7'; t8'; t9'; t10'; t11'; t12' ]
+let command = Bench.make_command tests
 
 let def_id ~in_ =
   Pexp_let
@@ -449,15 +534,15 @@ let def_id ~in_ =
     , in_ )
 
 
-let t9 =
+let id_app_stress_test =
   let rec loop n =
     match n with
     | 0 -> Pexp_var "id"
     | n -> Pexp_app (loop (n - 1), Pexp_var "id")
   in
   Bench.Test.create_indexed
-    ~name:"id - stress test"
-    ~args:[ 1; 5; 10 ]
+    ~name:"id app - stress test"
+    ~args:[ 1; 5; 10; 50; 100; 200; 500; 1000; 2000 ]
     (fun n ->
       Staged.stage (fun () ->
           Typing.infer_exp
@@ -466,6 +551,85 @@ let t9 =
             (def_id ~in_:(loop n))))
 
 
-let tests = [ t1; t2; t3; t4; t5; t6; t7; t8 ]
-let command = Bench.make_command tests
-let stress_command = Bench.make_command [ t9 ]
+let def_pair ~in_ =
+  Pexp_let
+    ( Nonrecursive
+    , [ { pvb_forall_vars = []
+        ; pvb_pat = Ppat_var "pair"
+        ; pvb_expr =
+            Pexp_fun
+              ( Ppat_var "x"
+              , Pexp_fun
+                  ( Ppat_var "f"
+                  , Pexp_app
+                      (Pexp_app (Pexp_var "f", Pexp_var "x"), Pexp_var "x") ) )
+        }
+      ]
+    , in_ )
+
+
+let id_let_stress_test = 
+  let rec loop n = 
+    match n with
+    | 0 -> Pexp_const Const_unit
+    | n -> def_id ~in_:(loop (n - 1))
+  in
+  Bench.Test.create_indexed
+    ~name:"id let - stress test"
+    ~args:[ 1; 5; 10; 50; 100; 200; 500; 1000; 2000 ]
+    (fun n ->
+      Staged.stage (fun () ->
+          Typing.infer_exp
+            ~env:Env.empty
+            ~abbrevs:Abbreviations.empty
+            (loop n)))
+let pair_let_stress_test =
+  let def_f0 ~in_ =
+    Pexp_let
+      ( Nonrecursive
+      , [ { pvb_forall_vars = []
+          ; pvb_pat = Ppat_var "f0"
+          ; pvb_expr =
+              Pexp_fun (Ppat_var "x", Pexp_app (Pexp_var "pair", Pexp_var "x"))
+          }
+        ]
+      , in_ )
+  in
+  let rec loop i n =
+    if i = n
+    then
+      (* fun z -> fn (fun x -> x) z *)
+      Pexp_fun
+        ( Ppat_var "z"
+        , Pexp_app
+            ( Pexp_app
+                ( Pexp_var ("f" ^ Int.to_string n)
+                , Pexp_fun (Ppat_var "x", Pexp_var "x") )
+            , Pexp_var "z" ) )
+    else (
+      assert (i >= 1);
+      Pexp_let
+        ( Nonrecursive
+        , [ { pvb_forall_vars = []
+            ; pvb_pat = Ppat_var ("f" ^ Int.to_string i)
+            ; pvb_expr =
+                (let f = "f" ^ Int.to_string (i - 1) in
+                 Pexp_fun
+                   ( Ppat_var "x"
+                   , Pexp_app (Pexp_var f, Pexp_app (Pexp_var f, Pexp_var "x"))
+                   ))
+            }
+          ]
+        , loop (i + 1) n ))
+  in
+  Bench.Test.create_indexed
+    ~name:"pair let - stress test"
+    ~args:[ 1;2;3;4;5;6 ]
+    (fun n ->
+      Staged.stage (fun () ->
+          let exp = def_pair ~in_:(def_f0 ~in_:(loop 1 n)) in
+          Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp))
+
+
+let stress_tests = [ pair_let_stress_test ]
+let stress_command = Bench.make_command stress_tests

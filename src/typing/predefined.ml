@@ -15,7 +15,7 @@ open! Import
 open Constraint
 
 module Type_former = struct
-  open Types.Algebra
+  open Algebra
 
   (* [t1 @-> t2] returns the arrow type [t1 -> t2]. *)
   let ( @-> ) x y = Type_former.Arrow (x, y)

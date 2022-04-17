@@ -19,15 +19,108 @@ open Structure
 
 module Make (Algebra : Algebra) = struct
   open Algebra
-  module Constraint = Constraint.Make (Algebra)
+
+  module Label = struct
+    include Types.Label
+
+    let sexp_of_t = comparator.sexp_of_t
+  end
+
   module Type_var = Types.Var
   module Type_former = Types.Former
-  module Type = Types.Type
+
+  (* Instantiant the next layered abstraction: Generalization *)
+  module G = Generalization.Make (Types.Label) (Type_former)
+  module U = G.Unifier
+
+  module Decoded = struct
+    let state = G.make_state ()
+    let () = G.enter ~state
+
+    module Var = struct
+      type t = U.Type.t
+
+      let make () = G.make_flexible_var ~state
+      let id = U.Type.id
+      let sexp_of_t t = [%sexp (id t : int)]
+    end
+
+    module Type = struct
+      type t = U.Type.t
+
+      type 'a desc =
+        | Var of Var.t
+        | Former of 'a Type_former.t
+        | Row_cons of Label.t * 'a * 'a
+        | Row_uniform of 'a
+
+      let id = U.Type.id
+
+      let desc_of_structure structure ~var = 
+        match G.Structure.repr structure with
+        | Flexible_var -> Var var
+        | Rigid_var _rigid_var -> Var var
+        | Row_cons (label, t1, t2) -> Row_cons (label, t1, t2)
+        | Row_uniform t -> Row_uniform t
+        | Former former -> Former former
+
+
+      let desc t = desc_of_structure (U.Type.structure t) ~var:t
+
+      
+      let sexp_of_desc (type a) (sexp_of_a : a -> Sexp.t) desc =
+        match desc with
+        | Var t -> [%sexp Var (t : Var.t)]
+        | Former former -> [%sexp Former, (former : a Type_former.t)]
+        | Row_cons (label, t1, t2) ->
+          [%sexp Row_cons, (label : Label.t), (t1 : a), (t2 : a)]
+        | Row_uniform t -> [%sexp Row_uniform, (t : a)]
+
+      let rec sexp_of_t t = [%sexp Type, (id t : int), (desc t : t desc)]
+
+      let make desc = 
+        match desc with
+        | Var t -> t
+        | Former former -> G.make_former ~state former
+        | Row_cons (label, t1, t2) ->
+          G.make_row_cons ~state ~label ~field:t1 ~tl:t2
+        | Row_uniform t -> G.make_row_uniform ~state t
+
+      let let_ ~binding:(var, t1) ~in_:t2 =
+        U.unify ~state ~ctx:U.empty_ctx var t1;
+        t2
+
+      let mu var t = 
+        U.unify ~state ~ctx:U.empty_ctx var t;
+        t
+
+      let fold t ~f ~mu ~var = 
+        U.Type.fold
+          ~f:(fun t structure -> f (desc_of_structure structure ~var:t))
+          ~mu
+          ~var
+          t
+
+      (* let map t ~f ~mu ~var = 
+        U.Type.fold
+          ~f:(fun t structure -> f (desc_of_structure structure ~var:t) |> make)
+          ~mu
+          ~var
+          t *)
+    end
+
+    type scheme = Var.t list * Type.t [@@deriving sexp_of]
+  end
+
+  module Algebra_with_decoded = struct
+    include Algebra
+    module Decoded = Decoded
+  end
+
+  module Constraint = Constraint.Make (Algebra_with_decoded)
 
   (* Aliases *)
   module C = Constraint
-  module G = Generalization.Make (Types.Label) (Type_former)
-  module U = G.Unifier
 
   (* Abbreviation exports *)
 
@@ -60,75 +153,21 @@ module Make (Algebra : Algebra) = struct
   *)
 
   module Decoder = struct
-    type t = U.Type.t -> Type.t
-
     (* [decode_variable var] decodes [var] into a [Type_var] using it's unique identifier. *)
-    let[@landmark] decode_variable var =
+    let[@landmark] decode_variable var : Decoded.Var.t =
       Log.debug (fun m -> m "Decode variable");
-      Type_var.of_int (U.Type.id var)
+      var
 
 
     let[@landmark] decode_rigid_variable (rigid_var : Rigid_var.t) =
       Type_var.of_int (rigid_var :> int)
 
 
-    (* [decode_type type_] decodes type [type_] (may contain cycles) into a [Type]. 
-       Cache is causing wierd segfault. TODO investigate more...
-    *)
-    (* let decode_type : t =
-      let cache = Hashtbl.create ~size:30 (module U.Type) in
-      fun type_ ->
-        Log.debug (fun m -> m "Decoding type");
-        try
-          Log.debug (fun m -> m "Finding type in cache...");
-          let type_ = Hashtbl.find_exn cache type_ in
-          Log.debug (fun m -> m "Found type :)");
-          type_
-        with
-        | Not_found_s _ ->
-          Log.debug (fun m -> m "Failed to find type in cache, folding now...");
-          let decoded_type =
-            U.Type.fold
-              ~f:(fun type_ structure ->
-                match G.Structure.repr structure with
-                | Flexible_var -> Type.var (decode_variable type_)
-                | Rigid_var rigid_var ->
-                  Type.var (decode_rigid_variable rigid_var)
-                | Row_cons (label, label_type, tl) ->
-                  Type.row_cons (label, label_type) tl
-                | Row_uniform type_ -> Type.row_uniform type_
-                | Former former -> Type.former former)
-              ~var:(fun type_ -> Type.var (decode_variable type_))
-              ~mu:(fun v t -> Type.mu (decode_variable v) t)
-              type_
-          in
-          Hashtbl.set cache ~key:type_ ~data:decoded_type;
-          decoded_type [@landmark "decode_type"] *)
-
-    let decode_type : t =
-     fun type_ ->
-      Log.debug (fun m -> m "[decode_type] Decoding type %d" (U.Type.id type_));
-      let decoded_type =
-        U.Type.fold
-          ~f:(fun type_ structure ->
-            Log.debug (fun m -> m "[decode_type] executing f");
-            match G.Structure.repr structure with
-            | Flexible_var -> Type.var (decode_variable type_)
-            | Rigid_var rigid_var -> Type.var (decode_rigid_variable rigid_var)
-            | Row_cons (label, label_type, tl) ->
-              Type.row_cons (label, label_type) tl
-            | Row_uniform type_ -> Type.row_uniform type_
-            | Former former -> Type.former former)
-          ~var:(fun type_ -> Type.var (decode_variable type_))
-          ~mu:(fun v t -> Type.mu (decode_variable v) t)
-          type_
-      in
-      Log.debug (fun m -> m "Decoded type");
-      decoded_type
-
+    (* [decode_type type_] decodes type [type_] (may contain cycles) into a [Type]. *)
+    let decode_type t : Decoded.Type.t = t
 
     (* [decode_scheme scheme] decodes the graphical scheme [scheme] into a [Type.scheme]. *)
-    let[@landmark] decode_scheme scheme =
+    let[@landmark] decode_scheme scheme : Decoded.scheme =
       Log.debug (fun m -> m "Decoding scheme");
       ( List.map (G.variables scheme) ~f:decode_variable
       , decode_type (G.root scheme) )
@@ -166,7 +205,7 @@ module Make (Algebra : Algebra) = struct
   *)
   exception Rigid_variable_escape of Type_var.t
   exception Cannot_flexize of Type_var.t
-  exception Scope_escape of Type.t
+  exception Scope_escape of Decoded.Type.t
 
   let[@landmark] exit state ~rigid_vars ~types =
     try G.exit ~state:state.generalization_state ~rigid_vars ~types with
@@ -374,17 +413,14 @@ module Make (Algebra : Algebra) = struct
      The decoded types are now supplied in the exception [Unify]. 
   *)
 
-  exception Unify of Type.t * Type.t
+  exception Unify of Decoded.Type.t * Decoded.Type.t
 
   let unify ~state ~env type1 type2 =
     try
       (* Log.debug (fun m -> m "Unify method in solve :)"); *)
-      let to_string t =
-        Decoder.decode_type t 
-        |> Type.sexp_of_t
-        |> Sexp.to_string_hum
-      in
-      Log.debug (fun m -> m "Unify\n %s \n%s" (to_string type1) (to_string type2));
+      let to_string t = U.Type.sexp_of_t t |> Sexp.to_string_hum in
+      Log.debug (fun m ->
+          m "Unify\n %s \n%s" (to_string type1) (to_string type2));
       U.unify
         ~state:state.generalization_state
         ~ctx:(Env.ctx env)
@@ -793,13 +829,13 @@ module Make (Algebra : Algebra) = struct
 
 
   type error =
-    [ `Unify of Type.t * Type.t
-    | `Cycle of Type.t
+    [ `Unify of Decoded.Type.t * Decoded.Type.t
+    | `Cycle of Decoded.Type.t
     | `Unbound_term_variable of Term_var.t
     | `Unbound_constraint_variable of Constraint.variable
     | `Rigid_variable_escape of Type_var.t
     | `Cannot_flexize of Type_var.t
-    | `Scope_escape of Type.t
+    | `Scope_escape of Decoded.Type.t
     | `Non_rigid_equations
     | `Inconsistent_equations
     ]

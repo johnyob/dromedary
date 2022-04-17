@@ -56,7 +56,6 @@ module Type_former = struct
     type 'a t [@@deriving sexp_of]
 
     val id : 'a t -> int
-
     val map : 'a t -> f:('a -> 'b) -> 'b t
     val fold : 'a t -> f:('a -> 'b -> 'b) -> init:'b -> 'b
     val iter : 'a t -> f:('a -> unit) -> unit
@@ -71,55 +70,8 @@ module Type_former = struct
   end
 end
 
-module type Type = sig
-  (* Abstract types to be substituted by functor arguments. *)
-
-  type label
-  type variable
-  type 'a former
-
-  (** A concrete representation of types. This is the *free monad* of
-      [Former.t] with variables [Var.t], defined by the grammar:
-        t ::= 'a | t F
-  
-      We could define [t] using an *explicit fixpoint*: 
-      type t = 
-        | Var of Var.t
-        | Former of t Former.t
-
-      However, we leave [t] abstract, since OCaml doesn't have pattern 
-      synonyms, making explicit fixpoints unwieldy.
-
-      For constructors of [t]. See {!var}, {!former}. 
-  *)
-
-  type t [@@deriving sexp_of]
-
-  (** [var 'a] is the representation of the type variable ['a] as the 
-      type [t]. *)
-
-  val var : variable -> t
-
-  (** [former f] is the representation of the concrete type former [f] in
-      type [t]. *)
-  val former : t former -> t
-
-  (** [mu a t] is the representation of the recursive type [μ a. t].
-      While Dromedary doesn't support recursive types, we use them for
-      printing cyclic types (e.g. when using [Cycle]).  
-  *)
-  val mu : variable -> t -> t
-
-  (** [row_cons (label, label_type) tl] is the representation of the
-      row [(label : label_type; tl)]. *)
-  val row_cons : label * t -> t -> t
-
-  (** [row_uniform t] is the representation of the row [∂t]. *)
-  val row_uniform : t -> t
-end
-
 module type Types = sig
-  (** Type variables used for type reconstruction. *)
+  (** Type variables, used for type recon *)
   module Var : Type_var
 
   (** Type formers used for type reconstruction. Used by the Unifier. *)
@@ -127,18 +79,82 @@ module type Types = sig
 
   (** Labels for row types. *)
   module Label : Comparable.S
+end
 
-  (** Types used for type reconstruction. *)
+module type Decoded_var = sig
+  type t [@@deriving sexp_of]
+
+  val make : unit -> t
+  val id : t -> int
+end
+
+module type Decoded_type = sig
+  type variable
+  type label
+  type 'a former
+
+  (** [t] describes the decoded type *)
+  type t [@@deriving sexp_of]
+
+  (** [desc] is an "external" descriptor -- which may be used 
+      to decode the type. *)
+  type 'a desc =
+    | Var of variable
+    | Former of 'a former
+    | Row_cons of label * 'a * 'a
+    | Row_uniform of 'a
+  [@@deriving sexp_of]
+
+  (** Decoded types may be cyclic -- so we require an [id] *)
+  val id : t -> int
+
+  (** [desc t] returns the descriptor of [t] *)
+  val desc : t -> t desc
+
+  (** [make desc] creates the decoded type with descriptor [desc] *)
+  val make : t desc -> t
+
+  (** [mu a t] returns the equi-recursive (cyclic) type 
+      w/ body [t] binding [a] cyclically.  *)
+  val mu : variable -> t -> t
+
+  val let_ : binding:variable * t -> in_:t -> t
+
+  val fold
+    :  t
+    -> f:('a desc -> 'a)
+    -> mu:(variable -> 'a -> 'a)
+    -> var:(variable -> 'a)
+    -> 'a
+end
+
+module type Decoded = sig
+  type label
+  type 'a former
+
+  module Var : Decoded_var
+
   module Type :
-    Type with type variable := Var.t and type 'a former := 'a Former.t and type label := Label.t
+    Decoded_type
+      with type label := label
+       and type variable := Var.t
+       and type 'a former := 'a former
 
-  (** A scheme [scheme] is defined as by the grammar: σ ::= τ | ∀ ɑ. σ *)
-  type scheme = Var.t list * Type.t
+  type scheme = Var.t list * Type.t [@@deriving sexp_of]
 end
 
 module type Algebra = sig
   module Term_var : Term_var
   module Types : Types
+end
+
+module type Algebra_with_decoded = sig
+  include Algebra
+
+  module Decoded :
+    Decoded
+      with type label := Types.Label.t
+       and type 'a former := 'a Types.Former.t
 end
 
 module type Intf = sig
@@ -150,7 +166,8 @@ module type Intf = sig
     module Make (T : Basic) : S with type 'a t := 'a T.t
   end
 
-  module type Type = Type
   module type Types = Types
+  module type Decoded = Decoded
   module type Algebra = Algebra
+  module type Algebra_with_decoded = Algebra_with_decoded
 end

@@ -15,8 +15,12 @@ open! Import
 module Module_types = Private.Constraint.Module_types
 
 module Make (Algebra : Algebra) = struct
-  include Private.Constraint.Make (Algebra)
   module Solver = Private.Solver.Make (Algebra)
+
+  module Decoded = Solver.Decoded
+  include Private.Constraint.Make (Solver.Algebra_with_decoded)
+
+
   module Abbrev_type = Solver.Abbrev_type
   module Abbreviations = Solver.Abbreviations
 

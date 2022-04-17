@@ -15,10 +15,22 @@ open! Import
 
 module Make (Algebra : Algebra) : sig
   open Algebra
+  module Label := Types.Label
   module Type_var := Types.Var
-  module Type := Types.Type
   module Type_former := Types.Former
-  module Constraint := Constraint.Make(Algebra)
+
+  module Decoded :
+    Decoded
+      with type label := Types.Label.t
+       and type 'a former := 'a Types.Former.t
+
+  module Algebra_with_decoded :
+    Algebra_with_decoded
+      with module Term_var = Term_var
+       and module Types = Types
+       and module Decoded = Decoded
+
+  module Constraint := Constraint.Make(Algebra_with_decoded)
 
   module Abbrev_type : sig
     type t [@@deriving sexp_of, compare]
@@ -37,13 +49,13 @@ module Make (Algebra : Algebra) : sig
   (** [solve t] solves [t] and computes it's value. *)
 
   type error =
-    [ `Unify of Type.t * Type.t
-    | `Cycle of Type.t
+    [ `Unify of Decoded.Type.t * Decoded.Type.t
+    | `Cycle of Decoded.Type.t
     | `Unbound_term_variable of Term_var.t
     | `Unbound_constraint_variable of Constraint.variable
     | `Rigid_variable_escape of Type_var.t
     | `Cannot_flexize of Type_var.t
-    | `Scope_escape of Type.t
+    | `Scope_escape of Decoded.Type.t
     | `Non_rigid_equations
     | `Inconsistent_equations
     ]

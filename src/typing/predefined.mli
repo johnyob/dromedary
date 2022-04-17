@@ -15,7 +15,7 @@ open! Import
 open Constraint
 
 module Type_former : sig
-  open Types.Algebra
+  open Algebra
 
   (** [t1 @-> t2] returns the type former for the arrow type [t1 -> t2]. *)
   val ( @-> ) : 'a -> 'a -> 'a Type_former.t

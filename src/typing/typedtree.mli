@@ -17,7 +17,7 @@ open Types
 
 type 'a instance = 'a * type_expr list [@@deriving sexp_of]
 
-and 'a abstraction = string list * 'a [@@deriving sexp_of]
+and 'a abstraction = type_var list * 'a [@@deriving sexp_of]
 
 type pattern =
   { pat_desc : pattern_desc
@@ -135,7 +135,7 @@ type value_description =
 type extension_constructor = 
   { text_name : string
       (** Extension type name [t]. *)
-  ; text_params : string list
+  ; text_params : type_var list
       (** Extension type params: [('a1, ..., 'an)]. *)
   ; text_kind : extension_constructor_kind 
   }

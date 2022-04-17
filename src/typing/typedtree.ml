@@ -18,7 +18,7 @@ open Types
 (** Abstract syntax tree after typing *)
 
 type 'a instance = 'a * type_expr list [@@deriving sexp_of]
-and 'a abstraction = string list * 'a [@@deriving sexp_of]
+and 'a abstraction = Type_var.t list * 'a [@@deriving sexp_of]
 
 type pattern =
   { pat_desc : pattern_desc
@@ -90,7 +90,7 @@ type value_description =
 
 type extension_constructor =
   { text_name : string
-  ; text_params : string list
+  ; text_params : type_var list
   ; text_kind : extension_constructor_kind
   }
 [@@derving sexp_of]
@@ -253,14 +253,15 @@ and pp_label_exp_mach ~indent ppf (label_desc, exp) =
   pp_expression_mach ~indent ppf exp
 
 
-and pp_abstraction_mach ~indent ~pp ppf (variables, t) =
+and pp_abstraction_mach ~indent ~pp ppf ((variables, t) : _ abstraction) =
   Format.fprintf ppf "%sAbstraction:@." indent;
   let indent = indent_space ^ indent in
   Format.fprintf
     ppf
     "%sVariables: %s@."
     indent
-    (String.concat ~sep:"," variables);
+    (List.map variables ~f:(fun var -> var |> Type_var.id |> Int.to_string)
+    |> String.concat ~sep:",");
   pp ~indent ppf t
 
 
@@ -298,7 +299,7 @@ let pp_scheme_mach ~indent ppf (variables, type_expr) =
     ppf
     "%sVariables: %s@."
     indent
-    (String.concat ~sep:"," variables);
+    (String.concat ~sep:"," (List.map ~f:(fun t -> Type_var.id t |> Int.to_string) variables));
   pp_type_expr_mach ~indent ppf type_expr
 
 
@@ -327,7 +328,7 @@ let pp_extension_constructor_mach ~indent ppf ext_constr =
     ppf
     "%sExtension parameters: %s@."
     indent
-    (String.concat ~sep:" " ext_constr.text_params);
+    (String.concat ~sep:" " (List.map ~f:(fun t -> Type_var.id t |> Int.to_string) ext_constr.text_params));
   pp_extension_constructor_kind_mach ~indent ppf ext_constr.text_kind
 
 

@@ -11,45 +11,77 @@
 (*                                                                           *)
 (*****************************************************************************)
 
+open! Import
 open Util
 
 (** Representation of types and declarations  *)
 
 type tag = string
 
-type type_expr [@@deriving sexp_of]
+module Type_var : sig
+  type t [@@deriving sexp_of]
 
-type type_desc =
-  | Ttyp_var of string 
-      (** Type variables ['a]. *)
-  | Ttyp_arrow of type_expr * type_expr 
-      (** Function types [T1 -> T2]. *)
-  | Ttyp_tuple of type_expr list 
-      (** Product (or "tuple") types. *)
-  | Ttyp_constr of type_constr 
-      (** Type constructors. *)
-  | Ttyp_mu of string * type_expr
-      (** Alias, required for displaying equi-recursive types. *)
-  | Ttyp_where of type_expr * string * type_expr
-      (** Where, used for translation of core type to type expr 
-          (may be used in future for explicit sharing :) ) *)
-  | Ttyp_variant of type_expr 
-      (** Polymorphic variant [ [ ... ] ] *)
-  | Ttyp_row_cons of tag * type_expr * row 
-      (** Row cons [< `A : T, row >] *)
-  | Ttyp_row_uniform of type_expr 
-      (** Uniform row [ ∂<T> ] *)
-[@@deriving sexp_of]
+  include Comparable with type t := t
 
-and row = type_expr
-and type_constr = type_expr list * string [@@deriving sexp_of]
+  val make : unit -> t
+  val id : t -> int
+  val decode : Decoded.Var.t -> t
+end
 
-and scheme = string list * type_expr [@@deriving sexp_of]
+module Type_expr : sig
+  type t [@@deriving sexp_of]
 
+  type 'a desc =
+    | Ttyp_var of Type_var.t 
+        (** Type variables ['a]. *)
+    | Ttyp_arrow of 'a * 'a 
+        (** Function types [T1 -> T2]. *)
+    | Ttyp_tuple of 'a list 
+        (** Product (or "tuple") types. *)
+    | Ttyp_constr of 'a type_constr 
+        (** Type constructors. *)
+    | Ttyp_variant of 'a 
+        (** Polymorphic variant [ [ ... ] ] *)
+    | Ttyp_row_cons of tag * 'a * 'a 
+        (** Row cons [< `A : T :: row >] *)
+    | Ttyp_row_uniform of 'a 
+        (** Uniform row [ ∂<T> ] *)
+  [@@deriving sexp_of]
 
-val make_type_expr : type_desc -> type_expr
+  and 'a type_constr = 'a list * string
 
-val type_desc : type_expr -> type_desc
+  include Comparable with type t := t
+
+  (** [make desc] creates a type expr w/ descriptor [desc] *)
+  val make : t desc -> t
+
+  val let_ : binding:Type_var.t * t -> in_:t -> t
+
+  val mu : Type_var.t -> t -> t
+
+  (** [desc type_expr] returns the descriptor of [type_expr] *)
+  val desc : t -> t desc
+
+  val decode : Decoded.Type.t -> t
+
+  (** [id type_expr] returns the id of [type_expr] -- used to prevent cyclic traversals *)
+  val id : t -> int
+
+  val fold
+    :  t
+    -> f:('a desc -> 'a)
+    -> mu:(Type_var.t -> 'a -> 'a)
+    -> var:(Type_var.t -> 'a)
+    -> 'a
+end
+
+type type_expr = Type_expr.t [@@deriving sexp_of]
+type row = Type_expr.t [@@deriving sexp_of]
+type type_var = Type_var.t [@@derving sexp_of]
+type scheme = type_var list * type_expr [@@deriving sexp_of]
+
+(* TODO: Fix the duplication of [sexp_of_type_var], report this as a bug! *)
+val sexp_of_type_var : type_var -> Sexp.t
 
 (** [pp_type_expr_mach ppf type_expr] pretty prints an explicit tree of the 
     type expression [type_expr]. *)
@@ -58,52 +90,6 @@ val pp_type_expr_mach : indent:string -> type_expr Pretty_printer.t
 (** [pp_type_expr ppf type_expr] pretty prints the syntactic representation of the
     type expression [type_expr]. *)
 val pp_type_expr : type_expr Pretty_printer.t
-
-module Algebra : sig
-  open Constraints.Module_types
-
-  (** [Term_var] implements the abstract notion of variables in Dromedary's expressions
-   (or "Terms"). *)
-  module Term_var : Term_var with type t = string
-
-  (** [Type_var] implements the abstract notion of type variables in Dromedary's types. *)
-  module Type_var : Type_var with type t = string
-
-  (** [Type_former] defines the various type formers for Dromedary's types.
-   
-       This notion of type former differs from that of our formal descriptions,
-       since it describes:
-       - Arrow types (or function types).
-       - Tuple tuples.
-       - Type constructors (or "Type formers" are referred to in the formalizations).
-   *)
-  module Type_former : sig
-    type 'a t =
-      | Arrow of 'a * 'a
-      | Tuple of 'a list
-      | Constr of 'a list * string
-      | Variant of 'a
-    [@@deriving sexp_of]
-
-    include Type_former.S with type 'a t := 'a t
-  end
-
-  (** [Type] is the abstraction of Dromedary's types, [type_expr]. *)
-  module Type :
-    Type
-      with type label := string
-       and type variable := Type_var.t
-       and type 'a former := 'a Type_former.t
-       and type t = type_expr
-
-  include
-    Algebra
-      with module Term_var := Term_var
-       and type Types.Label.t = string
-       and module Types.Var = Type_var
-       and module Types.Former = Type_former
-       and module Types.Type = Type
-end
 
 (* Type definitions *)
 
@@ -120,8 +106,8 @@ and type_decl_kind =
   | Type_alias of alias
 [@@deriving sexp_of]
 
-and alias = 
-  { alias_alphas : string list
+and alias =
+  { alias_alphas : type_var list
   ; alias_name : string
   ; alias_type : type_expr
   }
@@ -129,8 +115,8 @@ and alias =
 
 and label_declaration =
   { label_name : string
-  ; label_alphas : string list
-  ; label_betas : string list
+  ; label_alphas : type_var list
+  ; label_betas : type_var list
   ; label_arg : type_expr
   ; label_type : type_expr
   }
@@ -138,7 +124,7 @@ and label_declaration =
 
 and constructor_declaration =
   { constructor_name : string
-  ; constructor_alphas : string list
+  ; constructor_alphas : type_var list
   ; constructor_arg : constructor_argument option
   ; constructor_type : type_expr
   ; constructor_constraints : (type_expr * type_expr) list
@@ -146,7 +132,7 @@ and constructor_declaration =
 [@@deriving sexp_of]
 
 and constructor_argument =
-  { constructor_arg_betas : string list
+  { constructor_arg_betas : type_var list
   ; constructor_arg_type : type_expr
   }
 [@@deriving sexp_of]
@@ -155,8 +141,8 @@ val pp_constructor_declaration_mach
   :  indent:string
   -> constructor_declaration Pretty_printer.t
 
-val pp_type_declaration_mach 
-  :  indent:string 
+val pp_type_declaration_mach
+  :  indent:string
   -> type_declaration Pretty_printer.t
 
 (* Constructor and record label descriptions *)

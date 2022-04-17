@@ -1,4 +1,5 @@
 (executable
  (public_name benchmark)
  (name benchmark)
+ (preprocess (pps ppx_jane))
  (libraries core core_bench core_unix.command_unix dromedary))

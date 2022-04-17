@@ -80,47 +80,47 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Local
-                   └──Constructor alphas: a result visit_action
+                   └──Constructor alphas: 16059 16060 16061
                    └──Constructor type:
                       └──Type expr: Constructor: context
-                         └──Type expr: Variable: a
-                         └──Type expr: Variable: result
-                         └──Type expr: Variable: visit_action
+                         └──Type expr: Variable: 16059
+                         └──Type expr: Variable: 16060
+                         └──Type expr: Variable: 16061
                    └──Constructor argument:
-                      └──Constructor betas: insert
+                      └──Constructor betas: 16062
                       └──Type expr: Constructor: unit
                    └──Constraint:
-                      └──Type expr: Variable: result
+                      └──Type expr: Variable: 16060
                       └──Type expr: Tuple
-                         └──Type expr: Variable: a
-                         └──Type expr: Variable: insert
+                         └──Type expr: Variable: 16059
+                         └──Type expr: Variable: 16062
                    └──Constraint:
-                      └──Type expr: Variable: visit_action
+                      └──Type expr: Variable: 16061
                       └──Type expr: Constructor: local_visit_action
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 16059
                 └──Constructor declaration:
                    └──Constructor name: Global
-                   └──Constructor alphas: a result visit_action
+                   └──Constructor alphas: 16059 16060 16061
                    └──Constructor type:
                       └──Type expr: Constructor: context
-                         └──Type expr: Variable: a
-                         └──Type expr: Variable: result
-                         └──Type expr: Variable: visit_action
+                         └──Type expr: Variable: 16059
+                         └──Type expr: Variable: 16060
+                         └──Type expr: Variable: 16061
                    └──Constraint:
-                      └──Type expr: Variable: a
-                      └──Type expr: Variable: result
+                      └──Type expr: Variable: 16059
+                      └──Type expr: Variable: 16060
                    └──Constraint:
-                      └──Type expr: Variable: visit_action
+                      └──Type expr: Variable: 16061
                       └──Type expr: Constructor: visit_action
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 16059
        └──Structure item: Primitive
           └──Value description:
              └──Name: raise
              └──Scheme:
-                └──Variables: a15431
+                └──Variables: 16070
                 └──Type expr: Arrow
                    └──Type expr: Constructor: exn
-                   └──Type expr: Variable: a15431
+                   └──Type expr: Variable: 16070
              └──Primitive name: %raise
        └──Structure item: Exception
           └──Type exception:
@@ -140,53 +140,53 @@ let%expect_test "" =
                    └──Type expr: Arrow
                       └──Type expr: Constructor: context
                          └──Type expr: Constructor: unit
-                         └──Type expr: Variable: a15449
-                         └──Type expr: Variable: a15450
+                         └──Type expr: Variable: 16088
+                         └──Type expr: Variable: 16089
                       └──Type expr: Arrow
                          └──Type expr: Constructor: unit
-                         └──Type expr: Variable: a15450
+                         └──Type expr: Variable: 16089
                    └──Desc: Variable: vexpr
                 └──Abstraction:
-                   └──Variables: a15449,a15450
+                   └──Variables: 16088,16089
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: context
                             └──Type expr: Constructor: unit
-                            └──Type expr: Variable: a15449
-                            └──Type expr: Variable: a15450
+                            └──Type expr: Variable: 16088
+                            └──Type expr: Variable: 16089
                          └──Type expr: Arrow
                             └──Type expr: Constructor: unit
-                            └──Type expr: Variable: a15450
+                            └──Type expr: Variable: 16089
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: context
                                └──Type expr: Constructor: unit
-                               └──Type expr: Variable: a15449
-                               └──Type expr: Variable: a15450
+                               └──Type expr: Variable: 16088
+                               └──Type expr: Variable: 16089
                             └──Desc: Variable: ctx
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: unit
-                               └──Type expr: Variable: a15450
+                               └──Type expr: Variable: 16089
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: context
                                      └──Type expr: Constructor: unit
-                                     └──Type expr: Variable: a15449
-                                     └──Type expr: Variable: a15450
+                                     └──Type expr: Variable: 16088
+                                     └──Type expr: Variable: 16089
                                   └──Desc: Variable
                                      └──Variable: ctx
                                └──Type expr: Constructor: context
                                   └──Type expr: Constructor: unit
-                                  └──Type expr: Variable: a15449
-                                  └──Type expr: Variable: a15450
+                                  └──Type expr: Variable: 16088
+                                  └──Type expr: Variable: 16089
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: context
                                            └──Type expr: Constructor: unit
-                                           └──Type expr: Variable: a15449
-                                           └──Type expr: Variable: a15450
+                                           └──Type expr: Variable: 16088
+                                           └──Type expr: Variable: 16089
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Local
@@ -195,29 +195,29 @@ let%expect_test "" =
                                               └──Constructor type:
                                                  └──Type expr: Constructor: context
                                                     └──Type expr: Constructor: unit
-                                                    └──Type expr: Variable: a15449
-                                                    └──Type expr: Variable: a15450
+                                                    └──Type expr: Variable: 16088
+                                                    └──Type expr: Variable: 16089
                                            └──Pattern:
                                               └──Type expr: Constructor: unit
                                               └──Desc: Constant: ()
                                      └──Expression:
                                         └──Type expr: Arrow
                                            └──Type expr: Constructor: unit
-                                           └──Type expr: Variable: a15450
+                                           └──Type expr: Variable: 16089
                                         └──Desc: Function
                                            └──Pattern:
                                               └──Type expr: Constructor: unit
                                               └──Desc: Any
                                            └──Expression:
-                                              └──Type expr: Variable: a15450
+                                              └──Type expr: Variable: 16089
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: exn
-                                                       └──Type expr: Variable: a15450
+                                                       └──Type expr: Variable: 16089
                                                     └──Desc: Variable
                                                        └──Variable: raise
-                                                       └──Type expr: Variable: a15450
+                                                       └──Type expr: Variable: 16089
                                                  └──Expression:
                                                     └──Type expr: Constructor: exn
                                                     └──Desc: Construct
@@ -229,34 +229,34 @@ let%expect_test "" =
                                      └──Pattern:
                                         └──Type expr: Constructor: context
                                            └──Type expr: Constructor: unit
-                                           └──Type expr: Variable: a15449
-                                           └──Type expr: Variable: a15450
+                                           └──Type expr: Variable: 16088
+                                           └──Type expr: Variable: 16089
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Global
                                               └──Constructor type:
                                                  └──Type expr: Constructor: context
                                                     └──Type expr: Constructor: unit
-                                                    └──Type expr: Variable: a15449
-                                                    └──Type expr: Variable: a15450
+                                                    └──Type expr: Variable: 16088
+                                                    └──Type expr: Variable: 16089
                                      └──Expression:
                                         └──Type expr: Arrow
                                            └──Type expr: Constructor: unit
-                                           └──Type expr: Variable: a15450
+                                           └──Type expr: Variable: 16089
                                         └──Desc: Function
                                            └──Pattern:
                                               └──Type expr: Constructor: unit
                                               └──Desc: Any
                                            └──Expression:
-                                              └──Type expr: Variable: a15450
+                                              └──Type expr: Variable: 16089
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: exn
-                                                       └──Type expr: Variable: a15450
+                                                       └──Type expr: Variable: 16089
                                                     └──Desc: Variable
                                                        └──Variable: raise
-                                                       └──Type expr: Variable: a15450
+                                                       └──Type expr: Variable: 16089
                                                  └──Expression:
                                                     └──Type expr: Constructor: exn
                                                     └──Desc: Construct

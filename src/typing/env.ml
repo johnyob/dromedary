@@ -50,17 +50,17 @@ let convert_alias { alias_alphas; alias_name; alias_type } =
   let substitution_alist =
     List.map alias_alphas ~f:(fun x -> x, Abbrev_type.make_var ())
   in
-  let substitution = String.Map.of_alist_exn substitution_alist in
+  let substitution = Type_var.Map.of_alist_exn substitution_alist in
   let alias_former = Constr (List.map ~f:snd substitution_alist, alias_name) in
   let rec convert type_expr =
-    match type_desc type_expr with
-    | Ttyp_var var -> String.Map.find_exn substitution var
+    match Type_expr.desc type_expr with
+    | Ttyp_var var -> Type_var.Map.find_exn substitution var
     | Ttyp_arrow (t1, t2) ->
       Abbrev_type.make_former (Arrow (convert t1, convert t2))
     | Ttyp_tuple ts -> Abbrev_type.make_former (Tuple (List.map ts ~f:convert))
     | Ttyp_constr (ts, constr_name) ->
       Abbrev_type.make_former (Constr (List.map ts ~f:convert, constr_name))
-    | Ttyp_variant _ | Ttyp_row_cons _ | Ttyp_row_uniform _ | Ttyp_mu _ | Ttyp_where _ ->
+    | Ttyp_variant _ | Ttyp_row_cons _ | Ttyp_row_uniform _ ->
       raise_s
         [%message "Unsupported alias type expression" (type_expr : type_expr)]
   in
