@@ -42,12 +42,12 @@ let%expect_test "name-existentials-1" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 20543
                    └──Constructor type:
                       └──Type expr: Constructor: ty
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 20543
                    └──Constraint:
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 20543
                       └──Type expr: Constructor: int
        └──Structure item: Type
           └──Type declaration:
@@ -59,18 +59,18 @@ let%expect_test "name-existentials-1" =
                    └──Constructor type:
                       └──Type expr: Constructor: packed
                    └──Constructor argument:
-                      └──Constructor betas: a
+                      └──Constructor betas: 20546
                       └──Type expr: Tuple
                          └──Type expr: Constructor: ty
-                            └──Type expr: Variable: a
-                         └──Type expr: Variable: a
+                            └──Type expr: Variable: 20546
+                         └──Type expr: Variable: 20546
        └──Structure item: Primitive
           └──Value description:
              └──Name: ignore
              └──Scheme:
-                └──Variables: a19641
+                └──Variables: 20550
                 └──Type expr: Arrow
-                   └──Type expr: Variable: a19641
+                   └──Type expr: Variable: 20550
                    └──Type expr: Constructor: unit
              └──Primitive name: %ignore
        └──Structure item: Let
@@ -96,35 +96,35 @@ let%expect_test "name-existentials-1" =
                                   └──Constructor argument type:
                                      └──Type expr: Tuple
                                         └──Type expr: Constructor: ty
-                                           └──Type expr: Variable: a19671
-                                        └──Type expr: Variable: a19671
+                                           └──Type expr: Variable: 20580
+                                        └──Type expr: Variable: 20580
                                   └──Constructor type:
                                      └──Type expr: Constructor: packed
                                └──Pattern:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: ty
-                                        └──Type expr: Variable: a19671
-                                     └──Type expr: Variable: a19671
+                                        └──Type expr: Variable: 20580
+                                     └──Type expr: Variable: 20580
                                   └──Desc: Tuple
                                      └──Pattern:
                                         └──Type expr: Constructor: ty
-                                           └──Type expr: Variable: a19671
+                                           └──Type expr: Variable: 20580
                                         └──Desc: Variable: w
                                      └──Pattern:
-                                        └──Type expr: Variable: a19671
+                                        └──Type expr: Variable: 20580
                                         └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: unit
                             └──Desc: Application
                                └──Expression:
                                   └──Type expr: Arrow
-                                     └──Type expr: Variable: a19671
+                                     └──Type expr: Variable: 20580
                                      └──Type expr: Constructor: unit
                                   └──Desc: Variable
                                      └──Variable: ignore
-                                     └──Type expr: Variable: a19671
+                                     └──Type expr: Variable: 20580
                                └──Expression:
-                                  └──Type expr: Variable: a19671
+                                  └──Type expr: Variable: 20580
                                   └──Desc: Variable
                                      └──Variable: x
        └──Structure item: Let
@@ -150,35 +150,35 @@ let%expect_test "name-existentials-1" =
                                   └──Constructor argument type:
                                      └──Type expr: Tuple
                                         └──Type expr: Constructor: ty
-                                           └──Type expr: Variable: a19700
-                                        └──Type expr: Variable: a19700
+                                           └──Type expr: Variable: 20609
+                                        └──Type expr: Variable: 20609
                                   └──Constructor type:
                                      └──Type expr: Constructor: packed
                                └──Pattern:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: ty
-                                        └──Type expr: Variable: a19700
-                                     └──Type expr: Variable: a19700
+                                        └──Type expr: Variable: 20609
+                                     └──Type expr: Variable: 20609
                                   └──Desc: Tuple
                                      └──Pattern:
                                         └──Type expr: Constructor: ty
-                                           └──Type expr: Variable: a19700
+                                           └──Type expr: Variable: 20609
                                         └──Desc: Variable: w
                                      └──Pattern:
-                                        └──Type expr: Variable: a19700
+                                        └──Type expr: Variable: 20609
                                         └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: unit
                             └──Desc: Application
                                └──Expression:
                                   └──Type expr: Arrow
-                                     └──Type expr: Variable: a19700
+                                     └──Type expr: Variable: 20609
                                      └──Type expr: Constructor: unit
                                   └──Desc: Variable
                                      └──Variable: ignore
-                                     └──Type expr: Variable: a19700
+                                     └──Type expr: Variable: 20609
                                └──Expression:
-                                  └──Type expr: Variable: a19700
+                                  └──Type expr: Variable: 20609
                                   └──Desc: Variable
                                      └──Variable: x |}]
 
@@ -216,12 +216,12 @@ let%expect_test "name-existentials-2" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 20628
                    └──Constructor type:
                       └──Type expr: Constructor: ty
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 20628
                    └──Constraint:
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 20628
                       └──Type expr: Constructor: int
        └──Structure item: Type
           └──Type declaration:
@@ -233,11 +233,11 @@ let%expect_test "name-existentials-2" =
                    └──Constructor type:
                       └──Type expr: Constructor: packed
                    └──Constructor argument:
-                      └──Constructor betas: a
+                      └──Constructor betas: 20631
                       └──Type expr: Tuple
                          └──Type expr: Constructor: ty
-                            └──Type expr: Variable: a
-                         └──Type expr: Variable: a
+                            └──Type expr: Variable: 20631
+                         └──Type expr: Variable: 20631
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -261,22 +261,22 @@ let%expect_test "name-existentials-2" =
                                   └──Constructor argument type:
                                      └──Type expr: Tuple
                                         └──Type expr: Constructor: ty
-                                           └──Type expr: Variable: a19731
-                                        └──Type expr: Variable: a19731
+                                           └──Type expr: Variable: 20647
+                                        └──Type expr: Variable: 20647
                                   └──Constructor type:
                                      └──Type expr: Constructor: packed
                                └──Pattern:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: ty
-                                        └──Type expr: Variable: a19731
-                                     └──Type expr: Variable: a19731
+                                        └──Type expr: Variable: 20647
+                                     └──Type expr: Variable: 20647
                                   └──Desc: Tuple
                                      └──Pattern:
                                         └──Type expr: Constructor: ty
-                                           └──Type expr: Variable: a19731
+                                           └──Type expr: Variable: 20647
                                         └──Desc: Variable: w
                                      └──Pattern:
-                                        └──Type expr: Variable: a19731
+                                        └──Type expr: Variable: 20647
                                         └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: unit
@@ -304,22 +304,22 @@ let%expect_test "name-existentials-2" =
                                   └──Constructor argument type:
                                      └──Type expr: Tuple
                                         └──Type expr: Constructor: ty
-                                           └──Type expr: Variable: a19751
-                                        └──Type expr: Variable: a19751
+                                           └──Type expr: Variable: 20667
+                                        └──Type expr: Variable: 20667
                                   └──Constructor type:
                                      └──Type expr: Constructor: packed
                                └──Pattern:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: ty
-                                        └──Type expr: Variable: a19751
-                                     └──Type expr: Variable: a19751
+                                        └──Type expr: Variable: 20667
+                                     └──Type expr: Variable: 20667
                                   └──Desc: Tuple
                                      └──Pattern:
                                         └──Type expr: Constructor: ty
-                                           └──Type expr: Variable: a19751
+                                           └──Type expr: Variable: 20667
                                         └──Desc: Variable: w
                                      └──Pattern:
-                                        └──Type expr: Variable: a19751
+                                        └──Type expr: Variable: 20667
                                         └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: unit
@@ -378,20 +378,20 @@ let%expect_test "name-existentials-4" =
                    └──Constructor type:
                       └──Type expr: Constructor: u
                    └──Constructor argument:
-                      └──Constructor betas: a b
+                      └──Constructor betas: 20683 20682
                       └──Type expr: Tuple
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 20682
                          └──Type expr: Arrow
-                            └──Type expr: Variable: a
+                            └──Type expr: Variable: 20682
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: b
+                               └──Type expr: Variable: 20683
        └──Structure item: Primitive
           └──Value description:
              └──Name: ignore
              └──Scheme:
-                └──Variables: a19759
+                └──Variables: 20688
                 └──Type expr: Arrow
-                   └──Type expr: Variable: a19759
+                   └──Type expr: Variable: 20688
                    └──Type expr: Constructor: unit
              └──Primitive name: %ignore
        └──Structure item: Let
@@ -416,42 +416,42 @@ let%expect_test "name-existentials-4" =
                                   └──Name: C
                                   └──Constructor argument type:
                                      └──Type expr: Tuple
-                                        └──Type expr: Variable: a19777
+                                        └──Type expr: Variable: 20706
                                         └──Type expr: Arrow
-                                           └──Type expr: Variable: a19777
+                                           └──Type expr: Variable: 20706
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: a19779
+                                              └──Type expr: Variable: 20708
                                   └──Constructor type:
                                      └──Type expr: Constructor: u
                                └──Pattern:
                                   └──Type expr: Tuple
-                                     └──Type expr: Variable: a19777
+                                     └──Type expr: Variable: 20706
                                      └──Type expr: Arrow
-                                        └──Type expr: Variable: a19777
+                                        └──Type expr: Variable: 20706
                                         └──Type expr: Constructor: list
-                                           └──Type expr: Variable: a19779
+                                           └──Type expr: Variable: 20708
                                   └──Desc: Tuple
                                      └──Pattern:
-                                        └──Type expr: Variable: a19777
+                                        └──Type expr: Variable: 20706
                                         └──Desc: Variable: x
                                      └──Pattern:
                                         └──Type expr: Arrow
-                                           └──Type expr: Variable: a19777
+                                           └──Type expr: Variable: 20706
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: a19779
+                                              └──Type expr: Variable: 20708
                                         └──Desc: Variable: f
                          └──Expression:
                             └──Type expr: Constructor: unit
                             └──Desc: Application
                                └──Expression:
                                   └──Type expr: Arrow
-                                     └──Type expr: Variable: a19777
+                                     └──Type expr: Variable: 20706
                                      └──Type expr: Constructor: unit
                                   └──Desc: Variable
                                      └──Variable: ignore
-                                     └──Type expr: Variable: a19777
+                                     └──Type expr: Variable: 20706
                                └──Expression:
-                                  └──Type expr: Variable: a19777
+                                  └──Type expr: Variable: 20706
                                   └──Desc: Variable
                                      └──Variable: x |}]
 
@@ -504,24 +504,24 @@ let%expect_test "name-existentials-6" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 20730
                    └──Constructor type:
                       └──Type expr: Constructor: expr
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 20730
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: int
                    └──Constraint:
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 20730
                       └──Type expr: Constructor: int
                 └──Constructor declaration:
                    └──Constructor name: Add
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 20730
                    └──Constructor type:
                       └──Type expr: Constructor: expr
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 20730
                    └──Constraint:
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 20730
                       └──Type expr: Arrow
                          └──Type expr: Constructor: int
                          └──Type expr: Arrow
@@ -529,50 +529,50 @@ let%expect_test "name-existentials-6" =
                             └──Type expr: Constructor: int
                 └──Constructor declaration:
                    └──Constructor name: App
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 20730
                    └──Constructor type:
                       └──Type expr: Constructor: expr
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 20730
                    └──Constructor argument:
-                      └──Constructor betas: arg
+                      └──Constructor betas: 20740
                       └──Type expr: Tuple
                          └──Type expr: Constructor: expr
                             └──Type expr: Arrow
-                               └──Type expr: Variable: arg
-                               └──Type expr: Variable: a
+                               └──Type expr: Variable: 20740
+                               └──Type expr: Variable: 20730
                          └──Type expr: Constructor: expr
-                            └──Type expr: Variable: arg
+                            └──Type expr: Variable: 20740
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Variable: eval
                 └──Abstraction:
-                   └──Variables: a19799
+                   └──Variables: 20750
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: expr
-                            └──Type expr: Variable: a19816
-                         └──Type expr: Variable: a19816
+                            └──Type expr: Variable: 20767
+                         └──Type expr: Variable: 20767
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: expr
-                               └──Type expr: Variable: a19816
+                               └──Type expr: Variable: 20767
                             └──Desc: Variable: t
                          └──Expression:
-                            └──Type expr: Variable: a19816
+                            └──Type expr: Variable: 20767
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: expr
-                                     └──Type expr: Variable: a19816
+                                     └──Type expr: Variable: 20767
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: expr
-                                  └──Type expr: Variable: a19816
+                                  └──Type expr: Variable: 20767
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: expr
-                                           └──Type expr: Variable: a19816
+                                           └──Type expr: Variable: 20767
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Int
@@ -580,26 +580,26 @@ let%expect_test "name-existentials-6" =
                                                  └──Type expr: Constructor: int
                                               └──Constructor type:
                                                  └──Type expr: Constructor: expr
-                                                    └──Type expr: Variable: a19816
+                                                    └──Type expr: Variable: 20767
                                            └──Pattern:
                                               └──Type expr: Constructor: int
                                               └──Desc: Variable: n
                                      └──Expression:
-                                        └──Type expr: Variable: a19816
+                                        └──Type expr: Variable: 20767
                                         └──Desc: Variable
                                            └──Variable: n
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: expr
-                                           └──Type expr: Variable: a19816
+                                           └──Type expr: Variable: 20767
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Add
                                               └──Constructor type:
                                                  └──Type expr: Constructor: expr
-                                                    └──Type expr: Variable: a19816
+                                                    └──Type expr: Variable: 20767
                                      └──Expression:
-                                        └──Type expr: Variable: a19816
+                                        └──Type expr: Variable: 20767
                                         └──Desc: Function
                                            └──Pattern:
                                               └──Type expr: Constructor: int
@@ -638,7 +638,7 @@ let%expect_test "name-existentials-6" =
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: expr
-                                           └──Type expr: Variable: a19816
+                                           └──Type expr: Variable: 20767
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: App
@@ -646,75 +646,75 @@ let%expect_test "name-existentials-6" =
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: expr
                                                        └──Type expr: Arrow
-                                                          └──Type expr: Variable: a19891
-                                                          └──Type expr: Variable: a19816
+                                                          └──Type expr: Variable: 20842
+                                                          └──Type expr: Variable: 20767
                                                     └──Type expr: Constructor: expr
-                                                       └──Type expr: Variable: a19891
+                                                       └──Type expr: Variable: 20842
                                               └──Constructor type:
                                                  └──Type expr: Constructor: expr
-                                                    └──Type expr: Variable: a19816
+                                                    └──Type expr: Variable: 20767
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: expr
                                                     └──Type expr: Arrow
-                                                       └──Type expr: Variable: a19891
-                                                       └──Type expr: Variable: a19816
+                                                       └──Type expr: Variable: 20842
+                                                       └──Type expr: Variable: 20767
                                                  └──Type expr: Constructor: expr
-                                                    └──Type expr: Variable: a19891
+                                                    └──Type expr: Variable: 20842
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: expr
                                                        └──Type expr: Arrow
-                                                          └──Type expr: Variable: a19891
-                                                          └──Type expr: Variable: a19816
+                                                          └──Type expr: Variable: 20842
+                                                          └──Type expr: Variable: 20767
                                                     └──Desc: Variable: f
                                                  └──Pattern:
                                                     └──Type expr: Constructor: expr
-                                                       └──Type expr: Variable: a19891
+                                                       └──Type expr: Variable: 20842
                                                     └──Desc: Variable: x
                                      └──Expression:
-                                        └──Type expr: Variable: a19816
+                                        └──Type expr: Variable: 20767
                                         └──Desc: Application
                                            └──Expression:
                                               └──Type expr: Arrow
-                                                 └──Type expr: Variable: a19891
-                                                 └──Type expr: Variable: a19816
+                                                 └──Type expr: Variable: 20842
+                                                 └──Type expr: Variable: 20767
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: expr
                                                           └──Type expr: Arrow
-                                                             └──Type expr: Variable: a19891
-                                                             └──Type expr: Variable: a19816
+                                                             └──Type expr: Variable: 20842
+                                                             └──Type expr: Variable: 20767
                                                        └──Type expr: Arrow
-                                                          └──Type expr: Variable: a19891
-                                                          └──Type expr: Variable: a19816
+                                                          └──Type expr: Variable: 20842
+                                                          └──Type expr: Variable: 20767
                                                     └──Desc: Variable
                                                        └──Variable: eval
                                                        └──Type expr: Arrow
-                                                          └──Type expr: Variable: a19891
-                                                          └──Type expr: Variable: a19816
+                                                          └──Type expr: Variable: 20842
+                                                          └──Type expr: Variable: 20767
                                                  └──Expression:
                                                     └──Type expr: Constructor: expr
                                                        └──Type expr: Arrow
-                                                          └──Type expr: Variable: a19891
-                                                          └──Type expr: Variable: a19816
+                                                          └──Type expr: Variable: 20842
+                                                          └──Type expr: Variable: 20767
                                                     └──Desc: Variable
                                                        └──Variable: f
                                            └──Expression:
-                                              └──Type expr: Variable: a19891
+                                              └──Type expr: Variable: 20842
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: expr
-                                                          └──Type expr: Variable: a19891
-                                                       └──Type expr: Variable: a19891
+                                                          └──Type expr: Variable: 20842
+                                                       └──Type expr: Variable: 20842
                                                     └──Desc: Variable
                                                        └──Variable: eval
-                                                       └──Type expr: Variable: a19891
+                                                       └──Type expr: Variable: 20842
                                                  └──Expression:
                                                     └──Type expr: Constructor: expr
-                                                       └──Type expr: Variable: a19891
+                                                       └──Type expr: Variable: 20842
                                                     └──Desc: Variable
                                                        └──Variable: x |}]
 
@@ -809,16 +809,16 @@ let%expect_test "name-existentials-10" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Pair
-                   └──Constructor alphas: a b
+                   └──Constructor alphas: 20891 20892
                    └──Constructor type:
                       └──Type expr: Constructor: pair
-                         └──Type expr: Variable: a
-                         └──Type expr: Variable: b
+                         └──Type expr: Variable: 20891
+                         └──Type expr: Variable: 20892
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: a
-                         └──Type expr: Variable: b
+                         └──Type expr: Variable: 20891
+                         └──Type expr: Variable: 20892
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:

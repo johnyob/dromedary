@@ -35,17 +35,17 @@ let%expect_test "" =
                          └──Label: Int
                          └──Type expr: Constructor: present
                             └──Type expr: Constructor: int
-                         └──Type expr: Variable: 12139
+                         └──Type expr: Variable: 12730
                    └──Desc: Variable: three
                 └──Abstraction:
-                   └──Variables: 12139
+                   └──Variables: 12730
                    └──Expression:
                       └──Type expr: Variant
                          └──Type expr: Row cons
                             └──Label: Int
                             └──Type expr: Constructor: present
                                └──Type expr: Constructor: int
-                            └──Type expr: Variable: 12139
+                            └──Type expr: Variable: 12730
                       └──Desc: Variant
                          └──Variant description:
                             └──Tag: Int
@@ -54,7 +54,7 @@ let%expect_test "" =
                                   └──Label: Int
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: int
-                                  └──Type expr: Variable: 12139
+                                  └──Type expr: Variable: 12730
                          └──Expression:
                             └──Type expr: Constructor: int
                             └──Desc: Constant: 3
@@ -67,17 +67,17 @@ let%expect_test "" =
                          └──Label: Float
                          └──Type expr: Constructor: present
                             └──Type expr: Constructor: float
-                         └──Type expr: Variable: 12151
+                         └──Type expr: Variable: 12742
                    └──Desc: Variable: four
                 └──Abstraction:
-                   └──Variables: 12151
+                   └──Variables: 12742
                    └──Expression:
                       └──Type expr: Variant
                          └──Type expr: Row cons
                             └──Label: Float
                             └──Type expr: Constructor: present
                                └──Type expr: Constructor: float
-                            └──Type expr: Variable: 12151
+                            └──Type expr: Variable: 12742
                       └──Desc: Variant
                          └──Variant description:
                             └──Tag: Float
@@ -86,7 +86,7 @@ let%expect_test "" =
                                   └──Label: Float
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: float
-                                  └──Type expr: Variable: 12151
+                                  └──Type expr: Variable: 12742
                          └──Expression:
                             └──Type expr: Constructor: float
                             └──Desc: Constant: 4.000000
@@ -99,17 +99,17 @@ let%expect_test "" =
                          └──Label: Not_a_number
                          └──Type expr: Constructor: present
                             └──Type expr: Constructor: unit
-                         └──Type expr: Variable: 12163
+                         └──Type expr: Variable: 12754
                    └──Desc: Variable: nan
                 └──Abstraction:
-                   └──Variables: 12163
+                   └──Variables: 12754
                    └──Expression:
                       └──Type expr: Variant
                          └──Type expr: Row cons
                             └──Label: Not_a_number
                             └──Type expr: Constructor: present
                                └──Type expr: Constructor: unit
-                            └──Type expr: Variable: 12163
+                            └──Type expr: Variable: 12754
                       └──Desc: Variant
                          └──Variant description:
                             └──Tag: Not_a_number
@@ -118,29 +118,29 @@ let%expect_test "" =
                                   └──Label: Not_a_number
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: unit
-                                  └──Type expr: Variable: 12163
+                                  └──Type expr: Variable: 12754
        └──Structure item: Type
           └──Type declaration:
              └──Type name: list
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 12132
+                   └──Constructor alphas: 12723
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 12132
+                         └──Type expr: Variable: 12723
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 12132
+                   └──Constructor alphas: 12723
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 12132
+                         └──Type expr: Variable: 12723
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 12132
+                         └──Type expr: Variable: 12723
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 12132
+                            └──Type expr: Variable: 12723
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -159,10 +159,10 @@ let%expect_test "" =
                                   └──Label: Not_a_number
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: unit
-                                  └──Type expr: Variable: 12227
+                                  └──Type expr: Variable: 12818
                    └──Desc: Any
                 └──Abstraction:
-                   └──Variables: 12227
+                   └──Variables: 12818
                    └──Expression:
                       └──Type expr: Constructor: list
                          └──Type expr: Variant
@@ -178,7 +178,7 @@ let%expect_test "" =
                                      └──Label: Not_a_number
                                      └──Type expr: Constructor: present
                                         └──Type expr: Constructor: unit
-                                     └──Type expr: Variable: 12227
+                                     └──Type expr: Variable: 12818
                       └──Desc: Construct
                          └──Constructor description:
                             └──Name: Cons
@@ -197,7 +197,7 @@ let%expect_test "" =
                                               └──Label: Not_a_number
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: unit
-                                              └──Type expr: Variable: 12227
+                                              └──Type expr: Variable: 12818
                                   └──Type expr: Constructor: list
                                      └──Type expr: Variant
                                         └──Type expr: Row cons
@@ -212,7 +212,7 @@ let%expect_test "" =
                                                  └──Label: Not_a_number
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: unit
-                                                 └──Type expr: Variable: 12227
+                                                 └──Type expr: Variable: 12818
                             └──Constructor type:
                                └──Type expr: Constructor: list
                                   └──Type expr: Variant
@@ -228,7 +228,7 @@ let%expect_test "" =
                                               └──Label: Not_a_number
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: unit
-                                              └──Type expr: Variable: 12227
+                                              └──Type expr: Variable: 12818
                          └──Expression:
                             └──Type expr: Tuple
                                └──Type expr: Variant
@@ -244,7 +244,7 @@ let%expect_test "" =
                                            └──Label: Not_a_number
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: unit
-                                           └──Type expr: Variable: 12227
+                                           └──Type expr: Variable: 12818
                                └──Type expr: Constructor: list
                                   └──Type expr: Variant
                                      └──Type expr: Row cons
@@ -259,7 +259,7 @@ let%expect_test "" =
                                               └──Label: Not_a_number
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: unit
-                                              └──Type expr: Variable: 12227
+                                              └──Type expr: Variable: 12818
                             └──Desc: Tuple
                                └──Expression:
                                   └──Type expr: Variant
@@ -275,7 +275,7 @@ let%expect_test "" =
                                               └──Label: Not_a_number
                                               └──Type expr: Constructor: present
                                                  └──Type expr: Constructor: unit
-                                              └──Type expr: Variable: 12227
+                                              └──Type expr: Variable: 12818
                                   └──Desc: Variable
                                      └──Variable: three
                                      └──Type expr: Row cons
@@ -286,7 +286,7 @@ let%expect_test "" =
                                            └──Label: Not_a_number
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: unit
-                                           └──Type expr: Variable: 12227
+                                           └──Type expr: Variable: 12818
                                └──Expression:
                                   └──Type expr: Constructor: list
                                      └──Type expr: Variant
@@ -302,7 +302,7 @@ let%expect_test "" =
                                                  └──Label: Not_a_number
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: unit
-                                                 └──Type expr: Variable: 12227
+                                                 └──Type expr: Variable: 12818
                                   └──Desc: Construct
                                      └──Constructor description:
                                         └──Name: Cons
@@ -321,7 +321,7 @@ let%expect_test "" =
                                                           └──Label: Not_a_number
                                                           └──Type expr: Constructor: present
                                                              └──Type expr: Constructor: unit
-                                                          └──Type expr: Variable: 12227
+                                                          └──Type expr: Variable: 12818
                                               └──Type expr: Constructor: list
                                                  └──Type expr: Variant
                                                     └──Type expr: Row cons
@@ -336,7 +336,7 @@ let%expect_test "" =
                                                              └──Label: Not_a_number
                                                              └──Type expr: Constructor: present
                                                                 └──Type expr: Constructor: unit
-                                                             └──Type expr: Variable: 12227
+                                                             └──Type expr: Variable: 12818
                                         └──Constructor type:
                                            └──Type expr: Constructor: list
                                               └──Type expr: Variant
@@ -352,7 +352,7 @@ let%expect_test "" =
                                                           └──Label: Not_a_number
                                                           └──Type expr: Constructor: present
                                                              └──Type expr: Constructor: unit
-                                                          └──Type expr: Variable: 12227
+                                                          └──Type expr: Variable: 12818
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Variant
@@ -368,7 +368,7 @@ let%expect_test "" =
                                                        └──Label: Not_a_number
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: unit
-                                                       └──Type expr: Variable: 12227
+                                                       └──Type expr: Variable: 12818
                                            └──Type expr: Constructor: list
                                               └──Type expr: Variant
                                                  └──Type expr: Row cons
@@ -383,7 +383,7 @@ let%expect_test "" =
                                                           └──Label: Not_a_number
                                                           └──Type expr: Constructor: present
                                                              └──Type expr: Constructor: unit
-                                                          └──Type expr: Variable: 12227
+                                                          └──Type expr: Variable: 12818
                                         └──Desc: Tuple
                                            └──Expression:
                                               └──Type expr: Variant
@@ -399,7 +399,7 @@ let%expect_test "" =
                                                           └──Label: Not_a_number
                                                           └──Type expr: Constructor: present
                                                              └──Type expr: Constructor: unit
-                                                          └──Type expr: Variable: 12227
+                                                          └──Type expr: Variable: 12818
                                               └──Desc: Variable
                                                  └──Variable: four
                                                  └──Type expr: Row cons
@@ -410,7 +410,7 @@ let%expect_test "" =
                                                        └──Label: Not_a_number
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: unit
-                                                       └──Type expr: Variable: 12227
+                                                       └──Type expr: Variable: 12818
                                            └──Expression:
                                               └──Type expr: Constructor: list
                                                  └──Type expr: Variant
@@ -426,7 +426,7 @@ let%expect_test "" =
                                                              └──Label: Not_a_number
                                                              └──Type expr: Constructor: present
                                                                 └──Type expr: Constructor: unit
-                                                             └──Type expr: Variable: 12227
+                                                             └──Type expr: Variable: 12818
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Cons
@@ -445,7 +445,7 @@ let%expect_test "" =
                                                                       └──Label: Not_a_number
                                                                       └──Type expr: Constructor: present
                                                                          └──Type expr: Constructor: unit
-                                                                      └──Type expr: Variable: 12227
+                                                                      └──Type expr: Variable: 12818
                                                           └──Type expr: Constructor: list
                                                              └──Type expr: Variant
                                                                 └──Type expr: Row cons
@@ -460,7 +460,7 @@ let%expect_test "" =
                                                                          └──Label: Not_a_number
                                                                          └──Type expr: Constructor: present
                                                                             └──Type expr: Constructor: unit
-                                                                         └──Type expr: Variable: 12227
+                                                                         └──Type expr: Variable: 12818
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
                                                           └──Type expr: Variant
@@ -476,7 +476,7 @@ let%expect_test "" =
                                                                       └──Label: Not_a_number
                                                                       └──Type expr: Constructor: present
                                                                          └──Type expr: Constructor: unit
-                                                                      └──Type expr: Variable: 12227
+                                                                      └──Type expr: Variable: 12818
                                                  └──Expression:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Variant
@@ -492,7 +492,7 @@ let%expect_test "" =
                                                                    └──Label: Not_a_number
                                                                    └──Type expr: Constructor: present
                                                                       └──Type expr: Constructor: unit
-                                                                   └──Type expr: Variable: 12227
+                                                                   └──Type expr: Variable: 12818
                                                        └──Type expr: Constructor: list
                                                           └──Type expr: Variant
                                                              └──Type expr: Row cons
@@ -507,7 +507,7 @@ let%expect_test "" =
                                                                       └──Label: Not_a_number
                                                                       └──Type expr: Constructor: present
                                                                          └──Type expr: Constructor: unit
-                                                                      └──Type expr: Variable: 12227
+                                                                      └──Type expr: Variable: 12818
                                                     └──Desc: Tuple
                                                        └──Expression:
                                                           └──Type expr: Variant
@@ -523,7 +523,7 @@ let%expect_test "" =
                                                                       └──Label: Not_a_number
                                                                       └──Type expr: Constructor: present
                                                                          └──Type expr: Constructor: unit
-                                                                      └──Type expr: Variable: 12227
+                                                                      └──Type expr: Variable: 12818
                                                           └──Desc: Variable
                                                              └──Variable: nan
                                                              └──Type expr: Row cons
@@ -534,7 +534,7 @@ let%expect_test "" =
                                                                    └──Label: Int
                                                                    └──Type expr: Constructor: present
                                                                       └──Type expr: Constructor: int
-                                                                   └──Type expr: Variable: 12227
+                                                                   └──Type expr: Variable: 12818
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
                                                              └──Type expr: Variant
@@ -550,7 +550,7 @@ let%expect_test "" =
                                                                          └──Label: Not_a_number
                                                                          └──Type expr: Constructor: present
                                                                             └──Type expr: Constructor: unit
-                                                                         └──Type expr: Variable: 12227
+                                                                         └──Type expr: Variable: 12818
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Nil
@@ -569,7 +569,7 @@ let%expect_test "" =
                                                                                   └──Label: Not_a_number
                                                                                   └──Type expr: Constructor: present
                                                                                      └──Type expr: Constructor: unit
-                                                                                  └──Type expr: Variable: 12227 |}]
+                                                                                  └──Type expr: Variable: 12818 |}]
 
 let%expect_test "" =
   let str = 
@@ -591,28 +591,28 @@ let%expect_test "" =
   print_infer_result str;
   [%expect {|
     ("Cannot unify types"
-     (type_expr1
-      (Type 12311
+     ("Type_expr.decode type_expr1"
+      (Type 12902
        (Former
         (Variant
-         (Type 12288
+         (Type 12879
           (Row_cons Float
-           (Type 12306
-            (Former (Constr ((Type 12307 (Former (Constr () float)))) present)))
-           (Type 12305
+           (Type 12897
+            (Former (Constr ((Type 12898 (Former (Constr () float)))) present)))
+           (Type 12896
             (Row_cons Int
-             (Type 12290
-              (Former (Constr ((Type 12291 (Former (Constr () int)))) present)))
-             (Type 12308 Var)))))))))
-     (type_expr2
-      (Type 12322
+             (Type 12881
+              (Former (Constr ((Type 12882 (Former (Constr () int)))) present)))
+             (Type 12899 (Var 12899))))))))))
+     ("Type_expr.decode type_expr2"
+      (Type 12913
        (Former
         (Variant
-         (Type 12323
+         (Type 12914
           (Row_cons Int
-           (Type 12325
-            (Former (Constr ((Type 12326 (Former (Constr () string)))) present)))
-           (Type 12324 Var)))))))) |}]
+           (Type 12916
+            (Former (Constr ((Type 12917 (Former (Constr () string)))) present)))
+           (Type 12915 (Var 12915))))))))) |}]
 
 let%expect_test "" =
   let str = 
@@ -636,11 +636,11 @@ let%expect_test "" =
           └──Value description:
              └──Name: gt
              └──Scheme:
-                └──Variables: 12329
+                └──Variables: 12920
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 12329
+                   └──Type expr: Variable: 12920
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 12329
+                      └──Type expr: Variable: 12920
                       └──Type expr: Constructor: bool
              └──Primitive name: %greater_than
        └──Structure item: Let
@@ -864,31 +864,31 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 12396
+                   └──Constructor alphas: 12987
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 12396
+                         └──Type expr: Variable: 12987
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 12396
+                   └──Constructor alphas: 12987
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 12396
+                         └──Type expr: Variable: 12987
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 12396
+                         └──Type expr: Variable: 12987
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 12396
+                            └──Type expr: Variable: 12987
        └──Structure item: Primitive
           └──Value description:
              └──Name: gt
              └──Scheme:
-                └──Variables: 12401
+                └──Variables: 12992
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 12401
+                   └──Type expr: Variable: 12992
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 12401
+                      └──Type expr: Variable: 12992
                       └──Type expr: Constructor: bool
              └──Primitive name: %greater_than
        └──Structure item: Let
@@ -1080,16 +1080,16 @@ let%expect_test "" =
           └──Value description:
              └──Name: filter
              └──Scheme:
-                └──Variables: 12468
+                └──Variables: 13059
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: 12468
+                      └──Type expr: Variable: 13059
                    └──Type expr: Arrow
                       └──Type expr: Arrow
-                         └──Type expr: Variable: 12468
+                         └──Type expr: Variable: 13059
                          └──Type expr: Constructor: bool
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 12468
+                         └──Type expr: Variable: 13059
              └──Primitive name: %filter
        └──Structure item: Let
           └──Value bindings:
@@ -1514,31 +1514,31 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 12559
+                   └──Constructor alphas: 13150
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 12559
+                         └──Type expr: Variable: 13150
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 12559
+                   └──Constructor alphas: 13150
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 12559
+                         └──Type expr: Variable: 13150
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 12559
+                         └──Type expr: Variable: 13150
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 12559
+                            └──Type expr: Variable: 13150
        └──Structure item: Primitive
           └──Value description:
              └──Name: gt
              └──Scheme:
-                └──Variables: 12568
+                └──Variables: 13159
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 12568
+                   └──Type expr: Variable: 13159
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 12568
+                      └──Type expr: Variable: 13159
                       └──Type expr: Constructor: bool
              └──Primitive name: %greater_than
        └──Structure item: Type
@@ -1547,24 +1547,24 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Ok
-                   └──Constructor alphas: 12564 12565
+                   └──Constructor alphas: 13155 13156
                    └──Constructor type:
                       └──Type expr: Constructor: result
-                         └──Type expr: Variable: 12564
-                         └──Type expr: Variable: 12565
+                         └──Type expr: Variable: 13155
+                         └──Type expr: Variable: 13156
                    └──Constructor argument:
                       └──Constructor betas:
-                      └──Type expr: Variable: 12564
+                      └──Type expr: Variable: 13155
                 └──Constructor declaration:
                    └──Constructor name: Error
-                   └──Constructor alphas: 12564 12565
+                   └──Constructor alphas: 13155 13156
                    └──Constructor type:
                       └──Type expr: Constructor: result
-                         └──Type expr: Variable: 12564
-                         └──Type expr: Variable: 12565
+                         └──Type expr: Variable: 13155
+                         └──Type expr: Variable: 13156
                    └──Constructor argument:
                       └──Constructor betas:
-                      └──Type expr: Variable: 12565
+                      └──Type expr: Variable: 13156
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -1873,16 +1873,16 @@ let%expect_test "" =
           └──Value description:
              └──Name: filter
              └──Scheme:
-                └──Variables: 12662
+                └──Variables: 13253
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: 12662
+                      └──Type expr: Variable: 13253
                    └──Type expr: Arrow
                       └──Type expr: Arrow
-                         └──Type expr: Variable: 12662
+                         └──Type expr: Variable: 13253
                          └──Type expr: Constructor: bool
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 12662
+                         └──Type expr: Variable: 13253
              └──Primitive name: %filter
        └──Structure item: Let
           └──Value bindings:
@@ -2511,11 +2511,11 @@ let%expect_test "" =
           └──Value description:
              └──Name: gt
              └──Scheme:
-                └──Variables: 12780
+                └──Variables: 13371
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 12780
+                   └──Type expr: Variable: 13371
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 12780
+                      └──Type expr: Variable: 13371
                       └──Type expr: Constructor: bool
              └──Primitive name: %greater_than
        └──Structure item: Type
@@ -2524,24 +2524,24 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Ok
-                   └──Constructor alphas: 12776 12777
+                   └──Constructor alphas: 13367 13368
                    └──Constructor type:
                       └──Type expr: Constructor: result
-                         └──Type expr: Variable: 12776
-                         └──Type expr: Variable: 12777
+                         └──Type expr: Variable: 13367
+                         └──Type expr: Variable: 13368
                    └──Constructor argument:
                       └──Constructor betas:
-                      └──Type expr: Variable: 12776
+                      └──Type expr: Variable: 13367
                 └──Constructor declaration:
                    └──Constructor name: Error
-                   └──Constructor alphas: 12776 12777
+                   └──Constructor alphas: 13367 13368
                    └──Constructor type:
                       └──Type expr: Constructor: result
-                         └──Type expr: Variable: 12776
-                         └──Type expr: Variable: 12777
+                         └──Type expr: Variable: 13367
+                         └──Type expr: Variable: 13368
                    └──Constructor argument:
                       └──Constructor betas:
-                      └──Type expr: Variable: 12777
+                      └──Type expr: Variable: 13368
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -2556,7 +2556,7 @@ let%expect_test "" =
                                └──Label: Float
                                └──Type expr: Constructor: present
                                   └──Type expr: Constructor: float
-                               └──Type expr: Variable: 12794
+                               └──Type expr: Variable: 13385
                       └──Type expr: Constructor: result
                          └──Type expr: Constructor: bool
                          └──Type expr: Constructor: string
@@ -2574,7 +2574,7 @@ let%expect_test "" =
                                   └──Label: Float
                                   └──Type expr: Constructor: present
                                      └──Type expr: Constructor: float
-                                  └──Type expr: Variable: 12794
+                                  └──Type expr: Variable: 13385
                          └──Type expr: Constructor: result
                             └──Type expr: Constructor: bool
                             └──Type expr: Constructor: string
@@ -2589,7 +2589,7 @@ let%expect_test "" =
                                      └──Label: Float
                                      └──Type expr: Constructor: present
                                         └──Type expr: Constructor: float
-                                     └──Type expr: Variable: 12794
+                                     └──Type expr: Variable: 13385
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: result
@@ -2606,7 +2606,7 @@ let%expect_test "" =
                                            └──Label: Float
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: float
-                                           └──Type expr: Variable: 12794
+                                           └──Type expr: Variable: 13385
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Variant
@@ -2618,7 +2618,7 @@ let%expect_test "" =
                                         └──Label: Float
                                         └──Type expr: Constructor: present
                                            └──Type expr: Constructor: float
-                                        └──Type expr: Variable: 12794
+                                        └──Type expr: Variable: 13385
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
@@ -2631,7 +2631,7 @@ let%expect_test "" =
                                                  └──Label: Float
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: float
-                                                 └──Type expr: Variable: 12794
+                                                 └──Type expr: Variable: 13385
                                         └──Desc: Variant
                                            └──Variant description:
                                               └──Tag: Int
@@ -2644,7 +2644,7 @@ let%expect_test "" =
                                                        └──Label: Float
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: float
-                                                       └──Type expr: Variable: 12794
+                                                       └──Type expr: Variable: 13385
                                            └──Pattern:
                                               └──Type expr: Constructor: int
                                               └──Desc: Variable: x
@@ -2696,7 +2696,7 @@ let%expect_test "" =
                                                  └──Label: Float
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: float
-                                                 └──Type expr: Variable: 12794
+                                                 └──Type expr: Variable: 13385
                                         └──Desc: Variant
                                            └──Variant description:
                                               └──Tag: Float
@@ -2709,7 +2709,7 @@ let%expect_test "" =
                                                        └──Label: Float
                                                        └──Type expr: Constructor: present
                                                           └──Type expr: Constructor: float
-                                                       └──Type expr: Variable: 12794
+                                                       └──Type expr: Variable: 13385
                                            └──Pattern:
                                               └──Type expr: Constructor: float
                                               └──Desc: Variable: x
@@ -2761,7 +2761,7 @@ let%expect_test "" =
                                                  └──Label: Float
                                                  └──Type expr: Constructor: present
                                                     └──Type expr: Constructor: float
-                                                 └──Type expr: Variable: 12794
+                                                 └──Type expr: Variable: 13385
                                         └──Desc: Any
                                      └──Expression:
                                         └──Type expr: Constructor: result
@@ -2805,7 +2805,7 @@ let%expect_test "" =
                                         └──Label: Float
                                         └──Type expr: Constructor: present
                                            └──Type expr: Constructor: float
-                                        └──Type expr: Variable: 12865
+                                        └──Type expr: Variable: 13456
                                └──Type expr: Constructor: result
                                   └──Type expr: Constructor: bool
                                   └──Type expr: Constructor: string
@@ -2821,7 +2821,7 @@ let%expect_test "" =
                                      └──Label: Float
                                      └──Type expr: Constructor: present
                                         └──Type expr: Constructor: float
-                                     └──Type expr: Variable: 12865
+                                     └──Type expr: Variable: 13456
                             └──Desc: Variant
                                └──Variant description:
                                   └──Tag: Int
@@ -2834,7 +2834,7 @@ let%expect_test "" =
                                            └──Label: Float
                                            └──Type expr: Constructor: present
                                               └──Type expr: Constructor: float
-                                           └──Type expr: Variable: 12865
+                                           └──Type expr: Variable: 13456
                                └──Expression:
                                   └──Type expr: Constructor: int
                                   └──Desc: Constant: 0
@@ -2870,7 +2870,7 @@ let%expect_test "" =
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: int
                                                  └──Type expr: Constructor: int
-                                           └──Type expr: Variable: 12919
+                                           └──Type expr: Variable: 13510
                                └──Type expr: Constructor: result
                                   └──Type expr: Constructor: bool
                                   └──Type expr: Constructor: string
@@ -2892,7 +2892,7 @@ let%expect_test "" =
                                            └──Type expr: Tuple
                                               └──Type expr: Constructor: int
                                               └──Type expr: Constructor: int
-                                        └──Type expr: Variable: 12919
+                                        └──Type expr: Variable: 13510
                             └──Desc: Variant
                                └──Variant description:
                                   └──Tag: Rational
@@ -2911,7 +2911,7 @@ let%expect_test "" =
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: int
                                                     └──Type expr: Constructor: int
-                                              └──Type expr: Variable: 12919
+                                              └──Type expr: Variable: 13510
                                └──Expression:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: int

@@ -32,38 +32,38 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 15604
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 15604
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: int
                    └──Constraint:
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 15604
                       └──Type expr: Constructor: int
                 └──Constructor declaration:
                    └──Constructor name: String
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 15604
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 15604
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: string
                    └──Constraint:
-                      └──Type expr: Variable: a
+                      └──Type expr: Variable: 15604
                       └──Type expr: Constructor: string
                 └──Constructor declaration:
                    └──Constructor name: Same
-                   └──Constructor alphas: a
+                   └──Constructor alphas: 15604
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 15604
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 15604
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:

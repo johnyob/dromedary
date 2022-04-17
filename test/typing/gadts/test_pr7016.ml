@@ -24,33 +24,33 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: ctx tl
+                   └──Constructor alphas: 15675 15676
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: ctx
-                         └──Type expr: Variable: tl
+                         └──Type expr: Variable: 15675
+                         └──Type expr: Variable: 15676
                    └──Constraint:
-                      └──Type expr: Variable: ctx
-                      └──Type expr: Variable: tl
+                      └──Type expr: Variable: 15675
+                      └──Type expr: Variable: 15676
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: ctx tl
+                   └──Constructor alphas: 15675 15676
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: ctx
-                         └──Type expr: Variable: tl
+                         └──Type expr: Variable: 15675
+                         └──Type expr: Variable: 15676
                    └──Constructor argument:
-                      └──Constructor betas: a b
+                      └──Constructor betas: 15679 15678
                       └──Type expr: Tuple
-                         └──Type expr: Variable: a
+                         └──Type expr: Variable: 15678
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: b
-                            └──Type expr: Variable: tl
+                            └──Type expr: Variable: 15679
+                            └──Type expr: Variable: 15676
                    └──Constraint:
-                      └──Type expr: Variable: ctx
+                      └──Type expr: Variable: 15675
                       └──Type expr: Tuple
-                         └──Type expr: Variable: a
-                         └──Type expr: Variable: b
+                         └──Type expr: Variable: 15678
+                         └──Type expr: Variable: 15679
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -58,59 +58,59 @@ let%expect_test "" =
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
                          └──Type expr: Tuple
-                            └──Type expr: Variable: a15133
-                            └──Type expr: Variable: a15134
-                         └──Type expr: Variable: a15134
-                      └──Type expr: Variable: a15133
+                            └──Type expr: Variable: 15707
+                            └──Type expr: Variable: 15708
+                         └──Type expr: Variable: 15708
+                      └──Type expr: Variable: 15707
                    └──Desc: Variable: get1
                 └──Abstraction:
-                   └──Variables: a15134,a15133
+                   └──Variables: 15708,15707
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
                             └──Type expr: Tuple
-                               └──Type expr: Variable: a15133
-                               └──Type expr: Variable: a15134
-                            └──Type expr: Variable: a15134
-                         └──Type expr: Variable: a15133
+                               └──Type expr: Variable: 15707
+                               └──Type expr: Variable: 15708
+                            └──Type expr: Variable: 15708
+                         └──Type expr: Variable: 15707
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
                                └──Type expr: Tuple
-                                  └──Type expr: Variable: a15133
-                                  └──Type expr: Variable: a15134
-                               └──Type expr: Variable: a15134
+                                  └──Type expr: Variable: 15707
+                                  └──Type expr: Variable: 15708
+                               └──Type expr: Variable: 15708
                             └──Desc: Construct
                                └──Constructor description:
                                   └──Name: Cons
                                   └──Constructor argument type:
                                      └──Type expr: Tuple
-                                        └──Type expr: Variable: a15136
+                                        └──Type expr: Variable: 15710
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: a15138
-                                           └──Type expr: Variable: a15134
+                                           └──Type expr: Variable: 15712
+                                           └──Type expr: Variable: 15708
                                   └──Constructor type:
                                      └──Type expr: Constructor: t
                                         └──Type expr: Tuple
-                                           └──Type expr: Variable: a15133
-                                           └──Type expr: Variable: a15134
-                                        └──Type expr: Variable: a15134
+                                           └──Type expr: Variable: 15707
+                                           └──Type expr: Variable: 15708
+                                        └──Type expr: Variable: 15708
                                └──Pattern:
                                   └──Type expr: Tuple
-                                     └──Type expr: Variable: a15136
+                                     └──Type expr: Variable: 15710
                                      └──Type expr: Constructor: t
-                                        └──Type expr: Variable: a15138
-                                        └──Type expr: Variable: a15134
+                                        └──Type expr: Variable: 15712
+                                        └──Type expr: Variable: 15708
                                   └──Desc: Tuple
                                      └──Pattern:
-                                        └──Type expr: Variable: a15136
+                                        └──Type expr: Variable: 15710
                                         └──Desc: Variable: x
                                      └──Pattern:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: a15138
-                                           └──Type expr: Variable: a15134
+                                           └──Type expr: Variable: 15712
+                                           └──Type expr: Variable: 15708
                                         └──Desc: Any
                          └──Expression:
-                            └──Type expr: Variable: a15133
+                            └──Type expr: Variable: 15707
                             └──Desc: Variable
                                └──Variable: x |}]
