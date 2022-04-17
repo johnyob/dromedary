@@ -48,32 +48,35 @@ module Make (Algebra : Algebra) = struct
     module Type = struct
       type t = U.Type.t
 
-      type desc =
+      type 'a desc =
         | Var of Var.t
-        | Former of t Type_former.t
-        | Row_cons of Label.t * t * t
-        | Row_uniform of t
+        | Former of 'a Type_former.t
+        | Row_cons of Label.t * 'a * 'a
+        | Row_uniform of 'a
 
       let id = U.Type.id
 
-      let desc t =
-        match G.Structure.repr (U.Type.structure t) with
-        | Flexible_var -> Var t
-        | Rigid_var _rigid_var -> Var t
+      let desc_of_structure structure ~var = 
+        match G.Structure.repr structure with
+        | Flexible_var -> Var var
+        | Rigid_var _rigid_var -> Var var
         | Row_cons (label, t1, t2) -> Row_cons (label, t1, t2)
         | Row_uniform t -> Row_uniform t
         | Former former -> Former former
 
 
-      let rec sexp_of_t t = [%sexp Type, (id t : int), (desc t : desc)]
+      let desc t = desc_of_structure (U.Type.structure t) ~var:t
 
-      and sexp_of_desc desc =
+      
+      let sexp_of_desc (type a) (sexp_of_a : a -> Sexp.t) desc =
         match desc with
         | Var t -> [%sexp Var (t : Var.t)]
-        | Former former -> [%sexp Former, (former : t Type_former.t)]
+        | Former former -> [%sexp Former, (former : a Type_former.t)]
         | Row_cons (label, t1, t2) ->
-          [%sexp Row_cons, (label : Label.t), (t1 : t), (t2 : t)]
-        | Row_uniform t -> [%sexp Row_uniform, (t : t)]
+          [%sexp Row_cons, (label : Label.t), (t1 : a), (t2 : a)]
+        | Row_uniform t -> [%sexp Row_uniform, (t : a)]
+
+      let rec sexp_of_t t = [%sexp Type, (id t : int), (desc t : t desc)]
 
       let make desc = 
         match desc with
@@ -82,6 +85,28 @@ module Make (Algebra : Algebra) = struct
         | Row_cons (label, t1, t2) ->
           G.make_row_cons ~state ~label ~field:t1 ~tl:t2
         | Row_uniform t -> G.make_row_uniform ~state t
+
+      let let_ ~binding:(var, t1) ~in_:t2 =
+        U.unify ~state ~ctx:U.empty_ctx var t1;
+        t2
+
+      let mu var t = 
+        U.unify ~state ~ctx:U.empty_ctx var t;
+        t
+
+      let fold t ~f ~mu ~var = 
+        U.Type.fold
+          ~f:(fun t structure -> f (desc_of_structure structure ~var:t))
+          ~mu
+          ~var
+          t
+
+      (* let map t ~f ~mu ~var = 
+        U.Type.fold
+          ~f:(fun t structure -> f (desc_of_structure structure ~var:t) |> make)
+          ~mu
+          ~var
+          t *)
     end
 
     type scheme = Var.t list * Type.t [@@deriving sexp_of]

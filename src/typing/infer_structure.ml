@@ -47,7 +47,16 @@ let rec transl_core_type ~substitution core_type =
   | Ptyp_variant row ->
     let vars, t = transl_row ~substitution row in
     vars, Type_expr.make (Ttyp_variant t)
-  | Ptyp_mu (_var, _core_type) -> raise_s [%message "Mu types are unsupported"]
+  | Ptyp_mu (var, core_type) ->
+    let var' = Type_var.make () in
+    let substitution =
+      String.Map.set
+        substitution
+        ~key:var
+        ~data:(Type_expr.make (Ttyp_var var'))
+    in
+    let vars, t = transl_core_type ~substitution core_type in
+    vars, Type_expr.mu var' t
   | Ptyp_where (core_type1, var, core_type2) ->
     let vars2, t2 = transl_core_type ~substitution core_type2 in
     let substitution = String.Map.set substitution ~key:var ~data:t2 in
@@ -236,7 +245,9 @@ let transl_ext_constr ext_constr =
   let type_vars = List.map ~f:(fun _ -> Type_var.make ()) pext_params in
   let substitution =
     String.Map.of_alist_exn
-      (List.zip_exn pext_params (List.map ~f:(fun var -> Type_expr.make (Ttyp_var var)) type_vars))
+      (List.zip_exn
+         pext_params
+         (List.map ~f:(fun var -> Type_expr.make (Ttyp_var var)) type_vars))
   in
   let constr_decl =
     transl_constr_decl
@@ -294,7 +305,10 @@ let infer_primitive { pval_name; pval_type; pval_prim } =
       | [ (_, scheme) ], _ -> scheme
       | _ -> assert false
     in
-    { tval_name = pval_name; tval_type = (List.map ~f:Type_var.decode vars, Type_expr.decode type_); tval_prim = pval_prim })
+    { tval_name = pval_name
+    ; tval_type = List.map ~f:Type_var.decode vars, Type_expr.decode type_
+    ; tval_prim = pval_prim
+    })
 
 
 let infer_exception ~env type_exn =
@@ -349,7 +363,7 @@ let infer_str_item ~env str_item =
   | Pstr_value (Nonrecursive, value_bindings) ->
     let%bind let_bindings = infer_value_bindings ~env value_bindings in
     let to_value_binding (_, (variables, (pat, exp))) =
-      { tvb_pat = pat; tvb_expr = List.map ~f:Type_var.decode  variables, exp }
+      { tvb_pat = pat; tvb_expr = List.map ~f:Type_var.decode variables, exp }
     in
     return
       ( env

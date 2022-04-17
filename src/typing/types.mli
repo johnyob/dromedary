@@ -20,53 +20,63 @@ type tag = string
 
 module Type_var : sig
   type t [@@deriving sexp_of]
+
   include Comparable with type t := t
-  
+
   val make : unit -> t
   val id : t -> int
-
   val decode : Decoded.Var.t -> t
 end
 
 module Type_expr : sig
   type t [@@deriving sexp_of]
 
-  type desc =
-    | Ttyp_var of Type_var.t
+  type 'a desc =
+    | Ttyp_var of Type_var.t 
         (** Type variables ['a]. *)
-    | Ttyp_arrow of t * t 
+    | Ttyp_arrow of 'a * 'a 
         (** Function types [T1 -> T2]. *)
-    | Ttyp_tuple of t list 
+    | Ttyp_tuple of 'a list 
         (** Product (or "tuple") types. *)
-    | Ttyp_constr of type_constr 
+    | Ttyp_constr of 'a type_constr 
         (** Type constructors. *)
-    | Ttyp_variant of row 
+    | Ttyp_variant of 'a 
         (** Polymorphic variant [ [ ... ] ] *)
-    | Ttyp_row_cons of tag * t * row 
+    | Ttyp_row_cons of tag * 'a * 'a 
         (** Row cons [< `A : T :: row >] *)
-    | Ttyp_row_uniform of t 
+    | Ttyp_row_uniform of 'a 
         (** Uniform row [ ∂<T> ] *)
   [@@deriving sexp_of]
 
-  and row = t 
-  and type_constr = t list * string 
+  and 'a type_constr = 'a list * string
 
   include Comparable with type t := t
 
   (** [make desc] creates a type expr w/ descriptor [desc] *)
-  val make : desc -> t
+  val make : t desc -> t
+
+  val let_ : binding:Type_var.t * t -> in_:t -> t
+
+  val mu : Type_var.t -> t -> t
 
   (** [desc type_expr] returns the descriptor of [type_expr] *)
-  val desc : t -> desc
+  val desc : t -> t desc
+
+  val decode : Decoded.Type.t -> t
 
   (** [id type_expr] returns the id of [type_expr] -- used to prevent cyclic traversals *)
   val id : t -> int
 
-  val decode : Decoded.Type.t -> t
+  val fold
+    :  t
+    -> f:('a desc -> 'a)
+    -> mu:(Type_var.t -> 'a -> 'a)
+    -> var:(Type_var.t -> 'a)
+    -> 'a
 end
 
 type type_expr = Type_expr.t [@@deriving sexp_of]
-type row = Type_expr.row [@@deriving sexp_of]
+type row = Type_expr.t [@@deriving sexp_of]
 type type_var = Type_var.t [@@derving sexp_of]
 type scheme = type_var list * type_expr [@@deriving sexp_of]
 
@@ -96,7 +106,7 @@ and type_decl_kind =
   | Type_alias of alias
 [@@deriving sexp_of]
 
-and alias = 
+and alias =
   { alias_alphas : type_var list
   ; alias_name : string
   ; alias_type : type_expr
@@ -131,8 +141,8 @@ val pp_constructor_declaration_mach
   :  indent:string
   -> constructor_declaration Pretty_printer.t
 
-val pp_type_declaration_mach 
-  :  indent:string 
+val pp_type_declaration_mach
+  :  indent:string
   -> type_declaration Pretty_printer.t
 
 (* Constructor and record label descriptions *)

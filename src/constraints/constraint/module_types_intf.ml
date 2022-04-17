@@ -98,35 +98,48 @@ module type Decoded_type = sig
 
   (** [desc] is an "external" descriptor -- which may be used 
       to decode the type. *)
-  type desc =
+  type 'a desc =
     | Var of variable
-    | Former of t former
-    | Row_cons of label * t * t
-    | Row_uniform of t
+    | Former of 'a former
+    | Row_cons of label * 'a * 'a
+    | Row_uniform of 'a
   [@@deriving sexp_of]
 
   (** Decoded types may be cyclic -- so we require an [id] *)
   val id : t -> int
 
   (** [desc t] returns the descriptor of [t] *)
-  val desc : t -> desc
+  val desc : t -> t desc
 
   (** [make desc] creates the decoded type with descriptor [desc] *)
-  val make : desc -> t
+  val make : t desc -> t
+
+  (** [mu a t] returns the equi-recursive (cyclic) type 
+      w/ body [t] binding [a] cyclically.  *)
+  val mu : variable -> t -> t
+
+  val let_ : binding:variable * t -> in_:t -> t
+
+  val fold
+    :  t
+    -> f:('a desc -> 'a)
+    -> mu:(variable -> 'a -> 'a)
+    -> var:(variable -> 'a)
+    -> 'a
 end
 
 module type Decoded = sig
   type label
   type 'a former
 
-  module Var : Decoded_var 
+  module Var : Decoded_var
 
   module Type :
     Decoded_type
       with type label := label
        and type variable := Var.t
        and type 'a former := 'a former
-       
+
   type scheme = Var.t list * Type.t [@@deriving sexp_of]
 end
 
