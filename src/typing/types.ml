@@ -114,6 +114,7 @@ and type_decl_kind =
   | Type_variant of constructor_declaration list
   | Type_abstract
   | Type_alias of alias
+  | Type_open
 [@@deriving sexp_of]
 
 and alias =
@@ -403,6 +404,7 @@ let pp_type_decl_kind_mach ~indent ppf type_decl_kind =
   | Type_alias alias ->
     print "Alias";
     pp_alias_mach ~indent ppf alias
+  | Type_open -> print "Open"
 
 
 let pp_type_declaration_mach ~indent ppf type_decl =

@@ -104,6 +104,7 @@ and type_decl_kind =
   | Type_variant of constructor_declaration list
   | Type_abstract
   | Type_alias of alias
+  | Type_open
 [@@deriving sexp_of]
 
 and alias =
