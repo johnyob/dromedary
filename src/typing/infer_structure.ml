@@ -234,37 +234,54 @@ let transl_type_decl type_decl =
            ~substitution
            ~type_params:type_vars
            ~type_name)
+    | Ptype_open -> Type_open
   in
   { type_name; type_kind }
 
 
-let transl_ext_constr ext_constr =
-  let { pext_name; pext_params; pext_kind = Pext_decl constr_decl } =
-    ext_constr
-  in
-  let type_vars = List.map ~f:(fun _ -> Type_var.make ()) pext_params in
-  let substitution =
-    String.Map.of_alist_exn
-      (List.zip_exn
-         pext_params
-         (List.map ~f:(fun var -> Type_expr.make (Ttyp_var var)) type_vars))
-  in
+let transl_ext_constr ext_constr ~substitution ~type_params ~type_name =
+  let { pext_kind = Pext_decl constr_decl } = ext_constr in
   let constr_decl =
-    transl_constr_decl
-      constr_decl
-      ~substitution
-      ~type_params:type_vars
-      ~type_name:pext_name
+    transl_constr_decl constr_decl ~substitution ~type_params ~type_name
   in
-  { text_name = pext_name
-  ; text_params = type_vars
+  { text_name = type_name
+  ; text_params = type_params
   ; text_kind = Text_decl constr_decl
   }
 
 
+let transl_type_ext type_ext =
+  let { ptyext_name; ptyext_params; ptyext_constructors = ptyext_constrs } =
+    type_ext
+  in
+  let type_vars = List.map ~f:(fun _ -> Type_var.make ()) ptyext_params in
+  let substitution =
+    String.Map.of_alist_exn
+      (List.zip_exn
+         ptyext_params
+         (List.map ~f:(fun var -> Type_expr.make (Ttyp_var var)) type_vars))
+  in
+  let tyext_constrs =
+    List.map
+      ptyext_constrs
+      ~f:
+        (transl_ext_constr
+           ~substitution
+           ~type_params:type_vars
+           ~type_name:ptyext_name)
+  in
+  { tyext_name = ptyext_name; tyext_constructors = tyext_constrs }
+
+
 let transl_type_exn type_exn =
   let { ptyexn_constructor } = type_exn in
-  let tyexn_constructor = transl_ext_constr ptyexn_constructor in
+  let tyexn_constructor =
+    transl_ext_constr
+      ptyexn_constructor
+      ~substitution:String.Map.empty
+      ~type_params:[]
+      ~type_name:"exn"
+  in
   { tyexn_constructor }
 
 
@@ -326,6 +343,12 @@ let infer_type_decl ~env type_decls =
   env, type_decls
 
 
+let infer_type_ext ~env type_ext =
+  let type_ext = transl_type_ext type_ext in
+  let env = Env.add_type_ext env type_ext in
+  env, type_ext
+
+
 let infer_rec_value_bindings ~env value_bindings =
   Infer_core.Expression.(
     Structure.infer_rec_value_bindings value_bindings |> Computation.run ~env)
@@ -369,6 +392,9 @@ let infer_str_item ~env str_item =
       ( env
       , let%map.Item let_bindings = Item.let_ ~bindings:let_bindings in
         Tstr_value (List.map ~f:to_value_binding let_bindings) )
+  | Pstr_typext type_ext ->
+    let env, type_ext = infer_type_ext ~env type_ext in
+    return (env, Item.return (Tstr_typext type_ext))
 
 
 let rec infer_str ~env str =
