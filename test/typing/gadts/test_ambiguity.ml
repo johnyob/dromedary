@@ -29,7 +29,7 @@ let%expect_test "ambiguity-1" =
   [%expect
     {|
     ("Type escape it's equational scope"
-     ("Type_expr.decode type_expr" (Type 30357 (Var 30357)))) |}]
+     ("Type_expr.decode type_expr" (Type 30411 (Var 30411)))) |}]
 
 let%expect_test "ambiguity-2" =
   let str =
@@ -51,7 +51,7 @@ let%expect_test "ambiguity-2" =
   [%expect
     {|
     ("Type escape it's equational scope"
-     ("Type_expr.decode type_expr" (Type 30408 (Var 30408)))) |}]
+     ("Type_expr.decode type_expr" (Type 30462 (Var 30462)))) |}]
 
 let%expect_test "ambiguity-3" =
   let str =
@@ -75,7 +75,7 @@ let%expect_test "ambiguity-3" =
   [%expect
     {|
     ("Type escape it's equational scope"
-     ("Type_expr.decode type_expr" (Type 30455 (Var 30455)))) |}]
+     ("Type_expr.decode type_expr" (Type 30509 (Var 30509)))) |}]
 
 let%expect_test "ambiguity-4" =
   let str =
@@ -103,7 +103,7 @@ let%expect_test "ambiguity-4" =
     {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr"
-      (Type 30520 (Former (Constr ((Type 30543 (Var 30543))) list))))) |}]
+      (Type 30574 (Former (Constr ((Type 30597 (Var 30597))) list))))) |}]
 
 let%expect_test "ambiguity-5" =
   let str =
@@ -131,7 +131,7 @@ let%expect_test "ambiguity-5" =
     {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr"
-      (Type 30590 (Former (Constr ((Type 30613 (Var 30613))) list))))) |}]
+      (Type 30644 (Former (Constr ((Type 30667 (Var 30667))) list))))) |}]
 
 let%expect_test "ambiguity-6" =
   let str =
@@ -159,8 +159,8 @@ let%expect_test "ambiguity-6" =
   [%expect
     {|
     ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 30676 (Var 30676)))
-     ("Type_expr.decode type_expr2" (Type 30698 (Var 30698)))) |}]
+     ("Type_expr.decode type_expr1" (Type 30730 (Var 30730)))
+     ("Type_expr.decode type_expr2" (Type 30752 (Var 30752)))) |}]
 
 let%expect_test "ambiguity-6" =
   let str =
@@ -188,8 +188,8 @@ let%expect_test "ambiguity-6" =
   [%expect
     {|
     ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 30759 (Var 30759)))
-     ("Type_expr.decode type_expr2" (Type 30781 (Var 30781)))) |}]
+     ("Type_expr.decode type_expr1" (Type 30813 (Var 30813)))
+     ("Type_expr.decode type_expr2" (Type 30835 (Var 30835)))) |}]
 
 let%expect_test "ambiguity-7" =
   let str =
@@ -217,8 +217,8 @@ let%expect_test "ambiguity-7" =
   [%expect
     {|
     ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 30842 (Var 30842)))
-     ("Type_expr.decode type_expr2" (Type 30864 (Var 30864)))) |}]
+     ("Type_expr.decode type_expr1" (Type 30896 (Var 30896)))
+     ("Type_expr.decode type_expr2" (Type 30918 (Var 30918)))) |}]
 
 let%expect_test "ambiguity-8" =
   let str =
@@ -246,8 +246,8 @@ let%expect_test "ambiguity-8" =
   [%expect
     {|
     ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 30948 (Var 30948)))
-     ("Type_expr.decode type_expr2" (Type 30970 (Var 30970)))) |}]
+     ("Type_expr.decode type_expr1" (Type 31002 (Var 31002)))
+     ("Type_expr.decode type_expr2" (Type 31024 (Var 31024)))) |}]
 
 let%expect_test "ambiguity-9" =
   let str =
@@ -275,8 +275,8 @@ let%expect_test "ambiguity-9" =
   [%expect
     {|
     ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 31027 (Var 31027)))
-     ("Type_expr.decode type_expr2" (Type 31049 (Var 31049)))) |}]
+     ("Type_expr.decode type_expr1" (Type 31081 (Var 31081)))
+     ("Type_expr.decode type_expr2" (Type 31103 (Var 31103)))) |}]
 
 let%expect_test "ambiguity-10" =
   let str =
@@ -304,5 +304,5 @@ let%expect_test "ambiguity-10" =
   [%expect
     {|
     ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 31106 (Var 31106)))
-     ("Type_expr.decode type_expr2" (Type 31128 (Var 31128)))) |}]
+     ("Type_expr.decode type_expr1" (Type 31160 (Var 31160)))
+     ("Type_expr.decode type_expr2" (Type 31182 (Var 31182)))) |}]
