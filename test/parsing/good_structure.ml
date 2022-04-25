@@ -783,6 +783,8 @@ let%expect_test "exceptions - no argument" =
        └──Structure item: Exception
           └──Type exception:
              └──Extension constructor:
+                └──Extension name: exn
+                └──Extension parameters:
                 └──Extension constructor kind: Declaration
                    └──Constructor declaration:
                       └──Constructor name: Not_found
@@ -841,6 +843,8 @@ let%expect_test "exceptions - argument" =
        └──Structure item: Exception
           └──Type exception:
              └──Extension constructor:
+                └──Extension name: exn
+                └──Extension parameters:
                 └──Extension constructor kind: Declaration
                    └──Constructor declaration:
                       └──Constructor name: Lexer_error

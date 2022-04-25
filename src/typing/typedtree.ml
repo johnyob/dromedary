@@ -101,18 +101,11 @@ and extension_constructor_kind = Text_decl of constructor_declaration
 and type_exception = { tyexn_constructor : extension_constructor }
 [@@derving sexp_of]
 
-and type_extension =
-  { tyext_name : string
-  ; tyext_constructors : extension_constructor list
-  }
-[@@deriving sexp_of]
-
 and structure_item =
   | Tstr_value of value_binding list
   | Tstr_value_rec of rec_value_binding list
   | Tstr_primitive of value_description
   | Tstr_type of type_declaration list
-  | Tstr_typext of type_extension
   | Tstr_exception of type_exception
 [@@deriving sexp_of]
 
@@ -306,9 +299,7 @@ let pp_scheme_mach ~indent ppf (variables, type_expr) =
     ppf
     "%sVariables: %s@."
     indent
-    (String.concat
-       ~sep:","
-       (List.map ~f:(fun t -> Type_var.id t |> Int.to_string) variables));
+    (String.concat ~sep:"," (List.map ~f:(fun t -> Type_var.id t |> Int.to_string) variables));
   pp_type_expr_mach ~indent ppf type_expr
 
 
@@ -337,11 +328,7 @@ let pp_extension_constructor_mach ~indent ppf ext_constr =
     ppf
     "%sExtension parameters: %s@."
     indent
-    (String.concat
-       ~sep:" "
-       (List.map
-          ~f:(fun t -> Type_var.id t |> Int.to_string)
-          ext_constr.text_params));
+    (String.concat ~sep:" " (List.map ~f:(fun t -> Type_var.id t |> Int.to_string) ext_constr.text_params));
   pp_extension_constructor_kind_mach ~indent ppf ext_constr.text_kind
 
 
@@ -349,15 +336,6 @@ let pp_type_exception_mach ~indent ppf type_exn =
   Format.fprintf ppf "%sType exception:@." indent;
   let indent = indent_space ^ indent in
   pp_extension_constructor_mach ~indent ppf type_exn.tyexn_constructor
-
-
-let pp_type_extension_mach ~indent ppf type_ext =
-  Format.fprintf ppf "%sType extension:@." indent;
-  let indent = indent_space ^ indent in
-  Format.fprintf ppf "%sExtension name: %s@." indent type_ext.tyext_name;
-  List.iter
-    ~f:(pp_extension_constructor_mach ~indent ppf)
-    type_ext.tyext_constructors
 
 
 let pp_structure_item_mach ~indent ppf str_item =
@@ -379,9 +357,6 @@ let pp_structure_item_mach ~indent ppf str_item =
   | Tstr_exception type_exception ->
     print "Exception";
     pp_type_exception_mach ~indent ppf type_exception
-  | Tstr_typext type_ext ->
-    print "Type Extension";
-    pp_type_extension_mach ~indent ppf type_ext
 
 
 let pp_structure_mach ~indent ppf str =
@@ -411,6 +386,7 @@ let pp_case_mach = to_pp_mach ~pp:pp_case_mach ~name:"Case"
 
 (* let pp_structure_item_mach =
   to_pp_mach ~name:"Structure item" ~pp:pp_structure_item_mach *)
+
 
 let pp_structure_mach = to_pp_mach ~name:"Structure" ~pp:pp_structure_mach
 let pp_expression _ppf = assert false
