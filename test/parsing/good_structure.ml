@@ -1015,3 +1015,53 @@ let%expect_test "where" =
                       └──Type: Constructor
                          └──Constructor: int
              └──Primitive name: %length |}]
+
+let%expect_test "" =
+  let str = 
+    {|
+      type 'a eff = ..;;
+
+      type 'a eff += 
+         | Yield constraint 'a = unit
+         | Fork of unit -> unit constraint 'a = unit
+      ;;
+    |}
+  in
+  print_structure_parsetree str;
+  [%expect {|
+    Structure:
+    └──Structure:
+       └──Structure item: Type
+          └──Type declaration:
+             └──Type name: eff
+             └──Type parameters: a
+             └──Type declaration kind: Open
+       └──Structure item: Type Extension
+          └──Type extension:
+             └──Extension name: eff
+             └──Extension parameters: a
+             └──Extension constructor:
+                └──Extension constructor kind: Declaration
+                   └──Constructor declaration:
+                      └──Constructor name: Yield
+                      └──Constraint:
+                         └──Type: Variable
+                            └──Variable: a
+                         └──Type: Constructor
+                            └──Constructor: unit
+             └──Extension constructor:
+                └──Extension constructor kind: Declaration
+                   └──Constructor declaration:
+                      └──Constructor name: Fork
+                      └──Constructor argument:
+                         └──Constructor existentials:
+                         └──Type: Arrow
+                            └──Type: Constructor
+                               └──Constructor: unit
+                            └──Type: Constructor
+                               └──Constructor: unit
+                      └──Constraint:
+                         └──Type: Variable
+                            └──Variable: a
+                         └──Type: Constructor
+                            └──Constructor: unit |}]
