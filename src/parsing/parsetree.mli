@@ -205,6 +205,7 @@ and type_decl_kind =
   | Ptype_record of label_declaration list
   | Ptype_abstract
   | Ptype_alias of core_type
+  | Ptype_open
 [@@deriving sexp_of]
 
 (** Label declaration: [l : 'b1 .. 'bm. T] *)
@@ -255,13 +256,7 @@ val pp_constructor_declaration : constructor_declaration Pretty_printer.t
 
 
 (** Extension constructor [type ('a1, ... 'an) t += ...] *)
-type extension_constructor = 
-  { pext_name : string
-      (** Extension type name [t]. *)
-  ; pext_params : string list
-      (** Extension type params: [('a1, ..., 'an)]. *)
-  ; pext_kind : extension_constructor_kind 
-  }
+type extension_constructor = { pext_kind : extension_constructor_kind }
 [@@derving sexp_of]
 
 and extension_constructor_kind = 
@@ -281,6 +276,17 @@ type type_exception =
   { ptyexn_constructor : extension_constructor }
 [@@derving sexp_of]
 
+(** Extensions [type t += ..] *)
+type type_extension = 
+  { ptyext_name : string
+    (* Type name [t] *)
+  ; ptyext_params : string list
+    (** Parameters: [('a1, .., 'an) t] *)
+  ; ptyext_constructors : extension_constructor list
+    (** Constructors [ C1 [of t1] | ... | Cn [of tn] ] *)
+  }
+[@@deriving sexp_of]
+
 type structure_item = 
   | Pstr_value of rec_flag * value_binding list
       (** Structure let binding: [let <rec> P1 = E1 and ... and Pn = En] *)
@@ -288,6 +294,8 @@ type structure_item =
       (** External primitive descriptions *)
   | Pstr_type of type_declaration list
       (** Type declarations [type t1 = ... and ... tn = ...] *)
+  | Pstr_typext of type_extension 
+      (** Type extensions [type t += ...] *)
   | Pstr_exception of type_exception
       (** Exception [exception C <of T>] *)
 [@@deriving sexp_of]
