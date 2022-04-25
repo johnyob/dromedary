@@ -160,7 +160,7 @@ let exn_decl ~con ~arg =
     }
   in
   let ext_constr =
-    { pext_kind = Pext_decl constr_decl }
+    { pext_name = "exn"; pext_params = []; pext_kind = Pext_decl constr_decl }
   in
   { ptyexn_constructor = ext_constr }
 
@@ -603,8 +603,6 @@ type_decl_kind:
       { Ptype_record label_decls }
   | EQUAL; type_ = core_type
       { Ptype_alias type_ }
-  | EQUAL; DOT; DOT
-      { Ptype_open }
 
 %inline label_declaration:
   | label = IDENT
@@ -647,26 +645,6 @@ constraints:
     ; arg = option(exception_argument)
       { exn_decl ~con:con_id ~arg }
 
-%inline extension_constructor_kind:
-  | constr_decl = constructor_declaration
-      { Pext_decl constr_decl }
-
-%inline extension_constructor:
-  | ext_kind = extension_constructor_kind
-      { { pext_kind = ext_kind } }
-
-%inline type_ext_declaration:
-  | TYPE
-    ; params = type_param_list
-    ; id = IDENT
-    ; OP_PLUS; EQUAL
-    ; ext_constrs = preceded_or_separated_nonempty_list(BAR, extension_constructor)
-      { { ptyext_name = id
-        ; ptyext_params = params
-        ; ptyext_constructors = ext_constrs 
-        } }
-
-
 structure_item:
   | LET
     ; rec_flag = rec_flag
@@ -679,14 +657,11 @@ structure_item:
     ; EQUAL
     ; prim = STRING
       { Pstr_primitive { pval_name = id; pval_type = scheme; pval_prim = prim } }
-  | type_ext = type_ext_declaration 
-      { Pstr_typext type_ext }
   | type_decls = type_declarations
       { Pstr_type type_decls }
   | EXCEPTION
     ; exn_decl = exception_declaration
       { Pstr_exception exn_decl }
-  
 
 %inline terminated_structure_item:
   | str_item = structure_item
