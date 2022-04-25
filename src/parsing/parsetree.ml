@@ -101,6 +101,7 @@ and type_decl_kind =
   | Ptype_record of label_declaration list
   | Ptype_abstract
   | Ptype_alias of core_type
+  | Ptype_open
 
 and label_declaration =
   { plabel_name : string
@@ -119,19 +120,23 @@ and constructor_argument =
   ; pconstructor_arg_type : core_type
   }
 
-type extension_constructor =
-  { pext_name : string
-  ; pext_params : string list
-  ; pext_kind : extension_constructor_kind
-  }
+type extension_constructor = { pext_kind : extension_constructor_kind }
 [@@deriving sexp_of]
 
 and extension_constructor_kind = Pext_decl of constructor_declaration
+
+type type_extension =
+  { ptyext_name : string
+  ; ptyext_params : string list
+  ; ptyext_constructors : extension_constructor list
+  }
+[@@deriving sexp_of]
 
 type structure_item =
   | Pstr_value of rec_flag * value_binding list
   | Pstr_primitive of value_description
   | Pstr_type of type_declaration list
+  | Pstr_typext of type_extension
   | Pstr_exception of type_exception
 [@@deriving sexp_of]
 
@@ -450,6 +455,7 @@ let pp_type_decl_kind_mach ~indent ppf type_decl_kind =
   | Ptype_alias core_type ->
     print "Alias";
     pp_core_type_mach ~indent ppf core_type
+  | Ptype_open -> print "Open"
 
 
 let pp_type_declaration_mach ~indent ppf type_decl =
@@ -476,12 +482,12 @@ let pp_extension_constructor_kind_mach ~indent ppf ext_constr_kind =
 let pp_extension_constructor_mach ~indent ppf ext_constr =
   Format.fprintf ppf "%sExtension constructor:@." indent;
   let indent = indent_space ^ indent in
-  Format.fprintf ppf "%sExtension name: %s@." indent ext_constr.pext_name;
+  (* Format.fprintf ppf "%sExtension name: %s@." indent ext_constr.pext_name;
   Format.fprintf
     ppf
     "%sExtension parameters: %s@."
     indent
-    (String.concat ~sep:" " ext_constr.pext_params);
+    (String.concat ~sep:" " ext_constr.pext_params); *)
   pp_extension_constructor_kind_mach ~indent ppf ext_constr.pext_kind
 
 
@@ -489,6 +495,20 @@ let pp_type_exception_mach ~indent ppf type_exn =
   Format.fprintf ppf "%sType exception:@." indent;
   let indent = indent_space ^ indent in
   pp_extension_constructor_mach ~indent ppf type_exn.ptyexn_constructor
+
+
+let pp_type_extension_mach ~indent ppf type_ext =
+  Format.fprintf ppf "%sType extension:@." indent;
+  let indent = indent_space ^ indent in
+  Format.fprintf ppf "%sExtension name: %s@." indent type_ext.ptyext_name;
+  Format.fprintf
+    ppf
+    "%sExtension parameters: %s@."
+    indent
+    (String.concat ~sep:" " type_ext.ptyext_params);
+  List.iter
+    type_ext.ptyext_constructors
+    ~f:(pp_extension_constructor_mach ~indent ppf)
 
 
 let pp_structure_item_mach ~indent ppf str_item =
@@ -507,6 +527,9 @@ let pp_structure_item_mach ~indent ppf str_item =
   | Pstr_exception type_exception ->
     print "Exception";
     pp_type_exception_mach ~indent ppf type_exception
+  | Pstr_typext type_extension ->
+    print "Type Extension";
+    pp_type_extension_mach ~indent ppf type_extension
 
 
 let pp_structure_mach ~indent ppf str =
@@ -898,6 +921,7 @@ let pp_type_decl_kind ppf type_decl_kind =
       label_decls
   | Ptype_abstract -> ()
   | Ptype_alias core_type -> Format.fprintf ppf "@;=@;%a" pp_core_type core_type
+  | Ptype_open -> Format.fprintf ppf "@;=@;.."
 
 
 let pp_type_params ppf params =
@@ -925,23 +949,18 @@ let pp_extension_constructor_kind ppf ext_constr_kind =
 
 
 let pp_extension_constructor ppf ext_constr =
+  pp_extension_constructor_kind ppf ext_constr.pext_kind
+
+
+let pp_extension_constructors ppf ext_constrs =
   Format.fprintf
     ppf
-    "@[@[type@;%a%s@]@;+=@;%a@]"
-    pp_type_params
-    ext_constr.pext_params
-    ext_constr.pext_name
-    pp_extension_constructor_kind
-    ext_constr.pext_kind
+    "@;=@;@[<hv>%a@]"
+    (fun ppf -> list ~sep:"@;|@;" pp_extension_constructor ppf)
+    ext_constrs
 
 
 let pp_type_exception ppf { ptyexn_constructor = exn_constr } =
-  assert (String.(exn_constr.pext_name = "exn"));
-  assert (List.is_empty exn_constr.pext_params);
-  assert (
-    match exn_constr.pext_kind with
-    | Pext_decl constr_decl ->
-      List.is_empty constr_decl.pconstructor_constraints);
   Format.fprintf
     ppf
     "@[exception@;%a]"
@@ -993,6 +1012,15 @@ let pp_structure_item ppf str_item =
     in
     pp_type_declarations ~pp:pp_type_declaration ppf type_decls
   | Pstr_exception exn -> pp_type_exception ppf exn
+  | Pstr_typext type_ext ->
+    Format.fprintf
+      ppf
+      "@[<hv>@[%a%s@]@;=@;%a@]"
+      pp_type_params
+      type_ext.ptyext_params
+      type_ext.ptyext_name
+      pp_extension_constructors
+      type_ext.ptyext_constructors
 
 
 let pp_structure ppf str = list ~sep:"@." pp_structure_item ppf str

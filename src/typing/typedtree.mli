@@ -151,6 +151,15 @@ type type_exception =
   { tyexn_constructor : extension_constructor }
 [@@derving sexp_of]
 
+(** Type extension [type t += ...] *)
+type type_extension = 
+  { tyext_name : string
+      (** Extension type name [t]. *)
+  ; tyext_constructors : extension_constructor list 
+      (** Extension constructors *)
+  }
+[@@deriving sexp_of]
+
 type structure_item = 
   | Tstr_value of value_binding list 
     (** Let expressions *)
@@ -160,6 +169,8 @@ type structure_item =
       (** External primitive descriptions *)
   | Tstr_type of type_declaration list
       (** Type declarations [type t1 = ... and ... tn = ...] *)
+  | Tstr_typext of type_extension
+      (** Type extensions [type t += ...] *)
   | Tstr_exception of type_exception
       (** Exception [exception C <of T>] *)
 [@@deriving sexp_of]

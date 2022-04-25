@@ -78,12 +78,16 @@ let add_type_decl t type_decl =
   | Type_alias alias ->
     let abbrev = convert_alias alias in
     { t with abbrevs = Constraint.Abbreviations.add t.abbrevs ~abbrev }
-  | Type_abstract -> t
+  | Type_abstract | Type_open -> t
 
 
 let add_ext_constr t ext_constr =
   let { text_kind = Text_decl constr_decl; _ } = ext_constr in
   add_constr_decl t constr_decl
+
+
+let add_type_ext t type_ext =
+  List.fold_left type_ext.tyext_constructors ~init:t ~f:add_ext_constr
 
 
 let to_abbrevs t = t.abbrevs
