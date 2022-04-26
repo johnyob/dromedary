@@ -31,7 +31,8 @@ let add_list env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type = Type_expr.make (Ttyp_tuple [ a'; type_ ])
+                  ; constructor_arg_type =
+                      Type_expr.make (Ttyp_tuple [ a'; type_ ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -69,7 +70,8 @@ let add_term env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type = Type_expr.make (Ttyp_constr ([ int ], name))
+                  ; constructor_arg_type =
+                      Type_expr.make (Ttyp_constr ([ int ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', int ]
@@ -110,7 +112,8 @@ let add_term env =
                            ])
                   }
             ; constructor_type = type_
-            ; constructor_constraints = [ a', Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ]
+            ; constructor_constraints =
+                [ a', Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ]
             }
           ; { constructor_name = "Fst"
             ; constructor_alphas = alphas
@@ -119,7 +122,8 @@ let add_term env =
                   { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
                       Type_expr.make
-                        (Ttyp_constr ([ Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ], name))
+                        (Ttyp_constr
+                           ([ Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', b1' ]
@@ -131,7 +135,8 @@ let add_term env =
                   { constructor_arg_betas = [ b1; b2 ]
                   ; constructor_arg_type =
                       Type_expr.make
-                        (Ttyp_constr ([ Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ], name))
+                        (Ttyp_constr
+                           ([ Type_expr.make (Ttyp_tuple [ b1'; b2' ]) ], name))
                   }
             ; constructor_type = type_
             ; constructor_constraints = [ a', b2' ]
@@ -244,7 +249,8 @@ let add_tree env =
             ; constructor_arg =
                 Some
                   { constructor_arg_betas = []
-                  ; constructor_arg_type = Type_expr.make (Ttyp_tuple [ a'; type_; a' ])
+                  ; constructor_arg_type =
+                      Type_expr.make (Ttyp_tuple [ a'; type_; a' ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -359,7 +365,8 @@ let add_perfect_tree env =
                            [ a'
                            ; Type_expr.make
                                (Ttyp_constr
-                                  ([ Type_expr.make (Ttyp_tuple [ a'; a' ]) ], name))
+                                  ( [ Type_expr.make (Ttyp_tuple [ a'; a' ]) ]
+                                  , name ))
                            ])
                   }
             ; constructor_type = type_
@@ -457,7 +464,9 @@ let add_elem env =
                   ; constructor_arg_type =
                       Type_expr.make
                         (Ttyp_tuple
-                           [ Type_expr.make (Ttyp_constr ([ value' ], "key")); value' ])
+                           [ Type_expr.make (Ttyp_constr ([ value' ], "key"))
+                           ; value'
+                           ])
                   }
             ; constructor_type = type_
             ; constructor_constraints = []
@@ -520,7 +529,42 @@ let t12' =
     |}
 
 
-let tests = [ t1'; t2'; t3'; t4'; t5'; t6'; t7'; t8'; t9'; t10'; t11'; t12' ]
+let t13' =
+  create_test_infer_exp
+    ~name:"coloring"
+    ~env:Env.empty
+    {|
+      let basic_color_to_int = 
+        fun basic_color ->
+          match basic_color with
+          ( `Black -> 0 | `Red -> 1 | `Green -> 2 | `Yellow -> 3
+          | `Blue -> 4 | `Megenta -> 5 | `Cyan -> 6 | `White -> 7
+          )
+      in
+      let color_to_int = 
+        fun color ->
+          match color with
+          ( `Basic (basic_color, weight) ->
+            let base = match weight with (`Bold -> 8 | `Regular -> 0) in
+            base + basic_color_to_int basic_color
+          | `Rgb (r, g, b) -> 16 + b + g * 6 + r * 36
+          | `Gray i -> 232 + i
+          )
+      in
+      let extended_color_to_int = 
+        fun ex_color -> 
+          match ex_color with
+          ( `Rgba (r, g, b, a) -> 256 + a + b * 6 + g * 36 + r * 216
+          | color -> color_to_int color 
+          )
+      in ()
+    |}
+
+
+let tests =
+  [ t1'; t2'; t3'; t4'; t5'; t6'; t7'; t8'; t9'; t10'; t11'; t12'; t13' ]
+
+
 let command = Bench.make_command tests
 
 let def_id ~in_ =
@@ -568,8 +612,8 @@ let def_pair ~in_ =
     , in_ )
 
 
-let id_let_stress_test = 
-  let rec loop n = 
+let id_let_stress_test =
+  let rec loop n =
     match n with
     | 0 -> Pexp_const Const_unit
     | n -> def_id ~in_:(loop (n - 1))
@@ -579,10 +623,9 @@ let id_let_stress_test =
     ~args:[ 1; 5; 10; 50; 100; 200; 500; 1000; 2000 ]
     (fun n ->
       Staged.stage (fun () ->
-          Typing.infer_exp
-            ~env:Env.empty
-            ~abbrevs:Abbreviations.empty
-            (loop n)))
+          Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty (loop n)))
+
+
 let pair_let_stress_test =
   let def_f0 ~in_ =
     Pexp_let
@@ -624,7 +667,7 @@ let pair_let_stress_test =
   in
   Bench.Test.create_indexed
     ~name:"pair let - stress test"
-    ~args:[ 1;2;3;4;5;6 ]
+    ~args:[ 1; 2; 3; 4; 5; 6 ]
     (fun n ->
       Staged.stage (fun () ->
           let exp = def_pair ~in_:(def_f0 ~in_:(loop 1 n)) in
