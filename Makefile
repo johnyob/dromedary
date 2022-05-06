@@ -17,6 +17,9 @@ test:
 clean:
 	dune clean
 
+cloc:
+	cloc --force-lang-def=cloc.txt --exclude-dir=_build,_coverage,.circleci,.git .
+
 coverage:
 	make clean
 	BISECT_ENABLE=yes dune build
