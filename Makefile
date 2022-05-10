@@ -18,7 +18,7 @@ clean:
 	dune clean
 
 cloc:
-	cloc --force-lang-def=cloc.txt --exclude-dir=_build,_coverage,.circleci,.git .
+	./scripts/cloc.sh
 
 coverage:
 	make clean
