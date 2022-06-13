@@ -20,7 +20,7 @@ Dromedary implements *significantly* more features than the language presented i
 - Type abbreviations
 - Structures
 
-For a description of the thoery of these extensions in a constraint-based setting, see the (*not released yet*) [accompanying dissertation](https://www.youtube.com/watch?v=dQw4w9WgXcQ). 
+For a description of the thoery of these extensions in a constraint-based setting, see the [accompanying dissertation](dissertation/main.pdf). 
 
 ## Installation
 
