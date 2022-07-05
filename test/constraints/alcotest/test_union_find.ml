@@ -22,12 +22,12 @@ let test_union_nodes_have_equal_descriptors =
     QCheck.(pair int int)
     (fun (i, j) ->
       (* Arrange *)
-      let node1 = Union_find.make i
-      and node2 = Union_find.make j in
+      let node1 = Union_find.create i
+      and node2 = Union_find.create j in
       (* Act *)
       Union_find.union node1 node2 ~f:( + );
       (* Assert *)
-      Union_find.find node1 = Union_find.find node2)
+      Union_find.get node1 = Union_find.get node2)
   |> QCheck_alcotest.to_alcotest
 
 
@@ -38,12 +38,12 @@ let test_union_descriptor_computation =
     QCheck.(pair int int)
     (fun (i, j) ->
       (* Arrange *)
-      let node1 = Union_find.make i
-      and node2 = Union_find.make j in
+      let node1 = Union_find.create i
+      and node2 = Union_find.create j in
       (* Act *)
       Union_find.union node1 node2 ~f:( - );
       (* Assert *)
-      Union_find.find node1 = i - j)
+      Union_find.get node1 = i - j)
   |> QCheck_alcotest.to_alcotest
 
 
@@ -54,8 +54,8 @@ let test_union_nodes_are_equiv =
     QCheck.(pair int int)
     (fun (i, j) ->
       (* Arrange *)
-      let node1 = Union_find.make i
-      and node2 = Union_find.make j in
+      let node1 = Union_find.create i
+      and node2 = Union_find.create j in
       (* Act *)
       Union_find.union node1 node2 ~f:( * );
       (* Assert *)
@@ -70,9 +70,9 @@ let test_find_returns_correct_descriptor =
     QCheck.(int)
     (fun i ->
       (* Arrange *)
-      let node = Union_find.make i in
+      let node = Union_find.create i in
       (* Act *)
-      let i' = Union_find.find node in
+      let i' = Union_find.get node in
       (* Assert *)
       i = i')
   |> QCheck_alcotest.to_alcotest
@@ -85,11 +85,11 @@ let test_set_sets_descriptor =
     QCheck.(pair int int)
     (fun (i, j) ->
       (* Arrange *)
-      let node = Union_find.make i in
+      let node = Union_find.create i in
       (* Act *)
       Union_find.set node j;
       (* Assert *)
-      Union_find.find node = j)
+      Union_find.get node = j)
   |> QCheck_alcotest.to_alcotest
 
 
@@ -100,7 +100,7 @@ let test_equiv_is_reflexive =
     QCheck.(int)
     (fun i ->
       (* Arrange *)
-      let node = Union_find.make i in
+      let node = Union_find.create i in
       (* Act *)
       (* Assert *)
       Union_find.(node === node))

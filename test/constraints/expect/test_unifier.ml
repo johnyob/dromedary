@@ -43,16 +43,16 @@ module Type_former = struct
 end
 
 module Unifier =
-  Unifier (Structure.First_order (Structure.Of_former (Type_former)))
+  Unifier.Make (Structure.First_order (Structure.Of_former (Type_former)))
 
 module Type = Unifier.Type
 
 let unify = Unifier.unify ~ctx:()
-let make_flexible_var () = Unifier.Type.make Var
+let make_flexible_var () = Unifier.Type.create Var
 
 let make_rigid_var =
   let next_rigid = ref (-1) in
-  fun () -> Unifier.Type.make
+  fun () -> Unifier.Type.create
     (Structure
        (Constr
           ( []
@@ -62,7 +62,7 @@ let make_rigid_var =
              Int.to_string !next_rigid) )))
 
 
-let ( @ ) f ts = Unifier.Type.make (Structure (Constr (ts, f)))
+let ( @ ) f ts = Unifier.Type.create (Structure (Constr (ts, f)))
 
 let print_type t =
   let content = Type.to_dot t in
