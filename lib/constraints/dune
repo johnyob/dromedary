@@ -1,5 +1,5 @@
 (library
- (public_name dromedary.constraints)
+ (public_name dromedary.lib.constraints)
  (name constraints)
  (preprocess
   (pps ppx_jane ppx_deriving.eq bisect_ppx --conditional))
