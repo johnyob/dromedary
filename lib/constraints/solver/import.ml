@@ -15,8 +15,6 @@
 include Base
 module Format = Caml.Format
 
-module Doubly_linked = Util.Doubly_linked
-
 include Logs
 
 let src =
