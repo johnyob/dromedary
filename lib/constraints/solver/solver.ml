@@ -965,6 +965,4 @@ end
 module Private = struct
   module Structure = Structure
   module Generalization = Generalization.Make
-  module Unifier = Unifier.Make
-  module Union_find = Union_find
 end

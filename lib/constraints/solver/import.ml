@@ -15,6 +15,8 @@
 include Base
 module Format = Caml.Format
 
+module Unifier = Dromedary_lib_unifier
+
 include Logs
 
 let src =

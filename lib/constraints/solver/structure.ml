@@ -12,7 +12,13 @@
 (*****************************************************************************)
 
 open! Import
-include Structure_intf
+
+module type Identifiable = sig
+  type 'a t
+
+  val id : 'a t -> int
+end
+
 
 module Rigid_var = struct
   module T = struct
@@ -30,6 +36,8 @@ module Rigid_var = struct
   let hash t = t
 end
 
+module type S = Unifier.Structure.S
+
 module Of_former (Former : Type_former.S) = struct
   include Former
 
@@ -37,8 +45,8 @@ module Of_former (Former : Type_former.S) = struct
 
   exception Cannot_merge
 
-  let merge ~ctx:() ~equate t1 t2 =
-    (try Former.iter2_exn t1 t2 ~f:equate with
+  let merge ~ctx:() ~create:_ ~unify t1 t2 =
+    (try Former.iter2_exn t1 t2 ~f:unify with
     | Former.Iter2 -> raise Cannot_merge);
     t1
 end
@@ -69,11 +77,12 @@ module First_order (Structure : S) = struct
     | Structure structure -> Structure.fold structure ~f ~init
 
 
-  let merge ~ctx ~equate t1 t2 =
+  let merge ~ctx ~create ~unify t1 t2 =
+    let create structure = create (Structure structure) in  
     match t1, t2 with
     | Var, t | t, Var -> t
     | Structure structure1, Structure structure2 ->
-      Structure (Structure.merge ~ctx ~equate structure1 structure2)
+      Structure (Structure.merge ~ctx ~create ~unify structure1 structure2)
 end
 
 module Abbreviations
@@ -168,13 +177,13 @@ struct
 
   let repr t = t
 
-  let merge ~ctx ~equate t1 t2 =
+  let merge ~ctx ~create ~unify t1 t2 =
     Log.debug (fun m -> m "Merge Abbrev");
     let ( === ) t1 t2 = Id.id t1 = Id.id t2 in
-    let ( =~ ) t1 t2 = Structure.merge ~ctx:ctx.super_ ~equate t1 t2 in
+    let ( =~ ) t1 t2 = Structure.merge ~ctx:ctx.super_ ~create ~unify t1 t2 in
     let ( =~- ) a t =
       let a' = ctx.make_structure t in
-      equate a a'
+      unify a a'
     in
     let expand_with_abbrev t ~abbrev =
       (* Expand the abbreviation of [t] *)
@@ -260,10 +269,13 @@ module Ambivalent (Structure : S) = struct
 
       exception Cannot_merge = Structure.Cannot_merge
 
-      let merge ~ctx ~equate t1 t2 =
+      let merge ~ctx ~create ~unify t1 t2 =
+        let create t = 
+          create (Structure t)
+        in
         let ( =~- ) type_ structure =
           let type_' = ctx.make structure in
-          equate type_ type_'
+          unify type_ type_'
         in
         let add_equation rigid_var structure =
           Log.debug (fun m -> m "Adding equation for %d" rigid_var);
@@ -278,7 +290,7 @@ module Ambivalent (Structure : S) = struct
         match t1, t2 with
         | Structure structure1, Structure structure2 ->
           Structure
-            (Structure.merge ~ctx:ctx.super_ ~equate structure1 structure2)
+            (Structure.merge ~ctx:ctx.super_ ~create ~unify structure1 structure2)
         | Rigid_var rigid_var1, Rigid_var rigid_var2
           when Rigid_var.compare rigid_var1 rigid_var2 = 0 ->
           Rigid_var rigid_var1
@@ -311,7 +323,7 @@ module Ambivalent (Structure : S) = struct
 
     type t = Unifier.Type.t [@@deriving sexp_of]
 
-    let make = Unifier.Type.make
+    let make = Unifier.Type.create
     let make_var () = make Var
     let make_rigid_var rigid_var = make (Structure (Rigid_var rigid_var))
     let make_structure structure = make (Structure (Structure structure))
@@ -427,12 +439,12 @@ module Ambivalent (Structure : S) = struct
 
   exception Cannot_merge = Structure.Cannot_merge
 
-  let merge ~ctx ~equate t1 t2 =
+  let merge ~ctx ~create ~unify t1 t2 =
     Log.debug (fun m -> m "Merge Ambiv");
     (* [type_ =~- structure] "unifies" the structure [structure] with type [type_] *)
     let ( =~- ) type_ structure =
       let type_' = ctx.make structure in
-      equate type_ type_'
+      unify type_ type_'
     in
     (* The new scope is the maximum of the 2 scopes. 
 
@@ -444,11 +456,12 @@ module Ambivalent (Structure : S) = struct
 
        Optimization: Expansions could be memoized, as in Morel. 
     *)
+    let create t = create (make (Structure t)) in
     let repr =
       match repr t1, repr t2 with
       | Structure structure1, Structure structure2 ->
         Structure
-          (Structure.merge ~ctx:ctx.super_ ~equate structure1 structure2)
+          (Structure.merge ~ctx:ctx.super_ ~create ~unify structure1 structure2)
       | Rigid_var rigid_var1, Rigid_var rigid_var2
         when Rigid_var.compare rigid_var1 rigid_var2 = 0 -> Rigid_var rigid_var1
       | Rigid_var rigid_var1, Rigid_var rigid_var2 ->
@@ -557,9 +570,10 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
 
   exception Cannot_merge = Structure.Cannot_merge
 
-  let merge ~ctx ~equate t1 t2 =
+  let merge ~ctx ~create ~unify t1 t2 =
     Log.debug (fun m -> m "Merge Rows");
-    let ( =~ ) = equate in
+    let create t = create (Structure t) in
+    let ( =~ ) = unify in
     let ( =~- ) a structure = a =~ ctx.make_structure structure in
     let is_row_cons l t =
       let t1, t2 = ctx.make_var (), ctx.make_var () in
@@ -574,7 +588,7 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
     match t1, t2 with
     | Structure structure1, Structure structure2 ->
       Log.debug (fun m -> m "Merge Rows : structures");
-      Structure (Structure.merge ~ctx:ctx.super_ ~equate structure1 structure2)
+      Structure (Structure.merge ~ctx:ctx.super_ ~create ~unify structure1 structure2)
     | Row_uniform t1, Row_uniform t2 ->
       Log.debug (fun m -> m "Merge Row uniform");
       t1 =~ t2;

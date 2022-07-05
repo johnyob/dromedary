@@ -4,4 +4,4 @@
  (preprocess
   (pps ppx_jane ppx_deriving.eq bisect_ppx --conditional))
  (instrumentation (backend landmarks))
- (libraries base dromedary.constraints.constraint vec dromedary.lib.util logs))
+ (libraries base dromedary.constraints.constraint vec dromedary.lib.unifier dromedary.lib.util logs))

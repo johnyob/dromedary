@@ -83,11 +83,4 @@ module Private : sig
     Generalization.S
       with type 'a former := 'a Type_former.t
        and type label := Label.t
-
-  module Unifier (Structure : Structure.S) :
-    Unifier.S
-      with type 'a structure = 'a Structure.t
-       and type 'a ctx = 'a Structure.ctx
-
-  module Union_find : module type of Union_find
 end

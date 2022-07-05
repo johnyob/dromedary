@@ -155,13 +155,15 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
       }
 
 
-    let merge ~ctx ~equate t1 t2 =
+    let merge ~ctx ~create:_ ~unify t1 t2 =
+      let create t = ctx.make t in
       let level = min t1.level t2.level in
       let is_generic = false in
       let structure =
         First_order.merge
           ~ctx:(to_row_ctx ctx)
-          ~equate
+          ~create 
+          ~unify
           t1.structure
           t2.structure
       in
@@ -263,7 +265,7 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
 
 
   let make ~state structure =
-    let new_type = U.Type.make (Structure.make structure state.current_level) in
+    let new_type = U.Type.create (Structure.make structure state.current_level) in
     set_region state new_type;
     new_type
 

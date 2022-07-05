@@ -54,3 +54,4 @@ module type S = sig
       over [t] with the initial accumulator value of [init]. *)
   val fold : 'a t -> f:('a -> 'b -> 'b) -> init:'b -> 'b
 end
+
