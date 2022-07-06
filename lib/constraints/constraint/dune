@@ -1,6 +1,0 @@
-(library
- (public_name dromedary.constraints.constraint)
- (name dromedary_constraints_constraint)
- (preprocess (pps ppx_jane bisect_ppx --conditional))
- (instrumentation (backend landmarks))
- (libraries base))

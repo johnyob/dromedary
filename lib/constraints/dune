@@ -2,6 +2,7 @@
  (public_name dromedary.lib.constraints)
  (name constraints)
  (preprocess
-  (pps ppx_jane ppx_deriving.eq bisect_ppx --conditional))
- (instrumentation (backend landmarks))
- (libraries dromedary.constraints.constraint dromedary.constraints.solver))
+  (pps ppx_jane bisect_ppx --conditional))
+ (instrumentation
+  (backend landmarks))
+ (libraries base vec logs dromedary.lib.unifier dromedary.lib.util))

@@ -133,6 +133,7 @@ let rec set t v =
     | Inner _ -> set (root t) v)
 
 
+(* TODO: Replace this with STM *)
 let try_link ~src ~dst ~in_ =
   let snapshot = !dst in
   dst := Inner src;
