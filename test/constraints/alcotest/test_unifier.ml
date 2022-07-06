@@ -66,7 +66,7 @@ module Type_former = struct
 end
 
 module Unifier = struct
-  include Unifier (Structure.First_order (Structure.Of_former (Type_former)))
+  include Unifier.Make (Structure.First_order (Structure.Of_former (Type_former)))
 
   module Type = struct
     include Type
@@ -113,15 +113,15 @@ module Type = struct
     let rec loop t =
       match t with
       | Ttyp_var x ->
-        Hashtbl.find_or_add table x ~default:(fun () -> Unifier.Type.make Var)
-      | Ttyp_int -> Unifier.Type.make (Structure Int)
+        Hashtbl.find_or_add table x ~default:(fun () -> Unifier.Type.create Var)
+      | Ttyp_int -> Unifier.Type.create (Structure Int)
       | Ttyp_arrow (t1, t2) ->
         let t1 = loop t1 in
         let t2 = loop t2 in
-        Unifier.Type.make (Structure (Arrow (t1, t2)))
+        Unifier.Type.create (Structure (Arrow (t1, t2)))
       | Ttyp_as (t, x) ->
         let x =
-          Hashtbl.find_or_add table x ~default:(fun () -> Unifier.Type.make Var)
+          Hashtbl.find_or_add table x ~default:(fun () -> Unifier.Type.create Var)
         in
         let t = loop t in
         Unifier.unify ~ctx:() x t;

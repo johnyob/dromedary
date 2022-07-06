@@ -1,6 +1,6 @@
 (library
  (name test_constraints)
- (libraries core constraints)
+ (libraries core constraints dromedary.lib.unifier)
  (inline_tests)
  (preprocess
   (pps ppx_jane)))

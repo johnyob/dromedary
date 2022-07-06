@@ -1,5 +1,5 @@
 (test
  (name test_constraints)
- (libraries base constraints alcotest qcheck qcheck-alcotest)
+ (libraries base constraints dromedary.lib.unifier alcotest qcheck qcheck-alcotest)
  (preprocess
   (pps ppx_jane ppx_deriving.eq)))

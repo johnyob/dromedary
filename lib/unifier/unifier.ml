@@ -19,7 +19,7 @@ open! Import
 
 include Unifier_intf
 
-module Make (Structure : Structure_intf.S) = struct
+module Make (Structure : Structure.S) = struct
   (* Unification involves unification types, using the union-find 
      data structure. 
      
@@ -37,7 +37,7 @@ module Make (Structure : Structure_intf.S) = struct
       (* A graphical type consists of a [Union_find] node,
      allowing reasoning w/ multi-equations of nodes. *)
 
-      type t = desc Union_find.t [@@deriving sexp_of]
+      type t = desc Union_find.t 
 
       (* Graphical type node descriptors contain information related to the 
       node that dominates the multi-equation.
@@ -64,10 +64,16 @@ module Make (Structure : Structure_intf.S) = struct
         { id : int
         ; mutable structure : t structure
         }
-      [@@deriving sexp_of]
+      
 
+      let desc t = Union_find.get t
 
-      let desc t = Union_find.find t
+      let rec sexp_of_desc { id; structure } = 
+        [%sexp Id (id : int), Structure (structure : t structure)]
+      
+      and sexp_of_t t = 
+        t |> desc |> sexp_of_desc
+
 
       (* [id t] returns the unique identifier of the type [t]. *)
       let id t = (desc t).id
@@ -99,9 +105,9 @@ module Make (Structure : Structure_intf.S) = struct
 
     (* [make structure metadata] returns a fresh type w/ structure [structure] and
        metadata [metadata]. *)
-    let make =
-      let id = ref 0 in
-      fun structure -> Union_find.make { id = post_incr id; structure }
+    let create =
+      let id = ref (-1) in
+      fun structure -> Union_find.create { id = (Int.incr id; !id); structure }
 
 
     let fold
@@ -221,7 +227,7 @@ module Make (Structure : Structure_intf.S) = struct
   (* [unify_structure structure1 structure2] unifies two graph type node
      structures. *)
   and unify_structure ~ctx structure1 structure2 =
-    Structure.merge ~ctx ~equate:(unify_exn ~ctx) structure1 structure2
+    Structure.merge ~ctx ~create:Type.create ~unify:(unify_exn ~ctx) structure1 structure2
 
 
   exception Unify of Type.t * Type.t

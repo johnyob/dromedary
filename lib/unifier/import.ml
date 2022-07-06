@@ -11,31 +11,36 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Base
+include Base
+include Logs
 
-(** This module implements an efficient union-find algorithm
-    on disjoint sets, based on Tarjan and Huet. See IA Algorithms notes. *)
+let src = Logs.Src.create "unifier" ~doc:"logs unifier events"
 
-(** The type ['a t] denotes a node within a given disjoint set. 
-    ['a] is the type of the value (descriptor) of the node. *)
+module Log = (val Logs.src_log src : Logs.LOG)
 
-type 'a t [@@deriving sexp_of]
+let reporter =
+  let open Caml in
+  let report _src level' ~over k msgf =
+    let k _ =
+      over ();
+      k ()
+    in
+    let with_header h fmt =
+      (Format.kfprintf k Format.std_formatter ("%a @[" ^^ fmt ^^ "@]@."))
+        Logs.pp_header
+        (level', h)
+    in
+    msgf (fun ?header ?tags:_ fmt -> with_header header fmt)
+  in
+  { Logs.report }
 
-(** [make desc] creates a make node. It forms it's disjoint set, with 
-    descriptor [desc]. *)
-val make : 'a -> 'a t
 
-(** [find node] returns the descriptor associated w/ [node]'s set. *)
-val find : 'a t -> 'a
-
-(** [set node desc] updates the descriptor of [node] to [desc]. *)
-val set : 'a t -> 'a -> unit
-
-(** [union node1 node2 ~f] merges the disjoint sets associated with [node1]
-    and [node2]. The descriptors are merged using the function [~f]. *)
-val union : 'a t -> 'a t -> f:('a -> 'a -> 'a) -> unit
-
-(** [node1 === node2] returns true if [node1] and [node2] belong to the same
-    disjoint set. *)
-val ( === ) : 'a t -> 'a t -> bool
-
+let init_logs ~level:level_ =
+  Logs.set_reporter reporter;
+  Logs.(
+    Src.set_level
+      src
+      (match level_ with
+      | `Debug -> Some Debug
+      | `Info -> Some Info
+      | `None -> None))

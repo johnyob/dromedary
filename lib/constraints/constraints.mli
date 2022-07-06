@@ -12,7 +12,7 @@
 (*****************************************************************************)
 
 open! Import
-module Module_types = Private.Constraint.Module_types
+module Module_types = Module_types
 
 module Make (Algebra : Algebra) : sig
   open Algebra
@@ -328,6 +328,6 @@ module Make (Algebra : Algebra) : sig
 end
 
 module Private : sig
-  module Constraint = Private.Constraint
-  include module type of Private.Solver.Private
+  module Constraint = Constraint
+  include module type of Solver.Private
 end

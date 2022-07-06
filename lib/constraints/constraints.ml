@@ -12,13 +12,13 @@
 (*****************************************************************************)
 
 open! Import
-module Module_types = Private.Constraint.Module_types
+module Module_types = Module_types
 
 module Make (Algebra : Algebra) = struct
-  module Solver = Private.Solver.Make (Algebra)
+  module Solver = Solver.Make (Algebra)
 
   module Decoded = Solver.Decoded
-  include Private.Constraint.Make (Solver.Algebra_with_decoded)
+  include Constraint.Make (Solver.Algebra_with_decoded)
 
 
   module Abbrev_type = Solver.Abbrev_type
@@ -33,6 +33,6 @@ module Make (Algebra : Algebra) = struct
 end
 
 module Private = struct
-  module Constraint = Private.Constraint
-  include Private.Solver.Private
+  module Constraint = Constraint
+  include Solver.Private
 end

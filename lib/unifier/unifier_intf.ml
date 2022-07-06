@@ -13,15 +13,7 @@
 
 (* This module implements signatures used by the unifier. *)
 
-(** Unification consists of solving equations between types. 
-    For generalization and efficiency, we use "multi-equations":
-      e ::= [] | t = e
-   
-    A multi-equation is standard iff it contains 1 non-variable member,
-    known as the [terminal]. 
-*)
-
-open! Import
+open Base
 
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
@@ -59,7 +51,7 @@ module type S = sig
     val hash : t -> int
 
     (** [make structure] creates a new unification type w/ structure [structure]. *)
-    val make : t structure -> t
+    val create : t structure -> t
 
     (** [fold t ~f ~var ~mu] will perform a fold over
       the (potentially) cyclic graph defined by the type [t]. *)
@@ -91,6 +83,6 @@ module type Intf = sig
   module type S = S
 
   (** The functor [Make]. *)
-  module Make (Structure : Structure_intf.S) :
+  module Make (Structure : Structure.S) :
     S with type 'a structure = 'a Structure.t and type 'a ctx = 'a Structure.ctx
 end
