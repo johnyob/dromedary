@@ -27,21 +27,21 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: 15568
+                   └──Constructor alphas: 47
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 15568
+                         └──Type expr: Variable: 47
                    └──Constraint:
-                      └──Type expr: Variable: 15568
+                      └──Type expr: Variable: 47
                       └──Type expr: Constructor: int
        └──Structure item: Primitive
           └──Value description:
              └──Name: raise
              └──Scheme:
-                └──Variables: 15573
+                └──Variables: 0
                 └──Type expr: Arrow
                    └──Type expr: Constructor: exn
-                   └──Type expr: Variable: 15573
+                   └──Type expr: Variable: 0
              └──Primitive name: %raise
        └──Structure item: Exception
           └──Type exception:
@@ -69,12 +69,12 @@ let%expect_test "" =
           └──Value bindings:
              └──Value binding:
                 └──Pattern:
-                   └──Type expr: Variable: 15578
+                   └──Type expr: Variable: 5
                    └──Desc: Any
                 └──Abstraction:
                    └──Variables:
                    └──Expression:
-                      └──Type expr: Variable: 15578
+                      └──Type expr: Variable: 5
                       └──Desc: Match
                          └──Expression:
                             └──Type expr: Constructor: t
@@ -105,15 +105,15 @@ let%expect_test "" =
                                      └──Type expr: Constructor: float
                                   └──Desc: Any
                                └──Expression:
-                                  └──Type expr: Variable: 15578
+                                  └──Type expr: Variable: 5
                                   └──Desc: Application
                                      └──Expression:
                                         └──Type expr: Arrow
                                            └──Type expr: Constructor: exn
-                                           └──Type expr: Variable: 15578
+                                           └──Type expr: Variable: 5
                                         └──Desc: Variable
                                            └──Variable: raise
-                                           └──Type expr: Variable: 15578
+                                           └──Type expr: Variable: 5
                                      └──Expression:
                                         └──Type expr: Constructor: exn
                                         └──Desc: Construct

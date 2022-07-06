@@ -557,17 +557,17 @@ let%expect_test "" =
              └──Value binding:
                 └──Variable: sum
                 └──Abstraction:
-                   └──Variables: 25048,25120
+                   └──Variables: 2,74
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: 25120
-                         └──Type expr: Variable: 25048
+                         └──Type expr: Variable: 74
+                         └──Type expr: Variable: 2
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: 25120
+                            └──Type expr: Variable: 74
                             └──Desc: Variable: n
                          └──Expression:
-                            └──Type expr: Variable: 25048
+                            └──Type expr: Variable: 2
                             └──Desc: Let rec
                                └──Value bindings:
                                   └──Value binding:
@@ -683,16 +683,16 @@ let%expect_test "" =
                                                                          └──Desc: Variable
                                                                             └──Variable: acc
                                └──Expression:
-                                  └──Type expr: Variable: 25048
+                                  └──Type expr: Variable: 2
                                   └──Desc: Application
                                      └──Expression:
                                         └──Type expr: Arrow
-                                           └──Type expr: Variable: 25120
-                                           └──Type expr: Variable: 25048
+                                           └──Type expr: Variable: 74
+                                           └──Type expr: Variable: 2
                                         └──Desc: Variable
                                            └──Variable: sum
                                      └──Expression:
-                                        └──Type expr: Variable: 25120
+                                        └──Type expr: Variable: 74
                                         └──Desc: Variable
                                            └──Variable: n |}]
 
@@ -724,74 +724,74 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 25123
+                   └──Constructor alphas: 77
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25123
+                         └──Type expr: Variable: 77
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 25123
+                   └──Constructor alphas: 77
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25123
+                         └──Type expr: Variable: 77
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 25123
+                         └──Type expr: Variable: 77
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 25123
+                            └──Type expr: Variable: 77
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Variable: mem
                 └──Abstraction:
-                   └──Variables: 25171,25160
+                   └──Variables: 43,32
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 25160
+                            └──Type expr: Variable: 32
                          └──Type expr: Arrow
-                            └──Type expr: Variable: 25171
+                            └──Type expr: Variable: 43
                             └──Type expr: Arrow
                                └──Type expr: Arrow
-                                  └──Type expr: Variable: 25171
+                                  └──Type expr: Variable: 43
                                   └──Type expr: Arrow
-                                     └──Type expr: Variable: 25160
+                                     └──Type expr: Variable: 32
                                      └──Type expr: Constructor: bool
                                └──Type expr: Constructor: bool
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 25160
+                               └──Type expr: Variable: 32
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: 25171
+                               └──Type expr: Variable: 43
                                └──Type expr: Arrow
                                   └──Type expr: Arrow
-                                     └──Type expr: Variable: 25171
+                                     └──Type expr: Variable: 43
                                      └──Type expr: Arrow
-                                        └──Type expr: Variable: 25160
+                                        └──Type expr: Variable: 32
                                         └──Type expr: Constructor: bool
                                   └──Type expr: Constructor: bool
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: 25171
+                                  └──Type expr: Variable: 43
                                   └──Desc: Variable: x
                                └──Expression:
                                   └──Type expr: Arrow
                                      └──Type expr: Arrow
-                                        └──Type expr: Variable: 25171
+                                        └──Type expr: Variable: 43
                                         └──Type expr: Arrow
-                                           └──Type expr: Variable: 25160
+                                           └──Type expr: Variable: 32
                                            └──Type expr: Constructor: bool
                                      └──Type expr: Constructor: bool
                                   └──Desc: Function
                                      └──Pattern:
                                         └──Type expr: Arrow
-                                           └──Type expr: Variable: 25171
+                                           └──Type expr: Variable: 43
                                            └──Type expr: Arrow
-                                              └──Type expr: Variable: 25160
+                                              └──Type expr: Variable: 32
                                               └──Type expr: Constructor: bool
                                         └──Desc: Variable: equal
                                      └──Expression:
@@ -799,52 +799,52 @@ let%expect_test "" =
                                         └──Desc: Match
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 25160
+                                                 └──Type expr: Variable: 32
                                               └──Desc: Variable
                                                  └──Variable: t
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 25160
+                                              └──Type expr: Variable: 32
                                            └──Cases:
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 25160
+                                                       └──Type expr: Variable: 32
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Nil
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 25160
+                                                                └──Type expr: Variable: 32
                                                  └──Expression:
                                                     └──Type expr: Constructor: bool
                                                     └──Desc: Constant: false
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 25160
+                                                       └──Type expr: Variable: 32
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Cons
                                                           └──Constructor argument type:
                                                              └──Type expr: Tuple
-                                                                └──Type expr: Variable: 25160
+                                                                └──Type expr: Variable: 32
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 25160
+                                                                   └──Type expr: Variable: 32
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 25160
+                                                                └──Type expr: Variable: 32
                                                        └──Pattern:
                                                           └──Type expr: Tuple
-                                                             └──Type expr: Variable: 25160
+                                                             └──Type expr: Variable: 32
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 25160
+                                                                └──Type expr: Variable: 32
                                                           └──Desc: Tuple
                                                              └──Pattern:
-                                                                └──Type expr: Variable: 25160
+                                                                └──Type expr: Variable: 32
                                                                 └──Desc: Variable: y
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 25160
+                                                                   └──Type expr: Variable: 32
                                                                 └──Desc: Variable: t
                                                  └──Expression:
                                                     └──Type expr: Constructor: bool
@@ -854,23 +854,23 @@ let%expect_test "" =
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
-                                                                   └──Type expr: Variable: 25160
+                                                                   └──Type expr: Variable: 32
                                                                    └──Type expr: Constructor: bool
                                                                 └──Desc: Application
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
-                                                                         └──Type expr: Variable: 25171
+                                                                         └──Type expr: Variable: 43
                                                                          └──Type expr: Arrow
-                                                                            └──Type expr: Variable: 25160
+                                                                            └──Type expr: Variable: 32
                                                                             └──Type expr: Constructor: bool
                                                                       └──Desc: Variable
                                                                          └──Variable: equal
                                                                    └──Expression:
-                                                                      └──Type expr: Variable: 25171
+                                                                      └──Type expr: Variable: 43
                                                                       └──Desc: Variable
                                                                          └──Variable: x
                                                              └──Expression:
-                                                                └──Type expr: Variable: 25160
+                                                                └──Type expr: Variable: 32
                                                                 └──Desc: Variable
                                                                    └──Variable: y
                                                        └──Expression:
@@ -882,52 +882,52 @@ let%expect_test "" =
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Arrow
-                                                                      └──Type expr: Variable: 25171
+                                                                      └──Type expr: Variable: 43
                                                                       └──Type expr: Arrow
-                                                                         └──Type expr: Variable: 25160
+                                                                         └──Type expr: Variable: 32
                                                                          └──Type expr: Constructor: bool
                                                                    └──Type expr: Constructor: bool
                                                                 └──Desc: Application
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
-                                                                         └──Type expr: Variable: 25171
+                                                                         └──Type expr: Variable: 43
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Arrow
-                                                                               └──Type expr: Variable: 25171
+                                                                               └──Type expr: Variable: 43
                                                                                └──Type expr: Arrow
-                                                                                  └──Type expr: Variable: 25160
+                                                                                  └──Type expr: Variable: 32
                                                                                   └──Type expr: Constructor: bool
                                                                             └──Type expr: Constructor: bool
                                                                       └──Desc: Application
                                                                          └──Expression:
                                                                             └──Type expr: Arrow
                                                                                └──Type expr: Constructor: list
-                                                                                  └──Type expr: Variable: 25160
+                                                                                  └──Type expr: Variable: 32
                                                                                └──Type expr: Arrow
-                                                                                  └──Type expr: Variable: 25171
+                                                                                  └──Type expr: Variable: 43
                                                                                   └──Type expr: Arrow
                                                                                      └──Type expr: Arrow
-                                                                                        └──Type expr: Variable: 25171
+                                                                                        └──Type expr: Variable: 43
                                                                                         └──Type expr: Arrow
-                                                                                           └──Type expr: Variable: 25160
+                                                                                           └──Type expr: Variable: 32
                                                                                            └──Type expr: Constructor: bool
                                                                                      └──Type expr: Constructor: bool
                                                                             └──Desc: Variable
                                                                                └──Variable: mem
                                                                          └──Expression:
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: 25160
+                                                                               └──Type expr: Variable: 32
                                                                             └──Desc: Variable
                                                                                └──Variable: t
                                                                    └──Expression:
-                                                                      └──Type expr: Variable: 25171
+                                                                      └──Type expr: Variable: 43
                                                                       └──Desc: Variable
                                                                          └──Variable: x
                                                              └──Expression:
                                                                 └──Type expr: Arrow
-                                                                   └──Type expr: Variable: 25171
+                                                                   └──Type expr: Variable: 43
                                                                    └──Type expr: Arrow
-                                                                      └──Type expr: Variable: 25160
+                                                                      └──Type expr: Variable: 32
                                                                       └──Type expr: Constructor: bool
                                                                 └──Desc: Variable
                                                                    └──Variable: equal |}]
@@ -982,270 +982,270 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 25178
+                   └──Constructor alphas: 50
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25178
+                         └──Type expr: Variable: 50
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 25178
+                   └──Constructor alphas: 50
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25178
+                         └──Type expr: Variable: 50
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 25178
+                         └──Type expr: Variable: 50
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 25178
+                            └──Type expr: Variable: 50
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Variable: unzip
                 └──Abstraction:
-                   └──Variables: 25241,25230
+                   └──Variables: 58,47
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: list
                             └──Type expr: Tuple
-                               └──Type expr: Variable: 25230
-                               └──Type expr: Variable: 25241
+                               └──Type expr: Variable: 47
+                               └──Type expr: Variable: 58
                          └──Type expr: Tuple
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 25230
+                               └──Type expr: Variable: 47
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 25241
+                               └──Type expr: Variable: 58
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: list
                                └──Type expr: Tuple
-                                  └──Type expr: Variable: 25230
-                                  └──Type expr: Variable: 25241
+                                  └──Type expr: Variable: 47
+                                  └──Type expr: Variable: 58
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Tuple
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 25230
+                                  └──Type expr: Variable: 47
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 25241
+                                  └──Type expr: Variable: 58
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: list
                                      └──Type expr: Tuple
-                                        └──Type expr: Variable: 25230
-                                        └──Type expr: Variable: 25241
+                                        └──Type expr: Variable: 47
+                                        └──Type expr: Variable: 58
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: list
                                   └──Type expr: Tuple
-                                     └──Type expr: Variable: 25230
-                                     └──Type expr: Variable: 25241
+                                     └──Type expr: Variable: 47
+                                     └──Type expr: Variable: 58
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: list
                                            └──Type expr: Tuple
-                                              └──Type expr: Variable: 25230
-                                              └──Type expr: Variable: 25241
+                                              └──Type expr: Variable: 47
+                                              └──Type expr: Variable: 58
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Nil
                                               └──Constructor type:
                                                  └──Type expr: Constructor: list
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 25230
-                                                       └──Type expr: Variable: 25241
+                                                       └──Type expr: Variable: 47
+                                                       └──Type expr: Variable: 58
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 25230
+                                              └──Type expr: Variable: 47
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 25241
+                                              └──Type expr: Variable: 58
                                         └──Desc: Tuple
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 25230
+                                                 └──Type expr: Variable: 47
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 25230
+                                                          └──Type expr: Variable: 47
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 25241
+                                                 └──Type expr: Variable: 58
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 25241
+                                                          └──Type expr: Variable: 58
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: list
                                            └──Type expr: Tuple
-                                              └──Type expr: Variable: 25230
-                                              └──Type expr: Variable: 25241
+                                              └──Type expr: Variable: 47
+                                              └──Type expr: Variable: 58
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Cons
                                               └──Constructor argument type:
                                                  └──Type expr: Tuple
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 25230
-                                                       └──Type expr: Variable: 25241
+                                                       └──Type expr: Variable: 47
+                                                       └──Type expr: Variable: 58
                                                     └──Type expr: Constructor: list
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: 25230
-                                                          └──Type expr: Variable: 25241
+                                                          └──Type expr: Variable: 47
+                                                          └──Type expr: Variable: 58
                                               └──Constructor type:
                                                  └──Type expr: Constructor: list
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 25230
-                                                       └──Type expr: Variable: 25241
+                                                       └──Type expr: Variable: 47
+                                                       └──Type expr: Variable: 58
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Tuple
-                                                    └──Type expr: Variable: 25230
-                                                    └──Type expr: Variable: 25241
+                                                    └──Type expr: Variable: 47
+                                                    └──Type expr: Variable: 58
                                                  └──Type expr: Constructor: list
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 25230
-                                                       └──Type expr: Variable: 25241
+                                                       └──Type expr: Variable: 47
+                                                       └──Type expr: Variable: 58
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 25230
-                                                       └──Type expr: Variable: 25241
+                                                       └──Type expr: Variable: 47
+                                                       └──Type expr: Variable: 58
                                                     └──Desc: Tuple
                                                        └──Pattern:
-                                                          └──Type expr: Variable: 25230
+                                                          └──Type expr: Variable: 47
                                                           └──Desc: Variable: x1
                                                        └──Pattern:
-                                                          └──Type expr: Variable: 25241
+                                                          └──Type expr: Variable: 58
                                                           └──Desc: Variable: x2
                                                  └──Pattern:
                                                     └──Type expr: Constructor: list
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: 25230
-                                                          └──Type expr: Variable: 25241
+                                                          └──Type expr: Variable: 47
+                                                          └──Type expr: Variable: 58
                                                     └──Desc: Variable: t
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 25230
+                                              └──Type expr: Variable: 47
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 25241
+                                              └──Type expr: Variable: 58
                                         └──Desc: Let
                                            └──Value bindings:
                                               └──Value binding:
                                                  └──Pattern:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 25230
+                                                          └──Type expr: Variable: 47
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 25241
+                                                          └──Type expr: Variable: 58
                                                     └──Desc: Tuple
                                                        └──Pattern:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 25230
+                                                             └──Type expr: Variable: 47
                                                           └──Desc: Variable: t1
                                                        └──Pattern:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 25241
+                                                             └──Type expr: Variable: 58
                                                           └──Desc: Variable: t2
                                                  └──Abstraction:
                                                     └──Variables:
                                                     └──Expression:
                                                        └──Type expr: Tuple
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 25230
+                                                             └──Type expr: Variable: 47
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 25241
+                                                             └──Type expr: Variable: 58
                                                        └──Desc: Application
                                                           └──Expression:
                                                              └──Type expr: Arrow
                                                                 └──Type expr: Constructor: list
                                                                    └──Type expr: Tuple
-                                                                      └──Type expr: Variable: 25230
-                                                                      └──Type expr: Variable: 25241
+                                                                      └──Type expr: Variable: 47
+                                                                      └──Type expr: Variable: 58
                                                                 └──Type expr: Tuple
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 25230
+                                                                      └──Type expr: Variable: 47
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 25241
+                                                                      └──Type expr: Variable: 58
                                                              └──Desc: Variable
                                                                 └──Variable: unzip
                                                           └──Expression:
                                                              └──Type expr: Constructor: list
                                                                 └──Type expr: Tuple
-                                                                   └──Type expr: Variable: 25230
-                                                                   └──Type expr: Variable: 25241
+                                                                   └──Type expr: Variable: 47
+                                                                   └──Type expr: Variable: 58
                                                              └──Desc: Variable
                                                                 └──Variable: t
                                            └──Expression:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 25230
+                                                    └──Type expr: Variable: 47
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 25241
+                                                    └──Type expr: Variable: 58
                                               └──Desc: Tuple
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 25230
+                                                       └──Type expr: Variable: 47
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Cons
                                                           └──Constructor argument type:
                                                              └──Type expr: Tuple
-                                                                └──Type expr: Variable: 25230
+                                                                └──Type expr: Variable: 47
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 25230
+                                                                   └──Type expr: Variable: 47
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 25230
+                                                                └──Type expr: Variable: 47
                                                        └──Expression:
                                                           └──Type expr: Tuple
-                                                             └──Type expr: Variable: 25230
+                                                             └──Type expr: Variable: 47
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 25230
+                                                                └──Type expr: Variable: 47
                                                           └──Desc: Tuple
                                                              └──Expression:
-                                                                └──Type expr: Variable: 25230
+                                                                └──Type expr: Variable: 47
                                                                 └──Desc: Variable
                                                                    └──Variable: x1
                                                              └──Expression:
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 25230
+                                                                   └──Type expr: Variable: 47
                                                                 └──Desc: Variable
                                                                    └──Variable: t1
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 25241
+                                                       └──Type expr: Variable: 58
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Cons
                                                           └──Constructor argument type:
                                                              └──Type expr: Tuple
-                                                                └──Type expr: Variable: 25241
+                                                                └──Type expr: Variable: 58
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 25241
+                                                                   └──Type expr: Variable: 58
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 25241
+                                                                └──Type expr: Variable: 58
                                                        └──Expression:
                                                           └──Type expr: Tuple
-                                                             └──Type expr: Variable: 25241
+                                                             └──Type expr: Variable: 58
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 25241
+                                                                └──Type expr: Variable: 58
                                                           └──Desc: Tuple
                                                              └──Expression:
-                                                                └──Type expr: Variable: 25241
+                                                                └──Type expr: Variable: 58
                                                                 └──Desc: Variable
                                                                    └──Variable: x2
                                                              └──Expression:
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 25241
+                                                                   └──Type expr: Variable: 58
                                                                 └──Desc: Variable
                                                                    └──Variable: t2 |}]
 
@@ -1285,30 +1285,30 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 25252
+                   └──Constructor alphas: 69
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25252
+                         └──Type expr: Variable: 69
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 25252
+                   └──Constructor alphas: 69
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25252
+                         └──Type expr: Variable: 69
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 25252
+                         └──Type expr: Variable: 69
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 25252
+                            └──Type expr: Variable: 69
        └──Structure item: Primitive
           └──Value description:
              └──Name: raise
              └──Scheme:
-                └──Variables: 25259
+                └──Variables: 0
                 └──Type expr: Arrow
                    └──Type expr: Constructor: exn
-                   └──Type expr: Variable: 25259
+                   └──Type expr: Variable: 0
              └──Primitive name: %raise
        └──Structure item: Exception
           └──Type exception:
@@ -1328,11 +1328,11 @@ let%expect_test "" =
           └──Value description:
              └──Name: lt
              └──Scheme:
-                └──Variables: 25264
+                └──Variables: 5
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 25264
+                   └──Type expr: Variable: 5
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 25264
+                      └──Type expr: Variable: 5
                       └──Type expr: Constructor: bool
              └──Primitive name: %less_than
        └──Structure item: Let
@@ -1689,45 +1689,45 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 25392
+                   └──Constructor alphas: 133
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25392
+                         └──Type expr: Variable: 133
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 25392
+                   └──Constructor alphas: 133
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25392
+                         └──Type expr: Variable: 133
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 25392
+                         └──Type expr: Variable: 133
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 25392
+                            └──Type expr: Variable: 133
        └──Structure item: Primitive
           └──Value description:
              └──Name: append
              └──Scheme:
-                └──Variables: 25397
+                └──Variables: 0
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: 25397
+                      └──Type expr: Variable: 0
                    └──Type expr: Arrow
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25397
+                         └──Type expr: Variable: 0
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25397
+                         └──Type expr: Variable: 0
              └──Primitive name: %append
        └──Structure item: Primitive
           └──Value description:
              └──Name: lt
              └──Scheme:
-                └──Variables: 25408
+                └──Variables: 11
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 25408
+                   └──Type expr: Variable: 11
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 25408
+                      └──Type expr: Variable: 11
                       └──Type expr: Constructor: bool
              └──Primitive name: %less_than
        └──Structure item: Let
@@ -2336,31 +2336,31 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 25606
+                   └──Constructor alphas: 209
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25606
+                         └──Type expr: Variable: 209
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 25606
+                   └──Constructor alphas: 209
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25606
+                         └──Type expr: Variable: 209
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 25606
+                         └──Type expr: Variable: 209
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 25606
+                            └──Type expr: Variable: 209
        └──Structure item: Primitive
           └──Value description:
              └──Name: lt
              └──Scheme:
-                └──Variables: 25611
+                └──Variables: 0
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 25611
+                   └──Type expr: Variable: 0
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 25611
+                      └──Type expr: Variable: 0
                       └──Type expr: Constructor: bool
              └──Primitive name: %less_than
        └──Structure item: Let
@@ -3301,29 +3301,29 @@ let%expect_test "" =
           └──Value description:
              └──Name: raise
              └──Scheme:
-                └──Variables: 25864
+                └──Variables: 0
                 └──Type expr: Arrow
                    └──Type expr: Constructor: exn
-                   └──Type expr: Variable: 25864
+                   └──Type expr: Variable: 0
              └──Primitive name: %raise
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Pattern:
-                   └──Type expr: Variable: 25869
+                   └──Type expr: Variable: 5
                    └──Desc: Any
                 └──Abstraction:
                    └──Variables:
                    └──Expression:
-                      └──Type expr: Variable: 25869
+                      └──Type expr: Variable: 5
                       └──Desc: Application
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: exn
-                               └──Type expr: Variable: 25869
+                               └──Type expr: Variable: 5
                             └──Desc: Variable
                                └──Variable: raise
-                               └──Type expr: Variable: 25869
+                               └──Type expr: Variable: 5
                          └──Expression:
                             └──Type expr: Constructor: exn
                             └──Desc: Construct
@@ -3453,19 +3453,19 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: None
-                   └──Constructor alphas: 25931
+                   └──Constructor alphas: 67
                    └──Constructor type:
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 25931
+                         └──Type expr: Variable: 67
                 └──Constructor declaration:
                    └──Constructor name: Some
-                   └──Constructor alphas: 25931
+                   └──Constructor alphas: 67
                    └──Constructor type:
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 25931
+                         └──Type expr: Variable: 67
                    └──Constructor argument:
                       └──Constructor betas:
-                      └──Type expr: Variable: 25931
+                      └──Type expr: Variable: 67
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -3494,19 +3494,19 @@ let%expect_test "" =
              └──Value binding:
                 └──Pattern:
                    └──Type expr: Constructor: option
-                      └──Type expr: Variable: 25941
+                      └──Type expr: Variable: 7
                    └──Desc: Variable: y
                 └──Abstraction:
-                   └──Variables: 25941
+                   └──Variables: 7
                    └──Expression:
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 25941
+                         └──Type expr: Variable: 7
                       └──Desc: Construct
                          └──Constructor description:
                             └──Name: None
                             └──Constructor type:
                                └──Type expr: Constructor: option
-                                  └──Type expr: Variable: 25941 |}]
+                                  └──Type expr: Variable: 7 |}]
 
 let%expect_test "" =
   let str = 
@@ -3545,40 +3545,40 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 25944
+                   └──Constructor alphas: 10
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25944
+                         └──Type expr: Variable: 10
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 25944
+                   └──Constructor alphas: 10
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 25944
+                         └──Type expr: Variable: 10
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 25944
+                         └──Type expr: Variable: 10
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 25944
+                            └──Type expr: Variable: 10
        └──Structure item: Primitive
           └──Value description:
              └──Name: raise
              └──Scheme:
-                └──Variables: 25951
+                └──Variables: 0
                 └──Type expr: Arrow
                    └──Type expr: Constructor: exn
-                   └──Type expr: Variable: 25951
+                   └──Type expr: Variable: 0
              └──Primitive name: %raise
        └──Structure item: Primitive
           └──Value description:
              └──Name: lt
              └──Scheme:
-                └──Variables: 25956
+                └──Variables: 5
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 25956
+                   └──Type expr: Variable: 5
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 25956
+                      └──Type expr: Variable: 5
                       └──Type expr: Constructor: bool
              └──Primitive name: %less_than
        └──Structure item: Exception
@@ -4082,255 +4082,255 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Lf
-                   └──Constructor alphas: 26105
+                   └──Constructor alphas: 0
                    └──Constructor type:
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 26105
+                         └──Type expr: Variable: 0
                 └──Constructor declaration:
                    └──Constructor name: Br
-                   └──Constructor alphas: 26105
+                   └──Constructor alphas: 0
                    └──Constructor type:
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 26105
+                         └──Type expr: Variable: 0
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 26105
-                         └──Type expr: Variable: 26105
+                            └──Type expr: Variable: 0
+                         └──Type expr: Variable: 0
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 26105
+                            └──Type expr: Variable: 0
        └──Structure item: Type
           └──Type declaration:
              └──Type name: list
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 26111
+                   └──Constructor alphas: 6
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 26111
+                         └──Type expr: Variable: 6
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 26111
+                   └──Constructor alphas: 6
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 26111
+                         └──Type expr: Variable: 6
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 26111
+                         └──Type expr: Variable: 6
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26111
+                            └──Type expr: Variable: 6
        └──Structure item: Primitive
           └──Value description:
              └──Name: append
              └──Scheme:
-                └──Variables: 26116
+                └──Variables: 0
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: 26116
+                      └──Type expr: Variable: 0
                    └──Type expr: Arrow
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 26116
+                         └──Type expr: Variable: 0
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 26116
+                         └──Type expr: Variable: 0
              └──Primitive name: %append
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Variable: pre_order
                 └──Abstraction:
-                   └──Variables: 26176
+                   └──Variables: 60
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 26176
+                            └──Type expr: Variable: 60
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26176
+                            └──Type expr: Variable: 60
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 26176
+                               └──Type expr: Variable: 60
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 26176
+                               └──Type expr: Variable: 60
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: tree
-                                     └──Type expr: Variable: 26176
+                                     └──Type expr: Variable: 60
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: tree
-                                  └──Type expr: Variable: 26176
+                                  └──Type expr: Variable: 60
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 26176
+                                           └──Type expr: Variable: 60
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Lf
                                               └──Constructor type:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26176
+                                                    └──Type expr: Variable: 60
                                      └──Expression:
                                         └──Type expr: Constructor: list
-                                           └──Type expr: Variable: 26176
+                                           └──Type expr: Variable: 60
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Nil
                                               └──Constructor type:
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26176
+                                                    └──Type expr: Variable: 60
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 26176
+                                           └──Type expr: Variable: 60
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Br
                                               └──Constructor argument type:
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26176
-                                                    └──Type expr: Variable: 26176
+                                                       └──Type expr: Variable: 60
+                                                    └──Type expr: Variable: 60
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26176
+                                                       └──Type expr: Variable: 60
                                               └──Constructor type:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26176
+                                                    └──Type expr: Variable: 60
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26176
-                                                 └──Type expr: Variable: 26176
+                                                    └──Type expr: Variable: 60
+                                                 └──Type expr: Variable: 60
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26176
+                                                    └──Type expr: Variable: 60
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26176
+                                                       └──Type expr: Variable: 60
                                                     └──Desc: Variable: l
                                                  └──Pattern:
-                                                    └──Type expr: Variable: 26176
+                                                    └──Type expr: Variable: 60
                                                     └──Desc: Variable: x
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26176
+                                                       └──Type expr: Variable: 60
                                                     └──Desc: Variable: r
                                      └──Expression:
                                         └──Type expr: Constructor: list
-                                           └──Type expr: Variable: 26176
+                                           └──Type expr: Variable: 60
                                         └──Desc: Application
                                            └──Expression:
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26176
+                                                    └──Type expr: Variable: 60
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26176
+                                                    └──Type expr: Variable: 60
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26176
+                                                          └──Type expr: Variable: 60
                                                        └──Type expr: Arrow
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 26176
+                                                             └──Type expr: Variable: 60
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 26176
+                                                             └──Type expr: Variable: 60
                                                     └──Desc: Variable
                                                        └──Variable: append
-                                                       └──Type expr: Variable: 26176
+                                                       └──Type expr: Variable: 60
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26176
+                                                       └──Type expr: Variable: 60
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Cons
                                                           └──Constructor argument type:
                                                              └──Type expr: Tuple
-                                                                └──Type expr: Variable: 26176
+                                                                └──Type expr: Variable: 60
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26176
+                                                                   └──Type expr: Variable: 60
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26176
+                                                                └──Type expr: Variable: 60
                                                        └──Expression:
                                                           └──Type expr: Tuple
-                                                             └──Type expr: Variable: 26176
+                                                             └──Type expr: Variable: 60
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26176
+                                                                └──Type expr: Variable: 60
                                                           └──Desc: Tuple
                                                              └──Expression:
-                                                                └──Type expr: Variable: 26176
+                                                                └──Type expr: Variable: 60
                                                                 └──Desc: Variable
                                                                    └──Variable: x
                                                              └──Expression:
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26176
+                                                                   └──Type expr: Variable: 60
                                                                 └──Desc: Construct
                                                                    └──Constructor description:
                                                                       └──Name: Nil
                                                                       └──Constructor type:
                                                                          └──Type expr: Constructor: list
-                                                                            └──Type expr: Variable: 26176
+                                                                            └──Type expr: Variable: 60
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 26176
+                                                 └──Type expr: Variable: 60
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26176
+                                                          └──Type expr: Variable: 60
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26176
+                                                          └──Type expr: Variable: 60
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26176
+                                                                └──Type expr: Variable: 60
                                                              └──Type expr: Arrow
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26176
+                                                                   └──Type expr: Variable: 60
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26176
+                                                                   └──Type expr: Variable: 60
                                                           └──Desc: Variable
                                                              └──Variable: append
-                                                             └──Type expr: Variable: 26176
+                                                             └──Type expr: Variable: 60
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 26176
+                                                             └──Type expr: Variable: 60
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 26176
+                                                                      └──Type expr: Variable: 60
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26176
+                                                                      └──Type expr: Variable: 60
                                                                 └──Desc: Variable
                                                                    └──Variable: pre_order
                                                              └──Expression:
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 26176
+                                                                   └──Type expr: Variable: 60
                                                                 └──Desc: Variable
                                                                    └──Variable: l
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26176
+                                                       └──Type expr: Variable: 60
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 26176
+                                                                └──Type expr: Variable: 60
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26176
+                                                                └──Type expr: Variable: 60
                                                           └──Desc: Variable
                                                              └──Variable: pre_order
                                                        └──Expression:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 26176
+                                                             └──Type expr: Variable: 60
                                                           └──Desc: Variable
                                                              └──Variable: r
        └──Structure item: Let
@@ -4338,198 +4338,198 @@ let%expect_test "" =
              └──Value binding:
                 └──Variable: in_order
                 └──Abstraction:
-                   └──Variables: 26268
+                   └──Variables: 152
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 26268
+                            └──Type expr: Variable: 152
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26268
+                            └──Type expr: Variable: 152
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 26268
+                               └──Type expr: Variable: 152
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 26268
+                               └──Type expr: Variable: 152
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: tree
-                                     └──Type expr: Variable: 26268
+                                     └──Type expr: Variable: 152
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: tree
-                                  └──Type expr: Variable: 26268
+                                  └──Type expr: Variable: 152
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 26268
+                                           └──Type expr: Variable: 152
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Lf
                                               └──Constructor type:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26268
+                                                    └──Type expr: Variable: 152
                                      └──Expression:
                                         └──Type expr: Constructor: list
-                                           └──Type expr: Variable: 26268
+                                           └──Type expr: Variable: 152
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Nil
                                               └──Constructor type:
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26268
+                                                    └──Type expr: Variable: 152
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 26268
+                                           └──Type expr: Variable: 152
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Br
                                               └──Constructor argument type:
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26268
-                                                    └──Type expr: Variable: 26268
+                                                       └──Type expr: Variable: 152
+                                                    └──Type expr: Variable: 152
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26268
+                                                       └──Type expr: Variable: 152
                                               └──Constructor type:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26268
+                                                    └──Type expr: Variable: 152
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26268
-                                                 └──Type expr: Variable: 26268
+                                                    └──Type expr: Variable: 152
+                                                 └──Type expr: Variable: 152
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26268
+                                                    └──Type expr: Variable: 152
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26268
+                                                       └──Type expr: Variable: 152
                                                     └──Desc: Variable: l
                                                  └──Pattern:
-                                                    └──Type expr: Variable: 26268
+                                                    └──Type expr: Variable: 152
                                                     └──Desc: Variable: x
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26268
+                                                       └──Type expr: Variable: 152
                                                     └──Desc: Variable: r
                                      └──Expression:
                                         └──Type expr: Constructor: list
-                                           └──Type expr: Variable: 26268
+                                           └──Type expr: Variable: 152
                                         └──Desc: Application
                                            └──Expression:
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26268
+                                                    └──Type expr: Variable: 152
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26268
+                                                    └──Type expr: Variable: 152
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26268
+                                                          └──Type expr: Variable: 152
                                                        └──Type expr: Arrow
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 26268
+                                                             └──Type expr: Variable: 152
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 26268
+                                                             └──Type expr: Variable: 152
                                                     └──Desc: Variable
                                                        └──Variable: append
-                                                       └──Type expr: Variable: 26268
+                                                       └──Type expr: Variable: 152
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26268
+                                                       └──Type expr: Variable: 152
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 26268
+                                                                └──Type expr: Variable: 152
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26268
+                                                                └──Type expr: Variable: 152
                                                           └──Desc: Variable
                                                              └──Variable: pre_order
-                                                             └──Type expr: Variable: 26268
+                                                             └──Type expr: Variable: 152
                                                        └──Expression:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 26268
+                                                             └──Type expr: Variable: 152
                                                           └──Desc: Variable
                                                              └──Variable: l
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 26268
+                                                 └──Type expr: Variable: 152
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26268
+                                                          └──Type expr: Variable: 152
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26268
+                                                          └──Type expr: Variable: 152
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26268
+                                                                └──Type expr: Variable: 152
                                                              └──Type expr: Arrow
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26268
+                                                                   └──Type expr: Variable: 152
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26268
+                                                                   └──Type expr: Variable: 152
                                                           └──Desc: Variable
                                                              └──Variable: append
-                                                             └──Type expr: Variable: 26268
+                                                             └──Type expr: Variable: 152
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 26268
+                                                             └──Type expr: Variable: 152
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Cons
                                                                 └──Constructor argument type:
                                                                    └──Type expr: Tuple
-                                                                      └──Type expr: Variable: 26268
+                                                                      └──Type expr: Variable: 152
                                                                       └──Type expr: Constructor: list
-                                                                         └──Type expr: Variable: 26268
+                                                                         └──Type expr: Variable: 152
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26268
+                                                                      └──Type expr: Variable: 152
                                                              └──Expression:
                                                                 └──Type expr: Tuple
-                                                                   └──Type expr: Variable: 26268
+                                                                   └──Type expr: Variable: 152
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26268
+                                                                      └──Type expr: Variable: 152
                                                                 └──Desc: Tuple
                                                                    └──Expression:
-                                                                      └──Type expr: Variable: 26268
+                                                                      └──Type expr: Variable: 152
                                                                       └──Desc: Variable
                                                                          └──Variable: x
                                                                    └──Expression:
                                                                       └──Type expr: Constructor: list
-                                                                         └──Type expr: Variable: 26268
+                                                                         └──Type expr: Variable: 152
                                                                       └──Desc: Construct
                                                                          └──Constructor description:
                                                                             └──Name: Nil
                                                                             └──Constructor type:
                                                                                └──Type expr: Constructor: list
-                                                                                  └──Type expr: Variable: 26268
+                                                                                  └──Type expr: Variable: 152
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26268
+                                                       └──Type expr: Variable: 152
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 26268
+                                                                └──Type expr: Variable: 152
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26268
+                                                                └──Type expr: Variable: 152
                                                           └──Desc: Variable
                                                              └──Variable: pre_order
-                                                             └──Type expr: Variable: 26268
+                                                             └──Type expr: Variable: 152
                                                        └──Expression:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 26268
+                                                             └──Type expr: Variable: 152
                                                           └──Desc: Variable
                                                              └──Variable: r
        └──Structure item: Let
@@ -4537,432 +4537,432 @@ let%expect_test "" =
              └──Value binding:
                 └──Variable: post_order
                 └──Abstraction:
-                   └──Variables: 26348
+                   └──Variables: 232
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 26348
+                            └──Type expr: Variable: 232
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26348
+                            └──Type expr: Variable: 232
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 26348
+                               └──Type expr: Variable: 232
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 26348
+                               └──Type expr: Variable: 232
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: tree
-                                     └──Type expr: Variable: 26348
+                                     └──Type expr: Variable: 232
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: tree
-                                  └──Type expr: Variable: 26348
+                                  └──Type expr: Variable: 232
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 26348
+                                           └──Type expr: Variable: 232
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Lf
                                               └──Constructor type:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26348
+                                                    └──Type expr: Variable: 232
                                      └──Expression:
                                         └──Type expr: Constructor: list
-                                           └──Type expr: Variable: 26348
+                                           └──Type expr: Variable: 232
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Nil
                                               └──Constructor type:
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26348
+                                                    └──Type expr: Variable: 232
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 26348
+                                           └──Type expr: Variable: 232
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Br
                                               └──Constructor argument type:
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26348
-                                                    └──Type expr: Variable: 26348
+                                                       └──Type expr: Variable: 232
+                                                    └──Type expr: Variable: 232
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26348
+                                                       └──Type expr: Variable: 232
                                               └──Constructor type:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26348
+                                                    └──Type expr: Variable: 232
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26348
-                                                 └──Type expr: Variable: 26348
+                                                    └──Type expr: Variable: 232
+                                                 └──Type expr: Variable: 232
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26348
+                                                    └──Type expr: Variable: 232
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26348
+                                                       └──Type expr: Variable: 232
                                                     └──Desc: Variable: l
                                                  └──Pattern:
-                                                    └──Type expr: Variable: 26348
+                                                    └──Type expr: Variable: 232
                                                     └──Desc: Variable: x
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 26348
+                                                       └──Type expr: Variable: 232
                                                     └──Desc: Variable: r
                                      └──Expression:
                                         └──Type expr: Constructor: list
-                                           └──Type expr: Variable: 26348
+                                           └──Type expr: Variable: 232
                                         └──Desc: Application
                                            └──Expression:
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26348
+                                                    └──Type expr: Variable: 232
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26348
+                                                    └──Type expr: Variable: 232
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26348
+                                                          └──Type expr: Variable: 232
                                                        └──Type expr: Arrow
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 26348
+                                                             └──Type expr: Variable: 232
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 26348
+                                                             └──Type expr: Variable: 232
                                                     └──Desc: Variable
                                                        └──Variable: append
-                                                       └──Type expr: Variable: 26348
+                                                       └──Type expr: Variable: 232
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26348
+                                                       └──Type expr: Variable: 232
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 26348
+                                                                └──Type expr: Variable: 232
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26348
+                                                                └──Type expr: Variable: 232
                                                           └──Desc: Variable
                                                              └──Variable: post_order
                                                        └──Expression:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 26348
+                                                             └──Type expr: Variable: 232
                                                           └──Desc: Variable
                                                              └──Variable: l
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 26348
+                                                 └──Type expr: Variable: 232
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26348
+                                                          └──Type expr: Variable: 232
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26348
+                                                          └──Type expr: Variable: 232
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26348
+                                                                └──Type expr: Variable: 232
                                                              └──Type expr: Arrow
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26348
+                                                                   └──Type expr: Variable: 232
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26348
+                                                                   └──Type expr: Variable: 232
                                                           └──Desc: Variable
                                                              └──Variable: append
-                                                             └──Type expr: Variable: 26348
+                                                             └──Type expr: Variable: 232
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 26348
+                                                             └──Type expr: Variable: 232
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 26348
+                                                                      └──Type expr: Variable: 232
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26348
+                                                                      └──Type expr: Variable: 232
                                                                 └──Desc: Variable
                                                                    └──Variable: post_order
                                                              └──Expression:
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 26348
+                                                                   └──Type expr: Variable: 232
                                                                 └──Desc: Variable
                                                                    └──Variable: r
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26348
+                                                       └──Type expr: Variable: 232
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Cons
                                                           └──Constructor argument type:
                                                              └──Type expr: Tuple
-                                                                └──Type expr: Variable: 26348
+                                                                └──Type expr: Variable: 232
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26348
+                                                                   └──Type expr: Variable: 232
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26348
+                                                                └──Type expr: Variable: 232
                                                        └──Expression:
                                                           └──Type expr: Tuple
-                                                             └──Type expr: Variable: 26348
+                                                             └──Type expr: Variable: 232
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26348
+                                                                └──Type expr: Variable: 232
                                                           └──Desc: Tuple
                                                              └──Expression:
-                                                                └──Type expr: Variable: 26348
+                                                                └──Type expr: Variable: 232
                                                                 └──Desc: Variable
                                                                    └──Variable: x
                                                              └──Expression:
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26348
+                                                                   └──Type expr: Variable: 232
                                                                 └──Desc: Construct
                                                                    └──Constructor description:
                                                                       └──Name: Nil
                                                                       └──Constructor type:
                                                                          └──Type expr: Constructor: list
-                                                                            └──Type expr: Variable: 26348
+                                                                            └──Type expr: Variable: 232
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 26413
+                         └──Type expr: Variable: 297
                       └──Type expr: Arrow
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26413
+                            └──Type expr: Variable: 297
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26413
+                            └──Type expr: Variable: 297
                    └──Desc: Variable: in_order
                 └──Abstraction:
                    └──Variables:
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 26413
+                            └──Type expr: Variable: 297
                          └──Type expr: Arrow
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 26413
+                               └──Type expr: Variable: 297
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 26413
+                               └──Type expr: Variable: 297
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 26413
+                               └──Type expr: Variable: 297
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 26413
+                                  └──Type expr: Variable: 297
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 26413
+                                  └──Type expr: Variable: 297
                             └──Desc: Let rec
                                └──Value bindings:
                                   └──Value binding:
                                      └──Variable: loop
                                      └──Abstraction:
-                                        └──Variables: 26390
+                                        └──Variables: 274
                                         └──Expression:
                                            └──Type expr: Arrow
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 26390
+                                                 └──Type expr: Variable: 274
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26390
+                                                    └──Type expr: Variable: 274
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26390
+                                                    └──Type expr: Variable: 274
                                            └──Desc: Function
                                               └──Pattern:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26390
+                                                    └──Type expr: Variable: 274
                                                  └──Desc: Variable: t
                                               └──Expression:
                                                  └──Type expr: Arrow
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26390
+                                                       └──Type expr: Variable: 274
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26390
+                                                       └──Type expr: Variable: 274
                                                  └──Desc: Function
                                                     └──Pattern:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26390
+                                                          └──Type expr: Variable: 274
                                                        └──Desc: Variable: acc
                                                     └──Expression:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26390
+                                                          └──Type expr: Variable: 274
                                                        └──Desc: Match
                                                           └──Expression:
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 26390
+                                                                └──Type expr: Variable: 274
                                                              └──Desc: Variable
                                                                 └──Variable: t
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 26390
+                                                             └──Type expr: Variable: 274
                                                           └──Cases:
                                                              └──Case:
                                                                 └──Pattern:
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 26390
+                                                                      └──Type expr: Variable: 274
                                                                    └──Desc: Construct
                                                                       └──Constructor description:
                                                                          └──Name: Lf
                                                                          └──Constructor type:
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26390
+                                                                               └──Type expr: Variable: 274
                                                                 └──Expression:
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26390
+                                                                      └──Type expr: Variable: 274
                                                                    └──Desc: Variable
                                                                       └──Variable: acc
                                                              └──Case:
                                                                 └──Pattern:
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 26390
+                                                                      └──Type expr: Variable: 274
                                                                    └──Desc: Construct
                                                                       └──Constructor description:
                                                                          └──Name: Br
                                                                          └──Constructor argument type:
                                                                             └──Type expr: Tuple
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26390
-                                                                               └──Type expr: Variable: 26390
+                                                                                  └──Type expr: Variable: 274
+                                                                               └──Type expr: Variable: 274
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26390
+                                                                                  └──Type expr: Variable: 274
                                                                          └──Constructor type:
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26390
+                                                                               └──Type expr: Variable: 274
                                                                       └──Pattern:
                                                                          └──Type expr: Tuple
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26390
-                                                                            └──Type expr: Variable: 26390
+                                                                               └──Type expr: Variable: 274
+                                                                            └──Type expr: Variable: 274
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26390
+                                                                               └──Type expr: Variable: 274
                                                                          └──Desc: Tuple
                                                                             └──Pattern:
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26390
+                                                                                  └──Type expr: Variable: 274
                                                                                └──Desc: Variable: l
                                                                             └──Pattern:
-                                                                               └──Type expr: Variable: 26390
+                                                                               └──Type expr: Variable: 274
                                                                                └──Desc: Variable: x
                                                                             └──Pattern:
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26390
+                                                                                  └──Type expr: Variable: 274
                                                                                └──Desc: Variable: r
                                                                 └──Expression:
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26390
+                                                                      └──Type expr: Variable: 274
                                                                    └──Desc: Application
                                                                       └──Expression:
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: 26390
+                                                                               └──Type expr: Variable: 274
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: 26390
+                                                                               └──Type expr: Variable: 274
                                                                          └──Desc: Application
                                                                             └──Expression:
                                                                                └──Type expr: Arrow
                                                                                   └──Type expr: Constructor: tree
-                                                                                     └──Type expr: Variable: 26390
+                                                                                     └──Type expr: Variable: 274
                                                                                   └──Type expr: Arrow
                                                                                      └──Type expr: Constructor: list
-                                                                                        └──Type expr: Variable: 26390
+                                                                                        └──Type expr: Variable: 274
                                                                                      └──Type expr: Constructor: list
-                                                                                        └──Type expr: Variable: 26390
+                                                                                        └──Type expr: Variable: 274
                                                                                └──Desc: Variable
                                                                                   └──Variable: loop
                                                                             └──Expression:
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26390
+                                                                                  └──Type expr: Variable: 274
                                                                                └──Desc: Variable
                                                                                   └──Variable: l
                                                                       └──Expression:
                                                                          └──Type expr: Constructor: list
-                                                                            └──Type expr: Variable: 26390
+                                                                            └──Type expr: Variable: 274
                                                                          └──Desc: Construct
                                                                             └──Constructor description:
                                                                                └──Name: Cons
                                                                                └──Constructor argument type:
                                                                                   └──Type expr: Tuple
-                                                                                     └──Type expr: Variable: 26390
+                                                                                     └──Type expr: Variable: 274
                                                                                      └──Type expr: Constructor: list
-                                                                                        └──Type expr: Variable: 26390
+                                                                                        └──Type expr: Variable: 274
                                                                                └──Constructor type:
                                                                                   └──Type expr: Constructor: list
-                                                                                     └──Type expr: Variable: 26390
+                                                                                     └──Type expr: Variable: 274
                                                                             └──Expression:
                                                                                └──Type expr: Tuple
-                                                                                  └──Type expr: Variable: 26390
+                                                                                  └──Type expr: Variable: 274
                                                                                   └──Type expr: Constructor: list
-                                                                                     └──Type expr: Variable: 26390
+                                                                                     └──Type expr: Variable: 274
                                                                                └──Desc: Tuple
                                                                                   └──Expression:
-                                                                                     └──Type expr: Variable: 26390
+                                                                                     └──Type expr: Variable: 274
                                                                                      └──Desc: Variable
                                                                                         └──Variable: x
                                                                                   └──Expression:
                                                                                      └──Type expr: Constructor: list
-                                                                                        └──Type expr: Variable: 26390
+                                                                                        └──Type expr: Variable: 274
                                                                                      └──Desc: Application
                                                                                         └──Expression:
                                                                                            └──Type expr: Arrow
                                                                                               └──Type expr: Constructor: list
-                                                                                                 └──Type expr: Variable: 26390
+                                                                                                 └──Type expr: Variable: 274
                                                                                               └──Type expr: Constructor: list
-                                                                                                 └──Type expr: Variable: 26390
+                                                                                                 └──Type expr: Variable: 274
                                                                                            └──Desc: Application
                                                                                               └──Expression:
                                                                                                  └──Type expr: Arrow
                                                                                                     └──Type expr: Constructor: tree
-                                                                                                       └──Type expr: Variable: 26390
+                                                                                                       └──Type expr: Variable: 274
                                                                                                     └──Type expr: Arrow
                                                                                                        └──Type expr: Constructor: list
-                                                                                                          └──Type expr: Variable: 26390
+                                                                                                          └──Type expr: Variable: 274
                                                                                                        └──Type expr: Constructor: list
-                                                                                                          └──Type expr: Variable: 26390
+                                                                                                          └──Type expr: Variable: 274
                                                                                                  └──Desc: Variable
                                                                                                     └──Variable: loop
                                                                                               └──Expression:
                                                                                                  └──Type expr: Constructor: tree
-                                                                                                    └──Type expr: Variable: 26390
+                                                                                                    └──Type expr: Variable: 274
                                                                                                  └──Desc: Variable
                                                                                                     └──Variable: r
                                                                                         └──Expression:
                                                                                            └──Type expr: Constructor: list
-                                                                                              └──Type expr: Variable: 26390
+                                                                                              └──Type expr: Variable: 274
                                                                                            └──Desc: Variable
                                                                                               └──Variable: acc
                                └──Expression:
                                   └──Type expr: Arrow
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 26413
+                                        └──Type expr: Variable: 297
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 26413
+                                        └──Type expr: Variable: 297
                                   └──Desc: Application
                                      └──Expression:
                                         └──Type expr: Arrow
                                            └──Type expr: Constructor: tree
-                                              └──Type expr: Variable: 26413
+                                              └──Type expr: Variable: 297
                                            └──Type expr: Arrow
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 26413
+                                                 └──Type expr: Variable: 297
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 26413
+                                                 └──Type expr: Variable: 297
                                         └──Desc: Variable
                                            └──Variable: loop
-                                           └──Type expr: Variable: 26413
+                                           └──Type expr: Variable: 297
                                      └──Expression:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 26413
+                                           └──Type expr: Variable: 297
                                         └──Desc: Variable
                                            └──Variable: t
        └──Structure item: Let
@@ -4971,234 +4971,234 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 26478
+                         └──Type expr: Variable: 362
                       └──Type expr: Arrow
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26478
+                            └──Type expr: Variable: 362
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26478
+                            └──Type expr: Variable: 362
                    └──Desc: Variable: pre_order
                 └──Abstraction:
                    └──Variables:
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 26478
+                            └──Type expr: Variable: 362
                          └──Type expr: Arrow
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 26478
+                               └──Type expr: Variable: 362
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 26478
+                               └──Type expr: Variable: 362
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 26478
+                               └──Type expr: Variable: 362
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 26478
+                                  └──Type expr: Variable: 362
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 26478
+                                  └──Type expr: Variable: 362
                             └──Desc: Let rec
                                └──Value bindings:
                                   └──Value binding:
                                      └──Variable: loop
                                      └──Abstraction:
-                                        └──Variables: 26448
+                                        └──Variables: 332
                                         └──Expression:
                                            └──Type expr: Arrow
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 26448
+                                                 └──Type expr: Variable: 332
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26448
+                                                    └──Type expr: Variable: 332
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26448
+                                                    └──Type expr: Variable: 332
                                            └──Desc: Function
                                               └──Pattern:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26448
+                                                    └──Type expr: Variable: 332
                                                  └──Desc: Variable: t
                                               └──Expression:
                                                  └──Type expr: Arrow
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26448
+                                                       └──Type expr: Variable: 332
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26448
+                                                       └──Type expr: Variable: 332
                                                  └──Desc: Function
                                                     └──Pattern:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26448
+                                                          └──Type expr: Variable: 332
                                                        └──Desc: Variable: acc
                                                     └──Expression:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26448
+                                                          └──Type expr: Variable: 332
                                                        └──Desc: Match
                                                           └──Expression:
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 26448
+                                                                └──Type expr: Variable: 332
                                                              └──Desc: Variable
                                                                 └──Variable: t
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 26448
+                                                             └──Type expr: Variable: 332
                                                           └──Cases:
                                                              └──Case:
                                                                 └──Pattern:
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 26448
+                                                                      └──Type expr: Variable: 332
                                                                    └──Desc: Construct
                                                                       └──Constructor description:
                                                                          └──Name: Lf
                                                                          └──Constructor type:
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26448
+                                                                               └──Type expr: Variable: 332
                                                                 └──Expression:
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26448
+                                                                      └──Type expr: Variable: 332
                                                                    └──Desc: Variable
                                                                       └──Variable: acc
                                                              └──Case:
                                                                 └──Pattern:
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 26448
+                                                                      └──Type expr: Variable: 332
                                                                    └──Desc: Construct
                                                                       └──Constructor description:
                                                                          └──Name: Br
                                                                          └──Constructor argument type:
                                                                             └──Type expr: Tuple
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26448
-                                                                               └──Type expr: Variable: 26448
+                                                                                  └──Type expr: Variable: 332
+                                                                               └──Type expr: Variable: 332
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26448
+                                                                                  └──Type expr: Variable: 332
                                                                          └──Constructor type:
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26448
+                                                                               └──Type expr: Variable: 332
                                                                       └──Pattern:
                                                                          └──Type expr: Tuple
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26448
-                                                                            └──Type expr: Variable: 26448
+                                                                               └──Type expr: Variable: 332
+                                                                            └──Type expr: Variable: 332
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26448
+                                                                               └──Type expr: Variable: 332
                                                                          └──Desc: Tuple
                                                                             └──Pattern:
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26448
+                                                                                  └──Type expr: Variable: 332
                                                                                └──Desc: Variable: l
                                                                             └──Pattern:
-                                                                               └──Type expr: Variable: 26448
+                                                                               └──Type expr: Variable: 332
                                                                                └──Desc: Variable: x
                                                                             └──Pattern:
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26448
+                                                                                  └──Type expr: Variable: 332
                                                                                └──Desc: Variable: r
                                                                 └──Expression:
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26448
+                                                                      └──Type expr: Variable: 332
                                                                    └──Desc: Construct
                                                                       └──Constructor description:
                                                                          └──Name: Cons
                                                                          └──Constructor argument type:
                                                                             └──Type expr: Tuple
-                                                                               └──Type expr: Variable: 26448
+                                                                               └──Type expr: Variable: 332
                                                                                └──Type expr: Constructor: list
-                                                                                  └──Type expr: Variable: 26448
+                                                                                  └──Type expr: Variable: 332
                                                                          └──Constructor type:
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: 26448
+                                                                               └──Type expr: Variable: 332
                                                                       └──Expression:
                                                                          └──Type expr: Tuple
-                                                                            └──Type expr: Variable: 26448
+                                                                            └──Type expr: Variable: 332
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: 26448
+                                                                               └──Type expr: Variable: 332
                                                                          └──Desc: Tuple
                                                                             └──Expression:
-                                                                               └──Type expr: Variable: 26448
+                                                                               └──Type expr: Variable: 332
                                                                                └──Desc: Variable
                                                                                   └──Variable: x
                                                                             └──Expression:
                                                                                └──Type expr: Constructor: list
-                                                                                  └──Type expr: Variable: 26448
+                                                                                  └──Type expr: Variable: 332
                                                                                └──Desc: Application
                                                                                   └──Expression:
                                                                                      └──Type expr: Arrow
                                                                                         └──Type expr: Constructor: list
-                                                                                           └──Type expr: Variable: 26448
+                                                                                           └──Type expr: Variable: 332
                                                                                         └──Type expr: Constructor: list
-                                                                                           └──Type expr: Variable: 26448
+                                                                                           └──Type expr: Variable: 332
                                                                                      └──Desc: Application
                                                                                         └──Expression:
                                                                                            └──Type expr: Arrow
                                                                                               └──Type expr: Constructor: tree
-                                                                                                 └──Type expr: Variable: 26448
+                                                                                                 └──Type expr: Variable: 332
                                                                                               └──Type expr: Arrow
                                                                                                  └──Type expr: Constructor: list
-                                                                                                    └──Type expr: Variable: 26448
+                                                                                                    └──Type expr: Variable: 332
                                                                                                  └──Type expr: Constructor: list
-                                                                                                    └──Type expr: Variable: 26448
+                                                                                                    └──Type expr: Variable: 332
                                                                                            └──Desc: Variable
                                                                                               └──Variable: loop
                                                                                         └──Expression:
                                                                                            └──Type expr: Constructor: tree
-                                                                                              └──Type expr: Variable: 26448
+                                                                                              └──Type expr: Variable: 332
                                                                                            └──Desc: Variable
                                                                                               └──Variable: l
                                                                                   └──Expression:
                                                                                      └──Type expr: Constructor: list
-                                                                                        └──Type expr: Variable: 26448
+                                                                                        └──Type expr: Variable: 332
                                                                                      └──Desc: Application
                                                                                         └──Expression:
                                                                                            └──Type expr: Arrow
                                                                                               └──Type expr: Constructor: list
-                                                                                                 └──Type expr: Variable: 26448
+                                                                                                 └──Type expr: Variable: 332
                                                                                               └──Type expr: Constructor: list
-                                                                                                 └──Type expr: Variable: 26448
+                                                                                                 └──Type expr: Variable: 332
                                                                                            └──Desc: Application
                                                                                               └──Expression:
                                                                                                  └──Type expr: Arrow
                                                                                                     └──Type expr: Constructor: tree
-                                                                                                       └──Type expr: Variable: 26448
+                                                                                                       └──Type expr: Variable: 332
                                                                                                     └──Type expr: Arrow
                                                                                                        └──Type expr: Constructor: list
-                                                                                                          └──Type expr: Variable: 26448
+                                                                                                          └──Type expr: Variable: 332
                                                                                                        └──Type expr: Constructor: list
-                                                                                                          └──Type expr: Variable: 26448
+                                                                                                          └──Type expr: Variable: 332
                                                                                                  └──Desc: Variable
                                                                                                     └──Variable: loop
                                                                                               └──Expression:
                                                                                                  └──Type expr: Constructor: tree
-                                                                                                    └──Type expr: Variable: 26448
+                                                                                                    └──Type expr: Variable: 332
                                                                                                  └──Desc: Variable
                                                                                                     └──Variable: r
                                                                                         └──Expression:
                                                                                            └──Type expr: Constructor: list
-                                                                                              └──Type expr: Variable: 26448
+                                                                                              └──Type expr: Variable: 332
                                                                                            └──Desc: Variable
                                                                                               └──Variable: acc
                                └──Expression:
                                   └──Type expr: Arrow
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 26478
+                                        └──Type expr: Variable: 362
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 26478
+                                        └──Type expr: Variable: 362
                                   └──Desc: Application
                                      └──Expression:
                                         └──Type expr: Arrow
                                            └──Type expr: Constructor: tree
-                                              └──Type expr: Variable: 26478
+                                              └──Type expr: Variable: 362
                                            └──Type expr: Arrow
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 26478
+                                                 └──Type expr: Variable: 362
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 26478
+                                                 └──Type expr: Variable: 362
                                         └──Desc: Variable
                                            └──Variable: loop
-                                           └──Type expr: Variable: 26478
+                                           └──Type expr: Variable: 362
                                      └──Expression:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 26478
+                                           └──Type expr: Variable: 362
                                         └──Desc: Variable
                                            └──Variable: t
        └──Structure item: Let
@@ -5207,234 +5207,234 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 26543
+                         └──Type expr: Variable: 427
                       └──Type expr: Arrow
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26543
+                            └──Type expr: Variable: 427
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26543
+                            └──Type expr: Variable: 427
                    └──Desc: Variable: post_order
                 └──Abstraction:
                    └──Variables:
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 26543
+                            └──Type expr: Variable: 427
                          └──Type expr: Arrow
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 26543
+                               └──Type expr: Variable: 427
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 26543
+                               └──Type expr: Variable: 427
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 26543
+                               └──Type expr: Variable: 427
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 26543
+                                  └──Type expr: Variable: 427
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 26543
+                                  └──Type expr: Variable: 427
                             └──Desc: Let rec
                                └──Value bindings:
                                   └──Value binding:
                                      └──Variable: loop
                                      └──Abstraction:
-                                        └──Variables: 26527
+                                        └──Variables: 411
                                         └──Expression:
                                            └──Type expr: Arrow
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 26527
+                                                 └──Type expr: Variable: 411
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26527
+                                                    └──Type expr: Variable: 411
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26527
+                                                    └──Type expr: Variable: 411
                                            └──Desc: Function
                                               └──Pattern:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 26527
+                                                    └──Type expr: Variable: 411
                                                  └──Desc: Variable: t
                                               └──Expression:
                                                  └──Type expr: Arrow
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26527
+                                                       └──Type expr: Variable: 411
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26527
+                                                       └──Type expr: Variable: 411
                                                  └──Desc: Function
                                                     └──Pattern:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26527
+                                                          └──Type expr: Variable: 411
                                                        └──Desc: Variable: acc
                                                     └──Expression:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26527
+                                                          └──Type expr: Variable: 411
                                                        └──Desc: Match
                                                           └──Expression:
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 26527
+                                                                └──Type expr: Variable: 411
                                                              └──Desc: Variable
                                                                 └──Variable: t
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 26527
+                                                             └──Type expr: Variable: 411
                                                           └──Cases:
                                                              └──Case:
                                                                 └──Pattern:
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 26527
+                                                                      └──Type expr: Variable: 411
                                                                    └──Desc: Construct
                                                                       └──Constructor description:
                                                                          └──Name: Lf
                                                                          └──Constructor type:
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26527
+                                                                               └──Type expr: Variable: 411
                                                                 └──Expression:
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26527
+                                                                      └──Type expr: Variable: 411
                                                                    └──Desc: Variable
                                                                       └──Variable: acc
                                                              └──Case:
                                                                 └──Pattern:
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 26527
+                                                                      └──Type expr: Variable: 411
                                                                    └──Desc: Construct
                                                                       └──Constructor description:
                                                                          └──Name: Br
                                                                          └──Constructor argument type:
                                                                             └──Type expr: Tuple
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26527
-                                                                               └──Type expr: Variable: 26527
+                                                                                  └──Type expr: Variable: 411
+                                                                               └──Type expr: Variable: 411
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26527
+                                                                                  └──Type expr: Variable: 411
                                                                          └──Constructor type:
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26527
+                                                                               └──Type expr: Variable: 411
                                                                       └──Pattern:
                                                                          └──Type expr: Tuple
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26527
-                                                                            └──Type expr: Variable: 26527
+                                                                               └──Type expr: Variable: 411
+                                                                            └──Type expr: Variable: 411
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 26527
+                                                                               └──Type expr: Variable: 411
                                                                          └──Desc: Tuple
                                                                             └──Pattern:
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26527
+                                                                                  └──Type expr: Variable: 411
                                                                                └──Desc: Variable: l
                                                                             └──Pattern:
-                                                                               └──Type expr: Variable: 26527
+                                                                               └──Type expr: Variable: 411
                                                                                └──Desc: Variable: x
                                                                             └──Pattern:
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26527
+                                                                                  └──Type expr: Variable: 411
                                                                                └──Desc: Variable: r
                                                                 └──Expression:
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26527
+                                                                      └──Type expr: Variable: 411
                                                                    └──Desc: Application
                                                                       └──Expression:
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: 26527
+                                                                               └──Type expr: Variable: 411
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: 26527
+                                                                               └──Type expr: Variable: 411
                                                                          └──Desc: Application
                                                                             └──Expression:
                                                                                └──Type expr: Arrow
                                                                                   └──Type expr: Constructor: tree
-                                                                                     └──Type expr: Variable: 26527
+                                                                                     └──Type expr: Variable: 411
                                                                                   └──Type expr: Arrow
                                                                                      └──Type expr: Constructor: list
-                                                                                        └──Type expr: Variable: 26527
+                                                                                        └──Type expr: Variable: 411
                                                                                      └──Type expr: Constructor: list
-                                                                                        └──Type expr: Variable: 26527
+                                                                                        └──Type expr: Variable: 411
                                                                                └──Desc: Variable
                                                                                   └──Variable: loop
                                                                             └──Expression:
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 26527
+                                                                                  └──Type expr: Variable: 411
                                                                                └──Desc: Variable
                                                                                   └──Variable: l
                                                                       └──Expression:
                                                                          └──Type expr: Constructor: list
-                                                                            └──Type expr: Variable: 26527
+                                                                            └──Type expr: Variable: 411
                                                                          └──Desc: Application
                                                                             └──Expression:
                                                                                └──Type expr: Arrow
                                                                                   └──Type expr: Constructor: list
-                                                                                     └──Type expr: Variable: 26527
+                                                                                     └──Type expr: Variable: 411
                                                                                   └──Type expr: Constructor: list
-                                                                                     └──Type expr: Variable: 26527
+                                                                                     └──Type expr: Variable: 411
                                                                                └──Desc: Application
                                                                                   └──Expression:
                                                                                      └──Type expr: Arrow
                                                                                         └──Type expr: Constructor: tree
-                                                                                           └──Type expr: Variable: 26527
+                                                                                           └──Type expr: Variable: 411
                                                                                         └──Type expr: Arrow
                                                                                            └──Type expr: Constructor: list
-                                                                                              └──Type expr: Variable: 26527
+                                                                                              └──Type expr: Variable: 411
                                                                                            └──Type expr: Constructor: list
-                                                                                              └──Type expr: Variable: 26527
+                                                                                              └──Type expr: Variable: 411
                                                                                      └──Desc: Variable
                                                                                         └──Variable: loop
                                                                                   └──Expression:
                                                                                      └──Type expr: Constructor: tree
-                                                                                        └──Type expr: Variable: 26527
+                                                                                        └──Type expr: Variable: 411
                                                                                      └──Desc: Variable
                                                                                         └──Variable: r
                                                                             └──Expression:
                                                                                └──Type expr: Constructor: list
-                                                                                  └──Type expr: Variable: 26527
+                                                                                  └──Type expr: Variable: 411
                                                                                └──Desc: Construct
                                                                                   └──Constructor description:
                                                                                      └──Name: Cons
                                                                                      └──Constructor argument type:
                                                                                         └──Type expr: Tuple
-                                                                                           └──Type expr: Variable: 26527
+                                                                                           └──Type expr: Variable: 411
                                                                                            └──Type expr: Constructor: list
-                                                                                              └──Type expr: Variable: 26527
+                                                                                              └──Type expr: Variable: 411
                                                                                      └──Constructor type:
                                                                                         └──Type expr: Constructor: list
-                                                                                           └──Type expr: Variable: 26527
+                                                                                           └──Type expr: Variable: 411
                                                                                   └──Expression:
                                                                                      └──Type expr: Tuple
-                                                                                        └──Type expr: Variable: 26527
+                                                                                        └──Type expr: Variable: 411
                                                                                         └──Type expr: Constructor: list
-                                                                                           └──Type expr: Variable: 26527
+                                                                                           └──Type expr: Variable: 411
                                                                                      └──Desc: Tuple
                                                                                         └──Expression:
-                                                                                           └──Type expr: Variable: 26527
+                                                                                           └──Type expr: Variable: 411
                                                                                            └──Desc: Variable
                                                                                               └──Variable: x
                                                                                         └──Expression:
                                                                                            └──Type expr: Constructor: list
-                                                                                              └──Type expr: Variable: 26527
+                                                                                              └──Type expr: Variable: 411
                                                                                            └──Desc: Variable
                                                                                               └──Variable: acc
                                └──Expression:
                                   └──Type expr: Arrow
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 26543
+                                        └──Type expr: Variable: 427
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 26543
+                                        └──Type expr: Variable: 427
                                   └──Desc: Application
                                      └──Expression:
                                         └──Type expr: Arrow
                                            └──Type expr: Constructor: tree
-                                              └──Type expr: Variable: 26543
+                                              └──Type expr: Variable: 427
                                            └──Type expr: Arrow
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 26543
+                                                 └──Type expr: Variable: 427
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 26543
+                                                 └──Type expr: Variable: 427
                                         └──Desc: Variable
                                            └──Variable: loop
-                                           └──Type expr: Variable: 26543
+                                           └──Type expr: Variable: 427
                                      └──Expression:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 26543
+                                           └──Type expr: Variable: 427
                                         └──Desc: Variable
                                            └──Variable: t |}]
 
@@ -5479,22 +5479,22 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 26546
+                   └──Constructor alphas: 430
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 26546
+                         └──Type expr: Variable: 430
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 26546
+                   └──Constructor alphas: 430
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 26546
+                         └──Type expr: Variable: 430
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 26546
+                         └──Type expr: Variable: 430
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26546
+                            └──Type expr: Variable: 430
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -5959,282 +5959,282 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 26752
+                   └──Constructor alphas: 201
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 26752
+                         └──Type expr: Variable: 201
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 26752
+                   └──Constructor alphas: 201
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 26752
+                         └──Type expr: Variable: 201
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 26752
+                         └──Type expr: Variable: 201
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 26752
+                            └──Type expr: Variable: 201
        └──Structure item: Primitive
           └──Value description:
              └──Name: map
              └──Scheme:
-                └──Variables: 26758,26757
+                └──Variables: 1,0
                 └──Type expr: Arrow
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 26757
-                      └──Type expr: Variable: 26758
+                      └──Type expr: Variable: 0
+                      └──Type expr: Variable: 1
                    └──Type expr: Arrow
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 26757
+                         └──Type expr: Variable: 0
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 26758
+                         └──Type expr: Variable: 1
              └──Primitive name: %map
        └──Structure item: Primitive
           └──Value description:
              └──Name: hd
              └──Scheme:
-                └──Variables: 26769
+                └──Variables: 12
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: 26769
-                   └──Type expr: Variable: 26769
+                      └──Type expr: Variable: 12
+                   └──Type expr: Variable: 12
              └──Primitive name: %hd
        └──Structure item: Primitive
           └──Value description:
              └──Name: tl
              └──Scheme:
-                └──Variables: 26774
+                └──Variables: 17
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: 26774
+                      └──Type expr: Variable: 17
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: 26774
+                      └──Type expr: Variable: 17
              └──Primitive name: %tl
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Variable: transpose
                 └──Abstraction:
-                   └──Variables: 26824
+                   └──Variables: 67
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: list
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 26824
+                               └──Type expr: Variable: 67
                          └──Type expr: Constructor: list
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 26824
+                               └──Type expr: Variable: 67
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: list
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 26824
+                                  └──Type expr: Variable: 67
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: list
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 26824
+                                  └──Type expr: Variable: 67
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: list
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 26824
+                                        └──Type expr: Variable: 67
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: list
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 26824
+                                     └──Type expr: Variable: 67
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: list
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 26824
+                                              └──Type expr: Variable: 67
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Cons
                                               └──Constructor argument type:
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26824
+                                                       └──Type expr: Variable: 67
                                                     └──Type expr: Constructor: list
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26824
+                                                          └──Type expr: Variable: 67
                                               └──Constructor type:
                                                  └──Type expr: Constructor: list
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26824
+                                                       └──Type expr: Variable: 67
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26824
+                                                    └──Type expr: Variable: 67
                                                  └──Type expr: Constructor: list
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26824
+                                                       └──Type expr: Variable: 67
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26824
+                                                       └──Type expr: Variable: 67
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Nil
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26824
+                                                                └──Type expr: Variable: 67
                                                  └──Pattern:
                                                     └──Type expr: Constructor: list
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26824
+                                                          └──Type expr: Variable: 67
                                                     └──Desc: Any
                                      └──Expression:
                                         └──Type expr: Constructor: list
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 26824
+                                              └──Type expr: Variable: 67
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Nil
                                               └──Constructor type:
                                                  └──Type expr: Constructor: list
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26824
+                                                       └──Type expr: Variable: 67
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: list
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 26824
+                                              └──Type expr: Variable: 67
                                         └──Desc: Variable: rows
                                      └──Expression:
                                         └──Type expr: Constructor: list
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 26824
+                                              └──Type expr: Variable: 67
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Cons
                                               └──Constructor argument type:
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26824
+                                                       └──Type expr: Variable: 67
                                                     └──Type expr: Constructor: list
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26824
+                                                          └──Type expr: Variable: 67
                                               └──Constructor type:
                                                  └──Type expr: Constructor: list
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26824
+                                                       └──Type expr: Variable: 67
                                            └──Expression:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 26824
+                                                    └──Type expr: Variable: 67
                                                  └──Type expr: Constructor: list
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26824
+                                                       └──Type expr: Variable: 67
                                               └──Desc: Tuple
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 26824
+                                                       └──Type expr: Variable: 67
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: list
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26824
+                                                                   └──Type expr: Variable: 67
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26824
+                                                                └──Type expr: Variable: 67
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Constructor: list
-                                                                         └──Type expr: Variable: 26824
-                                                                      └──Type expr: Variable: 26824
+                                                                         └──Type expr: Variable: 67
+                                                                      └──Type expr: Variable: 67
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Constructor: list
                                                                          └──Type expr: Constructor: list
-                                                                            └──Type expr: Variable: 26824
+                                                                            └──Type expr: Variable: 67
                                                                       └──Type expr: Constructor: list
-                                                                         └──Type expr: Variable: 26824
+                                                                         └──Type expr: Variable: 67
                                                                 └──Desc: Variable
                                                                    └──Variable: map
-                                                                   └──Type expr: Variable: 26824
+                                                                   └──Type expr: Variable: 67
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26824
+                                                                      └──Type expr: Variable: 67
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26824
-                                                                   └──Type expr: Variable: 26824
+                                                                      └──Type expr: Variable: 67
+                                                                   └──Type expr: Variable: 67
                                                                 └──Desc: Variable
                                                                    └──Variable: hd
-                                                                   └──Type expr: Variable: 26824
+                                                                   └──Type expr: Variable: 67
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26824
+                                                                └──Type expr: Variable: 67
                                                           └──Desc: Variable
                                                              └──Variable: rows
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 26824
+                                                          └──Type expr: Variable: 67
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: list
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26824
+                                                                   └──Type expr: Variable: 67
                                                              └──Type expr: Constructor: list
                                                                 └──Type expr: Constructor: list
-                                                                   └──Type expr: Variable: 26824
+                                                                   └──Type expr: Variable: 67
                                                           └──Desc: Variable
                                                              └──Variable: transpose
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
                                                              └──Type expr: Constructor: list
-                                                                └──Type expr: Variable: 26824
+                                                                └──Type expr: Variable: 67
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: list
                                                                       └──Type expr: Constructor: list
-                                                                         └──Type expr: Variable: 26824
+                                                                         └──Type expr: Variable: 67
                                                                    └──Type expr: Constructor: list
                                                                       └──Type expr: Constructor: list
-                                                                         └──Type expr: Variable: 26824
+                                                                         └──Type expr: Variable: 67
                                                                 └──Desc: Application
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: 26824
+                                                                               └──Type expr: Variable: 67
                                                                             └──Type expr: Constructor: list
-                                                                               └──Type expr: Variable: 26824
+                                                                               └──Type expr: Variable: 67
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Constructor: list
                                                                                └──Type expr: Constructor: list
-                                                                                  └──Type expr: Variable: 26824
+                                                                                  └──Type expr: Variable: 67
                                                                             └──Type expr: Constructor: list
                                                                                └──Type expr: Constructor: list
-                                                                                  └──Type expr: Variable: 26824
+                                                                                  └──Type expr: Variable: 67
                                                                       └──Desc: Variable
                                                                          └──Variable: map
                                                                          └──Type expr: Constructor: list
-                                                                            └──Type expr: Variable: 26824
+                                                                            └──Type expr: Variable: 67
                                                                          └──Type expr: Constructor: list
-                                                                            └──Type expr: Variable: 26824
+                                                                            └──Type expr: Variable: 67
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
                                                                          └──Type expr: Constructor: list
-                                                                            └──Type expr: Variable: 26824
+                                                                            └──Type expr: Variable: 67
                                                                          └──Type expr: Constructor: list
-                                                                            └──Type expr: Variable: 26824
+                                                                            └──Type expr: Variable: 67
                                                                       └──Desc: Variable
                                                                          └──Variable: tl
-                                                                         └──Type expr: Variable: 26824
+                                                                         └──Type expr: Variable: 67
                                                              └──Expression:
                                                                 └──Type expr: Constructor: list
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 26824
+                                                                      └──Type expr: Variable: 67
                                                                 └──Desc: Variable
                                                                    └──Variable: rows
        └──Structure item: Let
@@ -6698,226 +6698,226 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Lf
-                   └──Constructor alphas: 27002
+                   └──Constructor alphas: 245
                    └──Constructor type:
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 27002
+                         └──Type expr: Variable: 245
                 └──Constructor declaration:
                    └──Constructor name: Br
-                   └──Constructor alphas: 27002
+                   └──Constructor alphas: 245
                    └──Constructor type:
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 27002
+                         └──Type expr: Variable: 245
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 27002
-                         └──Type expr: Variable: 27002
+                            └──Type expr: Variable: 245
+                         └──Type expr: Variable: 245
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 27002
+                            └──Type expr: Variable: 245
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Variable: cons
                 └──Abstraction:
-                   └──Variables: 27071
+                   └──Variables: 61
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 27071
+                            └──Type expr: Variable: 61
                          └──Type expr: Arrow
-                            └──Type expr: Variable: 27071
+                            └──Type expr: Variable: 61
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 27071
+                               └──Type expr: Variable: 61
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 27071
+                               └──Type expr: Variable: 61
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: 27071
+                               └──Type expr: Variable: 61
                                └──Type expr: Constructor: tree
-                                  └──Type expr: Variable: 27071
+                                  └──Type expr: Variable: 61
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: 27071
+                                  └──Type expr: Variable: 61
                                   └──Desc: Variable: x
                                └──Expression:
                                   └──Type expr: Constructor: tree
-                                     └──Type expr: Variable: 27071
+                                     └──Type expr: Variable: 61
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 27071
+                                           └──Type expr: Variable: 61
                                         └──Desc: Variable
                                            └──Variable: t
                                      └──Type expr: Constructor: tree
-                                        └──Type expr: Variable: 27071
+                                        └──Type expr: Variable: 61
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27071
+                                                 └──Type expr: Variable: 61
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Lf
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
                                            └──Expression:
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27071
+                                                 └──Type expr: Variable: 61
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Br
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
-                                                          └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
+                                                          └──Type expr: Variable: 61
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
                                                  └──Expression:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27071
-                                                       └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
+                                                       └──Type expr: Variable: 61
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
                                                     └──Desc: Tuple
                                                        └──Expression:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Lf
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 27071
+                                                                      └──Type expr: Variable: 61
                                                        └──Expression:
-                                                          └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
                                                           └──Desc: Variable
                                                              └──Variable: x
                                                        └──Expression:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Lf
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 27071
+                                                                      └──Type expr: Variable: 61
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27071
+                                                 └──Type expr: Variable: 61
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Br
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
-                                                          └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
+                                                          └──Type expr: Variable: 61
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
                                                  └──Pattern:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27071
-                                                       └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
+                                                       └──Type expr: Variable: 61
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
                                                     └──Desc: Tuple
                                                        └──Pattern:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
                                                           └──Desc: Variable: l
                                                        └──Pattern:
-                                                          └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
                                                           └──Desc: Variable: y
                                                        └──Pattern:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
                                                           └──Desc: Variable: r
                                            └──Expression:
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27071
+                                                 └──Type expr: Variable: 61
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Br
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
-                                                          └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
+                                                          └──Type expr: Variable: 61
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
                                                  └──Expression:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27071
-                                                       └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
+                                                       └──Type expr: Variable: 61
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
                                                     └──Desc: Tuple
                                                        └──Expression:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
-                                                                   └──Type expr: Variable: 27071
+                                                                   └──Type expr: Variable: 61
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 27071
+                                                                      └──Type expr: Variable: 61
                                                                 └──Desc: Application
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
                                                                          └──Type expr: Constructor: tree
-                                                                            └──Type expr: Variable: 27071
+                                                                            └──Type expr: Variable: 61
                                                                          └──Type expr: Arrow
-                                                                            └──Type expr: Variable: 27071
+                                                                            └──Type expr: Variable: 61
                                                                             └──Type expr: Constructor: tree
-                                                                               └──Type expr: Variable: 27071
+                                                                               └──Type expr: Variable: 61
                                                                       └──Desc: Variable
                                                                          └──Variable: cons
                                                                    └──Expression:
                                                                       └──Type expr: Constructor: tree
-                                                                         └──Type expr: Variable: 27071
+                                                                         └──Type expr: Variable: 61
                                                                       └──Desc: Variable
                                                                          └──Variable: l
                                                              └──Expression:
-                                                                └──Type expr: Variable: 27071
+                                                                └──Type expr: Variable: 61
                                                                 └──Desc: Variable
                                                                    └──Variable: y
                                                        └──Expression:
-                                                          └──Type expr: Variable: 27071
+                                                          └──Type expr: Variable: 61
                                                           └──Desc: Variable
                                                              └──Variable: x
                                                        └──Expression:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27071
+                                                             └──Type expr: Variable: 61
                                                           └──Desc: Variable
                                                              └──Variable: r
        └──Structure item: Primitive
           └──Value description:
              └──Name: raise
              └──Scheme:
-                └──Variables: 27079
+                └──Variables: 69
                 └──Type expr: Arrow
                    └──Type expr: Constructor: exn
-                   └──Type expr: Variable: 27079
+                   └──Type expr: Variable: 69
              └──Primitive name: %raise
        └──Structure item: Exception
           └──Type exception:
@@ -6938,63 +6938,63 @@ let%expect_test "" =
              └──Value binding:
                 └──Variable: uncons
                 └──Abstraction:
-                   └──Variables: 27159
+                   └──Variables: 149
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 27159
+                            └──Type expr: Variable: 149
                          └──Type expr: Tuple
-                            └──Type expr: Variable: 27159
+                            └──Type expr: Variable: 149
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 27159
+                               └──Type expr: Variable: 149
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 27159
+                               └──Type expr: Variable: 149
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Tuple
-                               └──Type expr: Variable: 27159
+                               └──Type expr: Variable: 149
                                └──Type expr: Constructor: tree
-                                  └──Type expr: Variable: 27159
+                                  └──Type expr: Variable: 149
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: tree
-                                     └──Type expr: Variable: 27159
+                                     └──Type expr: Variable: 149
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: tree
-                                  └──Type expr: Variable: 27159
+                                  └──Type expr: Variable: 149
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 27159
+                                           └──Type expr: Variable: 149
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Lf
                                               └──Constructor type:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
                                      └──Expression:
                                         └──Type expr: Tuple
-                                           └──Type expr: Variable: 27159
+                                           └──Type expr: Variable: 149
                                            └──Type expr: Constructor: tree
-                                              └──Type expr: Variable: 27159
+                                              └──Type expr: Variable: 149
                                         └──Desc: Application
                                            └──Expression:
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: exn
                                                  └──Type expr: Tuple
-                                                    └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
                                               └──Desc: Variable
                                                  └──Variable: raise
                                                  └──Type expr: Tuple
-                                                    └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
                                            └──Expression:
                                               └──Type expr: Constructor: exn
                                               └──Desc: Construct
@@ -7010,194 +7010,194 @@ let%expect_test "" =
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 27159
+                                           └──Type expr: Variable: 149
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Br
                                               └──Constructor argument type:
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27159
-                                                    └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
+                                                    └──Type expr: Variable: 149
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
                                               └──Constructor type:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27159
-                                                 └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
+                                                 └──Type expr: Variable: 149
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Lf
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27159
+                                                                └──Type expr: Variable: 149
                                                  └──Pattern:
-                                                    └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
                                                     └──Desc: Variable: x
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Lf
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27159
+                                                                └──Type expr: Variable: 149
                                      └──Expression:
                                         └──Type expr: Tuple
-                                           └──Type expr: Variable: 27159
+                                           └──Type expr: Variable: 149
                                            └──Type expr: Constructor: tree
-                                              └──Type expr: Variable: 27159
+                                              └──Type expr: Variable: 149
                                         └──Desc: Tuple
                                            └──Expression:
-                                              └──Type expr: Variable: 27159
+                                              └──Type expr: Variable: 149
                                               └──Desc: Variable
                                                  └──Variable: x
                                            └──Expression:
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27159
+                                                 └──Type expr: Variable: 149
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Lf
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27159
+                                                          └──Type expr: Variable: 149
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 27159
+                                           └──Type expr: Variable: 149
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Br
                                               └──Constructor argument type:
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27159
-                                                    └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
+                                                    └──Type expr: Variable: 149
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
                                               └──Constructor type:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27159
-                                                 └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
+                                                 └──Type expr: Variable: 149
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
                                                     └──Desc: Variable: l
                                                  └──Pattern:
-                                                    └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
                                                     └──Desc: Variable: x
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
                                                     └──Desc: Variable: r
                                      └──Expression:
                                         └──Type expr: Tuple
-                                           └──Type expr: Variable: 27159
+                                           └──Type expr: Variable: 149
                                            └──Type expr: Constructor: tree
-                                              └──Type expr: Variable: 27159
+                                              └──Type expr: Variable: 149
                                         └──Desc: Let
                                            └──Value bindings:
                                               └──Value binding:
                                                  └──Pattern:
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27159
+                                                          └──Type expr: Variable: 149
                                                     └──Desc: Tuple
                                                        └──Pattern:
-                                                          └──Type expr: Variable: 27159
+                                                          └──Type expr: Variable: 149
                                                           └──Desc: Variable: y
                                                        └──Pattern:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27159
+                                                             └──Type expr: Variable: 149
                                                           └──Desc: Variable: l'
                                                  └──Abstraction:
                                                     └──Variables:
                                                     └──Expression:
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: 27159
+                                                          └──Type expr: Variable: 149
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27159
+                                                             └──Type expr: Variable: 149
                                                        └──Desc: Application
                                                           └──Expression:
                                                              └──Type expr: Arrow
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27159
+                                                                   └──Type expr: Variable: 149
                                                                 └──Type expr: Tuple
-                                                                   └──Type expr: Variable: 27159
+                                                                   └──Type expr: Variable: 149
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 27159
+                                                                      └──Type expr: Variable: 149
                                                              └──Desc: Variable
                                                                 └──Variable: uncons
                                                           └──Expression:
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27159
+                                                                └──Type expr: Variable: 149
                                                              └──Desc: Variable
                                                                 └──Variable: l
                                            └──Expression:
                                               └──Type expr: Tuple
-                                                 └──Type expr: Variable: 27159
+                                                 └──Type expr: Variable: 149
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
                                               └──Desc: Tuple
                                                  └──Expression:
-                                                    └──Type expr: Variable: 27159
+                                                    └──Type expr: Variable: 149
                                                     └──Desc: Variable
                                                        └──Variable: x
                                                  └──Expression:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27159
+                                                       └──Type expr: Variable: 149
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Br
                                                           └──Constructor argument type:
                                                              └──Type expr: Tuple
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27159
-                                                                └──Type expr: Variable: 27159
+                                                                   └──Type expr: Variable: 149
+                                                                └──Type expr: Variable: 149
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27159
+                                                                   └──Type expr: Variable: 149
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27159
+                                                                └──Type expr: Variable: 149
                                                        └──Expression:
                                                           └──Type expr: Tuple
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27159
-                                                             └──Type expr: Variable: 27159
+                                                                └──Type expr: Variable: 149
+                                                             └──Type expr: Variable: 149
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27159
+                                                                └──Type expr: Variable: 149
                                                           └──Desc: Tuple
                                                              └──Expression:
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27159
+                                                                   └──Type expr: Variable: 149
                                                                 └──Desc: Variable
                                                                    └──Variable: r
                                                              └──Expression:
-                                                                └──Type expr: Variable: 27159
+                                                                └──Type expr: Variable: 149
                                                                 └──Desc: Variable
                                                                    └──Variable: x
                                                              └──Expression:
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27159
+                                                                   └──Type expr: Variable: 149
                                                                 └──Desc: Variable
                                                                    └──Variable: l'
        └──Structure item: Let
@@ -7206,65 +7206,65 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 27176
-                      └──Type expr: Variable: 27176
+                         └──Type expr: Variable: 166
+                      └──Type expr: Variable: 166
                    └──Desc: Variable: hd
                 └──Abstraction:
-                   └──Variables: 27176,27176,27176
+                   └──Variables: 166,166,166
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 27176
-                         └──Type expr: Variable: 27176
+                            └──Type expr: Variable: 166
+                         └──Type expr: Variable: 166
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 27176
+                               └──Type expr: Variable: 166
                             └──Desc: Variable: t
                          └──Expression:
-                            └──Type expr: Variable: 27176
+                            └──Type expr: Variable: 166
                             └──Desc: Let
                                └──Value bindings:
                                   └──Value binding:
                                      └──Pattern:
                                         └──Type expr: Tuple
-                                           └──Type expr: Variable: 27176
+                                           └──Type expr: Variable: 166
                                            └──Type expr: Constructor: tree
-                                              └──Type expr: Variable: 27176
+                                              └──Type expr: Variable: 166
                                         └──Desc: Tuple
                                            └──Pattern:
-                                              └──Type expr: Variable: 27176
+                                              └──Type expr: Variable: 166
                                               └──Desc: Variable: x
                                            └──Pattern:
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27176
+                                                 └──Type expr: Variable: 166
                                               └──Desc: Any
                                      └──Abstraction:
                                         └──Variables:
                                         └──Expression:
                                            └──Type expr: Tuple
-                                              └──Type expr: Variable: 27176
+                                              └──Type expr: Variable: 166
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27176
+                                                 └──Type expr: Variable: 166
                                            └──Desc: Application
                                               └──Expression:
                                                  └──Type expr: Arrow
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27176
+                                                       └──Type expr: Variable: 166
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 27176
+                                                       └──Type expr: Variable: 166
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27176
+                                                          └──Type expr: Variable: 166
                                                  └──Desc: Variable
                                                     └──Variable: uncons
-                                                    └──Type expr: Variable: 27176
+                                                    └──Type expr: Variable: 166
                                               └──Expression:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27176
+                                                    └──Type expr: Variable: 166
                                                  └──Desc: Variable
                                                     └──Variable: t
                                └──Expression:
-                                  └──Type expr: Variable: 27176
+                                  └──Type expr: Variable: 166
                                   └──Desc: Variable
                                      └──Variable: x
        └──Structure item: Let
@@ -7273,69 +7273,69 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 27199
+                         └──Type expr: Variable: 189
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 27199
+                         └──Type expr: Variable: 189
                    └──Desc: Variable: tl
                 └──Abstraction:
-                   └──Variables: 27199,27199
+                   └──Variables: 189,189
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 27199
+                            └──Type expr: Variable: 189
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 27199
+                            └──Type expr: Variable: 189
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 27199
+                               └──Type expr: Variable: 189
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 27199
+                               └──Type expr: Variable: 189
                             └──Desc: Let
                                └──Value bindings:
                                   └──Value binding:
                                      └──Pattern:
                                         └──Type expr: Tuple
-                                           └──Type expr: Variable: 27199
+                                           └──Type expr: Variable: 189
                                            └──Type expr: Constructor: tree
-                                              └──Type expr: Variable: 27199
+                                              └──Type expr: Variable: 189
                                         └──Desc: Tuple
                                            └──Pattern:
-                                              └──Type expr: Variable: 27199
+                                              └──Type expr: Variable: 189
                                               └──Desc: Any
                                            └──Pattern:
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27199
+                                                 └──Type expr: Variable: 189
                                               └──Desc: Variable: t
                                      └──Abstraction:
                                         └──Variables:
                                         └──Expression:
                                            └──Type expr: Tuple
-                                              └──Type expr: Variable: 27199
+                                              └──Type expr: Variable: 189
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27199
+                                                 └──Type expr: Variable: 189
                                            └──Desc: Application
                                               └──Expression:
                                                  └──Type expr: Arrow
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27199
+                                                       └──Type expr: Variable: 189
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 27199
+                                                       └──Type expr: Variable: 189
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27199
+                                                          └──Type expr: Variable: 189
                                                  └──Desc: Variable
                                                     └──Variable: uncons
-                                                    └──Type expr: Variable: 27199
+                                                    └──Type expr: Variable: 189
                                               └──Expression:
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27199
+                                                    └──Type expr: Variable: 189
                                                  └──Desc: Variable
                                                     └──Variable: t
                                └──Expression:
                                   └──Type expr: Constructor: tree
-                                     └──Type expr: Variable: 27199
+                                     └──Type expr: Variable: 189
                                   └──Desc: Variable
                                      └──Variable: t
        └──Structure item: Primitive
@@ -7413,39 +7413,39 @@ let%expect_test "" =
              └──Value binding:
                 └──Variable: nth
                 └──Abstraction:
-                   └──Variables: 27311
+                   └──Variables: 301
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 27311
+                            └──Type expr: Variable: 301
                          └──Type expr: Arrow
                             └──Type expr: Constructor: int
-                            └──Type expr: Variable: 27311
+                            └──Type expr: Variable: 301
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: tree
-                               └──Type expr: Variable: 27311
+                               └──Type expr: Variable: 301
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: int
-                               └──Type expr: Variable: 27311
+                               └──Type expr: Variable: 301
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: int
                                   └──Desc: Variable: n
                                └──Expression:
-                                  └──Type expr: Variable: 27311
+                                  └──Type expr: Variable: 301
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: tree
-                                              └──Type expr: Variable: 27311
+                                              └──Type expr: Variable: 301
                                            └──Type expr: Constructor: int
                                         └──Desc: Tuple
                                            └──Expression:
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27311
+                                                 └──Type expr: Variable: 301
                                               └──Desc: Variable
                                                  └──Variable: t
                                            └──Expression:
@@ -7454,38 +7454,38 @@ let%expect_test "" =
                                                  └──Variable: n
                                      └──Type expr: Tuple
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 27311
+                                           └──Type expr: Variable: 301
                                         └──Type expr: Constructor: int
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27311
+                                                    └──Type expr: Variable: 301
                                                  └──Type expr: Constructor: int
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27311
+                                                       └──Type expr: Variable: 301
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Lf
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27311
+                                                                └──Type expr: Variable: 301
                                                  └──Pattern:
                                                     └──Type expr: Constructor: int
                                                     └──Desc: Any
                                            └──Expression:
-                                              └──Type expr: Variable: 27311
+                                              └──Type expr: Variable: 301
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: exn
-                                                       └──Type expr: Variable: 27311
+                                                       └──Type expr: Variable: 301
                                                     └──Desc: Variable
                                                        └──Variable: raise
-                                                       └──Type expr: Variable: 27311
+                                                       └──Type expr: Variable: 301
                                                  └──Expression:
                                                     └──Type expr: Constructor: exn
                                                     └──Desc: Construct
@@ -7502,98 +7502,98 @@ let%expect_test "" =
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27311
+                                                    └──Type expr: Variable: 301
                                                  └──Type expr: Constructor: int
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27311
+                                                       └──Type expr: Variable: 301
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Br
                                                           └──Constructor argument type:
                                                              └──Type expr: Tuple
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27311
-                                                                └──Type expr: Variable: 27311
+                                                                   └──Type expr: Variable: 301
+                                                                └──Type expr: Variable: 301
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27311
+                                                                   └──Type expr: Variable: 301
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27311
+                                                                └──Type expr: Variable: 301
                                                        └──Pattern:
                                                           └──Type expr: Tuple
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27311
-                                                             └──Type expr: Variable: 27311
+                                                                └──Type expr: Variable: 301
+                                                             └──Type expr: Variable: 301
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27311
+                                                                └──Type expr: Variable: 301
                                                           └──Desc: Tuple
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27311
+                                                                   └──Type expr: Variable: 301
                                                                 └──Desc: Any
                                                              └──Pattern:
-                                                                └──Type expr: Variable: 27311
+                                                                └──Type expr: Variable: 301
                                                                 └──Desc: Variable: x
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27311
+                                                                   └──Type expr: Variable: 301
                                                                 └──Desc: Any
                                                  └──Pattern:
                                                     └──Type expr: Constructor: int
                                                     └──Desc: Constant: 0
                                            └──Expression:
-                                              └──Type expr: Variable: 27311
+                                              └──Type expr: Variable: 301
                                               └──Desc: Variable
                                                  └──Variable: x
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27311
+                                                    └──Type expr: Variable: 301
                                                  └──Type expr: Constructor: int
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27311
+                                                       └──Type expr: Variable: 301
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Br
                                                           └──Constructor argument type:
                                                              └──Type expr: Tuple
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27311
-                                                                └──Type expr: Variable: 27311
+                                                                   └──Type expr: Variable: 301
+                                                                └──Type expr: Variable: 301
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27311
+                                                                   └──Type expr: Variable: 301
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27311
+                                                                └──Type expr: Variable: 301
                                                        └──Pattern:
                                                           └──Type expr: Tuple
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27311
-                                                             └──Type expr: Variable: 27311
+                                                                └──Type expr: Variable: 301
+                                                             └──Type expr: Variable: 301
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27311
+                                                                └──Type expr: Variable: 301
                                                           └──Desc: Tuple
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27311
+                                                                   └──Type expr: Variable: 301
                                                                 └──Desc: Variable: l
                                                              └──Pattern:
-                                                                └──Type expr: Variable: 27311
+                                                                └──Type expr: Variable: 301
                                                                 └──Desc: Variable: x
                                                              └──Pattern:
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27311
+                                                                   └──Type expr: Variable: 301
                                                                 └──Desc: Variable: r
                                                  └──Pattern:
                                                     └──Type expr: Constructor: int
                                                     └──Desc: Variable: n
                                            └──Expression:
-                                              └──Type expr: Variable: 27311
+                                              └──Type expr: Variable: 301
                                               └──Desc: If
                                                  └──Expression:
                                                     └──Type expr: Constructor: bool
@@ -7609,25 +7609,25 @@ let%expect_test "" =
                                                           └──Desc: Variable
                                                              └──Variable: n
                                                  └──Expression:
-                                                    └──Type expr: Variable: 27311
+                                                    └──Type expr: Variable: 301
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: int
-                                                             └──Type expr: Variable: 27311
+                                                             └──Type expr: Variable: 301
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 27311
+                                                                      └──Type expr: Variable: 301
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Constructor: int
-                                                                      └──Type expr: Variable: 27311
+                                                                      └──Type expr: Variable: 301
                                                                 └──Desc: Variable
                                                                    └──Variable: nth
                                                              └──Expression:
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27311
+                                                                   └──Type expr: Variable: 301
                                                                 └──Desc: Variable
                                                                    └──Variable: r
                                                        └──Expression:
@@ -7653,25 +7653,25 @@ let%expect_test "" =
                                                                 └──Type expr: Constructor: int
                                                                 └──Desc: Constant: 2
                                                  └──Expression:
-                                                    └──Type expr: Variable: 27311
+                                                    └──Type expr: Variable: 301
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: int
-                                                             └──Type expr: Variable: 27311
+                                                             └──Type expr: Variable: 301
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 27311
+                                                                      └──Type expr: Variable: 301
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Constructor: int
-                                                                      └──Type expr: Variable: 27311
+                                                                      └──Type expr: Variable: 301
                                                                 └──Desc: Variable
                                                                    └──Variable: nth
                                                              └──Expression:
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27311
+                                                                   └──Type expr: Variable: 301
                                                                 └──Desc: Variable
                                                                    └──Variable: l
                                                        └──Expression:
@@ -7767,54 +7767,54 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Lf
-                   └──Constructor alphas: 27385
+                   └──Constructor alphas: 375
                    └──Constructor type:
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 27385
+                         └──Type expr: Variable: 375
                 └──Constructor declaration:
                    └──Constructor name: Br
-                   └──Constructor alphas: 27385
+                   └──Constructor alphas: 375
                    └──Constructor type:
                       └──Type expr: Constructor: tree
-                         └──Type expr: Variable: 27385
+                         └──Type expr: Variable: 375
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 27385
-                         └──Type expr: Variable: 27385
+                            └──Type expr: Variable: 375
+                         └──Type expr: Variable: 375
                          └──Type expr: Constructor: tree
-                            └──Type expr: Variable: 27385
+                            └──Type expr: Variable: 375
        └──Structure item: Type
           └──Type declaration:
              └──Type name: list
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 27391
+                   └──Constructor alphas: 381
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 27391
+                         └──Type expr: Variable: 381
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 27391
+                   └──Constructor alphas: 381
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 27391
+                         └──Type expr: Variable: 381
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 27391
+                         └──Type expr: Variable: 381
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27391
+                            └──Type expr: Variable: 381
        └──Structure item: Primitive
           └──Value description:
              └──Name: raise
              └──Scheme:
-                └──Variables: 27401
+                └──Variables: 0
                 └──Type expr: Arrow
                    └──Type expr: Constructor: exn
-                   └──Type expr: Variable: 27401
+                   └──Type expr: Variable: 0
              └──Primitive name: %raise
        └──Structure item: Exception
           └──Type exception:
@@ -7833,49 +7833,49 @@ let%expect_test "" =
              └──Type declaration kind: Alias
                 └──Alias
                    └──Alias name: queue
-                   └──Alias alphas: 27397
+                   └──Alias alphas: 387
                    └──Type expr: Tuple
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 27397
+                         └──Type expr: Variable: 387
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 27397
+                         └──Type expr: Variable: 387
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Pattern:
                    └──Type expr: Tuple
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 27411
+                         └──Type expr: Variable: 10
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 27414
+                         └──Type expr: Variable: 13
                    └──Desc: Variable: empty
                 └──Abstraction:
-                   └──Variables: 27414,27411
+                   └──Variables: 13,10
                    └──Expression:
                       └──Type expr: Tuple
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27411
+                            └──Type expr: Variable: 10
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27414
+                            └──Type expr: Variable: 13
                       └──Desc: Tuple
                          └──Expression:
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27411
+                               └──Type expr: Variable: 10
                             └──Desc: Construct
                                └──Constructor description:
                                   └──Name: Nil
                                   └──Constructor type:
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 27411
+                                        └──Type expr: Variable: 10
                          └──Expression:
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27414
+                               └──Type expr: Variable: 13
                             └──Desc: Construct
                                └──Constructor description:
                                   └──Name: Nil
                                   └──Constructor type:
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 27414
+                                        └──Type expr: Variable: 13
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -7883,28 +7883,28 @@ let%expect_test "" =
                    └──Type expr: Arrow
                       └──Type expr: Tuple
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27427
+                            └──Type expr: Variable: 26
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27424
+                            └──Type expr: Variable: 23
                       └──Type expr: Constructor: bool
                    └──Desc: Variable: is_empty
                 └──Abstraction:
-                   └──Variables: 27424,27427
+                   └──Variables: 23,26
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Tuple
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27427
+                               └──Type expr: Variable: 26
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27424
+                               └──Type expr: Variable: 23
                          └──Type expr: Constructor: bool
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Tuple
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27427
+                                  └──Type expr: Variable: 26
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27424
+                                  └──Type expr: Variable: 23
                             └──Desc: Variable: q
                          └──Expression:
                             └──Type expr: Constructor: bool
@@ -7912,43 +7912,43 @@ let%expect_test "" =
                                └──Expression:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 27427
+                                        └──Type expr: Variable: 26
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 27424
+                                        └──Type expr: Variable: 23
                                   └──Desc: Variable
                                      └──Variable: q
                                └──Type expr: Tuple
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27427
+                                     └──Type expr: Variable: 26
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27424
+                                     └──Type expr: Variable: 23
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27427
+                                              └──Type expr: Variable: 26
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27424
+                                              └──Type expr: Variable: 23
                                         └──Desc: Tuple
                                            └──Pattern:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27427
+                                                 └──Type expr: Variable: 26
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27427
+                                                          └──Type expr: Variable: 26
                                            └──Pattern:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27424
+                                                 └──Type expr: Variable: 23
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27424
+                                                          └──Type expr: Variable: 23
                                      └──Expression:
                                         └──Type expr: Constructor: bool
                                         └──Desc: Constant: true
@@ -7956,9 +7956,9 @@ let%expect_test "" =
                                      └──Pattern:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27427
+                                              └──Type expr: Variable: 26
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27424
+                                              └──Type expr: Variable: 23
                                         └──Desc: Any
                                      └──Expression:
                                         └──Type expr: Constructor: bool
@@ -7967,12 +7967,12 @@ let%expect_test "" =
           └──Value description:
              └──Name: rev
              └──Scheme:
-                └──Variables: 27437
+                └──Variables: 36
                 └──Type expr: Arrow
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: 27437
+                      └──Type expr: Variable: 36
                    └──Type expr: Constructor: list
-                      └──Type expr: Variable: 27437
+                      └──Type expr: Variable: 36
              └──Primitive name: %rev
        └──Structure item: Let
           └──Value bindings:
@@ -7981,127 +7981,127 @@ let%expect_test "" =
                    └──Type expr: Arrow
                       └──Type expr: Tuple
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27468
+                            └──Type expr: Variable: 67
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27468
+                            └──Type expr: Variable: 67
                       └──Type expr: Tuple
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27468
+                            └──Type expr: Variable: 67
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27468
+                            └──Type expr: Variable: 67
                    └──Desc: Variable: norm
                 └──Abstraction:
-                   └──Variables: 27468
+                   └──Variables: 67
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Tuple
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27468
+                               └──Type expr: Variable: 67
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27468
+                               └──Type expr: Variable: 67
                          └──Type expr: Tuple
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27468
+                               └──Type expr: Variable: 67
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27468
+                               └──Type expr: Variable: 67
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Tuple
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27468
+                                  └──Type expr: Variable: 67
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27468
+                                  └──Type expr: Variable: 67
                             └──Desc: Variable: q
                          └──Expression:
                             └──Type expr: Tuple
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27468
+                                  └──Type expr: Variable: 67
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27468
+                                  └──Type expr: Variable: 67
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 27468
+                                        └──Type expr: Variable: 67
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 27468
+                                        └──Type expr: Variable: 67
                                   └──Desc: Variable
                                      └──Variable: q
                                └──Type expr: Tuple
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27468
+                                     └──Type expr: Variable: 67
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27468
+                                     └──Type expr: Variable: 67
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27468
+                                              └──Type expr: Variable: 67
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27468
+                                              └──Type expr: Variable: 67
                                         └──Desc: Tuple
                                            └──Pattern:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27468
+                                                 └──Type expr: Variable: 67
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27468
+                                                          └──Type expr: Variable: 67
                                            └──Pattern:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27468
+                                                 └──Type expr: Variable: 67
                                               └──Desc: Variable: ys
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27468
+                                              └──Type expr: Variable: 67
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27468
+                                              └──Type expr: Variable: 67
                                         └──Desc: Tuple
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27468
+                                                 └──Type expr: Variable: 67
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27468
+                                                          └──Type expr: Variable: 67
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27468
+                                                          └──Type expr: Variable: 67
                                                     └──Desc: Variable
                                                        └──Variable: rev
-                                                       └──Type expr: Variable: 27468
+                                                       └──Type expr: Variable: 67
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 27468
+                                                       └──Type expr: Variable: 67
                                                     └──Desc: Variable
                                                        └──Variable: ys
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27468
+                                                 └──Type expr: Variable: 67
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Nil
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27468
+                                                          └──Type expr: Variable: 67
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27468
+                                              └──Type expr: Variable: 67
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27468
+                                              └──Type expr: Variable: 67
                                         └──Desc: Variable: q
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27468
+                                              └──Type expr: Variable: 67
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27468
+                                              └──Type expr: Variable: 67
                                         └──Desc: Variable
                                            └──Variable: q
        └──Structure item: Let
@@ -8111,16 +8111,16 @@ let%expect_test "" =
                    └──Type expr: Arrow
                       └──Type expr: Tuple
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27496
+                            └──Type expr: Variable: 95
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27496
+                            └──Type expr: Variable: 95
                       └──Type expr: Arrow
-                         └──Type expr: Variable: 27496
+                         └──Type expr: Variable: 95
                          └──Type expr: Tuple
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27496
+                               └──Type expr: Variable: 95
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27496
+                               └──Type expr: Variable: 95
                    └──Desc: Variable: enqueue
                 └──Abstraction:
                    └──Variables:
@@ -8128,105 +8128,105 @@ let%expect_test "" =
                       └──Type expr: Arrow
                          └──Type expr: Tuple
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27496
+                               └──Type expr: Variable: 95
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27496
+                               └──Type expr: Variable: 95
                          └──Type expr: Arrow
-                            └──Type expr: Variable: 27496
+                            └──Type expr: Variable: 95
                             └──Type expr: Tuple
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27496
+                                  └──Type expr: Variable: 95
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27496
+                                  └──Type expr: Variable: 95
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Tuple
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27496
+                                  └──Type expr: Variable: 95
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27496
+                                  └──Type expr: Variable: 95
                             └──Desc: Tuple
                                └──Pattern:
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27496
+                                     └──Type expr: Variable: 95
                                   └──Desc: Variable: xs
                                └──Pattern:
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27496
+                                     └──Type expr: Variable: 95
                                   └──Desc: Variable: ys
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: 27496
+                               └──Type expr: Variable: 95
                                └──Type expr: Tuple
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27496
+                                     └──Type expr: Variable: 95
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27496
+                                     └──Type expr: Variable: 95
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: 27496
+                                  └──Type expr: Variable: 95
                                   └──Desc: Variable: y
                                └──Expression:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 27496
+                                        └──Type expr: Variable: 95
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 27496
+                                        └──Type expr: Variable: 95
                                   └──Desc: Application
                                      └──Expression:
                                         └──Type expr: Arrow
                                            └──Type expr: Tuple
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27496
+                                                 └──Type expr: Variable: 95
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27496
+                                                 └──Type expr: Variable: 95
                                            └──Type expr: Tuple
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27496
+                                                 └──Type expr: Variable: 95
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27496
+                                                 └──Type expr: Variable: 95
                                         └──Desc: Variable
                                            └──Variable: norm
-                                           └──Type expr: Variable: 27496
+                                           └──Type expr: Variable: 95
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27496
+                                              └──Type expr: Variable: 95
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27496
+                                              └──Type expr: Variable: 95
                                         └──Desc: Tuple
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27496
+                                                 └──Type expr: Variable: 95
                                               └──Desc: Variable
                                                  └──Variable: xs
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27496
+                                                 └──Type expr: Variable: 95
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Cons
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: 27496
+                                                          └──Type expr: Variable: 95
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 27496
+                                                             └──Type expr: Variable: 95
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27496
+                                                          └──Type expr: Variable: 95
                                                  └──Expression:
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 27496
+                                                       └──Type expr: Variable: 95
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27496
+                                                          └──Type expr: Variable: 95
                                                     └──Desc: Tuple
                                                        └──Expression:
-                                                          └──Type expr: Variable: 27496
+                                                          └──Type expr: Variable: 95
                                                           └──Desc: Variable
                                                              └──Variable: y
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 27496
+                                                             └──Type expr: Variable: 95
                                                           └──Desc: Variable
                                                              └──Variable: ys
        └──Structure item: Let
@@ -8236,14 +8236,14 @@ let%expect_test "" =
                    └──Type expr: Arrow
                       └──Type expr: Tuple
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27515
+                            └──Type expr: Variable: 114
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27534
+                            └──Type expr: Variable: 133
                       └──Type expr: Tuple
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27534
+                            └──Type expr: Variable: 133
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27534
+                            └──Type expr: Variable: 133
                    └──Desc: Variable: dequeue
                 └──Abstraction:
                    └──Variables:
@@ -8251,152 +8251,152 @@ let%expect_test "" =
                       └──Type expr: Arrow
                          └──Type expr: Tuple
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27515
+                               └──Type expr: Variable: 114
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27534
+                               └──Type expr: Variable: 133
                          └──Type expr: Tuple
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27534
+                               └──Type expr: Variable: 133
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27534
+                               └──Type expr: Variable: 133
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Tuple
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27515
+                                  └──Type expr: Variable: 114
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27534
+                                  └──Type expr: Variable: 133
                             └──Desc: Variable: q
                          └──Expression:
                             └──Type expr: Tuple
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27534
+                                  └──Type expr: Variable: 133
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27534
+                                  └──Type expr: Variable: 133
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 27515
+                                        └──Type expr: Variable: 114
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 27534
+                                        └──Type expr: Variable: 133
                                   └──Desc: Variable
                                      └──Variable: q
                                └──Type expr: Tuple
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27515
+                                     └──Type expr: Variable: 114
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27534
+                                     └──Type expr: Variable: 133
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27515
+                                              └──Type expr: Variable: 114
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27534
+                                              └──Type expr: Variable: 133
                                         └──Desc: Tuple
                                            └──Pattern:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27515
+                                                 └──Type expr: Variable: 114
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Cons
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: 27515
+                                                          └──Type expr: Variable: 114
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 27515
+                                                             └──Type expr: Variable: 114
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27515
+                                                          └──Type expr: Variable: 114
                                                  └──Pattern:
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 27515
+                                                       └──Type expr: Variable: 114
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27515
+                                                          └──Type expr: Variable: 114
                                                     └──Desc: Tuple
                                                        └──Pattern:
-                                                          └──Type expr: Variable: 27515
+                                                          └──Type expr: Variable: 114
                                                           └──Desc: Variable: x
                                                        └──Pattern:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 27515
+                                                             └──Type expr: Variable: 114
                                                           └──Desc: Variable: xs
                                            └──Pattern:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27534
+                                                 └──Type expr: Variable: 133
                                               └──Desc: Variable: ys
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27534
+                                              └──Type expr: Variable: 133
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27534
+                                              └──Type expr: Variable: 133
                                         └──Desc: Application
                                            └──Expression:
                                               └──Type expr: Arrow
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 27534
+                                                       └──Type expr: Variable: 133
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 27534
+                                                       └──Type expr: Variable: 133
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 27534
+                                                       └──Type expr: Variable: 133
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 27534
+                                                       └──Type expr: Variable: 133
                                               └──Desc: Variable
                                                  └──Variable: norm
-                                                 └──Type expr: Variable: 27534
+                                                 └──Type expr: Variable: 133
                                            └──Expression:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 27534
+                                                    └──Type expr: Variable: 133
                                                  └──Type expr: Constructor: list
-                                                    └──Type expr: Variable: 27534
+                                                    └──Type expr: Variable: 133
                                               └──Desc: Tuple
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 27534
+                                                       └──Type expr: Variable: 133
                                                     └──Desc: Variable
                                                        └──Variable: xs
-                                                       └──Type expr: Variable: 27534
+                                                       └──Type expr: Variable: 133
                                                  └──Expression:
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 27534
+                                                       └──Type expr: Variable: 133
                                                     └──Desc: Variable
                                                        └──Variable: ys
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27515
+                                              └──Type expr: Variable: 114
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27534
+                                              └──Type expr: Variable: 133
                                         └──Desc: Any
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27534
+                                              └──Type expr: Variable: 133
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27534
+                                              └──Type expr: Variable: 133
                                         └──Desc: Application
                                            └──Expression:
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: exn
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 27534
+                                                       └──Type expr: Variable: 133
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 27534
+                                                       └──Type expr: Variable: 133
                                               └──Desc: Variable
                                                  └──Variable: raise
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 27534
+                                                       └──Type expr: Variable: 133
                                                     └──Type expr: Constructor: list
-                                                       └──Type expr: Variable: 27534
+                                                       └──Type expr: Variable: 133
                                            └──Expression:
                                               └──Type expr: Constructor: exn
                                               └──Desc: Construct
@@ -8411,100 +8411,100 @@ let%expect_test "" =
                    └──Type expr: Arrow
                       └──Type expr: Tuple
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27558
-                         └──Type expr: Variable: 27556
-                      └──Type expr: Variable: 27552
+                            └──Type expr: Variable: 157
+                         └──Type expr: Variable: 155
+                      └──Type expr: Variable: 151
                    └──Desc: Variable: hd
                 └──Abstraction:
-                   └──Variables: 27552,27552,27556,27552
+                   └──Variables: 151,151,155,151
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Tuple
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27558
-                            └──Type expr: Variable: 27556
-                         └──Type expr: Variable: 27552
+                               └──Type expr: Variable: 157
+                            └──Type expr: Variable: 155
+                         └──Type expr: Variable: 151
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Tuple
                                └──Type expr: Constructor: list
-                                  └──Type expr: Variable: 27558
-                               └──Type expr: Variable: 27556
+                                  └──Type expr: Variable: 157
+                               └──Type expr: Variable: 155
                             └──Desc: Variable: q
                          └──Expression:
-                            └──Type expr: Variable: 27552
+                            └──Type expr: Variable: 151
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: list
-                                        └──Type expr: Variable: 27558
-                                     └──Type expr: Variable: 27556
+                                        └──Type expr: Variable: 157
+                                     └──Type expr: Variable: 155
                                   └──Desc: Variable
                                      └──Variable: q
                                └──Type expr: Tuple
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27558
-                                  └──Type expr: Variable: 27556
+                                     └──Type expr: Variable: 157
+                                  └──Type expr: Variable: 155
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27558
-                                           └──Type expr: Variable: 27556
+                                              └──Type expr: Variable: 157
+                                           └──Type expr: Variable: 155
                                         └──Desc: Tuple
                                            └──Pattern:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27558
+                                                 └──Type expr: Variable: 157
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Cons
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: 27558
+                                                          └──Type expr: Variable: 157
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 27558
+                                                             └──Type expr: Variable: 157
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27558
+                                                          └──Type expr: Variable: 157
                                                  └──Pattern:
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 27558
+                                                       └──Type expr: Variable: 157
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27558
+                                                          └──Type expr: Variable: 157
                                                     └──Desc: Tuple
                                                        └──Pattern:
-                                                          └──Type expr: Variable: 27558
+                                                          └──Type expr: Variable: 157
                                                           └──Desc: Variable: x
                                                        └──Pattern:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 27558
+                                                             └──Type expr: Variable: 157
                                                           └──Desc: Any
                                            └──Pattern:
-                                              └──Type expr: Variable: 27556
+                                              └──Type expr: Variable: 155
                                               └──Desc: Any
                                      └──Expression:
-                                        └──Type expr: Variable: 27552
+                                        └──Type expr: Variable: 151
                                         └──Desc: Variable
                                            └──Variable: x
-                                           └──Type expr: Variable: 27552
+                                           └──Type expr: Variable: 151
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27558
-                                           └──Type expr: Variable: 27556
+                                              └──Type expr: Variable: 157
+                                           └──Type expr: Variable: 155
                                         └──Desc: Any
                                      └──Expression:
-                                        └──Type expr: Variable: 27552
+                                        └──Type expr: Variable: 151
                                         └──Desc: Application
                                            └──Expression:
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: exn
-                                                 └──Type expr: Variable: 27552
+                                                 └──Type expr: Variable: 151
                                               └──Desc: Variable
                                                  └──Variable: raise
-                                                 └──Type expr: Variable: 27552
+                                                 └──Type expr: Variable: 151
                                            └──Expression:
                                               └──Type expr: Constructor: exn
                                               └──Desc: Construct
@@ -8517,31 +8517,31 @@ let%expect_test "" =
              └──Value binding:
                 └──Variable: bfs
                 └──Abstraction:
-                   └──Variables: 27641
+                   └──Variables: 240
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Tuple
                             └──Type expr: Constructor: list
                                └──Type expr: Constructor: tree
-                                  └──Type expr: Variable: 27641
+                                  └──Type expr: Variable: 240
                             └──Type expr: Constructor: list
                                └──Type expr: Constructor: tree
-                                  └──Type expr: Variable: 27641
+                                  └──Type expr: Variable: 240
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 27641
+                            └──Type expr: Variable: 240
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Tuple
                                └──Type expr: Constructor: list
                                   └──Type expr: Constructor: tree
-                                     └──Type expr: Variable: 27641
+                                     └──Type expr: Variable: 240
                                └──Type expr: Constructor: list
                                   └──Type expr: Constructor: tree
-                                     └──Type expr: Variable: 27641
+                                     └──Type expr: Variable: 240
                             └──Desc: Variable: q
                          └──Expression:
                             └──Type expr: Constructor: list
-                               └──Type expr: Variable: 27641
+                               └──Type expr: Variable: 240
                             └──Desc: If
                                └──Expression:
                                   └──Type expr: Constructor: bool
@@ -8551,359 +8551,359 @@ let%expect_test "" =
                                            └──Type expr: Tuple
                                               └──Type expr: Constructor: list
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27641
+                                                    └──Type expr: Variable: 240
                                               └──Type expr: Constructor: list
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27641
+                                                    └──Type expr: Variable: 240
                                            └──Type expr: Constructor: bool
                                         └──Desc: Variable
                                            └──Variable: is_empty
                                            └──Type expr: Constructor: tree
-                                              └──Type expr: Variable: 27641
+                                              └──Type expr: Variable: 240
                                            └──Type expr: Constructor: tree
-                                              └──Type expr: Variable: 27641
+                                              └──Type expr: Variable: 240
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: list
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27641
+                                                 └──Type expr: Variable: 240
                                            └──Type expr: Constructor: list
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27641
+                                                 └──Type expr: Variable: 240
                                         └──Desc: Variable
                                            └──Variable: q
                                └──Expression:
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27641
+                                     └──Type expr: Variable: 240
                                   └──Desc: Construct
                                      └──Constructor description:
                                         └──Name: Nil
                                         └──Constructor type:
                                            └──Type expr: Constructor: list
-                                              └──Type expr: Variable: 27641
+                                              └──Type expr: Variable: 240
                                └──Expression:
                                   └──Type expr: Constructor: list
-                                     └──Type expr: Variable: 27641
+                                     └──Type expr: Variable: 240
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: tree
-                                           └──Type expr: Variable: 27641
+                                           └──Type expr: Variable: 240
                                         └──Desc: Application
                                            └──Expression:
                                               └──Type expr: Arrow
                                                  └──Type expr: Tuple
                                                     └──Type expr: Constructor: list
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
                                                     └──Type expr: Constructor: list
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27641
+                                                    └──Type expr: Variable: 240
                                               └──Desc: Variable
                                                  └──Variable: hd
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27641
+                                                    └──Type expr: Variable: 240
                                                  └──Type expr: Constructor: list
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27641
+                                                       └──Type expr: Variable: 240
                                                  └──Type expr: Constructor: tree
-                                                    └──Type expr: Variable: 27641
+                                                    └──Type expr: Variable: 240
                                            └──Expression:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: list
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27641
+                                                       └──Type expr: Variable: 240
                                                  └──Type expr: Constructor: list
                                                     └──Type expr: Constructor: tree
-                                                       └──Type expr: Variable: 27641
+                                                       └──Type expr: Variable: 240
                                               └──Desc: Variable
                                                  └──Variable: q
                                      └──Type expr: Constructor: tree
-                                        └──Type expr: Variable: 27641
+                                        └──Type expr: Variable: 240
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27641
+                                                 └──Type expr: Variable: 240
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Lf
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27641
+                                                 └──Type expr: Variable: 240
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Tuple
                                                           └──Type expr: Constructor: list
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27641
+                                                                └──Type expr: Variable: 240
                                                           └──Type expr: Constructor: list
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27641
+                                                                └──Type expr: Variable: 240
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
                                                     └──Desc: Variable
                                                        └──Variable: bfs
                                                  └──Expression:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: list
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27641
+                                                             └──Type expr: Variable: 240
                                                        └──Type expr: Constructor: list
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27641
+                                                             └──Type expr: Variable: 240
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Tuple
                                                                 └──Type expr: Constructor: list
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 27641
+                                                                      └──Type expr: Variable: 240
                                                                 └──Type expr: Constructor: list
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 27641
+                                                                      └──Type expr: Variable: 240
                                                              └──Type expr: Tuple
                                                                 └──Type expr: Constructor: list
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 27641
+                                                                      └──Type expr: Variable: 240
                                                                 └──Type expr: Constructor: list
                                                                    └──Type expr: Constructor: tree
-                                                                      └──Type expr: Variable: 27641
+                                                                      └──Type expr: Variable: 240
                                                           └──Desc: Variable
                                                              └──Variable: dequeue
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27641
+                                                                └──Type expr: Variable: 240
                                                              └──Type expr: Constructor: tree
-                                                                └──Type expr: Variable: 27641
+                                                                └──Type expr: Variable: 240
                                                        └──Expression:
                                                           └──Type expr: Tuple
                                                              └──Type expr: Constructor: list
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27641
+                                                                   └──Type expr: Variable: 240
                                                              └──Type expr: Constructor: list
                                                                 └──Type expr: Constructor: tree
-                                                                   └──Type expr: Variable: 27641
+                                                                   └──Type expr: Variable: 240
                                                           └──Desc: Variable
                                                              └──Variable: q
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: tree
-                                                 └──Type expr: Variable: 27641
+                                                 └──Type expr: Variable: 240
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Br
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27641
-                                                          └──Type expr: Variable: 27641
+                                                             └──Type expr: Variable: 240
+                                                          └──Type expr: Variable: 240
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27641
+                                                             └──Type expr: Variable: 240
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
                                                  └──Pattern:
                                                     └──Type expr: Tuple
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27641
-                                                       └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
+                                                       └──Type expr: Variable: 240
                                                        └──Type expr: Constructor: tree
-                                                          └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
                                                     └──Desc: Tuple
                                                        └──Pattern:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27641
+                                                             └──Type expr: Variable: 240
                                                           └──Desc: Variable: l
                                                        └──Pattern:
-                                                          └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
                                                           └──Desc: Variable: x
                                                        └──Pattern:
                                                           └──Type expr: Constructor: tree
-                                                             └──Type expr: Variable: 27641
+                                                             └──Type expr: Variable: 240
                                                           └──Desc: Variable: r
                                            └──Expression:
                                               └──Type expr: Constructor: list
-                                                 └──Type expr: Variable: 27641
+                                                 └──Type expr: Variable: 240
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Cons
                                                     └──Constructor argument type:
                                                        └──Type expr: Tuple
-                                                          └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 27641
+                                                             └──Type expr: Variable: 240
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
                                                  └──Expression:
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 27641
+                                                       └──Type expr: Variable: 240
                                                        └──Type expr: Constructor: list
-                                                          └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
                                                     └──Desc: Tuple
                                                        └──Expression:
-                                                          └──Type expr: Variable: 27641
+                                                          └──Type expr: Variable: 240
                                                           └──Desc: Variable
                                                              └──Variable: x
                                                        └──Expression:
                                                           └──Type expr: Constructor: list
-                                                             └──Type expr: Variable: 27641
+                                                             └──Type expr: Variable: 240
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Tuple
                                                                       └──Type expr: Constructor: list
                                                                          └──Type expr: Constructor: tree
-                                                                            └──Type expr: Variable: 27641
+                                                                            └──Type expr: Variable: 240
                                                                       └──Type expr: Constructor: list
                                                                          └──Type expr: Constructor: tree
-                                                                            └──Type expr: Variable: 27641
+                                                                            └──Type expr: Variable: 240
                                                                    └──Type expr: Constructor: list
-                                                                      └──Type expr: Variable: 27641
+                                                                      └──Type expr: Variable: 240
                                                                 └──Desc: Variable
                                                                    └──Variable: bfs
                                                              └──Expression:
                                                                 └──Type expr: Tuple
                                                                    └──Type expr: Constructor: list
                                                                       └──Type expr: Constructor: tree
-                                                                         └──Type expr: Variable: 27641
+                                                                         └──Type expr: Variable: 240
                                                                    └──Type expr: Constructor: list
                                                                       └──Type expr: Constructor: tree
-                                                                         └──Type expr: Variable: 27641
+                                                                         └──Type expr: Variable: 240
                                                                 └──Desc: Application
                                                                    └──Expression:
                                                                       └──Type expr: Arrow
                                                                          └──Type expr: Constructor: tree
-                                                                            └──Type expr: Variable: 27641
+                                                                            └──Type expr: Variable: 240
                                                                          └──Type expr: Tuple
                                                                             └──Type expr: Constructor: list
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 27641
+                                                                                  └──Type expr: Variable: 240
                                                                             └──Type expr: Constructor: list
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 27641
+                                                                                  └──Type expr: Variable: 240
                                                                       └──Desc: Application
                                                                          └──Expression:
                                                                             └──Type expr: Arrow
                                                                                └──Type expr: Tuple
                                                                                   └──Type expr: Constructor: list
                                                                                      └──Type expr: Constructor: tree
-                                                                                        └──Type expr: Variable: 27641
+                                                                                        └──Type expr: Variable: 240
                                                                                   └──Type expr: Constructor: list
                                                                                      └──Type expr: Constructor: tree
-                                                                                        └──Type expr: Variable: 27641
+                                                                                        └──Type expr: Variable: 240
                                                                                └──Type expr: Arrow
                                                                                   └──Type expr: Constructor: tree
-                                                                                     └──Type expr: Variable: 27641
+                                                                                     └──Type expr: Variable: 240
                                                                                   └──Type expr: Tuple
                                                                                      └──Type expr: Constructor: list
                                                                                         └──Type expr: Constructor: tree
-                                                                                           └──Type expr: Variable: 27641
+                                                                                           └──Type expr: Variable: 240
                                                                                      └──Type expr: Constructor: list
                                                                                         └──Type expr: Constructor: tree
-                                                                                           └──Type expr: Variable: 27641
+                                                                                           └──Type expr: Variable: 240
                                                                             └──Desc: Variable
                                                                                └──Variable: enqueue
                                                                                └──Type expr: Constructor: tree
-                                                                                  └──Type expr: Variable: 27641
+                                                                                  └──Type expr: Variable: 240
                                                                          └──Expression:
                                                                             └──Type expr: Tuple
                                                                                └──Type expr: Constructor: list
                                                                                   └──Type expr: Constructor: tree
-                                                                                     └──Type expr: Variable: 27641
+                                                                                     └──Type expr: Variable: 240
                                                                                └──Type expr: Constructor: list
                                                                                   └──Type expr: Constructor: tree
-                                                                                     └──Type expr: Variable: 27641
+                                                                                     └──Type expr: Variable: 240
                                                                             └──Desc: Application
                                                                                └──Expression:
                                                                                   └──Type expr: Arrow
                                                                                      └──Type expr: Constructor: tree
-                                                                                        └──Type expr: Variable: 27641
+                                                                                        └──Type expr: Variable: 240
                                                                                      └──Type expr: Tuple
                                                                                         └──Type expr: Constructor: list
                                                                                            └──Type expr: Constructor: tree
-                                                                                              └──Type expr: Variable: 27641
+                                                                                              └──Type expr: Variable: 240
                                                                                         └──Type expr: Constructor: list
                                                                                            └──Type expr: Constructor: tree
-                                                                                              └──Type expr: Variable: 27641
+                                                                                              └──Type expr: Variable: 240
                                                                                   └──Desc: Application
                                                                                      └──Expression:
                                                                                         └──Type expr: Arrow
                                                                                            └──Type expr: Tuple
                                                                                               └──Type expr: Constructor: list
                                                                                                  └──Type expr: Constructor: tree
-                                                                                                    └──Type expr: Variable: 27641
+                                                                                                    └──Type expr: Variable: 240
                                                                                               └──Type expr: Constructor: list
                                                                                                  └──Type expr: Constructor: tree
-                                                                                                    └──Type expr: Variable: 27641
+                                                                                                    └──Type expr: Variable: 240
                                                                                            └──Type expr: Arrow
                                                                                               └──Type expr: Constructor: tree
-                                                                                                 └──Type expr: Variable: 27641
+                                                                                                 └──Type expr: Variable: 240
                                                                                               └──Type expr: Tuple
                                                                                                  └──Type expr: Constructor: list
                                                                                                     └──Type expr: Constructor: tree
-                                                                                                       └──Type expr: Variable: 27641
+                                                                                                       └──Type expr: Variable: 240
                                                                                                  └──Type expr: Constructor: list
                                                                                                     └──Type expr: Constructor: tree
-                                                                                                       └──Type expr: Variable: 27641
+                                                                                                       └──Type expr: Variable: 240
                                                                                         └──Desc: Variable
                                                                                            └──Variable: enqueue
                                                                                            └──Type expr: Constructor: tree
-                                                                                              └──Type expr: Variable: 27641
+                                                                                              └──Type expr: Variable: 240
                                                                                      └──Expression:
                                                                                         └──Type expr: Tuple
                                                                                            └──Type expr: Constructor: list
                                                                                               └──Type expr: Constructor: tree
-                                                                                                 └──Type expr: Variable: 27641
+                                                                                                 └──Type expr: Variable: 240
                                                                                            └──Type expr: Constructor: list
                                                                                               └──Type expr: Constructor: tree
-                                                                                                 └──Type expr: Variable: 27641
+                                                                                                 └──Type expr: Variable: 240
                                                                                         └──Desc: Application
                                                                                            └──Expression:
                                                                                               └──Type expr: Arrow
                                                                                                  └──Type expr: Tuple
                                                                                                     └──Type expr: Constructor: list
                                                                                                        └──Type expr: Constructor: tree
-                                                                                                          └──Type expr: Variable: 27641
+                                                                                                          └──Type expr: Variable: 240
                                                                                                     └──Type expr: Constructor: list
                                                                                                        └──Type expr: Constructor: tree
-                                                                                                          └──Type expr: Variable: 27641
+                                                                                                          └──Type expr: Variable: 240
                                                                                                  └──Type expr: Tuple
                                                                                                     └──Type expr: Constructor: list
                                                                                                        └──Type expr: Constructor: tree
-                                                                                                          └──Type expr: Variable: 27641
+                                                                                                          └──Type expr: Variable: 240
                                                                                                     └──Type expr: Constructor: list
                                                                                                        └──Type expr: Constructor: tree
-                                                                                                          └──Type expr: Variable: 27641
+                                                                                                          └──Type expr: Variable: 240
                                                                                               └──Desc: Variable
                                                                                                  └──Variable: dequeue
                                                                                                  └──Type expr: Constructor: tree
-                                                                                                    └──Type expr: Variable: 27641
+                                                                                                    └──Type expr: Variable: 240
                                                                                                  └──Type expr: Constructor: tree
-                                                                                                    └──Type expr: Variable: 27641
+                                                                                                    └──Type expr: Variable: 240
                                                                                            └──Expression:
                                                                                               └──Type expr: Tuple
                                                                                                  └──Type expr: Constructor: list
                                                                                                     └──Type expr: Constructor: tree
-                                                                                                       └──Type expr: Variable: 27641
+                                                                                                       └──Type expr: Variable: 240
                                                                                                  └──Type expr: Constructor: list
                                                                                                     └──Type expr: Constructor: tree
-                                                                                                       └──Type expr: Variable: 27641
+                                                                                                       └──Type expr: Variable: 240
                                                                                               └──Desc: Variable
                                                                                                  └──Variable: q
                                                                                └──Expression:
                                                                                   └──Type expr: Constructor: tree
-                                                                                     └──Type expr: Variable: 27641
+                                                                                     └──Type expr: Variable: 240
                                                                                   └──Desc: Variable
                                                                                      └──Variable: l
                                                                    └──Expression:
                                                                       └──Type expr: Constructor: tree
-                                                                         └──Type expr: Variable: 27641
+                                                                         └──Type expr: Variable: 240
                                                                       └──Desc: Variable
                                                                          └──Variable: r |}]
 

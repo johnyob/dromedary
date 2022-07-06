@@ -27,14 +27,14 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Refl
-                   └──Constructor alphas: 15299 15300
+                   └──Constructor alphas: 39 40
                    └──Constructor type:
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: 15299
-                         └──Type expr: Variable: 15300
+                         └──Type expr: Variable: 39
+                         └──Type expr: Variable: 40
                    └──Constraint:
-                      └──Type expr: Variable: 15299
-                      └──Type expr: Variable: 15300
+                      └──Type expr: Variable: 39
+                      └──Type expr: Variable: 40
        └──Structure item: Type
           └──Type declaration:
              └──Type name: empty
@@ -49,8 +49,8 @@ let%expect_test "" =
           └──Value description:
              └──Name: hole
              └──Scheme:
-                └──Variables: 15305
-                └──Type expr: Variable: 15305
+                └──Variables: 0
+                └──Type expr: Variable: 0
              └──Primitive name: %hole
        └──Structure item: Let
           └──Value bindings:
@@ -64,10 +64,10 @@ let%expect_test "" =
                                └──Type expr: Constructor: empty
                             └──Type expr: Row uniform
                                └──Type expr: Constructor: absent
-                      └──Type expr: Variable: 15308
+                      └──Type expr: Variable: 3
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: 15308,15308
+                   └──Variables: 3,3
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Variant
@@ -77,7 +77,7 @@ let%expect_test "" =
                                   └──Type expr: Constructor: empty
                                └──Type expr: Row uniform
                                   └──Type expr: Constructor: absent
-                         └──Type expr: Variable: 15308
+                         └──Type expr: Variable: 3
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Variant
@@ -89,7 +89,7 @@ let%expect_test "" =
                                      └──Type expr: Constructor: absent
                             └──Desc: Variable: t
                          └──Expression:
-                            └──Type expr: Variable: 15308
+                            └──Type expr: Variable: 3
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Variant
@@ -132,7 +132,7 @@ let%expect_test "" =
                                               └──Type expr: Constructor: empty
                                               └──Desc: Any
                                      └──Expression:
-                                        └──Type expr: Variable: 15308
+                                        └──Type expr: Variable: 3
                                         └──Desc: Variable
                                            └──Variable: hole
-                                           └──Type expr: Variable: 15308 |}]
+                                           └──Type expr: Variable: 3 |}]

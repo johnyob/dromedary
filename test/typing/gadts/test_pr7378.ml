@@ -23,10 +23,10 @@ let%expect_test "" =
                    └──Constructor type:
                       └──Type expr: Constructor: t
                    └──Constructor argument:
-                      └──Constructor betas: 15511 15510
+                      └──Constructor betas: 50 49
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 15510
-                         └──Type expr: Variable: 15511
+                         └──Type expr: Variable: 49
+                         └──Type expr: Variable: 50
                          └──Type expr: Arrow
-                            └──Type expr: Variable: 15510
+                            └──Type expr: Variable: 49
                             └──Type expr: Constructor: unit |}]

@@ -153,89 +153,89 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 17371
+                   └──Constructor alphas: 89
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 17371
+                         └──Type expr: Variable: 89
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 17371
+                   └──Constructor alphas: 89
                    └──Constructor type:
                       └──Type expr: Constructor: list
-                         └──Type expr: Variable: 17371
+                         └──Type expr: Variable: 89
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 17371
+                         └──Type expr: Variable: 89
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 17371
+                            └──Type expr: Variable: 89
        └──Structure item: Primitive
           └──Value description:
              └──Name: fold_left
              └──Scheme:
-                └──Variables: 17393,17394
+                └──Variables: 0,1
                 └──Type expr: Arrow
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 17394
+                      └──Type expr: Variable: 1
                       └──Type expr: Arrow
-                         └──Type expr: Variable: 17393
-                         └──Type expr: Variable: 17394
+                         └──Type expr: Variable: 0
+                         └──Type expr: Variable: 1
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 17394
+                      └──Type expr: Variable: 1
                       └──Type expr: Arrow
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 17393
-                         └──Type expr: Variable: 17394
+                            └──Type expr: Variable: 0
+                         └──Type expr: Variable: 1
              └──Primitive name: %fold_left
        └──Structure item: Primitive
           └──Value description:
              └──Name: fold_right
              └──Scheme:
-                └──Variables: 17408,17407
+                └──Variables: 15,14
                 └──Type expr: Arrow
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 17407
+                      └──Type expr: Variable: 14
                       └──Type expr: Arrow
-                         └──Type expr: Variable: 17408
-                         └──Type expr: Variable: 17408
+                         └──Type expr: Variable: 15
+                         └──Type expr: Variable: 15
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 17408
+                      └──Type expr: Variable: 15
                       └──Type expr: Arrow
                          └──Type expr: Constructor: list
-                            └──Type expr: Variable: 17407
-                         └──Type expr: Variable: 17408
+                            └──Type expr: Variable: 14
+                         └──Type expr: Variable: 15
              └──Primitive name: %fold_right
        └──Structure item: Primitive
           └──Value description:
              └──Name: eq
              └──Scheme:
-                └──Variables: 17421
+                └──Variables: 28
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 17421
+                   └──Type expr: Variable: 28
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 17421
+                      └──Type expr: Variable: 28
                       └──Type expr: Constructor: bool
              └──Primitive name: %equal
        └──Structure item: Primitive
           └──Value description:
              └──Name: lt
              └──Scheme:
-                └──Variables: 17428
+                └──Variables: 35
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 17428
+                   └──Type expr: Variable: 35
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 17428
+                      └──Type expr: Variable: 35
                       └──Type expr: Constructor: bool
              └──Primitive name: %less_than
        └──Structure item: Primitive
           └──Value description:
              └──Name: leq
              └──Scheme:
-                └──Variables: 17435
+                └──Variables: 42
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 17435
+                   └──Type expr: Variable: 42
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 17435
+                      └──Type expr: Variable: 42
                       └──Type expr: Constructor: bool
              └──Primitive name: %less_than_equal
        └──Structure item: Type
@@ -244,19 +244,19 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: None
-                   └──Constructor alphas: 17376
+                   └──Constructor alphas: 94
                    └──Constructor type:
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 17376
+                         └──Type expr: Variable: 94
                 └──Constructor declaration:
                    └──Constructor name: Some
-                   └──Constructor alphas: 17376
+                   └──Constructor alphas: 94
                    └──Constructor type:
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 17376
+                         └──Type expr: Variable: 94
                    └──Constructor argument:
                       └──Constructor betas:
-                      └──Type expr: Variable: 17376
+                      └──Type expr: Variable: 94
        └──Structure item: Type
           └──Type declaration:
              └──Type name: var
@@ -3083,8 +3083,8 @@ let%expect_test "" =
   print_infer_result str;
   [%expect {|
     ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 18639 (Former (Constr () bool))))
-     ("Type_expr.decode type_expr2" (Type 18666 (Former (Constr () int))))) |}]
+     ("Type_expr.decode type_expr1" (Type 18 (Former (Constr () bool))))
+     ("Type_expr.decode type_expr2" (Type 45 (Former (Constr () int))))) |}]
 
 let%expect_test "" =
   let str = 
@@ -3103,8 +3103,8 @@ let%expect_test "" =
   print_infer_result str;
   [%expect {|
     ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 18687 (Former (Constr () bool))))
-     ("Type_expr.decode type_expr2" (Type 18730 (Former (Constr () int))))) |}]
+     ("Type_expr.decode type_expr1" (Type 19 (Former (Constr () bool))))
+     ("Type_expr.decode type_expr2" (Type 62 (Former (Constr () int))))) |}]
 
 let%expect_test "" =
   let str = 
@@ -3129,21 +3129,21 @@ let%expect_test "" =
              └──Value binding:
                 └──Pattern:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 18734
-                      └──Type expr: Variable: 18734
+                      └──Type expr: Variable: 2
+                      └──Type expr: Variable: 2
                    └──Desc: Variable: id
                 └──Abstraction:
-                   └──Variables: 18734,18734
+                   └──Variables: 2,2
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: 18734
-                         └──Type expr: Variable: 18734
+                         └──Type expr: Variable: 2
+                         └──Type expr: Variable: 2
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: 18734
+                            └──Type expr: Variable: 2
                             └──Desc: Variable: x
                          └──Expression:
-                            └──Type expr: Variable: 18734
+                            └──Type expr: Variable: 2
                             └──Desc: Variable
                                └──Variable: x
        └──Structure item: Let
@@ -3329,7 +3329,6 @@ let%expect_test "" =
   [%expect {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1"
-      (Type 18952 (Former (Constr ((Type 18826 (Former (Constr () int)))) list))))
+      (Type 151 (Former (Constr ((Type 25 (Former (Constr () int)))) list))))
      ("Type_expr.decode type_expr2"
-      (Type 18955
-       (Former (Constr ((Type 18956 (Former (Constr () bool)))) list))))) |}]
+      (Type 154 (Former (Constr ((Type 155 (Former (Constr () bool)))) list))))) |}]

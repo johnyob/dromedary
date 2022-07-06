@@ -49,108 +49,108 @@ let%expect_test "test-1" =
                └──Type declaration kind: Variant
                   └──Constructor declaration:
                      └──Constructor name: Int
-                     └──Constructor alphas: 20936
+                     └──Constructor alphas: 41
                      └──Constructor type:
                         └──Type expr: Constructor: t
-                           └──Type expr: Variable: 20936
+                           └──Type expr: Variable: 41
                      └──Constructor argument:
                         └──Constructor betas:
                         └──Type expr: Constructor: int
                      └──Constraint:
-                        └──Type expr: Variable: 20936
+                        └──Type expr: Variable: 41
                         └──Type expr: Constructor: int
                   └──Constructor declaration:
                      └──Constructor name: Bool
-                     └──Constructor alphas: 20936
+                     └──Constructor alphas: 41
                      └──Constructor type:
                         └──Type expr: Constructor: t
-                           └──Type expr: Variable: 20936
+                           └──Type expr: Variable: 41
                      └──Constructor argument:
                         └──Constructor betas:
                         └──Type expr: Constructor: bool
                      └──Constraint:
-                        └──Type expr: Variable: 20936
+                        └──Type expr: Variable: 41
                         └──Type expr: Constructor: bool
                   └──Constructor declaration:
                      └──Constructor name: Pair
-                     └──Constructor alphas: 20936
+                     └──Constructor alphas: 41
                      └──Constructor type:
                         └──Type expr: Constructor: t
-                           └──Type expr: Variable: 20936
+                           └──Type expr: Variable: 41
                      └──Constructor argument:
-                        └──Constructor betas: 20944 20943
+                        └──Constructor betas: 49 48
                         └──Type expr: Tuple
                            └──Type expr: Constructor: t
-                              └──Type expr: Variable: 20943
+                              └──Type expr: Variable: 48
                            └──Type expr: Constructor: t
-                              └──Type expr: Variable: 20944
+                              └──Type expr: Variable: 49
                      └──Constraint:
-                        └──Type expr: Variable: 20936
+                        └──Type expr: Variable: 41
                         └──Type expr: Tuple
-                           └──Type expr: Variable: 20943
-                           └──Type expr: Variable: 20944
+                           └──Type expr: Variable: 48
+                           └──Type expr: Variable: 49
                   └──Constructor declaration:
                      └──Constructor name: App
-                     └──Constructor alphas: 20936
+                     └──Constructor alphas: 41
                      └──Constructor type:
                         └──Type expr: Constructor: t
-                           └──Type expr: Variable: 20936
+                           └──Type expr: Variable: 41
                      └──Constructor argument:
-                        └──Constructor betas: 20950
+                        └──Constructor betas: 55
                         └──Type expr: Tuple
                            └──Type expr: Constructor: t
                               └──Type expr: Arrow
-                                 └──Type expr: Variable: 20950
-                                 └──Type expr: Variable: 20936
+                                 └──Type expr: Variable: 55
+                                 └──Type expr: Variable: 41
                            └──Type expr: Constructor: t
-                              └──Type expr: Variable: 20950
+                              └──Type expr: Variable: 55
                   └──Constructor declaration:
                      └──Constructor name: Abs
-                     └──Constructor alphas: 20936
+                     └──Constructor alphas: 41
                      └──Constructor type:
                         └──Type expr: Constructor: t
-                           └──Type expr: Variable: 20936
+                           └──Type expr: Variable: 41
                      └──Constructor argument:
-                        └──Constructor betas: 20957 20956
+                        └──Constructor betas: 62 61
                         └──Type expr: Arrow
-                           └──Type expr: Variable: 20956
-                           └──Type expr: Variable: 20957
+                           └──Type expr: Variable: 61
+                           └──Type expr: Variable: 62
                      └──Constraint:
-                        └──Type expr: Variable: 20936
+                        └──Type expr: Variable: 41
                         └──Type expr: Arrow
-                           └──Type expr: Variable: 20956
-                           └──Type expr: Variable: 20957
+                           └──Type expr: Variable: 61
+                           └──Type expr: Variable: 62
          └──Structure item: Let
             └──Value bindings:
                └──Value binding:
                   └──Variable: eval
                   └──Abstraction:
-                     └──Variables: 20965
+                     └──Variables: 4
                      └──Expression:
                         └──Type expr: Arrow
                            └──Type expr: Constructor: t
-                              └──Type expr: Variable: 20982
-                           └──Type expr: Variable: 20982
+                              └──Type expr: Variable: 21
+                           └──Type expr: Variable: 21
                         └──Desc: Function
                            └──Pattern:
                               └──Type expr: Constructor: t
-                                 └──Type expr: Variable: 20982
+                                 └──Type expr: Variable: 21
                               └──Desc: Variable: t
                            └──Expression:
-                              └──Type expr: Variable: 20982
+                              └──Type expr: Variable: 21
                               └──Desc: Match
                                  └──Expression:
                                     └──Type expr: Constructor: t
-                                       └──Type expr: Variable: 20982
+                                       └──Type expr: Variable: 21
                                     └──Desc: Variable
                                        └──Variable: t
                                  └──Type expr: Constructor: t
-                                    └──Type expr: Variable: 20982
+                                    └──Type expr: Variable: 21
                                  └──Cases:
                                     └──Case:
                                        └──Pattern:
                                           └──Type expr: Constructor: t
-                                             └──Type expr: Variable: 20982
+                                             └──Type expr: Variable: 21
                                           └──Desc: Construct
                                              └──Constructor description:
                                                 └──Name: Int
@@ -158,18 +158,18 @@ let%expect_test "test-1" =
                                                    └──Type expr: Constructor: int
                                                 └──Constructor type:
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 20982
+                                                      └──Type expr: Variable: 21
                                              └──Pattern:
                                                 └──Type expr: Constructor: int
                                                 └──Desc: Variable: n
                                        └──Expression:
-                                          └──Type expr: Variable: 20982
+                                          └──Type expr: Variable: 21
                                           └──Desc: Variable
                                              └──Variable: n
                                     └──Case:
                                        └──Pattern:
                                           └──Type expr: Constructor: t
-                                             └──Type expr: Variable: 20982
+                                             └──Type expr: Variable: 21
                                           └──Desc: Construct
                                              └──Constructor description:
                                                 └──Name: Bool
@@ -177,84 +177,84 @@ let%expect_test "test-1" =
                                                    └──Type expr: Constructor: bool
                                                 └──Constructor type:
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 20982
+                                                      └──Type expr: Variable: 21
                                              └──Pattern:
                                                 └──Type expr: Constructor: bool
                                                 └──Desc: Variable: b
                                        └──Expression:
-                                          └──Type expr: Variable: 20982
+                                          └──Type expr: Variable: 21
                                           └──Desc: Variable
                                              └──Variable: b
                                     └──Case:
                                        └──Pattern:
                                           └──Type expr: Constructor: t
-                                             └──Type expr: Variable: 20982
+                                             └──Type expr: Variable: 21
                                           └──Desc: Construct
                                              └──Constructor description:
                                                 └──Name: Pair
                                                 └──Constructor argument type:
                                                    └──Type expr: Tuple
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21022
+                                                         └──Type expr: Variable: 61
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21020
+                                                         └──Type expr: Variable: 59
                                                 └──Constructor type:
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 20982
+                                                      └──Type expr: Variable: 21
                                              └──Pattern:
                                                 └──Type expr: Tuple
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 21022
+                                                      └──Type expr: Variable: 61
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 21020
+                                                      └──Type expr: Variable: 59
                                                 └──Desc: Tuple
                                                    └──Pattern:
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21022
+                                                         └──Type expr: Variable: 61
                                                       └──Desc: Variable: t1
                                                    └──Pattern:
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21020
+                                                         └──Type expr: Variable: 59
                                                       └──Desc: Variable: t2
                                        └──Expression:
-                                          └──Type expr: Variable: 20982
+                                          └──Type expr: Variable: 21
                                           └──Desc: Tuple
                                              └──Expression:
-                                                └──Type expr: Variable: 21022
+                                                └──Type expr: Variable: 61
                                                 └──Desc: Application
                                                    └──Expression:
                                                       └──Type expr: Arrow
                                                          └──Type expr: Constructor: t
-                                                            └──Type expr: Variable: 21022
-                                                         └──Type expr: Variable: 21022
+                                                            └──Type expr: Variable: 61
+                                                         └──Type expr: Variable: 61
                                                       └──Desc: Variable
                                                          └──Variable: eval
-                                                         └──Type expr: Variable: 21022
+                                                         └──Type expr: Variable: 61
                                                    └──Expression:
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21022
+                                                         └──Type expr: Variable: 61
                                                       └──Desc: Variable
                                                          └──Variable: t1
                                              └──Expression:
-                                                └──Type expr: Variable: 21020
+                                                └──Type expr: Variable: 59
                                                 └──Desc: Application
                                                    └──Expression:
                                                       └──Type expr: Arrow
                                                          └──Type expr: Constructor: t
-                                                            └──Type expr: Variable: 21020
-                                                         └──Type expr: Variable: 21020
+                                                            └──Type expr: Variable: 59
+                                                         └──Type expr: Variable: 59
                                                       └──Desc: Variable
                                                          └──Variable: eval
-                                                         └──Type expr: Variable: 21020
+                                                         └──Type expr: Variable: 59
                                                    └──Expression:
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21020
+                                                         └──Type expr: Variable: 59
                                                       └──Desc: Variable
                                                          └──Variable: t2
                                     └──Case:
                                        └──Pattern:
                                           └──Type expr: Constructor: t
-                                             └──Type expr: Variable: 20982
+                                             └──Type expr: Variable: 21
                                           └──Desc: Construct
                                              └──Constructor description:
                                                 └──Name: App
@@ -262,98 +262,98 @@ let%expect_test "test-1" =
                                                    └──Type expr: Tuple
                                                       └──Type expr: Constructor: t
                                                          └──Type expr: Arrow
-                                                            └──Type expr: Variable: 21069
-                                                            └──Type expr: Variable: 20982
+                                                            └──Type expr: Variable: 108
+                                                            └──Type expr: Variable: 21
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21069
+                                                         └──Type expr: Variable: 108
                                                 └──Constructor type:
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 20982
+                                                      └──Type expr: Variable: 21
                                              └──Pattern:
                                                 └──Type expr: Tuple
                                                    └──Type expr: Constructor: t
                                                       └──Type expr: Arrow
-                                                         └──Type expr: Variable: 21069
-                                                         └──Type expr: Variable: 20982
+                                                         └──Type expr: Variable: 108
+                                                         └──Type expr: Variable: 21
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 21069
+                                                      └──Type expr: Variable: 108
                                                 └──Desc: Tuple
                                                    └──Pattern:
                                                       └──Type expr: Constructor: t
                                                          └──Type expr: Arrow
-                                                            └──Type expr: Variable: 21069
-                                                            └──Type expr: Variable: 20982
+                                                            └──Type expr: Variable: 108
+                                                            └──Type expr: Variable: 21
                                                       └──Desc: Variable: f
                                                    └──Pattern:
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21069
+                                                         └──Type expr: Variable: 108
                                                       └──Desc: Variable: x
                                        └──Expression:
-                                          └──Type expr: Variable: 20982
+                                          └──Type expr: Variable: 21
                                           └──Desc: Application
                                              └──Expression:
                                                 └──Type expr: Arrow
-                                                   └──Type expr: Variable: 21069
-                                                   └──Type expr: Variable: 20982
+                                                   └──Type expr: Variable: 108
+                                                   └──Type expr: Variable: 21
                                                 └──Desc: Application
                                                    └──Expression:
                                                       └──Type expr: Arrow
                                                          └──Type expr: Constructor: t
                                                             └──Type expr: Arrow
-                                                               └──Type expr: Variable: 21069
-                                                               └──Type expr: Variable: 20982
+                                                               └──Type expr: Variable: 108
+                                                               └──Type expr: Variable: 21
                                                          └──Type expr: Arrow
-                                                            └──Type expr: Variable: 21069
-                                                            └──Type expr: Variable: 20982
+                                                            └──Type expr: Variable: 108
+                                                            └──Type expr: Variable: 21
                                                       └──Desc: Variable
                                                          └──Variable: eval
                                                          └──Type expr: Arrow
-                                                            └──Type expr: Variable: 21069
-                                                            └──Type expr: Variable: 20982
+                                                            └──Type expr: Variable: 108
+                                                            └──Type expr: Variable: 21
                                                    └──Expression:
                                                       └──Type expr: Constructor: t
                                                          └──Type expr: Arrow
-                                                            └──Type expr: Variable: 21069
-                                                            └──Type expr: Variable: 20982
+                                                            └──Type expr: Variable: 108
+                                                            └──Type expr: Variable: 21
                                                       └──Desc: Variable
                                                          └──Variable: f
                                              └──Expression:
-                                                └──Type expr: Variable: 21069
+                                                └──Type expr: Variable: 108
                                                 └──Desc: Application
                                                    └──Expression:
                                                       └──Type expr: Arrow
                                                          └──Type expr: Constructor: t
-                                                            └──Type expr: Variable: 21069
-                                                         └──Type expr: Variable: 21069
+                                                            └──Type expr: Variable: 108
+                                                         └──Type expr: Variable: 108
                                                       └──Desc: Variable
                                                          └──Variable: eval
-                                                         └──Type expr: Variable: 21069
+                                                         └──Type expr: Variable: 108
                                                    └──Expression:
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21069
+                                                         └──Type expr: Variable: 108
                                                       └──Desc: Variable
                                                          └──Variable: x
                                     └──Case:
                                        └──Pattern:
                                           └──Type expr: Constructor: t
-                                             └──Type expr: Variable: 20982
+                                             └──Type expr: Variable: 21
                                           └──Desc: Construct
                                              └──Constructor description:
                                                 └──Name: Abs
                                                 └──Constructor argument type:
                                                    └──Type expr: Arrow
-                                                      └──Type expr: Variable: 21102
-                                                      └──Type expr: Variable: 21103
+                                                      └──Type expr: Variable: 141
+                                                      └──Type expr: Variable: 142
                                                 └──Constructor type:
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 20982
+                                                      └──Type expr: Variable: 21
                                              └──Pattern:
                                                 └──Type expr: Arrow
-                                                   └──Type expr: Variable: 21102
-                                                   └──Type expr: Variable: 21103
+                                                   └──Type expr: Variable: 141
+                                                   └──Type expr: Variable: 142
                                                 └──Desc: Variable: f
                                        └──Expression:
-                                          └──Type expr: Variable: 20982
+                                          └──Type expr: Variable: 21
                                           └──Desc: Variable
                                              └──Variable: f
          └──Structure item: Let
@@ -362,36 +362,36 @@ let%expect_test "test-1" =
                   └──Pattern:
                      └──Type expr: Arrow
                         └──Type expr: Constructor: t
-                           └──Type expr: Variable: 21129
+                           └──Type expr: Variable: 168
                         └──Type expr: Constructor: int
                      └──Desc: Variable: discern
                   └──Abstraction:
-                     └──Variables: 21129
+                     └──Variables: 168
                      └──Expression:
                         └──Type expr: Arrow
                            └──Type expr: Constructor: t
-                              └──Type expr: Variable: 21129
+                              └──Type expr: Variable: 168
                            └──Type expr: Constructor: int
                         └──Desc: Function
                            └──Pattern:
                               └──Type expr: Constructor: t
-                                 └──Type expr: Variable: 21129
+                                 └──Type expr: Variable: 168
                               └──Desc: Variable: t
                            └──Expression:
                               └──Type expr: Constructor: int
                               └──Desc: Match
                                  └──Expression:
                                     └──Type expr: Constructor: t
-                                       └──Type expr: Variable: 21129
+                                       └──Type expr: Variable: 168
                                     └──Desc: Variable
                                        └──Variable: t
                                  └──Type expr: Constructor: t
-                                    └──Type expr: Variable: 21129
+                                    └──Type expr: Variable: 168
                                  └──Cases:
                                     └──Case:
                                        └──Pattern:
                                           └──Type expr: Constructor: t
-                                             └──Type expr: Variable: 21129
+                                             └──Type expr: Variable: 168
                                           └──Desc: Construct
                                              └──Constructor description:
                                                 └──Name: Int
@@ -399,7 +399,7 @@ let%expect_test "test-1" =
                                                    └──Type expr: Constructor: int
                                                 └──Constructor type:
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 21129
+                                                      └──Type expr: Variable: 168
                                              └──Pattern:
                                                 └──Type expr: Constructor: int
                                                 └──Desc: Any
@@ -409,7 +409,7 @@ let%expect_test "test-1" =
                                     └──Case:
                                        └──Pattern:
                                           └──Type expr: Constructor: t
-                                             └──Type expr: Variable: 21129
+                                             └──Type expr: Variable: 168
                                           └──Desc: Construct
                                              └──Constructor description:
                                                 └──Name: Bool
@@ -417,7 +417,7 @@ let%expect_test "test-1" =
                                                    └──Type expr: Constructor: bool
                                                 └──Constructor type:
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 21129
+                                                      └──Type expr: Variable: 168
                                              └──Pattern:
                                                 └──Type expr: Constructor: bool
                                                 └──Desc: Any
@@ -427,25 +427,25 @@ let%expect_test "test-1" =
                                     └──Case:
                                        └──Pattern:
                                           └──Type expr: Constructor: t
-                                             └──Type expr: Variable: 21129
+                                             └──Type expr: Variable: 168
                                           └──Desc: Construct
                                              └──Constructor description:
                                                 └──Name: Pair
                                                 └──Constructor argument type:
                                                    └──Type expr: Tuple
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21156
+                                                         └──Type expr: Variable: 195
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21154
+                                                         └──Type expr: Variable: 193
                                                 └──Constructor type:
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 21129
+                                                      └──Type expr: Variable: 168
                                              └──Pattern:
                                                 └──Type expr: Tuple
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 21156
+                                                      └──Type expr: Variable: 195
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 21154
+                                                      └──Type expr: Variable: 193
                                                 └──Desc: Any
                                        └──Expression:
                                           └──Type expr: Constructor: int
@@ -453,7 +453,7 @@ let%expect_test "test-1" =
                                     └──Case:
                                        └──Pattern:
                                           └──Type expr: Constructor: t
-                                             └──Type expr: Variable: 21129
+                                             └──Type expr: Variable: 168
                                           └──Desc: Construct
                                              └──Constructor description:
                                                 └──Name: App
@@ -461,21 +461,21 @@ let%expect_test "test-1" =
                                                    └──Type expr: Tuple
                                                       └──Type expr: Constructor: t
                                                          └──Type expr: Arrow
-                                                            └──Type expr: Variable: 21173
-                                                            └──Type expr: Variable: 21129
+                                                            └──Type expr: Variable: 212
+                                                            └──Type expr: Variable: 168
                                                       └──Type expr: Constructor: t
-                                                         └──Type expr: Variable: 21173
+                                                         └──Type expr: Variable: 212
                                                 └──Constructor type:
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 21129
+                                                      └──Type expr: Variable: 168
                                              └──Pattern:
                                                 └──Type expr: Tuple
                                                    └──Type expr: Constructor: t
                                                       └──Type expr: Arrow
-                                                         └──Type expr: Variable: 21173
-                                                         └──Type expr: Variable: 21129
+                                                         └──Type expr: Variable: 212
+                                                         └──Type expr: Variable: 168
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 21173
+                                                      └──Type expr: Variable: 212
                                                 └──Desc: Any
                                        └──Expression:
                                           └──Type expr: Constructor: int
@@ -483,21 +483,21 @@ let%expect_test "test-1" =
                                     └──Case:
                                        └──Pattern:
                                           └──Type expr: Constructor: t
-                                             └──Type expr: Variable: 21129
+                                             └──Type expr: Variable: 168
                                           └──Desc: Construct
                                              └──Constructor description:
                                                 └──Name: Abs
                                                 └──Constructor argument type:
                                                    └──Type expr: Arrow
-                                                      └──Type expr: Variable: 21182
-                                                      └──Type expr: Variable: 21183
+                                                      └──Type expr: Variable: 221
+                                                      └──Type expr: Variable: 222
                                                 └──Constructor type:
                                                    └──Type expr: Constructor: t
-                                                      └──Type expr: Variable: 21129
+                                                      └──Type expr: Variable: 168
                                              └──Pattern:
                                                 └──Type expr: Arrow
-                                                   └──Type expr: Variable: 21182
-                                                   └──Type expr: Variable: 21183
+                                                   └──Type expr: Variable: 221
+                                                   └──Type expr: Variable: 222
                                                 └──Desc: Any
                                        └──Expression:
                                           └──Type expr: Constructor: int
@@ -545,30 +545,30 @@ let%expect_test "test-2" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 21191
+                   └──Constructor alphas: 230
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 21191
+                         └──Type expr: Variable: 230
                    └──Constraint:
-                      └──Type expr: Variable: 21191
+                      └──Type expr: Variable: 230
                       └──Type expr: Constructor: zero
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 21191
+                   └──Constructor alphas: 230
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 21191
+                         └──Type expr: Variable: 230
                    └──Constructor argument:
-                      └──Constructor betas: 21195 21194
+                      └──Constructor betas: 234 233
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 21194
+                         └──Type expr: Variable: 233
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 21195
+                            └──Type expr: Variable: 234
                    └──Constraint:
-                      └──Type expr: Variable: 21191
+                      └──Type expr: Variable: 230
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 21194
-                         └──Type expr: Variable: 21195
+                         └──Type expr: Variable: 233
+                         └──Type expr: Variable: 234
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -576,53 +576,53 @@ let%expect_test "test-2" =
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
                          └──Type expr: Tuple
-                            └──Type expr: Variable: 21220
-                            └──Type expr: Variable: 21221
-                      └──Type expr: Variable: 21223
+                            └──Type expr: Variable: 20
+                            └──Type expr: Variable: 21
+                      └──Type expr: Variable: 23
                    └──Desc: Variable: head
                 └──Abstraction:
-                   └──Variables: 21220,21221,21223,21223
+                   └──Variables: 20,21,23,23
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
                             └──Type expr: Tuple
-                               └──Type expr: Variable: 21220
-                               └──Type expr: Variable: 21221
-                         └──Type expr: Variable: 21223
+                               └──Type expr: Variable: 20
+                               └──Type expr: Variable: 21
+                         └──Type expr: Variable: 23
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
                                └──Type expr: Tuple
-                                  └──Type expr: Variable: 21220
-                                  └──Type expr: Variable: 21221
+                                  └──Type expr: Variable: 20
+                                  └──Type expr: Variable: 21
                             └──Desc: Construct
                                └──Constructor description:
                                   └──Name: Cons
                                   └──Constructor argument type:
                                      └──Type expr: Tuple
-                                        └──Type expr: Variable: 21223
+                                        └──Type expr: Variable: 23
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 21225
+                                           └──Type expr: Variable: 25
                                   └──Constructor type:
                                      └──Type expr: Constructor: t
                                         └──Type expr: Tuple
-                                           └──Type expr: Variable: 21220
-                                           └──Type expr: Variable: 21221
+                                           └──Type expr: Variable: 20
+                                           └──Type expr: Variable: 21
                                └──Pattern:
                                   └──Type expr: Tuple
-                                     └──Type expr: Variable: 21223
+                                     └──Type expr: Variable: 23
                                      └──Type expr: Constructor: t
-                                        └──Type expr: Variable: 21225
+                                        └──Type expr: Variable: 25
                                   └──Desc: Tuple
                                      └──Pattern:
-                                        └──Type expr: Variable: 21223
+                                        └──Type expr: Variable: 23
                                         └──Desc: Variable: x
                                      └──Pattern:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 21225
+                                           └──Type expr: Variable: 25
                                         └──Desc: Any
                          └──Expression:
-                            └──Type expr: Variable: 21223
+                            └──Type expr: Variable: 23
                             └──Desc: Variable
                                └──Variable: x
        └──Structure item: Let
@@ -632,56 +632,56 @@ let%expect_test "test-2" =
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
                          └──Type expr: Tuple
-                            └──Type expr: Variable: 21255
-                            └──Type expr: Variable: 21256
+                            └──Type expr: Variable: 55
+                            └──Type expr: Variable: 56
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 21260
+                         └──Type expr: Variable: 60
                    └──Desc: Variable: tail
                 └──Abstraction:
-                   └──Variables: 21255,21256
+                   └──Variables: 55,56
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
                             └──Type expr: Tuple
-                               └──Type expr: Variable: 21255
-                               └──Type expr: Variable: 21256
+                               └──Type expr: Variable: 55
+                               └──Type expr: Variable: 56
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 21260
+                            └──Type expr: Variable: 60
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
                                └──Type expr: Tuple
-                                  └──Type expr: Variable: 21255
-                                  └──Type expr: Variable: 21256
+                                  └──Type expr: Variable: 55
+                                  └──Type expr: Variable: 56
                             └──Desc: Construct
                                └──Constructor description:
                                   └──Name: Cons
                                   └──Constructor argument type:
                                      └──Type expr: Tuple
-                                        └──Type expr: Variable: 21258
+                                        └──Type expr: Variable: 58
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 21260
+                                           └──Type expr: Variable: 60
                                   └──Constructor type:
                                      └──Type expr: Constructor: t
                                         └──Type expr: Tuple
-                                           └──Type expr: Variable: 21255
-                                           └──Type expr: Variable: 21256
+                                           └──Type expr: Variable: 55
+                                           └──Type expr: Variable: 56
                                └──Pattern:
                                   └──Type expr: Tuple
-                                     └──Type expr: Variable: 21258
+                                     └──Type expr: Variable: 58
                                      └──Type expr: Constructor: t
-                                        └──Type expr: Variable: 21260
+                                        └──Type expr: Variable: 60
                                   └──Desc: Tuple
                                      └──Pattern:
-                                        └──Type expr: Variable: 21258
+                                        └──Type expr: Variable: 58
                                         └──Desc: Any
                                      └──Pattern:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 21260
+                                           └──Type expr: Variable: 60
                                         └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 21260
+                               └──Type expr: Variable: 60
                             └──Desc: Variable
                                └──Variable: t
        └──Structure item: Let
@@ -689,68 +689,68 @@ let%expect_test "test-2" =
              └──Value binding:
                 └──Variable: length
                 └──Abstraction:
-                   └──Variables: 21276
+                   └──Variables: 76
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 21294
+                            └──Type expr: Variable: 94
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 21294
+                               └──Type expr: Variable: 94
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: int
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: 21294
+                                     └──Type expr: Variable: 94
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: 21294
+                                  └──Type expr: Variable: 94
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 21294
+                                           └──Type expr: Variable: 94
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Nil
                                               └──Constructor type:
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: 21294
+                                                    └──Type expr: Variable: 94
                                      └──Expression:
                                         └──Type expr: Constructor: int
                                         └──Desc: Constant: 0
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 21294
+                                           └──Type expr: Variable: 94
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Cons
                                               └──Constructor argument type:
                                                  └──Type expr: Tuple
-                                                    └──Type expr: Variable: 21318
+                                                    └──Type expr: Variable: 118
                                                     └──Type expr: Constructor: t
-                                                       └──Type expr: Variable: 21320
+                                                       └──Type expr: Variable: 120
                                               └──Constructor type:
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: 21294
+                                                    └──Type expr: Variable: 94
                                            └──Pattern:
                                               └──Type expr: Tuple
-                                                 └──Type expr: Variable: 21318
+                                                 └──Type expr: Variable: 118
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: 21320
+                                                    └──Type expr: Variable: 120
                                               └──Desc: Tuple
                                                  └──Pattern:
-                                                    └──Type expr: Variable: 21318
+                                                    └──Type expr: Variable: 118
                                                     └──Desc: Any
                                                  └──Pattern:
                                                     └──Type expr: Constructor: t
-                                                       └──Type expr: Variable: 21320
+                                                       └──Type expr: Variable: 120
                                                     └──Desc: Variable: t
                                      └──Expression:
                                         └──Type expr: Constructor: int
@@ -776,14 +776,14 @@ let%expect_test "test-2" =
                                                  └──Expression:
                                                     └──Type expr: Arrow
                                                        └──Type expr: Constructor: t
-                                                          └──Type expr: Variable: 21320
+                                                          └──Type expr: Variable: 120
                                                        └──Type expr: Constructor: int
                                                     └──Desc: Variable
                                                        └──Variable: length
-                                                       └──Type expr: Variable: 21320
+                                                       └──Type expr: Variable: 120
                                                  └──Expression:
                                                     └──Type expr: Constructor: t
-                                                       └──Type expr: Variable: 21320
+                                                       └──Type expr: Variable: 120
                                                     └──Desc: Variable
                                                        └──Variable: t |}]
 
@@ -817,27 +817,27 @@ let%expect_test "test-3" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: C1
-                   └──Constructor alphas: 21359
+                   └──Constructor alphas: 159
                    └──Constructor type:
                       └──Type expr: Constructor: u
-                         └──Type expr: Variable: 21359
+                         └──Type expr: Variable: 159
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: int
                    └──Constraint:
-                      └──Type expr: Variable: 21359
+                      └──Type expr: Variable: 159
                       └──Type expr: Constructor: int
                 └──Constructor declaration:
                    └──Constructor name: C2
-                   └──Constructor alphas: 21359
+                   └──Constructor alphas: 159
                    └──Constructor type:
                       └──Type expr: Constructor: u
-                         └──Type expr: Variable: 21359
+                         └──Type expr: Variable: 159
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: bool
                    └──Constraint:
-                      └──Type expr: Variable: 21359
+                      └──Type expr: Variable: 159
                       └──Type expr: Constructor: bool
        └──Structure item: Type
           └──Type declaration:
@@ -845,15 +845,15 @@ let%expect_test "test-3" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: C3
-                   └──Constructor alphas: 21366
+                   └──Constructor alphas: 166
                    └──Constructor type:
                       └──Type expr: Constructor: v
-                         └──Type expr: Variable: 21366
+                         └──Type expr: Variable: 166
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: int
                    └──Constraint:
-                      └──Type expr: Variable: 21366
+                      └──Type expr: Variable: 166
                       └──Type expr: Constructor: int
        └──Structure item: Let
           └──Value bindings:
@@ -861,36 +861,36 @@ let%expect_test "test-3" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: u
-                         └──Type expr: Variable: 21379
-                      └──Type expr: Variable: 21379
+                         └──Type expr: Variable: 9
+                      └──Type expr: Variable: 9
                    └──Desc: Variable: unexhaustive
                 └──Abstraction:
-                   └──Variables: 21379
+                   └──Variables: 9
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: u
-                            └──Type expr: Variable: 21379
-                         └──Type expr: Variable: 21379
+                            └──Type expr: Variable: 9
+                         └──Type expr: Variable: 9
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: u
-                               └──Type expr: Variable: 21379
+                               └──Type expr: Variable: 9
                             └──Desc: Variable: t
                          └──Expression:
-                            └──Type expr: Variable: 21379
+                            └──Type expr: Variable: 9
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: u
-                                     └──Type expr: Variable: 21379
+                                     └──Type expr: Variable: 9
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: u
-                                  └──Type expr: Variable: 21379
+                                  └──Type expr: Variable: 9
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: u
-                                           └──Type expr: Variable: 21379
+                                           └──Type expr: Variable: 9
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: C2
@@ -898,12 +898,12 @@ let%expect_test "test-3" =
                                                  └──Type expr: Constructor: bool
                                               └──Constructor type:
                                                  └──Type expr: Constructor: u
-                                                    └──Type expr: Variable: 21379
+                                                    └──Type expr: Variable: 9
                                            └──Pattern:
                                               └──Type expr: Constructor: bool
                                               └──Desc: Variable: x
                                      └──Expression:
-                                        └──Type expr: Variable: 21379
+                                        └──Type expr: Variable: 9
                                         └──Desc: Variable
                                            └──Variable: x |}]
 
@@ -953,27 +953,27 @@ let%expect_test "test-4" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Foo
-                   └──Constructor alphas: 21400
+                   └──Constructor alphas: 30
                    └──Constructor type:
                       └──Type expr: Constructor: v
-                         └──Type expr: Variable: 21400
+                         └──Type expr: Variable: 30
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: t
                    └──Constraint:
-                      └──Type expr: Variable: 21400
+                      └──Type expr: Variable: 30
                       └──Type expr: Constructor: t
                 └──Constructor declaration:
                    └──Constructor name: Bar
-                   └──Constructor alphas: 21400
+                   └──Constructor alphas: 30
                    └──Constructor type:
                       └──Type expr: Constructor: v
-                         └──Type expr: Variable: 21400
+                         └──Type expr: Variable: 30
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: u
                    └──Constraint:
-                      └──Type expr: Variable: 21400
+                      └──Type expr: Variable: 30
                       └──Type expr: Constructor: u
        └──Structure item: Let
           └──Value bindings:
@@ -981,36 +981,36 @@ let%expect_test "test-4" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: v
-                         └──Type expr: Variable: 21416
+                         └──Type expr: Variable: 9
                       └──Type expr: Arrow
                          └──Type expr: Constructor: v
-                            └──Type expr: Variable: 21416
+                            └──Type expr: Variable: 9
                          └──Type expr: Constructor: bool
                    └──Desc: Variable: same_type
                 └──Abstraction:
-                   └──Variables: 21416
+                   └──Variables: 9
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: v
-                            └──Type expr: Variable: 21416
+                            └──Type expr: Variable: 9
                          └──Type expr: Arrow
                             └──Type expr: Constructor: v
-                               └──Type expr: Variable: 21416
+                               └──Type expr: Variable: 9
                             └──Type expr: Constructor: bool
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: v
-                               └──Type expr: Variable: 21416
+                               └──Type expr: Variable: 9
                             └──Desc: Variable: t1
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: v
-                                  └──Type expr: Variable: 21416
+                                  └──Type expr: Variable: 9
                                └──Type expr: Constructor: bool
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: v
-                                     └──Type expr: Variable: 21416
+                                     └──Type expr: Variable: 9
                                   └──Desc: Variable: t2
                                └──Expression:
                                   └──Type expr: Constructor: bool
@@ -1018,37 +1018,37 @@ let%expect_test "test-4" =
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: v
-                                              └──Type expr: Variable: 21416
+                                              └──Type expr: Variable: 9
                                            └──Type expr: Constructor: v
-                                              └──Type expr: Variable: 21416
+                                              └──Type expr: Variable: 9
                                         └──Desc: Tuple
                                            └──Expression:
                                               └──Type expr: Constructor: v
-                                                 └──Type expr: Variable: 21416
+                                                 └──Type expr: Variable: 9
                                               └──Desc: Variable
                                                  └──Variable: t1
                                            └──Expression:
                                               └──Type expr: Constructor: v
-                                                 └──Type expr: Variable: 21416
+                                                 └──Type expr: Variable: 9
                                               └──Desc: Variable
                                                  └──Variable: t2
                                      └──Type expr: Tuple
                                         └──Type expr: Constructor: v
-                                           └──Type expr: Variable: 21416
+                                           └──Type expr: Variable: 9
                                         └──Type expr: Constructor: v
-                                           └──Type expr: Variable: 21416
+                                           └──Type expr: Variable: 9
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: v
-                                                    └──Type expr: Variable: 21416
+                                                    └──Type expr: Variable: 9
                                                  └──Type expr: Constructor: v
-                                                    └──Type expr: Variable: 21416
+                                                    └──Type expr: Variable: 9
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: v
-                                                       └──Type expr: Variable: 21416
+                                                       └──Type expr: Variable: 9
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Foo
@@ -1056,13 +1056,13 @@ let%expect_test "test-4" =
                                                              └──Type expr: Constructor: t
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: v
-                                                                └──Type expr: Variable: 21416
+                                                                └──Type expr: Variable: 9
                                                        └──Pattern:
                                                           └──Type expr: Constructor: t
                                                           └──Desc: Any
                                                  └──Pattern:
                                                     └──Type expr: Constructor: v
-                                                       └──Type expr: Variable: 21416
+                                                       └──Type expr: Variable: 9
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Foo
@@ -1070,7 +1070,7 @@ let%expect_test "test-4" =
                                                              └──Type expr: Constructor: t
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: v
-                                                                └──Type expr: Variable: 21416
+                                                                └──Type expr: Variable: 9
                                                        └──Pattern:
                                                           └──Type expr: Constructor: t
                                                           └──Desc: Any
@@ -1081,13 +1081,13 @@ let%expect_test "test-4" =
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: v
-                                                    └──Type expr: Variable: 21416
+                                                    └──Type expr: Variable: 9
                                                  └──Type expr: Constructor: v
-                                                    └──Type expr: Variable: 21416
+                                                    └──Type expr: Variable: 9
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: v
-                                                       └──Type expr: Variable: 21416
+                                                       └──Type expr: Variable: 9
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Bar
@@ -1095,13 +1095,13 @@ let%expect_test "test-4" =
                                                              └──Type expr: Constructor: u
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: v
-                                                                └──Type expr: Variable: 21416
+                                                                └──Type expr: Variable: 9
                                                        └──Pattern:
                                                           └──Type expr: Constructor: u
                                                           └──Desc: Any
                                                  └──Pattern:
                                                     └──Type expr: Constructor: v
-                                                       └──Type expr: Variable: 21416
+                                                       └──Type expr: Variable: 9
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Bar
@@ -1109,7 +1109,7 @@ let%expect_test "test-4" =
                                                              └──Type expr: Constructor: u
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: v
-                                                                └──Type expr: Variable: 21416
+                                                                └──Type expr: Variable: 9
                                                        └──Pattern:
                                                           └──Type expr: Constructor: u
                                                           └──Desc: Any
@@ -1145,12 +1145,12 @@ let%expect_test "test-5" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: 21482
+                   └──Constructor alphas: 75
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 21482
+                         └──Type expr: Variable: 75
                    └──Constraint:
-                      └──Type expr: Variable: 21482
+                      └──Type expr: Variable: 75
                       └──Type expr: Constructor: int
        └──Structure item: Type
           └──Type declaration:
@@ -1158,19 +1158,19 @@ let%expect_test "test-5" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: None
-                   └──Constructor alphas: 21485
+                   └──Constructor alphas: 78
                    └──Constructor type:
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 21485
+                         └──Type expr: Variable: 78
                 └──Constructor declaration:
                    └──Constructor name: Some
-                   └──Constructor alphas: 21485
+                   └──Constructor alphas: 78
                    └──Constructor type:
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 21485
+                         └──Type expr: Variable: 78
                    └──Constructor argument:
                       └──Constructor betas:
-                      └──Type expr: Variable: 21485
+                      └──Type expr: Variable: 78
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -1256,21 +1256,21 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: 21514
+                   └──Constructor alphas: 26
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 21514
+                         └──Type expr: Variable: 26
                    └──Constraint:
-                      └──Type expr: Variable: 21514
+                      └──Type expr: Variable: 26
                       └──Type expr: Constructor: int
                 └──Constructor declaration:
                    └──Constructor name: Float
-                   └──Constructor alphas: 21514
+                   └──Constructor alphas: 26
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 21514
+                         └──Type expr: Variable: 26
                    └──Constraint:
-                      └──Type expr: Variable: 21514
+                      └──Type expr: Variable: 26
                       └──Type expr: Constructor: float
        └──Structure item: Let
           └──Value bindings:
@@ -1386,14 +1386,14 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Refl
-                   └──Constructor alphas: 21560 21561
+                   └──Constructor alphas: 41 42
                    └──Constructor type:
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: 21560
-                         └──Type expr: Variable: 21561
+                         └──Type expr: Variable: 41
+                         └──Type expr: Variable: 42
                    └──Constraint:
-                      └──Type expr: Variable: 21560
-                      └──Type expr: Variable: 21561
+                      └──Type expr: Variable: 41
+                      └──Type expr: Variable: 42
        └──Structure item: Type
           └──Type declaration:
              └──Type name: empty
@@ -1401,8 +1401,8 @@ let%expect_test "" =
                 └──Label declaration:
                    └──Label name: bottom
                    └──Label alphas:
-                   └──Label betas: 21563
-                   └──Type expr: Variable: 21563
+                   └──Label betas: 44
+                   └──Type expr: Variable: 44
                    └──Type expr: Constructor: empty
        └──Structure item: Type
           └──Type declaration:
@@ -1410,24 +1410,24 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Left
-                   └──Constructor alphas: 21565 21566
+                   └──Constructor alphas: 46 47
                    └──Constructor type:
                       └──Type expr: Constructor: sum
-                         └──Type expr: Variable: 21565
-                         └──Type expr: Variable: 21566
+                         └──Type expr: Variable: 46
+                         └──Type expr: Variable: 47
                    └──Constructor argument:
                       └──Constructor betas:
-                      └──Type expr: Variable: 21565
+                      └──Type expr: Variable: 46
                 └──Constructor declaration:
                    └──Constructor name: Right
-                   └──Constructor alphas: 21565 21566
+                   └──Constructor alphas: 46 47
                    └──Constructor type:
                       └──Type expr: Constructor: sum
-                         └──Type expr: Variable: 21565
-                         └──Type expr: Variable: 21566
+                         └──Type expr: Variable: 46
+                         └──Type expr: Variable: 47
                    └──Constructor argument:
                       └──Constructor betas:
-                      └──Type expr: Variable: 21566
+                      └──Type expr: Variable: 47
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
@@ -1534,38 +1534,38 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Nil
-                   └──Constructor alphas: 21604 21605
+                   └──Constructor alphas: 35 36
                    └──Constructor type:
                       └──Type expr: Constructor: ctx
-                         └──Type expr: Variable: 21604
-                         └──Type expr: Variable: 21605
+                         └──Type expr: Variable: 35
+                         └──Type expr: Variable: 36
                    └──Constraint:
-                      └──Type expr: Variable: 21604
+                      └──Type expr: Variable: 35
                       └──Type expr: Constructor: unit
                    └──Constraint:
-                      └──Type expr: Variable: 21605
+                      └──Type expr: Variable: 36
                       └──Type expr: Constructor: unit
                 └──Constructor declaration:
                    └──Constructor name: Cons
-                   └──Constructor alphas: 21604 21605
+                   └──Constructor alphas: 35 36
                    └──Constructor type:
                       └──Type expr: Constructor: ctx
-                         └──Type expr: Variable: 21604
-                         └──Type expr: Variable: 21605
+                         └──Type expr: Variable: 35
+                         └──Type expr: Variable: 36
                    └──Constructor argument:
-                      └──Constructor betas: 21610 21609
+                      └──Constructor betas: 41 40
                       └──Type expr: Constructor: ctx
-                         └──Type expr: Variable: 21609
-                         └──Type expr: Variable: 21610
+                         └──Type expr: Variable: 40
+                         └──Type expr: Variable: 41
                    └──Constraint:
-                      └──Type expr: Variable: 21604
+                      └──Type expr: Variable: 35
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 21609
+                         └──Type expr: Variable: 40
                          └──Type expr: Constructor: unit
                    └──Constraint:
-                      └──Type expr: Variable: 21605
+                      └──Type expr: Variable: 36
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 21610
+                         └──Type expr: Variable: 41
                          └──Type expr: Constructor: unit
        └──Structure item: Type
           └──Type declaration:
@@ -1573,128 +1573,128 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Zero
-                   └──Constructor alphas: 21617
+                   └──Constructor alphas: 48
                    └──Constructor type:
                       └──Type expr: Constructor: var
-                         └──Type expr: Variable: 21617
+                         └──Type expr: Variable: 48
                    └──Constructor argument:
-                      └──Constructor betas: 21618
+                      └──Constructor betas: 49
                       └──Type expr: Constructor: unit
                    └──Constraint:
-                      └──Type expr: Variable: 21617
+                      └──Type expr: Variable: 48
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 21618
+                         └──Type expr: Variable: 49
                          └──Type expr: Constructor: unit
                 └──Constructor declaration:
                    └──Constructor name: Succ
-                   └──Constructor alphas: 21617
+                   └──Constructor alphas: 48
                    └──Constructor type:
                       └──Type expr: Constructor: var
-                         └──Type expr: Variable: 21617
+                         └──Type expr: Variable: 48
                    └──Constructor argument:
-                      └──Constructor betas: 21623
+                      └──Constructor betas: 54
                       └──Type expr: Constructor: var
-                         └──Type expr: Variable: 21623
+                         └──Type expr: Variable: 54
                    └──Constraint:
-                      └──Type expr: Variable: 21617
+                      └──Type expr: Variable: 48
                       └──Type expr: Tuple
-                         └──Type expr: Variable: 21623
+                         └──Type expr: Variable: 54
                          └──Type expr: Constructor: unit
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Variable: f
                 └──Abstraction:
-                   └──Variables: 21640,21639
+                   └──Variables: 12,11
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: ctx
-                            └──Type expr: Variable: 21667
-                            └──Type expr: Variable: 21668
+                            └──Type expr: Variable: 39
+                            └──Type expr: Variable: 40
                          └──Type expr: Arrow
                             └──Type expr: Constructor: var
-                               └──Type expr: Variable: 21667
+                               └──Type expr: Variable: 39
                             └──Type expr: Constructor: var
-                               └──Type expr: Variable: 21668
+                               └──Type expr: Variable: 40
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: ctx
-                               └──Type expr: Variable: 21667
-                               └──Type expr: Variable: 21668
+                               └──Type expr: Variable: 39
+                               └──Type expr: Variable: 40
                             └──Desc: Variable: ctx
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: var
-                                  └──Type expr: Variable: 21667
+                                  └──Type expr: Variable: 39
                                └──Type expr: Constructor: var
-                                  └──Type expr: Variable: 21668
+                                  └──Type expr: Variable: 40
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: var
-                                     └──Type expr: Variable: 21667
+                                     └──Type expr: Variable: 39
                                   └──Desc: Variable: v
                                └──Expression:
                                   └──Type expr: Constructor: var
-                                     └──Type expr: Variable: 21668
+                                     └──Type expr: Variable: 40
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Tuple
                                            └──Type expr: Constructor: ctx
-                                              └──Type expr: Variable: 21667
-                                              └──Type expr: Variable: 21668
+                                              └──Type expr: Variable: 39
+                                              └──Type expr: Variable: 40
                                            └──Type expr: Constructor: var
-                                              └──Type expr: Variable: 21667
+                                              └──Type expr: Variable: 39
                                         └──Desc: Tuple
                                            └──Expression:
                                               └──Type expr: Constructor: ctx
-                                                 └──Type expr: Variable: 21667
-                                                 └──Type expr: Variable: 21668
+                                                 └──Type expr: Variable: 39
+                                                 └──Type expr: Variable: 40
                                               └──Desc: Variable
                                                  └──Variable: ctx
                                            └──Expression:
                                               └──Type expr: Constructor: var
-                                                 └──Type expr: Variable: 21667
+                                                 └──Type expr: Variable: 39
                                               └──Desc: Variable
                                                  └──Variable: v
                                      └──Type expr: Tuple
                                         └──Type expr: Constructor: ctx
-                                           └──Type expr: Variable: 21667
-                                           └──Type expr: Variable: 21668
+                                           └──Type expr: Variable: 39
+                                           └──Type expr: Variable: 40
                                         └──Type expr: Constructor: var
-                                           └──Type expr: Variable: 21667
+                                           └──Type expr: Variable: 39
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: ctx
-                                                    └──Type expr: Variable: 21667
-                                                    └──Type expr: Variable: 21668
+                                                    └──Type expr: Variable: 39
+                                                    └──Type expr: Variable: 40
                                                  └──Type expr: Constructor: var
-                                                    └──Type expr: Variable: 21667
+                                                    └──Type expr: Variable: 39
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: ctx
-                                                       └──Type expr: Variable: 21667
-                                                       └──Type expr: Variable: 21668
+                                                       └──Type expr: Variable: 39
+                                                       └──Type expr: Variable: 40
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Cons
                                                           └──Constructor argument type:
                                                              └──Type expr: Constructor: ctx
-                                                                └──Type expr: Variable: 21707
-                                                                └──Type expr: Variable: 21708
+                                                                └──Type expr: Variable: 79
+                                                                └──Type expr: Variable: 80
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: ctx
-                                                                └──Type expr: Variable: 21667
-                                                                └──Type expr: Variable: 21668
+                                                                └──Type expr: Variable: 39
+                                                                └──Type expr: Variable: 40
                                                        └──Pattern:
                                                           └──Type expr: Constructor: ctx
-                                                             └──Type expr: Variable: 21707
-                                                             └──Type expr: Variable: 21708
+                                                             └──Type expr: Variable: 79
+                                                             └──Type expr: Variable: 80
                                                           └──Desc: Variable: ctx
                                                  └──Pattern:
                                                     └──Type expr: Constructor: var
-                                                       └──Type expr: Variable: 21667
+                                                       └──Type expr: Variable: 39
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Zero
@@ -1702,13 +1702,13 @@ let%expect_test "" =
                                                              └──Type expr: Constructor: unit
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: var
-                                                                └──Type expr: Variable: 21667
+                                                                └──Type expr: Variable: 39
                                                        └──Pattern:
                                                           └──Type expr: Constructor: unit
                                                           └──Desc: Constant: ()
                                            └──Expression:
                                               └──Type expr: Constructor: var
-                                                 └──Type expr: Variable: 21668
+                                                 └──Type expr: Variable: 40
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Zero
@@ -1716,7 +1716,7 @@ let%expect_test "" =
                                                        └──Type expr: Constructor: unit
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: var
-                                                          └──Type expr: Variable: 21668
+                                                          └──Type expr: Variable: 40
                                                  └──Expression:
                                                     └──Type expr: Constructor: unit
                                                     └──Desc: Constant: ()
@@ -1724,93 +1724,93 @@ let%expect_test "" =
                                            └──Pattern:
                                               └──Type expr: Tuple
                                                  └──Type expr: Constructor: ctx
-                                                    └──Type expr: Variable: 21667
-                                                    └──Type expr: Variable: 21668
+                                                    └──Type expr: Variable: 39
+                                                    └──Type expr: Variable: 40
                                                  └──Type expr: Constructor: var
-                                                    └──Type expr: Variable: 21667
+                                                    └──Type expr: Variable: 39
                                               └──Desc: Tuple
                                                  └──Pattern:
                                                     └──Type expr: Constructor: ctx
-                                                       └──Type expr: Variable: 21667
-                                                       └──Type expr: Variable: 21668
+                                                       └──Type expr: Variable: 39
+                                                       └──Type expr: Variable: 40
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Cons
                                                           └──Constructor argument type:
                                                              └──Type expr: Constructor: ctx
-                                                                └──Type expr: Variable: 21752
-                                                                └──Type expr: Variable: 21753
+                                                                └──Type expr: Variable: 124
+                                                                └──Type expr: Variable: 125
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: ctx
-                                                                └──Type expr: Variable: 21667
-                                                                └──Type expr: Variable: 21668
+                                                                └──Type expr: Variable: 39
+                                                                └──Type expr: Variable: 40
                                                        └──Pattern:
                                                           └──Type expr: Constructor: ctx
-                                                             └──Type expr: Variable: 21752
-                                                             └──Type expr: Variable: 21753
+                                                             └──Type expr: Variable: 124
+                                                             └──Type expr: Variable: 125
                                                           └──Desc: Variable: ctx
                                                  └──Pattern:
                                                     └──Type expr: Constructor: var
-                                                       └──Type expr: Variable: 21667
+                                                       └──Type expr: Variable: 39
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Succ
                                                           └──Constructor argument type:
                                                              └──Type expr: Constructor: var
-                                                                └──Type expr: Variable: 21749
+                                                                └──Type expr: Variable: 121
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: var
-                                                                └──Type expr: Variable: 21667
+                                                                └──Type expr: Variable: 39
                                                        └──Pattern:
                                                           └──Type expr: Constructor: var
-                                                             └──Type expr: Variable: 21749
+                                                             └──Type expr: Variable: 121
                                                           └──Desc: Variable: v
                                            └──Expression:
                                               └──Type expr: Constructor: var
-                                                 └──Type expr: Variable: 21668
+                                                 └──Type expr: Variable: 40
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Succ
                                                     └──Constructor argument type:
                                                        └──Type expr: Constructor: var
-                                                          └──Type expr: Variable: 21753
+                                                          └──Type expr: Variable: 125
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: var
-                                                          └──Type expr: Variable: 21668
+                                                          └──Type expr: Variable: 40
                                                  └──Expression:
                                                     └──Type expr: Constructor: var
-                                                       └──Type expr: Variable: 21753
+                                                       └──Type expr: Variable: 125
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: var
-                                                                └──Type expr: Variable: 21749
+                                                                └──Type expr: Variable: 121
                                                              └──Type expr: Constructor: var
-                                                                └──Type expr: Variable: 21753
+                                                                └──Type expr: Variable: 125
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: ctx
-                                                                      └──Type expr: Variable: 21749
-                                                                      └──Type expr: Variable: 21753
+                                                                      └──Type expr: Variable: 121
+                                                                      └──Type expr: Variable: 125
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Constructor: var
-                                                                         └──Type expr: Variable: 21749
+                                                                         └──Type expr: Variable: 121
                                                                       └──Type expr: Constructor: var
-                                                                         └──Type expr: Variable: 21753
+                                                                         └──Type expr: Variable: 125
                                                                 └──Desc: Variable
                                                                    └──Variable: f
-                                                                   └──Type expr: Variable: 21753
-                                                                   └──Type expr: Variable: 21749
+                                                                   └──Type expr: Variable: 125
+                                                                   └──Type expr: Variable: 121
                                                              └──Expression:
                                                                 └──Type expr: Constructor: ctx
-                                                                   └──Type expr: Variable: 21749
-                                                                   └──Type expr: Variable: 21753
+                                                                   └──Type expr: Variable: 121
+                                                                   └──Type expr: Variable: 125
                                                                 └──Desc: Variable
                                                                    └──Variable: ctx
                                                        └──Expression:
                                                           └──Type expr: Constructor: var
-                                                             └──Type expr: Variable: 21749
+                                                             └──Type expr: Variable: 121
                                                           └──Desc: Variable
                                                              └──Variable: v |}]
 
@@ -1841,34 +1841,34 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: String
-                   └──Constructor alphas: 21803
+                   └──Constructor alphas: 175
                    └──Constructor type:
                       └──Type expr: Constructor: value
-                         └──Type expr: Variable: 21803
+                         └──Type expr: Variable: 175
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: string
                    └──Constraint:
-                      └──Type expr: Variable: 21803
+                      └──Type expr: Variable: 175
                       └──Type expr: Constructor: string
                 └──Constructor declaration:
                    └──Constructor name: Float
-                   └──Constructor alphas: 21803
+                   └──Constructor alphas: 175
                    └──Constructor type:
                       └──Type expr: Constructor: value
-                         └──Type expr: Variable: 21803
+                         └──Type expr: Variable: 175
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: float
                    └──Constraint:
-                      └──Type expr: Variable: 21803
+                      └──Type expr: Variable: 175
                       └──Type expr: Constructor: float
                 └──Constructor declaration:
                    └──Constructor name: Any
-                   └──Constructor alphas: 21803
+                   └──Constructor alphas: 175
                    └──Constructor type:
                       └──Type expr: Constructor: value
-                         └──Type expr: Variable: 21803
+                         └──Type expr: Variable: 175
        └──Structure item: Primitive
           └──Value description:
              └──Name: print_endline
@@ -1962,77 +1962,77 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Refl
-                   └──Constructor alphas: 21845 21846
+                   └──Constructor alphas: 34 35
                    └──Constructor type:
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: 21845
-                         └──Type expr: Variable: 21846
+                         └──Type expr: Variable: 34
+                         └──Type expr: Variable: 35
                    └──Constraint:
-                      └──Type expr: Variable: 21845
-                      └──Type expr: Variable: 21846
+                      └──Type expr: Variable: 34
+                      └──Type expr: Variable: 35
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: eq
-                         └──Type expr: Variable: 21865
+                         └──Type expr: Variable: 17
                          └──Type expr: Tuple
-                            └──Type expr: Variable: 21865
-                            └──Type expr: Variable: 21865
+                            └──Type expr: Variable: 17
+                            └──Type expr: Variable: 17
                       └──Type expr: Constructor: unit
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: 21865
+                   └──Variables: 17
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: eq
-                            └──Type expr: Variable: 21865
+                            └──Type expr: Variable: 17
                             └──Type expr: Tuple
-                               └──Type expr: Variable: 21865
-                               └──Type expr: Variable: 21865
+                               └──Type expr: Variable: 17
+                               └──Type expr: Variable: 17
                          └──Type expr: Constructor: unit
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: eq
-                               └──Type expr: Variable: 21865
+                               └──Type expr: Variable: 17
                                └──Type expr: Tuple
-                                  └──Type expr: Variable: 21865
-                                  └──Type expr: Variable: 21865
+                                  └──Type expr: Variable: 17
+                                  └──Type expr: Variable: 17
                             └──Desc: Variable: t
                          └──Expression:
                             └──Type expr: Constructor: unit
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: eq
-                                     └──Type expr: Variable: 21865
+                                     └──Type expr: Variable: 17
                                      └──Type expr: Tuple
-                                        └──Type expr: Variable: 21865
-                                        └──Type expr: Variable: 21865
+                                        └──Type expr: Variable: 17
+                                        └──Type expr: Variable: 17
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: eq
-                                  └──Type expr: Variable: 21865
+                                  └──Type expr: Variable: 17
                                   └──Type expr: Tuple
-                                     └──Type expr: Variable: 21865
-                                     └──Type expr: Variable: 21865
+                                     └──Type expr: Variable: 17
+                                     └──Type expr: Variable: 17
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: eq
-                                           └──Type expr: Variable: 21865
+                                           └──Type expr: Variable: 17
                                            └──Type expr: Tuple
-                                              └──Type expr: Variable: 21865
-                                              └──Type expr: Variable: 21865
+                                              └──Type expr: Variable: 17
+                                              └──Type expr: Variable: 17
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Refl
                                               └──Constructor type:
                                                  └──Type expr: Constructor: eq
-                                                    └──Type expr: Variable: 21865
+                                                    └──Type expr: Variable: 17
                                                     └──Type expr: Tuple
-                                                       └──Type expr: Variable: 21865
-                                                       └──Type expr: Variable: 21865
+                                                       └──Type expr: Variable: 17
+                                                       └──Type expr: Variable: 17
                                      └──Expression:
                                         └──Type expr: Constructor: unit
                                         └──Desc: Constant: () |}]
@@ -2065,27 +2065,27 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: 21880
+                   └──Constructor alphas: 32
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 21880
+                         └──Type expr: Variable: 32
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: int
                    └──Constraint:
-                      └──Type expr: Variable: 21880
+                      └──Type expr: Variable: 32
                       └──Type expr: Constructor: int
                 └──Constructor declaration:
                    └──Constructor name: Bool
-                   └──Constructor alphas: 21880
+                   └──Constructor alphas: 32
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 21880
+                         └──Type expr: Variable: 32
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: bool
                    └──Constraint:
-                      └──Type expr: Variable: 21880
+                      └──Type expr: Variable: 32
                       └──Type expr: Constructor: bool
        └──Structure item: Let
           └──Value bindings:
@@ -2093,36 +2093,36 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 21896
-                      └──Type expr: Variable: 21896
+                         └──Type expr: Variable: 9
+                      └──Type expr: Variable: 9
                    └──Desc: Variable: check
                 └──Abstraction:
-                   └──Variables: 21896
+                   └──Variables: 9
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 21896
-                         └──Type expr: Variable: 21896
+                            └──Type expr: Variable: 9
+                         └──Type expr: Variable: 9
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 21896
+                               └──Type expr: Variable: 9
                             └──Desc: Variable: t
                          └──Expression:
-                            └──Type expr: Variable: 21896
+                            └──Type expr: Variable: 9
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: 21896
+                                     └──Type expr: Variable: 9
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: 21896
+                                  └──Type expr: Variable: 9
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 21896
+                                           └──Type expr: Variable: 9
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Int
@@ -2130,18 +2130,18 @@ let%expect_test "" =
                                                  └──Type expr: Constructor: int
                                               └──Constructor type:
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: 21896
+                                                    └──Type expr: Variable: 9
                                            └──Pattern:
                                               └──Type expr: Constructor: int
                                               └──Desc: Variable: n
                                      └──Expression:
-                                        └──Type expr: Variable: 21896
+                                        └──Type expr: Variable: 9
                                         └──Desc: Variable
                                            └──Variable: n
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 21896
+                                           └──Type expr: Variable: 9
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Bool
@@ -2149,12 +2149,12 @@ let%expect_test "" =
                                                  └──Type expr: Constructor: bool
                                               └──Constructor type:
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: 21896
+                                                    └──Type expr: Variable: 9
                                            └──Pattern:
                                               └──Type expr: Constructor: bool
                                               └──Desc: Variable: b
                                      └──Expression:
-                                        └──Type expr: Variable: 21896
+                                        └──Type expr: Variable: 9
                                         └──Desc: Variable
                                            └──Variable: b |}]
 
@@ -2180,7 +2180,7 @@ let%expect_test "" =
   print_infer_result str;
   [%expect {|
     ("Type escape it's equational scope"
-     ("Type_expr.decode type_expr" (Type 21946 (Var 21946)))) |}]
+     ("Type_expr.decode type_expr" (Type 12 (Var 12)))) |}]
 
 let%expect_test "" =
   let str = 
@@ -2200,8 +2200,8 @@ let%expect_test "" =
   print_infer_result str;
   [%expect {|
     ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 21980 (Former (Constr () b))))
-     ("Type_expr.decode type_expr2" (Type 21976 (Former (Constr () a))))) |}]
+     ("Type_expr.decode type_expr1" (Type 10 (Former (Constr () b))))
+     ("Type_expr.decode type_expr2" (Type 6 (Former (Constr () a))))) |}]
 
 let%expect_test "" =
   let str = 
@@ -2220,8 +2220,8 @@ let%expect_test "" =
   [%expect {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1"
-      (Type 22004 (Former (Constr ((Type 22003 (Var 22003))) t))))
-     ("Type_expr.decode type_expr2" (Type 22002 (Former (Constr () int))))) |}]
+      (Type 19 (Former (Constr ((Type 18 (Var 18))) t))))
+     ("Type_expr.decode type_expr2" (Type 17 (Former (Constr () int))))) |}]
 
 let%expect_test "" =
   let str = 
@@ -2254,20 +2254,20 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: 22006
+                   └──Constructor alphas: 21
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22006
+                         └──Type expr: Variable: 21
                    └──Constraint:
-                      └──Type expr: Variable: 22006
+                      └──Type expr: Variable: 21
                       └──Type expr: Constructor: int
        └──Structure item: Primitive
           └──Value description:
              └──Name: ignore
              └──Scheme:
-                └──Variables: 22009
+                └──Variables: 0
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 22009
+                   └──Type expr: Variable: 0
                    └──Type expr: Constructor: unit
              └──Primitive name: %ignore
        └──Structure item: Let
@@ -2346,60 +2346,60 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22056
-                      └──Type expr: Variable: 22056
+                         └──Type expr: Variable: 47
+                      └──Type expr: Variable: 47
                    └──Desc: Variable: test
                 └──Abstraction:
-                   └──Variables: 22056
+                   └──Variables: 47
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 22056
-                         └──Type expr: Variable: 22056
+                            └──Type expr: Variable: 47
+                         └──Type expr: Variable: 47
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 22056
+                               └──Type expr: Variable: 47
                             └──Desc: Variable: t
                          └──Expression:
-                            └──Type expr: Variable: 22056
+                            └──Type expr: Variable: 47
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: 22056
+                                     └──Type expr: Variable: 47
                                   └──Desc: Variable
                                      └──Variable: t
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: 22056
+                                  └──Type expr: Variable: 47
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 22056
+                                           └──Type expr: Variable: 47
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Int
                                               └──Constructor type:
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: 22056
+                                                    └──Type expr: Variable: 47
                                      └──Expression:
-                                        └──Type expr: Variable: 22056
+                                        └──Type expr: Variable: 47
                                         └──Desc: Application
                                            └──Expression:
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: int
-                                                 └──Type expr: Variable: 22056
+                                                 └──Type expr: Variable: 47
                                               └──Desc: Application
                                                  └──Expression:
                                                     └──Type expr: Arrow
-                                                       └──Type expr: Variable: 22056
+                                                       └──Type expr: Variable: 47
                                                        └──Type expr: Arrow
                                                           └──Type expr: Constructor: int
-                                                          └──Type expr: Variable: 22056
+                                                          └──Type expr: Variable: 47
                                                     └──Desc: Variable
                                                        └──Variable: ky
                                                  └──Expression:
-                                                    └──Type expr: Variable: 22056
+                                                    └──Type expr: Variable: 47
                                                     └──Desc: Constant: 1
                                            └──Expression:
                                               └──Type expr: Constructor: int
@@ -2428,7 +2428,7 @@ let%expect_test "" =
   print_infer_result str;
   [%expect {|
     ("Type escape it's equational scope"
-     ("Type_expr.decode type_expr" (Type 22133 (Var 22133)))) |}]
+     ("Type_expr.decode type_expr" (Type 40 (Var 40)))) |}]
 
 let%expect_test "" =
   let str = 
@@ -2453,7 +2453,7 @@ let%expect_test "" =
   print_infer_result str;
   [%expect {|
     ("Type escape it's equational scope"
-     ("Type_expr.decode type_expr" (Type 22221 (Var 22221)))) |}]
+     ("Type_expr.decode type_expr" (Type 50 (Var 50)))) |}]
 
 let%expect_test "" =
   let str = 
@@ -2477,9 +2477,8 @@ let%expect_test "" =
   in
   print_infer_result str;
   [%expect {|
-    ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 22328 (Var 22328)))
-     ("Type_expr.decode type_expr2" (Type 22301 (Former (Constr () int))))) |}]
+    ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 77 (Var 77)))
+     ("Type_expr.decode type_expr2" (Type 50 (Former (Constr () int))))) |}]
 
 let%expect_test "" =
   let str = 
@@ -2511,20 +2510,20 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: 22329
+                   └──Constructor alphas: 78
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22329
+                         └──Type expr: Variable: 78
                    └──Constraint:
-                      └──Type expr: Variable: 22329
+                      └──Type expr: Variable: 78
                       └──Type expr: Constructor: int
        └──Structure item: Primitive
           └──Value description:
              └──Name: ignore
              └──Scheme:
-                └──Variables: 22332
+                └──Variables: 0
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 22332
+                   └──Type expr: Variable: 0
                    └──Type expr: Constructor: unit
              └──Primitive name: %ignore
        └──Structure item: Let
@@ -2603,20 +2602,20 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22383
+                         └──Type expr: Variable: 51
                       └──Type expr: Constructor: int
                    └──Desc: Variable: test
                 └──Abstraction:
-                   └──Variables: 22383
+                   └──Variables: 51
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 22383
+                            └──Type expr: Variable: 51
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 22383
+                               └──Type expr: Variable: 51
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: int
@@ -2633,22 +2632,22 @@ let%expect_test "" =
                                            └──Desc: Match
                                               └──Expression:
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: 22383
+                                                    └──Type expr: Variable: 51
                                                  └──Desc: Variable
                                                     └──Variable: x
                                               └──Type expr: Constructor: t
-                                                 └──Type expr: Variable: 22383
+                                                 └──Type expr: Variable: 51
                                               └──Cases:
                                                  └──Case:
                                                     └──Pattern:
                                                        └──Type expr: Constructor: t
-                                                          └──Type expr: Variable: 22383
+                                                          └──Type expr: Variable: 51
                                                        └──Desc: Construct
                                                           └──Constructor description:
                                                              └──Name: Int
                                                              └──Constructor type:
                                                                 └──Type expr: Constructor: t
-                                                                   └──Type expr: Variable: 22383
+                                                                   └──Type expr: Variable: 51
                                                     └──Expression:
                                                        └──Type expr: Constructor: int
                                                        └──Desc: Application
@@ -2707,20 +2706,20 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: 22401
+                   └──Constructor alphas: 69
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22401
+                         └──Type expr: Variable: 69
                    └──Constraint:
-                      └──Type expr: Variable: 22401
+                      └──Type expr: Variable: 69
                       └──Type expr: Constructor: int
        └──Structure item: Primitive
           └──Value description:
              └──Name: ignore
              └──Scheme:
-                └──Variables: 22404
+                └──Variables: 0
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 22404
+                   └──Type expr: Variable: 0
                    └──Type expr: Constructor: unit
              └──Primitive name: %ignore
        └──Structure item: Let
@@ -2799,57 +2798,57 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22451
-                      └──Type expr: Variable: 22451
+                         └──Type expr: Variable: 47
+                      └──Type expr: Variable: 47
                    └──Desc: Variable: test
                 └──Abstraction:
-                   └──Variables: 22451
+                   └──Variables: 47
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 22451
-                         └──Type expr: Variable: 22451
+                            └──Type expr: Variable: 47
+                         └──Type expr: Variable: 47
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 22451
+                               └──Type expr: Variable: 47
                             └──Desc: Variable: x
                          └──Expression:
-                            └──Type expr: Variable: 22451
+                            └──Type expr: Variable: 47
                             └──Desc: Let
                                └──Value bindings:
                                   └──Value binding:
                                      └──Pattern:
-                                        └──Type expr: Variable: 22451
+                                        └──Type expr: Variable: 47
                                         └──Desc: Variable: r
                                      └──Abstraction:
                                         └──Variables:
                                         └──Expression:
-                                           └──Type expr: Variable: 22451
+                                           └──Type expr: Variable: 47
                                            └──Desc: Match
                                               └──Expression:
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: 22451
+                                                    └──Type expr: Variable: 47
                                                  └──Desc: Variable
                                                     └──Variable: x
                                               └──Type expr: Constructor: t
-                                                 └──Type expr: Variable: 22451
+                                                 └──Type expr: Variable: 47
                                               └──Cases:
                                                  └──Case:
                                                     └──Pattern:
                                                        └──Type expr: Constructor: t
-                                                          └──Type expr: Variable: 22451
+                                                          └──Type expr: Variable: 47
                                                        └──Desc: Construct
                                                           └──Constructor description:
                                                              └──Name: Int
                                                              └──Constructor type:
                                                                 └──Type expr: Constructor: t
-                                                                   └──Type expr: Variable: 22451
+                                                                   └──Type expr: Variable: 47
                                                     └──Expression:
-                                                       └──Type expr: Variable: 22451
+                                                       └──Type expr: Variable: 47
                                                        └──Desc: Constant: 1
                                └──Expression:
-                                  └──Type expr: Variable: 22451
+                                  └──Type expr: Variable: 47
                                   └──Desc: Variable
                                      └──Variable: r |}]
 
@@ -2897,20 +2896,20 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: 22470
+                   └──Constructor alphas: 66
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22470
+                         └──Type expr: Variable: 66
                    └──Constraint:
-                      └──Type expr: Variable: 22470
+                      └──Type expr: Variable: 66
                       └──Type expr: Constructor: int
        └──Structure item: Primitive
           └──Value description:
              └──Name: ignore
              └──Scheme:
-                └──Variables: 22476
+                └──Variables: 0
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 22476
+                   └──Type expr: Variable: 0
                    └──Type expr: Constructor: unit
              └──Primitive name: %ignore
        └──Structure item: Let
@@ -2989,20 +2988,20 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22523
+                         └──Type expr: Variable: 47
                       └──Type expr: Constructor: int
                    └──Desc: Variable: test
                 └──Abstraction:
-                   └──Variables: 22523
+                   └──Variables: 47
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 22523
+                            └──Type expr: Variable: 47
                          └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 22523
+                               └──Type expr: Variable: 47
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: int
@@ -3019,22 +3018,22 @@ let%expect_test "" =
                                            └──Desc: Match
                                               └──Expression:
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: 22523
+                                                    └──Type expr: Variable: 47
                                                  └──Desc: Variable
                                                     └──Variable: x
                                               └──Type expr: Constructor: t
-                                                 └──Type expr: Variable: 22523
+                                                 └──Type expr: Variable: 47
                                               └──Cases:
                                                  └──Case:
                                                     └──Pattern:
                                                        └──Type expr: Constructor: t
-                                                          └──Type expr: Variable: 22523
+                                                          └──Type expr: Variable: 47
                                                        └──Desc: Construct
                                                           └──Constructor description:
                                                              └──Name: Int
                                                              └──Constructor type:
                                                                 └──Type expr: Constructor: t
-                                                                   └──Type expr: Variable: 22523
+                                                                   └──Type expr: Variable: 47
                                                     └──Expression:
                                                        └──Type expr: Constructor: int
                                                        └──Desc: Constant: 1
@@ -3048,157 +3047,157 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: None
-                   └──Constructor alphas: 22473
+                   └──Constructor alphas: 69
                    └──Constructor type:
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 22473
+                         └──Type expr: Variable: 69
                 └──Constructor declaration:
                    └──Constructor name: Some
-                   └──Constructor alphas: 22473
+                   └──Constructor alphas: 69
                    └──Constructor type:
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 22473
+                         └──Type expr: Variable: 69
                    └──Constructor argument:
                       └──Constructor betas:
-                      └──Type expr: Variable: 22473
+                      └──Type expr: Variable: 69
        └──Structure item: Let
           └──Value bindings:
              └──Value binding:
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22544
+                         └──Type expr: Variable: 68
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 22544
+                         └──Type expr: Variable: 68
                    └──Desc: Variable: test2
                 └──Abstraction:
-                   └──Variables: 22544
+                   └──Variables: 68
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 22544
+                            └──Type expr: Variable: 68
                          └──Type expr: Constructor: option
-                            └──Type expr: Variable: 22544
+                            └──Type expr: Variable: 68
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 22544
+                               └──Type expr: Variable: 68
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Constructor: option
-                               └──Type expr: Variable: 22544
+                               └──Type expr: Variable: 68
                             └──Desc: Let
                                └──Value bindings:
                                   └──Value binding:
                                      └──Pattern:
                                         └──Type expr: Constructor: ref
                                            └──Type expr: Constructor: option
-                                              └──Type expr: Variable: 22544
+                                              └──Type expr: Variable: 68
                                         └──Desc: Variable: r
                                      └──Abstraction:
                                         └──Variables:
                                         └──Expression:
                                            └──Type expr: Constructor: ref
                                               └──Type expr: Constructor: option
-                                                 └──Type expr: Variable: 22544
+                                                 └──Type expr: Variable: 68
                                            └──Desc: Application
                                               └──Expression:
                                                  └──Type expr: Arrow
                                                     └──Type expr: Constructor: option
-                                                       └──Type expr: Variable: 22544
+                                                       └──Type expr: Variable: 68
                                                     └──Type expr: Constructor: ref
                                                        └──Type expr: Constructor: option
-                                                          └──Type expr: Variable: 22544
+                                                          └──Type expr: Variable: 68
                                                  └──Desc: Primitive: ref
                                               └──Expression:
                                                  └──Type expr: Constructor: option
-                                                    └──Type expr: Variable: 22544
+                                                    └──Type expr: Variable: 68
                                                  └──Desc: Construct
                                                     └──Constructor description:
                                                        └──Name: None
                                                        └──Constructor type:
                                                           └──Type expr: Constructor: option
-                                                             └──Type expr: Variable: 22544
+                                                             └──Type expr: Variable: 68
                                └──Expression:
                                   └──Type expr: Constructor: option
-                                     └──Type expr: Variable: 22544
+                                     └──Type expr: Variable: 68
                                   └──Desc: Sequence
                                      └──Expression:
                                         └──Type expr: Constructor: unit
                                         └──Desc: Match
                                            └──Expression:
                                               └──Type expr: Constructor: t
-                                                 └──Type expr: Variable: 22544
+                                                 └──Type expr: Variable: 68
                                               └──Desc: Variable
                                                  └──Variable: x
                                            └──Type expr: Constructor: t
-                                              └──Type expr: Variable: 22544
+                                              └──Type expr: Variable: 68
                                            └──Cases:
                                               └──Case:
                                                  └──Pattern:
                                                     └──Type expr: Constructor: t
-                                                       └──Type expr: Variable: 22544
+                                                       └──Type expr: Variable: 68
                                                     └──Desc: Construct
                                                        └──Constructor description:
                                                           └──Name: Int
                                                           └──Constructor type:
                                                              └──Type expr: Constructor: t
-                                                                └──Type expr: Variable: 22544
+                                                                └──Type expr: Variable: 68
                                                  └──Expression:
                                                     └──Type expr: Constructor: unit
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
                                                              └──Type expr: Constructor: option
-                                                                └──Type expr: Variable: 22544
+                                                                └──Type expr: Variable: 68
                                                              └──Type expr: Constructor: unit
                                                           └──Desc: Application
                                                              └──Expression:
                                                                 └──Type expr: Arrow
                                                                    └──Type expr: Constructor: ref
                                                                       └──Type expr: Constructor: option
-                                                                         └──Type expr: Variable: 22544
+                                                                         └──Type expr: Variable: 68
                                                                    └──Type expr: Arrow
                                                                       └──Type expr: Constructor: option
-                                                                         └──Type expr: Variable: 22544
+                                                                         └──Type expr: Variable: 68
                                                                       └──Type expr: Constructor: unit
                                                                 └──Desc: Primitive: (:=)
                                                              └──Expression:
                                                                 └──Type expr: Constructor: ref
                                                                    └──Type expr: Constructor: option
-                                                                      └──Type expr: Variable: 22544
+                                                                      └──Type expr: Variable: 68
                                                                 └──Desc: Variable
                                                                    └──Variable: r
                                                        └──Expression:
                                                           └──Type expr: Constructor: option
-                                                             └──Type expr: Variable: 22544
+                                                             └──Type expr: Variable: 68
                                                           └──Desc: Construct
                                                              └──Constructor description:
                                                                 └──Name: Some
                                                                 └──Constructor argument type:
-                                                                   └──Type expr: Variable: 22544
+                                                                   └──Type expr: Variable: 68
                                                                 └──Constructor type:
                                                                    └──Type expr: Constructor: option
-                                                                      └──Type expr: Variable: 22544
+                                                                      └──Type expr: Variable: 68
                                                              └──Expression:
-                                                                └──Type expr: Variable: 22544
+                                                                └──Type expr: Variable: 68
                                                                 └──Desc: Constant: 1
                                      └──Expression:
                                         └──Type expr: Constructor: option
-                                           └──Type expr: Variable: 22544
+                                           └──Type expr: Variable: 68
                                         └──Desc: Application
                                            └──Expression:
                                               └──Type expr: Arrow
                                                  └──Type expr: Constructor: ref
                                                     └──Type expr: Constructor: option
-                                                       └──Type expr: Variable: 22544
+                                                       └──Type expr: Variable: 68
                                                  └──Type expr: Constructor: option
-                                                    └──Type expr: Variable: 22544
+                                                    └──Type expr: Variable: 68
                                               └──Desc: Primitive: (!)
                                            └──Expression:
                                               └──Type expr: Constructor: ref
                                                  └──Type expr: Constructor: option
-                                                    └──Type expr: Variable: 22544
+                                                    └──Type expr: Variable: 68
                                               └──Desc: Variable
                                                  └──Variable: r |}]
 
@@ -3237,12 +3236,12 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: 22605
+                   └──Constructor alphas: 129
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22605
+                         └──Type expr: Variable: 129
                    └──Constraint:
-                      └──Type expr: Variable: 22605
+                      └──Type expr: Variable: 129
                       └──Type expr: Constructor: int
        └──Structure item: Let
           └──Value bindings:
@@ -3283,56 +3282,56 @@ let%expect_test "" =
              └──Value binding:
                 └──Pattern:
                    └──Type expr: Arrow
-                      └──Type expr: Variable: 22631
+                      └──Type expr: Variable: 23
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 22631
+                            └──Type expr: Variable: 23
                          └──Type expr: Constructor: int
                    └──Desc: Variable: we_y1x
                 └──Abstraction:
-                   └──Variables: 22631
+                   └──Variables: 23
                    └──Expression:
                       └──Type expr: Arrow
-                         └──Type expr: Variable: 22631
+                         └──Type expr: Variable: 23
                          └──Type expr: Arrow
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 22631
+                               └──Type expr: Variable: 23
                             └──Type expr: Constructor: int
                       └──Desc: Function
                          └──Pattern:
-                            └──Type expr: Variable: 22631
+                            └──Type expr: Variable: 23
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: 22631
+                                  └──Type expr: Variable: 23
                                └──Type expr: Constructor: int
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: 22631
+                                     └──Type expr: Variable: 23
                                   └──Desc: Variable: v
                                └──Expression:
                                   └──Type expr: Constructor: int
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 22631
+                                           └──Type expr: Variable: 23
                                         └──Desc: Variable
                                            └──Variable: v
                                      └──Type expr: Constructor: t
-                                        └──Type expr: Variable: 22631
+                                        └──Type expr: Variable: 23
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: t
-                                                 └──Type expr: Variable: 22631
+                                                 └──Type expr: Variable: 23
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Int
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: t
-                                                          └──Type expr: Variable: 22631
+                                                          └──Type expr: Variable: 23
                                            └──Expression:
                                               └──Type expr: Constructor: int
                                               └──Desc: Let
@@ -3348,14 +3347,14 @@ let%expect_test "" =
                                                              └──Desc: Application
                                                                 └──Expression:
                                                                    └──Type expr: Arrow
-                                                                      └──Type expr: Variable: 22631
+                                                                      └──Type expr: Variable: 23
                                                                       └──Type expr: Constructor: int
                                                                    └──Desc: Application
                                                                       └──Expression:
                                                                          └──Type expr: Arrow
                                                                             └──Type expr: Constructor: int
                                                                             └──Type expr: Arrow
-                                                                               └──Type expr: Variable: 22631
+                                                                               └──Type expr: Variable: 23
                                                                                └──Type expr: Constructor: int
                                                                          └──Desc: Variable
                                                                             └──Variable: either
@@ -3363,7 +3362,7 @@ let%expect_test "" =
                                                                          └──Type expr: Constructor: int
                                                                          └──Desc: Constant: 1
                                                                 └──Expression:
-                                                                   └──Type expr: Variable: 22631
+                                                                   └──Type expr: Variable: 23
                                                                    └──Desc: Variable
                                                                       └──Variable: x
                                                  └──Expression:
@@ -3376,70 +3375,70 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22676
+                         └──Type expr: Variable: 68
                       └──Type expr: Arrow
-                         └──Type expr: Variable: 22676
-                         └──Type expr: Variable: 22676
+                         └──Type expr: Variable: 68
+                         └──Type expr: Variable: 68
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: 22676
+                   └──Variables: 68
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 22676
+                            └──Type expr: Variable: 68
                          └──Type expr: Arrow
-                            └──Type expr: Variable: 22676
-                            └──Type expr: Variable: 22676
+                            └──Type expr: Variable: 68
+                            └──Type expr: Variable: 68
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 22676
+                               └──Type expr: Variable: 68
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Arrow
-                               └──Type expr: Variable: 22676
-                               └──Type expr: Variable: 22676
+                               └──Type expr: Variable: 68
+                               └──Type expr: Variable: 68
                             └──Desc: Function
                                └──Pattern:
-                                  └──Type expr: Variable: 22676
+                                  └──Type expr: Variable: 68
                                   └──Desc: Variable: y
                                └──Expression:
-                                  └──Type expr: Variable: 22676
+                                  └──Type expr: Variable: 68
                                   └──Desc: Let
                                      └──Value bindings:
                                         └──Value binding:
                                            └──Pattern:
-                                              └──Type expr: Variable: 22676
+                                              └──Type expr: Variable: 68
                                               └──Desc: Variable: r
                                            └──Abstraction:
                                               └──Variables:
                                               └──Expression:
-                                                 └──Type expr: Variable: 22676
+                                                 └──Type expr: Variable: 68
                                                  └──Desc: Match
                                                     └──Expression:
                                                        └──Type expr: Constructor: t
-                                                          └──Type expr: Variable: 22676
+                                                          └──Type expr: Variable: 68
                                                        └──Desc: Variable
                                                           └──Variable: x
                                                     └──Type expr: Constructor: t
-                                                       └──Type expr: Variable: 22676
+                                                       └──Type expr: Variable: 68
                                                     └──Cases:
                                                        └──Case:
                                                           └──Pattern:
                                                              └──Type expr: Constructor: t
-                                                                └──Type expr: Variable: 22676
+                                                                └──Type expr: Variable: 68
                                                              └──Desc: Construct
                                                                 └──Constructor description:
                                                                    └──Name: Int
                                                                    └──Constructor type:
                                                                       └──Type expr: Constructor: t
-                                                                         └──Type expr: Variable: 22676
+                                                                         └──Type expr: Variable: 68
                                                           └──Expression:
-                                                             └──Type expr: Variable: 22676
+                                                             └──Type expr: Variable: 68
                                                              └──Desc: Variable
                                                                 └──Variable: y
                                      └──Expression:
-                                        └──Type expr: Variable: 22676
+                                        └──Type expr: Variable: 68
                                         └──Desc: Variable
                                            └──Variable: r |}]
 
@@ -3474,15 +3473,15 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: 22695
+                   └──Constructor alphas: 87
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22695
+                         └──Type expr: Variable: 87
                    └──Constructor argument:
                       └──Constructor betas:
                       └──Type expr: Constructor: int
                    └──Constraint:
-                      └──Type expr: Variable: 22695
+                      └──Type expr: Variable: 87
                       └──Type expr: Constructor: int
        └──Structure item: Let
           └──Value bindings:
@@ -3490,36 +3489,36 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22708
-                      └──Type expr: Variable: 22708
+                         └──Type expr: Variable: 9
+                      └──Type expr: Variable: 9
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: 22708
+                   └──Variables: 9
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 22708
-                         └──Type expr: Variable: 22708
+                            └──Type expr: Variable: 9
+                         └──Type expr: Variable: 9
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 22708
+                               └──Type expr: Variable: 9
                             └──Desc: Variable: x
                          └──Expression:
-                            └──Type expr: Variable: 22708
+                            └──Type expr: Variable: 9
                             └──Desc: Match
                                └──Expression:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: 22708
+                                     └──Type expr: Variable: 9
                                   └──Desc: Variable
                                      └──Variable: x
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: 22708
+                                  └──Type expr: Variable: 9
                                └──Cases:
                                   └──Case:
                                      └──Pattern:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 22708
+                                           └──Type expr: Variable: 9
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Int
@@ -3527,12 +3526,12 @@ let%expect_test "" =
                                                  └──Type expr: Constructor: int
                                               └──Constructor type:
                                                  └──Type expr: Constructor: t
-                                                    └──Type expr: Variable: 22708
+                                                    └──Type expr: Variable: 9
                                            └──Pattern:
                                               └──Type expr: Constructor: int
                                               └──Desc: Variable: y
                                      └──Expression:
-                                        └──Type expr: Variable: 22708
+                                        └──Type expr: Variable: 9
                                         └──Desc: Variable
                                            └──Variable: y
        └──Structure item: Let
@@ -3541,16 +3540,16 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 22763
-                      └──Type expr: Variable: 22763
+                         └──Type expr: Variable: 64
+                      └──Type expr: Variable: 64
                    └──Desc: Variable: g
                 └──Abstraction:
                    └──Variables:
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 22763
-                         └──Type expr: Variable: 22763
+                            └──Type expr: Variable: 64
+                         └──Type expr: Variable: 64
                       └──Desc: Let
                          └──Value bindings:
                             └──Value binding:
@@ -3565,28 +3564,28 @@ let%expect_test "" =
                          └──Expression:
                             └──Type expr: Arrow
                                └──Type expr: Constructor: t
-                                  └──Type expr: Variable: 22763
-                               └──Type expr: Variable: 22763
+                                  └──Type expr: Variable: 64
+                               └──Type expr: Variable: 64
                             └──Desc: Function
                                └──Pattern:
                                   └──Type expr: Constructor: t
-                                     └──Type expr: Variable: 22742
+                                     └──Type expr: Variable: 43
                                   └──Desc: Variable: x
                                └──Expression:
-                                  └──Type expr: Variable: 22742
+                                  └──Type expr: Variable: 43
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 22742
+                                           └──Type expr: Variable: 43
                                         └──Desc: Variable
                                            └──Variable: x
                                      └──Type expr: Constructor: t
-                                        └──Type expr: Variable: 22742
+                                        └──Type expr: Variable: 43
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: t
-                                                 └──Type expr: Variable: 22742
+                                                 └──Type expr: Variable: 43
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Int
@@ -3594,11 +3593,11 @@ let%expect_test "" =
                                                        └──Type expr: Constructor: int
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: t
-                                                          └──Type expr: Variable: 22742
+                                                          └──Type expr: Variable: 43
                                                  └──Pattern:
                                                     └──Type expr: Constructor: int
                                                     └──Desc: Variable: y
                                            └──Expression:
-                                              └──Type expr: Variable: 22742
+                                              └──Type expr: Variable: 43
                                               └──Desc: Variable
                                                  └──Variable: y |}]
