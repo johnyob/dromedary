@@ -83,27 +83,36 @@ let invariant _ t =
 
 let create v = ref (Root { rank = 0; value = v })
 
-(* TODO: Implement tail-recursive version of [root]. *)
-let rec root t =
-  match !t with
-  | Root _ -> t
-  | Inner t' ->
-    let root' = root t' in
-    (* Perform path compression. If [root' = t'], then 
-       [t] already points to the root. *)
-    if not (phys_equal t' root') then t := !t';
-    root'
+(* [compress t ~imm_desc ~imm_desc_node ~prop_descs] compresses the path
+   from [t] upwards to the root of [t]'s tree, where:
+    - [imm_desc] is the immediate descendent of [t], and 
+    - [prop_descs] are proper descendents of [imm_desc]
 
-(* TODO: Remove duplicate path compression logic from [root] and [repr]. *)
-let rec repr t =
+   The use of [imm_desc_node] is to avoid additional heap allocation
+   when performing path compression. 
+*)
+let rec compress t ~imm_desc ~imm_desc_node ~prop_descs =
+  match !t with
+  | Root r ->
+    (* Perform path compression *)
+    List.iter prop_descs ~f:(fun t -> t := imm_desc_node);
+    (* Return pointer to root and it's contents *)
+    t, r
+  | Inner t' as imm_desc_node ->
+    compress t' ~imm_desc:t ~imm_desc_node ~prop_descs:(imm_desc :: prop_descs)
+
+
+let repr t =
   match !t with
   | Root r -> t, r
-  | Inner t' ->
-    let ((root', _) as repr') = repr t' in
-    (* Perform path compression. If [root' = t'], then 
-       [t] already points to the root. *)
-    if not (phys_equal t' root') then t := !t';
-    repr'
+  | Inner t' as imm_desc_node ->
+    compress t' ~imm_desc:t ~imm_desc_node ~prop_descs:[]
+
+
+let root t =
+  match !t with
+  | Root _ -> t
+  | _ -> fst (repr t)
 
 
 let rec get t =
@@ -148,5 +157,5 @@ let union t1 t2 ~f =
         t2 := Root { rank = r; value = f v1 v2 }))
 
 
-let same_class t1 t2 = phys_equal (root t1) (root t2)
-let ( === ) t1 t2 = same_class t1 t2
+let is_equiv t1 t2 = phys_equal (root t1) (root t2)
+let ( === ) t1 t2 = is_equiv t1 t2

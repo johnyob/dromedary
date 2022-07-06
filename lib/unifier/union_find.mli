@@ -46,9 +46,9 @@ val set : 'a t -> 'a -> unit
     After [union t1 t2 ~f], [t1 === t2] always holds true. *)
 val union : 'a t -> 'a t -> f:('a -> 'a -> 'a) -> unit
 
-(** [same_class t1 t2] returns true iff [t1] and [t2] belong to the same
+(** [is_equiv t1 t2] returns true iff [t1] and [t2] belong to the same
     equivalence class. *)
-val same_class : 'a t -> 'a t -> bool
+val is_equiv : 'a t -> 'a t -> bool
 
-(** [t1 === t2] is equivalent to [same_class t1 t2]. *)
+(** [t1 === t2] is equivalent to [is_equiv t1 t2]. *)
 val ( === ) : 'a t -> 'a t -> bool
