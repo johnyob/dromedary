@@ -64,6 +64,9 @@ module type S = sig
 
     (** [to_dot t] returns the graph-viz .dot encoding of [t]. *)
     val to_dot : t -> string
+
+    (** [reset_id_cnt ()] resets the internal counter used for [id]. *)
+    val reset_id_cnt : unit -> unit
   end
 
   (** [unify ~ctx t1 t2] equates the graphical type nodes [t1] and [t2], 
