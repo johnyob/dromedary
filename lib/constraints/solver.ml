@@ -858,6 +858,7 @@ module Make (Algebra : Algebra) = struct
 
 
   let solve ?(debug = false) ~abbrevs =
+    U.Type.reset_id_cnt ();
     init_logs ~debug;
     with_result ~f:(fun cst ->
         let[@landmark] solved =
@@ -952,6 +953,7 @@ module Make (Algebra : Algebra) = struct
 
 
     let solve ?(debug = false) ~abbrevs =
+      U.Type.reset_id_cnt ();
       init_logs ~debug;
       with_result ~f:(fun t ->
           let[@landmark] solved =

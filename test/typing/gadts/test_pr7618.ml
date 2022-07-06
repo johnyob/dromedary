@@ -27,20 +27,20 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Int
-                   └──Constructor alphas: 15125
+                   └──Constructor alphas: 20
                    └──Constructor type:
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 15125
+                         └──Type expr: Variable: 20
                    └──Constraint:
-                      └──Type expr: Variable: 15125
+                      └──Type expr: Variable: 20
                       └──Type expr: Constructor: int
        └──Structure item: Primitive
           └──Value description:
              └──Name: ignore
              └──Scheme:
-                └──Variables: 15128
+                └──Variables: 0
                 └──Type expr: Arrow
-                   └──Type expr: Variable: 15128
+                   └──Type expr: Variable: 0
                    └──Type expr: Constructor: unit
              └──Primitive name: %ignore
        └──Structure item: Let
@@ -49,24 +49,24 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: t
-                         └──Type expr: Variable: 15142
+                         └──Type expr: Variable: 14
                       └──Type expr: Arrow
                          └──Type expr: Constructor: int
                          └──Type expr: Constructor: unit
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: 15142
+                   └──Variables: 14
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: t
-                            └──Type expr: Variable: 15142
+                            └──Type expr: Variable: 14
                          └──Type expr: Arrow
                             └──Type expr: Constructor: int
                             └──Type expr: Constructor: unit
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: t
-                               └──Type expr: Variable: 15142
+                               └──Type expr: Variable: 14
                             └──Desc: Variable: x
                          └──Expression:
                             └──Type expr: Arrow
@@ -81,22 +81,22 @@ let%expect_test "" =
                                   └──Desc: Match
                                      └──Expression:
                                         └──Type expr: Constructor: t
-                                           └──Type expr: Variable: 15142
+                                           └──Type expr: Variable: 14
                                         └──Desc: Variable
                                            └──Variable: x
                                      └──Type expr: Constructor: t
-                                        └──Type expr: Variable: 15142
+                                        └──Type expr: Variable: 14
                                      └──Cases:
                                         └──Case:
                                            └──Pattern:
                                               └──Type expr: Constructor: t
-                                                 └──Type expr: Variable: 15142
+                                                 └──Type expr: Variable: 14
                                               └──Desc: Construct
                                                  └──Constructor description:
                                                     └──Name: Int
                                                     └──Constructor type:
                                                        └──Type expr: Constructor: t
-                                                          └──Type expr: Variable: 15142
+                                                          └──Type expr: Variable: 14
                                            └──Expression:
                                               └──Type expr: Constructor: unit
                                               └──Desc: Sequence
@@ -105,13 +105,13 @@ let%expect_test "" =
                                                     └──Desc: Application
                                                        └──Expression:
                                                           └──Type expr: Arrow
-                                                             └──Type expr: Variable: 15142
+                                                             └──Type expr: Variable: 14
                                                              └──Type expr: Constructor: unit
                                                           └──Desc: Variable
                                                              └──Variable: ignore
-                                                             └──Type expr: Variable: 15142
+                                                             └──Type expr: Variable: 14
                                                        └──Expression:
-                                                          └──Type expr: Variable: 15142
+                                                          └──Type expr: Variable: 14
                                                           └──Desc: Variable
                                                              └──Variable: y
                                                  └──Expression:
@@ -141,9 +141,8 @@ let%expect_test "" =
   in
   print_infer_result str;
   [%expect {|
-    ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 15233 (Var 15233)))
-     ("Type_expr.decode type_expr2" (Type 15254 (Var 15254)))) |}]
+    ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 51 (Var 51)))
+     ("Type_expr.decode type_expr2" (Type 72 (Var 72)))) |}]
 
 let%expect_test "" = 
   let str = 
@@ -166,5 +165,5 @@ let%expect_test "" =
   print_infer_result str;
   [%expect {|
     ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 15283 (Former (Constr () string))))
-     ("Type_expr.decode type_expr2" (Type 15297 (Former (Constr () float))))) |}]
+     ("Type_expr.decode type_expr1" (Type 23 (Former (Constr () string))))
+     ("Type_expr.decode type_expr2" (Type 37 (Former (Constr () float))))) |}]

@@ -37,7 +37,7 @@ module Make (Structure : Structure.S) = struct
       (* A graphical type consists of a [Union_find] node,
      allowing reasoning w/ multi-equations of nodes. *)
 
-      type t = desc Union_find.t 
+      type t = desc Union_find.t
 
       (* Graphical type node descriptors contain information related to the 
       node that dominates the multi-equation.
@@ -64,16 +64,14 @@ module Make (Structure : Structure.S) = struct
         { id : int
         ; mutable structure : t structure
         }
-      
 
       let desc t = Union_find.get t
 
-      let rec sexp_of_desc { id; structure } = 
+      let rec sexp_of_desc { id; structure } =
         [%sexp Id (id : int), Structure (structure : t structure)]
-      
-      and sexp_of_t t = 
-        t |> desc |> sexp_of_desc
 
+
+      and sexp_of_t t = t |> desc |> sexp_of_desc
 
       (* [id t] returns the unique identifier of the type [t]. *)
       let id t = (desc t).id
@@ -96,18 +94,24 @@ module Make (Structure : Structure.S) = struct
        Based on it's integer field: id. *)
 
       let hash t = Hashtbl.hash (id t)
-
       let sexp_of_t_hum = sexp_of_t
       let sexp_of_t t = [%sexp (id t : int)]
     end
 
     include T
 
+    let next_id = ref (-1)
+    let reset_id_cnt () = next_id := -1
+
     (* [make structure metadata] returns a fresh type w/ structure [structure] and
        metadata [metadata]. *)
-    let create =
-      let id = ref (-1) in
-      fun structure -> Union_find.create { id = (Int.incr id; !id); structure }
+    let create structure =
+      Union_find.create
+        { id =
+            (Int.incr next_id;
+             !next_id)
+        ; structure
+        }
 
 
     let fold
@@ -119,7 +123,6 @@ module Make (Structure : Structure.S) = struct
         : a
       =
       Log.debug (fun m -> m "Folding over type: %d" (id type_));
-
       (* Hash table records the variables that are grey ([false])
        or black ([true]). *)
       let table = Hashtbl.create (module T) in
@@ -138,8 +141,10 @@ module Make (Structure : Structure.S) = struct
           let status = Hashtbl.find_exn table type_ in
           Hashtbl.remove table type_;
           Log.debug (fun m -> m "Loop status %b" status);
-          if status then mu type_ result else 
-            (Log.debug (fun m -> m "Returning from loop");
+          if status
+          then mu type_ result
+          else (
+            Log.debug (fun m -> m "Returning from loop");
             result))
       in
       let result = loop type_ in
@@ -227,7 +232,12 @@ module Make (Structure : Structure.S) = struct
   (* [unify_structure structure1 structure2] unifies two graph type node
      structures. *)
   and unify_structure ~ctx structure1 structure2 =
-    Structure.merge ~ctx ~create:Type.create ~unify:(unify_exn ~ctx) structure1 structure2
+    Structure.merge
+      ~ctx
+      ~create:Type.create
+      ~unify:(unify_exn ~ctx)
+      structure1
+      structure2
 
 
   exception Unify of Type.t * Type.t

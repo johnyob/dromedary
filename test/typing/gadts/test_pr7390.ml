@@ -50,31 +50,31 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: None
-                   └──Constructor alphas: 15338 15339 15340
+                   └──Constructor alphas: 33 34 35
                    └──Constructor type:
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 15338
-                         └──Type expr: Variable: 15339
-                         └──Type expr: Variable: 15340
+                         └──Type expr: Variable: 33
+                         └──Type expr: Variable: 34
+                         └──Type expr: Variable: 35
                    └──Constraint:
-                      └──Type expr: Variable: 15340
-                      └──Type expr: Variable: 15339
+                      └──Type expr: Variable: 35
+                      └──Type expr: Variable: 34
                 └──Constructor declaration:
                    └──Constructor name: Some
-                   └──Constructor alphas: 15338 15339 15340
+                   └──Constructor alphas: 33 34 35
                    └──Constructor type:
                       └──Type expr: Constructor: option
-                         └──Type expr: Variable: 15338
-                         └──Type expr: Variable: 15339
-                         └──Type expr: Variable: 15340
+                         └──Type expr: Variable: 33
+                         └──Type expr: Variable: 34
+                         └──Type expr: Variable: 35
                    └──Constructor argument:
                       └──Constructor betas:
-                      └──Type expr: Variable: 15338
+                      └──Type expr: Variable: 33
                    └──Constraint:
-                      └──Type expr: Variable: 15339
+                      └──Type expr: Variable: 34
                       └──Type expr: Constructor: filled
                    └──Constraint:
-                      └──Type expr: Variable: 15340
+                      └──Type expr: Variable: 35
                       └──Type expr: Constructor: empty
        └──Structure item: Type
           └──Type declaration:
@@ -82,20 +82,20 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Either
-                   └──Constructor alphas: 15345
+                   └──Constructor alphas: 40
                    └──Constructor type:
                       └──Type expr: Constructor: either
-                         └──Type expr: Variable: 15345
+                         └──Type expr: Variable: 40
                    └──Constructor argument:
-                      └──Constructor betas: 15346
+                      └──Constructor betas: 41
                       └──Type expr: Tuple
                          └──Type expr: Constructor: option
                             └──Type expr: Constructor: string
-                            └──Type expr: Variable: 15345
-                            └──Type expr: Variable: 15346
+                            └──Type expr: Variable: 40
+                            └──Type expr: Variable: 41
                          └──Type expr: Constructor: option
                             └──Type expr: Constructor: int
-                            └──Type expr: Variable: 15346
+                            └──Type expr: Variable: 41
                             └──Type expr: Constructor: empty
        └──Structure item: Let
           └──Value bindings:
@@ -103,20 +103,20 @@ let%expect_test "" =
                 └──Pattern:
                    └──Type expr: Arrow
                       └──Type expr: Constructor: either
-                         └──Type expr: Variable: 15376
+                         └──Type expr: Variable: 22
                       └──Type expr: Constructor: string
                    └──Desc: Variable: f
                 └──Abstraction:
-                   └──Variables: 15376
+                   └──Variables: 22
                    └──Expression:
                       └──Type expr: Arrow
                          └──Type expr: Constructor: either
-                            └──Type expr: Variable: 15376
+                            └──Type expr: Variable: 22
                          └──Type expr: Constructor: string
                       └──Desc: Function
                          └──Pattern:
                             └──Type expr: Constructor: either
-                               └──Type expr: Variable: 15376
+                               └──Type expr: Variable: 22
                             └──Desc: Construct
                                └──Constructor description:
                                   └──Name: Either
@@ -124,31 +124,31 @@ let%expect_test "" =
                                      └──Type expr: Tuple
                                         └──Type expr: Constructor: option
                                            └──Type expr: Constructor: string
-                                           └──Type expr: Variable: 15376
-                                           └──Type expr: Variable: 15377
+                                           └──Type expr: Variable: 22
+                                           └──Type expr: Variable: 23
                                         └──Type expr: Constructor: option
                                            └──Type expr: Constructor: int
-                                           └──Type expr: Variable: 15377
+                                           └──Type expr: Variable: 23
                                            └──Type expr: Constructor: empty
                                   └──Constructor type:
                                      └──Type expr: Constructor: either
-                                        └──Type expr: Variable: 15376
+                                        └──Type expr: Variable: 22
                                └──Pattern:
                                   └──Type expr: Tuple
                                      └──Type expr: Constructor: option
                                         └──Type expr: Constructor: string
-                                        └──Type expr: Variable: 15376
-                                        └──Type expr: Variable: 15377
+                                        └──Type expr: Variable: 22
+                                        └──Type expr: Variable: 23
                                      └──Type expr: Constructor: option
                                         └──Type expr: Constructor: int
-                                        └──Type expr: Variable: 15377
+                                        └──Type expr: Variable: 23
                                         └──Type expr: Constructor: empty
                                   └──Desc: Tuple
                                      └──Pattern:
                                         └──Type expr: Constructor: option
                                            └──Type expr: Constructor: string
-                                           └──Type expr: Variable: 15376
-                                           └──Type expr: Variable: 15377
+                                           └──Type expr: Variable: 22
+                                           └──Type expr: Variable: 23
                                         └──Desc: Construct
                                            └──Constructor description:
                                               └──Name: Some
@@ -157,15 +157,15 @@ let%expect_test "" =
                                               └──Constructor type:
                                                  └──Type expr: Constructor: option
                                                     └──Type expr: Constructor: string
-                                                    └──Type expr: Variable: 15376
-                                                    └──Type expr: Variable: 15377
+                                                    └──Type expr: Variable: 22
+                                                    └──Type expr: Variable: 23
                                            └──Pattern:
                                               └──Type expr: Constructor: string
                                               └──Desc: Variable: a
                                      └──Pattern:
                                         └──Type expr: Constructor: option
                                            └──Type expr: Constructor: int
-                                           └──Type expr: Variable: 15377
+                                           └──Type expr: Variable: 23
                                            └──Type expr: Constructor: empty
                                         └──Desc: Construct
                                            └──Constructor description:
@@ -173,7 +173,7 @@ let%expect_test "" =
                                               └──Constructor type:
                                                  └──Type expr: Constructor: option
                                                     └──Type expr: Constructor: int
-                                                    └──Type expr: Variable: 15377
+                                                    └──Type expr: Variable: 23
                                                     └──Type expr: Constructor: empty
                          └──Expression:
                             └──Type expr: Constructor: string

@@ -32,44 +32,44 @@ let%expect_test "" =
              └──Extension name: eff
              └──Extension constructor:
                 └──Extension name: eff
-                └──Extension parameters: 28358
+                └──Extension parameters: 73
                 └──Extension constructor kind: Declaration
                    └──Constructor declaration:
                       └──Constructor name: Yield
-                      └──Constructor alphas: 28358
+                      └──Constructor alphas: 73
                       └──Constructor type:
                          └──Type expr: Constructor: eff
-                            └──Type expr: Variable: 28358
+                            └──Type expr: Variable: 73
                       └──Constraint:
-                         └──Type expr: Variable: 28358
+                         └──Type expr: Variable: 73
                          └──Type expr: Constructor: unit
              └──Extension constructor:
                 └──Extension name: eff
-                └──Extension parameters: 28358
+                └──Extension parameters: 73
                 └──Extension constructor kind: Declaration
                    └──Constructor declaration:
                       └──Constructor name: Fork
-                      └──Constructor alphas: 28358
+                      └──Constructor alphas: 73
                       └──Constructor type:
                          └──Type expr: Constructor: eff
-                            └──Type expr: Variable: 28358
+                            └──Type expr: Variable: 73
                       └──Constructor argument:
                          └──Constructor betas:
                          └──Type expr: Arrow
                             └──Type expr: Constructor: unit
                             └──Type expr: Constructor: unit
                       └──Constraint:
-                         └──Type expr: Variable: 28358
+                         └──Type expr: Variable: 73
                          └──Type expr: Constructor: unit
        └──Structure item: Primitive
           └──Value description:
              └──Name: perform
              └──Scheme:
-                └──Variables: 28366
+                └──Variables: 0
                 └──Type expr: Arrow
                    └──Type expr: Constructor: eff
-                      └──Type expr: Variable: 28366
-                   └──Type expr: Variable: 28366
+                      └──Type expr: Variable: 0
+                   └──Type expr: Variable: 0
              └──Primitive name: %perform
        └──Structure item: Let
           └──Value bindings:

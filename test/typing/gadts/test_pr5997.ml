@@ -42,21 +42,21 @@ let%expect_test "" =
              └──Type declaration kind: Variant
                 └──Constructor declaration:
                    └──Constructor name: Eq
-                   └──Constructor alphas: 16279 16280
+                   └──Constructor alphas: 29 30
                    └──Constructor type:
                       └──Type expr: Constructor: cmp
-                         └──Type expr: Variable: 16279
-                         └──Type expr: Variable: 16280
+                         └──Type expr: Variable: 29
+                         └──Type expr: Variable: 30
                    └──Constraint:
-                      └──Type expr: Variable: 16279
-                      └──Type expr: Variable: 16280
+                      └──Type expr: Variable: 29
+                      └──Type expr: Variable: 30
                 └──Constructor declaration:
                    └──Constructor name: Diff
-                   └──Constructor alphas: 16279 16280
+                   └──Constructor alphas: 29 30
                    └──Constructor type:
                       └──Type expr: Constructor: cmp
-                         └──Type expr: Variable: 16279
-                         └──Type expr: Variable: 16280
+                         └──Type expr: Variable: 29
+                         └──Type expr: Variable: 30
        └──Structure item: Type
           └──Type declaration:
              └──Type name: u_t

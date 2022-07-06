@@ -29,7 +29,7 @@ let%expect_test "ambiguity-1" =
   [%expect
     {|
     ("Type escape it's equational scope"
-     ("Type_expr.decode type_expr" (Type 30411 (Var 30411)))) |}]
+     ("Type_expr.decode type_expr" (Type 28 (Var 28)))) |}]
 
 let%expect_test "ambiguity-2" =
   let str =
@@ -51,7 +51,7 @@ let%expect_test "ambiguity-2" =
   [%expect
     {|
     ("Type escape it's equational scope"
-     ("Type_expr.decode type_expr" (Type 30462 (Var 30462)))) |}]
+     ("Type_expr.decode type_expr" (Type 28 (Var 28)))) |}]
 
 let%expect_test "ambiguity-3" =
   let str =
@@ -75,7 +75,7 @@ let%expect_test "ambiguity-3" =
   [%expect
     {|
     ("Type escape it's equational scope"
-     ("Type_expr.decode type_expr" (Type 30509 (Var 30509)))) |}]
+     ("Type_expr.decode type_expr" (Type 24 (Var 24)))) |}]
 
 let%expect_test "ambiguity-4" =
   let str =
@@ -103,7 +103,7 @@ let%expect_test "ambiguity-4" =
     {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr"
-      (Type 30574 (Former (Constr ((Type 30597 (Var 30597))) list))))) |}]
+      (Type 36 (Former (Constr ((Type 59 (Var 59))) list))))) |}]
 
 let%expect_test "ambiguity-5" =
   let str =
@@ -131,7 +131,7 @@ let%expect_test "ambiguity-5" =
     {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr"
-      (Type 30644 (Former (Constr ((Type 30667 (Var 30667))) list))))) |}]
+      (Type 36 (Former (Constr ((Type 59 (Var 59))) list))))) |}]
 
 let%expect_test "ambiguity-6" =
   let str =
@@ -158,9 +158,8 @@ let%expect_test "ambiguity-6" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 30730 (Var 30730)))
-     ("Type_expr.decode type_expr2" (Type 30752 (Var 30752)))) |}]
+    ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 52 (Var 52)))
+     ("Type_expr.decode type_expr2" (Type 74 (Var 74)))) |}]
 
 let%expect_test "ambiguity-6" =
   let str =
@@ -187,9 +186,8 @@ let%expect_test "ambiguity-6" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 30813 (Var 30813)))
-     ("Type_expr.decode type_expr2" (Type 30835 (Var 30835)))) |}]
+    ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 52 (Var 52)))
+     ("Type_expr.decode type_expr2" (Type 74 (Var 74)))) |}]
 
 let%expect_test "ambiguity-7" =
   let str =
@@ -216,9 +214,8 @@ let%expect_test "ambiguity-7" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 30896 (Var 30896)))
-     ("Type_expr.decode type_expr2" (Type 30918 (Var 30918)))) |}]
+    ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 52 (Var 52)))
+     ("Type_expr.decode type_expr2" (Type 74 (Var 74)))) |}]
 
 let%expect_test "ambiguity-8" =
   let str =
@@ -245,9 +242,8 @@ let%expect_test "ambiguity-8" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 31002 (Var 31002)))
-     ("Type_expr.decode type_expr2" (Type 31024 (Var 31024)))) |}]
+    ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 75 (Var 75)))
+     ("Type_expr.decode type_expr2" (Type 97 (Var 97)))) |}]
 
 let%expect_test "ambiguity-9" =
   let str =
@@ -274,9 +270,8 @@ let%expect_test "ambiguity-9" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 31081 (Var 31081)))
-     ("Type_expr.decode type_expr2" (Type 31103 (Var 31103)))) |}]
+    ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 48 (Var 48)))
+     ("Type_expr.decode type_expr2" (Type 70 (Var 70)))) |}]
 
 let%expect_test "ambiguity-10" =
   let str =
@@ -303,6 +298,5 @@ let%expect_test "ambiguity-10" =
   print_infer_result str;
   [%expect
     {|
-    ("Cannot unify types"
-     ("Type_expr.decode type_expr1" (Type 31160 (Var 31160)))
-     ("Type_expr.decode type_expr2" (Type 31182 (Var 31182)))) |}]
+    ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 48 (Var 48)))
+     ("Type_expr.decode type_expr2" (Type 70 (Var 70)))) |}]
