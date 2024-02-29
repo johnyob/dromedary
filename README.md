@@ -6,7 +6,7 @@
 
 ## What is Dromedary?
 
-Dromedary is a work-in-progress implementation of a constraint-based type checker for a large subset of OCaml. It is largely based on the work of François Pottier's [Hindley-Milner elaboration in an applactive style](http://gallium.inria.fr/~fpottier/publis/fpottier-elaboration.pdf) and the constraint language presented in [The Essence of ML Type Inference](http://pauillac.inria.fr/~fpottier/publis/emlti-final.pdf).  
+Dromedary is a work-in-progress implementation of a constraint-based type checker for a large subset of OCaml. It is largely based on the work of François Pottier's [Hindley-Milner elaboration in an applictive style](http://gallium.inria.fr/~fpottier/publis/fpottier-elaboration.pdf) and the constraint language presented in [The Essence of ML Type Inference](http://pauillac.inria.fr/~fpottier/publis/emlti-final.pdf).  
 
 ## Features
 
