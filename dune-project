@@ -43,8 +43,7 @@
    (= 0.3.0))
   (logs
    (= 0.7.0))
-  (landmarks
-   (= 1.4))
+  landmarks
   (bisect_ppx
    (= 2.6.0))
   (qcheck
