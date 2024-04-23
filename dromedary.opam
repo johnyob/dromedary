@@ -21,7 +21,7 @@ depends: [
   "ppx_let" {= "v0.14.0"}
   "vec" {= "0.3.0"}
   "logs" {= "0.7.0"}
-  "landmarks" {= "1.4"}
+  "landmarks"
   "bisect_ppx" {= "2.6.0"}
   "qcheck" {= "0.17"}
   "alcotest" {= "1.4.0"}
@@ -31,7 +31,7 @@ depends: [
   "odoc" {with-doc}
 ]
 build: [
-  ["dune" "subst" "--root" "."] {dev}
+  ["dune" "subst"] {dev}
   [
     "dune"
     "build"
@@ -39,8 +39,7 @@ build: [
     name
     "-j"
     jobs
-    "--promote-install-files"
-    "false"
+    "--promote-install-files=false"
     "@install"
     "@runtest" {with-test}
     "@doc" {with-doc}
@@ -48,3 +47,7 @@ build: [
   ["dune" "install" "-p" name "--create-install-files" name]
 ]
 dev-repo: "git+https://github.com/johnyob/dromedary.git"
+pin-depends: [
+  [ "landmarks.1.4" "git+https://github.com/LexiFi/landmarks.git#b0c753cd2a4c4aa00dffdd3be187d8ed592fabf7" ]
+  [ "landmarks-ppx.1.4" "git+https://github.com/LexiFi/landmarks.git#b0c753cd2a4c4aa00dffdd3be187d8ed592fabf7" ]
+]
