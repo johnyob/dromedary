@@ -22,6 +22,7 @@ depends: [
   "vec" {= "0.3.0"}
   "logs" {= "0.7.0"}
   "landmarks"
+  "fmt"
   "bisect_ppx" {= "2.6.0"}
   "qcheck" {= "0.17"}
   "alcotest" {= "1.4.0"}

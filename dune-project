@@ -44,6 +44,7 @@
   (logs
    (= 0.7.0))
   landmarks
+  fmt
   (bisect_ppx
    (= 2.6.0))
   (qcheck

@@ -42,8 +42,8 @@ and pattern_desc =
       (** [`A <P>] *)
 [@@deriving sexp_of]
 
-val pp_pattern_mach : pattern Pretty_printer.t
-val pp_pattern : pattern Pretty_printer.t
+val pp_pattern_mach : pattern Fmt.t
+val pp_pattern : pattern Fmt.t
 
 type expression =
   { exp_desc : expression_desc
@@ -116,14 +116,14 @@ and case =
   }
 [@@deriving sexp_of]
 
-val pp_expression_mach : expression Pretty_printer.t
-val pp_expression : expression Pretty_printer.t
-val pp_value_binding_mach : value_binding Pretty_printer.t
-val pp_value_binding : value_binding Pretty_printer.t
-val pp_rec_value_binding_mach : rec_value_binding Pretty_printer.t
-val pp_rec_value_binding : rec_value_binding Pretty_printer.t
-val pp_case_mach : case Pretty_printer.t
-val pp_case : case Pretty_printer.t
+val pp_expression_mach : expression Fmt.t
+val pp_expression : expression Fmt.t
+val pp_value_binding_mach : value_binding Fmt.t
+val pp_value_binding : value_binding Fmt.t
+val pp_rec_value_binding_mach : rec_value_binding Fmt.t
+val pp_rec_value_binding : rec_value_binding Fmt.t
+val pp_case_mach : case Fmt.t
+val pp_case : case Fmt.t
 
 type value_description = 
   { tval_name : string
@@ -177,6 +177,6 @@ type structure_item =
 
 type structure = structure_item list [@@deriving sexp_of]
 
-val pp_structure_mach : structure Pretty_printer.t
+val pp_structure_mach : structure Fmt.t
 
 

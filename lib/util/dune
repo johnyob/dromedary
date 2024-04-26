@@ -1,5 +1,0 @@
-(library
- (public_name dromedary.lib.util)
- (name util)
- (preprocess (pps ppx_jane))
- (libraries core))

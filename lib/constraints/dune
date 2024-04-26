@@ -5,4 +5,4 @@
   (pps ppx_jane bisect_ppx --conditional))
  (instrumentation
   (backend landmarks))
- (libraries base vec logs dromedary.lib.unifier dromedary.lib.util))
+ (libraries base vec logs dromedary.lib.unifier))
