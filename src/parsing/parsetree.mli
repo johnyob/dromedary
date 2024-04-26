@@ -11,7 +11,6 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Util
 open Ast_types
 
 (** [Parsetree] is the abstract syntax tree produced by parsing
@@ -53,10 +52,10 @@ and closed_flag =
 
 (** [pp_core_type_mach ppf core_type] pretty prints [core_type] in a "machine format" 
     (an explicit tree structure). *)
-val pp_core_type_mach : core_type Pretty_printer.t
+val pp_core_type_mach : core_type Fmt.t
 
 (** [pp_core_type ppf core_type] pretty prints [core_type] as a syntactic representation. *)
-val pp_core_type : core_type Pretty_printer.t
+val pp_core_type : core_type Fmt.t
 
 (** [core_schemes] are defined by the grammar: 
     core_schemes ::= 'a1 ... 'an. T 
@@ -66,8 +65,8 @@ val pp_core_type : core_type Pretty_printer.t
 *)
 type core_scheme = string list * core_type [@@deriving sexp_of]
 
-val pp_core_scheme_mach : core_scheme Pretty_printer.t
-val pp_core_scheme : core_scheme Pretty_printer.t
+val pp_core_scheme_mach : core_scheme Fmt.t
+val pp_core_scheme : core_scheme Fmt.t
 
 type pattern =
   | Ppat_any 
@@ -88,8 +87,8 @@ type pattern =
       (** [(P : T)]. *)
 [@@deriving sexp_of]
 
-val pp_pattern_mach : pattern Pretty_printer.t
-val pp_pattern : pattern Pretty_printer.t
+val pp_pattern_mach : pattern Fmt.t
+val pp_pattern : pattern Fmt.t
 
 type expression =
   | Pexp_var of string 
@@ -159,24 +158,24 @@ and case =
 [@@deriving sexp_of]
 
 (** [pp_expression_mach ppf exp] pretty prints an expression [exp] as an explicit tree structure. *)
-val pp_expression_mach : expression Pretty_printer.t
+val pp_expression_mach : expression Fmt.t
 
 (** [pp_expression ppf exp] pretty prints an expression [exp] as a syntax representation. *)
-val pp_expression : expression Pretty_printer.t
+val pp_expression : expression Fmt.t
 
 (** [pp_value_binding_mach ppf value_binding] pretty prints the value binding [value_binding]
     as an explicit tree. *)
-val pp_value_binding_mach : value_binding Pretty_printer.t
+val pp_value_binding_mach : value_binding Fmt.t
 
 (** [pp_value_binding ppf value_binding] pretty prints the value binding [value_bindings] as a 
     syntactic representation. *)
-val pp_value_binding : value_binding Pretty_printer.t
+val pp_value_binding : value_binding Fmt.t
 
 (** [pp_case_mach ppf case] pretty prints the case [case] as an explicit tree structure. *)
-val pp_case_mach : case Pretty_printer.t
+val pp_case_mach : case Fmt.t
 
 (** [pp_case ppf case] prety prints the case [case] as a syntactic representation. *)
-val pp_case : case Pretty_printer.t
+val pp_case : case Fmt.t
 
 (** External value descriptions {| external x : T = "prim" |} *)
 type value_description = 
@@ -187,7 +186,7 @@ type value_description =
 [@@deriving sexp_of]
 
 (** [pp_value_description_mach ppf value_desc] pretty prints value description [value_desc] as an explicit tree structure. *)
-val pp_value_description_mach : value_description Pretty_printer.t
+val pp_value_description_mach : value_description Fmt.t
 
 
 type type_declaration = 
@@ -237,22 +236,22 @@ and constructor_argument =
 [@@deriving sexp_of]
 
 (** [pp_type_declaration_mach ppf type_decl] pretty prints [type_decl] using explicit tree structure. *)
-val pp_type_declaration_mach : type_declaration Pretty_printer.t 
+val pp_type_declaration_mach : type_declaration Fmt.t 
 
 (** [pp_type_declaration ppf type_decl] pretty prints a [type_decl] as a syntax representation. *)
-val pp_type_declaration : type_declaration Pretty_printer.t
+val pp_type_declaration : type_declaration Fmt.t
 
 (** [pp_label_declaration_mach ppf label_decl] pretty prints [label_decl] using explicit tree structure. *)
-val pp_label_declaration_mach : label_declaration Pretty_printer.t 
+val pp_label_declaration_mach : label_declaration Fmt.t 
 
 (** [pp_label_declaration ppf label_decl] pretty prints a [label_decl] as a syntax representation. *)
-val pp_label_declaration : label_declaration Pretty_printer.t
+val pp_label_declaration : label_declaration Fmt.t
 
 (** [pp_constructor_declaration_mach ppf constr_decl] pretty prints [constr_decl] using explicit tree structure. *)
-val pp_constructor_declaration_mach : constructor_declaration Pretty_printer.t 
+val pp_constructor_declaration_mach : constructor_declaration Fmt.t 
 
 (** [pp_constructor_declaration ppf constr_decl] pretty prints a [constr_decl] as a syntax representation. *)
-val pp_constructor_declaration : constructor_declaration Pretty_printer.t
+val pp_constructor_declaration : constructor_declaration Fmt.t
 
 
 (** Extension constructor [type ('a1, ... 'an) t += ...] *)
@@ -265,10 +264,10 @@ and extension_constructor_kind =
 [@@derving sexp_of]
 
 (** [pp_extension_constructor_mach ppf ext_constr] pretty prints [ext_constr] using explicit tree structure. *)
-val pp_extension_constructor_mach : extension_constructor Pretty_printer.t 
+val pp_extension_constructor_mach : extension_constructor Fmt.t 
 
 (** [pp_extension_constructor ppf ext_constr] pretty prints a [ext_constr] as a syntax representation. *)
-val pp_extension_constructor : extension_constructor Pretty_printer.t
+val pp_extension_constructor : extension_constructor Fmt.t
 
 
 (** Exception [exception C <of T>] *)
@@ -300,13 +299,13 @@ type structure_item =
       (** Exception [exception C <of T>] *)
 [@@deriving sexp_of]
 
-val pp_structure_item_mach : structure_item Pretty_printer.t
+val pp_structure_item_mach : structure_item Fmt.t
 
-val pp_structure_item : structure_item Pretty_printer.t
+val pp_structure_item : structure_item Fmt.t
 
 (** Structures -- a list of structure items *)
 type structure = structure_item list [@@deriving sexp_of]
 
-val pp_structure_mach : structure Pretty_printer.t
+val pp_structure_mach : structure Fmt.t
 
-val pp_structure : structure Pretty_printer.t
+val pp_structure : structure Fmt.t

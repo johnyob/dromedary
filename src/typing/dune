@@ -3,4 +3,4 @@
  (name typing)
  (preprocess (pps ppx_jane ppx_deriving.eq bisect_ppx --conditional))
  (instrumentation (backend landmarks))
- (libraries base dromedary.parsing dromedary.lib.constraints dromedary.lib.util))
+ (libraries base dromedary.parsing dromedary.lib.constraints))

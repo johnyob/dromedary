@@ -12,7 +12,6 @@
 (*****************************************************************************)
 
 open! Import
-open Util.Pretty_printer
 
 type tag = string [@@deriving sexp_of]
 
@@ -173,74 +172,78 @@ type label_description =
 let indent_space = "   "
 
 let pp_type_expr_mach =
-  let print ~indent ppf = Format.fprintf ppf "%sType expr: %s@." indent in
+  let pr ~indent ppf = Fmt.pf ppf "%sType expr: %s@." indent in
   let pp_type_expr_mach =
     Type_expr.fold
       ~f:(fun desc ~indent ppf ->
-        let print = print ~indent ppf in
+        let pr = pr ~indent ppf in
         let indent = indent_space ^ indent in
         match desc with
-        | Ttyp_var var ->
-          print (Format.asprintf "Variable: %d" (Type_var.id var))
+        | Ttyp_var var -> Fmt.kstr pr "Variable: %d" (Type_var.id var)
         | Ttyp_arrow (t1, t2) ->
-          print "Arrow";
+          pr "Arrow";
           t1 ~indent ppf;
           t2 ~indent ppf
         | Ttyp_tuple ts ->
-          print "Tuple";
+          pr "Tuple";
           List.iter ~f:(fun t -> t ~indent ppf) ts
         | Ttyp_constr (ts, constr) ->
-          print (Format.asprintf "Constructor: %s" constr);
+          Fmt.kstr pr "Constructor: %s" constr;
           List.iter ~f:(fun t -> t ~indent ppf) ts
         | Ttyp_variant t ->
-          print "Variant";
+          pr "Variant";
           t ~indent ppf
         | Ttyp_row_cons (label, t1, t2) ->
-          print "Row cons";
-          Format.fprintf ppf "%sLabel: %s@." indent label;
+          pr "Row cons";
+          Fmt.pf ppf "%sLabel: %s@." indent label;
           t1 ~indent ppf;
           t2 ~indent ppf
         | Ttyp_row_uniform t ->
-          print "Row uniform";
+          pr "Row uniform";
           t ~indent ppf)
       ~mu:(fun var t ~indent ppf ->
-        print ~indent ppf "Mu";
+        pr ~indent ppf "Mu";
         let indent = indent_space ^ indent in
-        Format.fprintf ppf "%sVariable: %d@." indent (Type_var.id var);
+        Fmt.pf ppf "%sVariable: %d@." indent (Type_var.id var);
         t ~indent ppf)
       ~var:(fun var ~indent ppf ->
-        print ~indent ppf (Format.asprintf "Variable: %d" (Type_var.id var)))
+        Fmt.kstr (pr ~indent ppf) "Variable: %d" (Type_var.id var))
   in
   fun ~indent ppf type_expr -> pp_type_expr_mach type_expr ~indent ppf
 
 
+let star = Fmt.any "@;*@;"
+
 let pp_type_expr ppf type_expr =
+  let pp_parens ~parens pp = if parens then Fmt.parens pp else pp in
   let rec loop ?(parens = false) ppf type_expr =
     match Type_expr.desc type_expr with
-    | Ttyp_var var -> Format.fprintf ppf "%d" (Type_var.id var)
+    | Ttyp_var var -> Fmt.pf ppf "%d" (Type_var.id var)
     | Ttyp_arrow (t1, t2) ->
-      let pp ppf (t1, t2) =
-        Format.fprintf
-          ppf
-          "@[%a@;->@;%a@]"
-          (loop ~parens:true)
-          t1
-          (loop ~parens:false)
-          t2
-      in
-      paren ~parens pp ppf (t1, t2)
-    | Ttyp_tuple ts ->
-      paren ~parens (list ~sep:"@;*@;" (loop ~parens:true)) ppf ts
-    | Ttyp_constr (ts, constr) ->
-      Format.fprintf
+      pp_parens
+        ~parens
+        Fmt.(
+          fun ppf (t1, t2) ->
+            pf
+              ppf
+              "@[%a@;->@;%a@]"
+              (loop ~parens:true)
+              t1
+              (loop ~parens:false)
+              t2)
         ppf
-        "%a@;%s"
-        (list ~first:"(" ~last:")" ~sep:",@;" (loop ~parens:false))
-        ts
-        constr
-    | Ttyp_variant t -> Format.fprintf ppf "@[[%a]@]" (loop ~parens:false) t
+        (t1, t2)
+    | Ttyp_tuple ts ->
+      pp_parens ~parens Fmt.(list ~sep:star (loop ~parens:true)) ppf ts
+    | Ttyp_constr (ts, constr) ->
+      (match ts with
+       | [] -> Fmt.pf ppf "%s" constr
+       | [ t ] -> Fmt.pf ppf "%a %s" (loop ~parens:false) t constr
+       | ts ->
+         Fmt.(pf ppf "(%a)@;%s" (list ~sep:sp (loop ~parens:false)) ts constr))
+    | Ttyp_variant t -> Fmt.pf ppf "@[[%a]@]" (loop ~parens:false) t
     | Ttyp_row_cons (label, t1, t2) ->
-      Format.fprintf
+      Fmt.pf
         ppf
         "@[%s@;:@;%a@;|@;%a@]"
         label
@@ -248,31 +251,31 @@ let pp_type_expr ppf type_expr =
         t1
         (loop ~parens:true)
         t2
-    | Ttyp_row_uniform t -> Format.fprintf ppf "@[∂%a@]" (loop ~parens:true) t
+    | Ttyp_row_uniform t -> Fmt.pf ppf "@[∂%a@]" (loop ~parens:true) t
   in
   loop ppf type_expr
 
 
 let pp_constructor_description_mach ~indent ppf constr_desc =
-  Format.fprintf ppf "%sConstructor description:@." indent;
+  Fmt.pf ppf "%sConstructor description:@." indent;
   let indent = indent_space ^ indent in
-  Format.fprintf ppf "%sName: %s@." indent constr_desc.constructor_name;
+  Fmt.pf ppf "%sName: %s@." indent constr_desc.constructor_name;
   let indent' = indent_space ^ indent in
   (match constr_desc.constructor_arg with
-  | None -> ()
-  | Some constr_arg ->
-    Format.fprintf ppf "%sConstructor argument type:@." indent;
-    pp_type_expr_mach ~indent:indent' ppf constr_arg);
-  Format.fprintf ppf "%sConstructor type:@." indent;
+   | None -> ()
+   | Some constr_arg ->
+     Fmt.pf ppf "%sConstructor argument type:@." indent;
+     pp_type_expr_mach ~indent:indent' ppf constr_arg);
+  Fmt.pf ppf "%sConstructor type:@." indent;
   pp_type_expr_mach ~indent:indent' ppf constr_desc.constructor_type
 
 
 let pp_variant_description_mach ~indent ppf variant_desc =
-  Format.fprintf ppf "%sVariant description:@." indent;
+  Fmt.pf ppf "%sVariant description:@." indent;
   let indent = indent_space ^ indent in
-  Format.fprintf ppf "%sTag: %s@." indent variant_desc.variant_tag;
+  Fmt.pf ppf "%sTag: %s@." indent variant_desc.variant_tag;
   let indent' = indent_space ^ indent in
-  Format.fprintf ppf "%sVariant row:@." indent;
+  Fmt.pf ppf "%sVariant row:@." indent;
   pp_type_expr_mach ~indent:indent' ppf variant_desc.variant_row
 
 
@@ -280,29 +283,29 @@ let pp_variant_description _ppf = assert false
 let pp_constructor_description _ppf = assert false
 
 let pp_label_description_mach ~indent ppf label_desc =
-  Format.fprintf ppf "%sLabel description:@." indent;
+  Fmt.pf ppf "%sLabel description:@." indent;
   let indent = indent_space ^ indent in
-  Format.fprintf ppf "%sLabel: %s@." indent label_desc.label_name;
+  Fmt.pf ppf "%sLabel: %s@." indent label_desc.label_name;
   let indent' = indent_space ^ indent in
-  Format.fprintf ppf "%sLabel argument type:@." indent;
+  Fmt.pf ppf "%sLabel argument type:@." indent;
   pp_type_expr_mach ~indent:indent' ppf label_desc.label_arg;
-  Format.fprintf ppf "%sLabel type:@." indent;
+  Fmt.pf ppf "%sLabel type:@." indent;
   pp_type_expr_mach ~indent:indent' ppf label_desc.label_type
 
 
 let pp_label_description _ppf = assert false
 
 let pp_constraint_mach ~indent ppf (lhs, rhs) =
-  Format.fprintf ppf "%sConstraint:@." indent;
+  Fmt.pf ppf "%sConstraint:@." indent;
   let indent = indent_space ^ indent in
   pp_type_expr_mach ~indent ppf lhs;
   pp_type_expr_mach ~indent ppf rhs
 
 
 let pp_constructor_argument_mach ~indent ppf constr_arg =
-  Format.fprintf ppf "%sConstructor argument:@." indent;
+  Fmt.pf ppf "%sConstructor argument:@." indent;
   let indent = indent_space ^ indent in
-  Format.fprintf
+  Fmt.pf
     ppf
     "%sConstructor betas: %s@."
     indent
@@ -315,18 +318,14 @@ let pp_constructor_argument_mach ~indent ppf constr_arg =
 
 
 let pp_constructor_declaration_mach
-    ~indent
-    ppf
-    (constr_decl : constructor_declaration)
+  ~indent
+  ppf
+  (constr_decl : constructor_declaration)
   =
-  Format.fprintf ppf "%sConstructor declaration:@." indent;
+  Fmt.pf ppf "%sConstructor declaration:@." indent;
   let indent = indent_space ^ indent in
-  Format.fprintf
-    ppf
-    "%sConstructor name: %s@."
-    indent
-    constr_decl.constructor_name;
-  Format.fprintf
+  Fmt.pf ppf "%sConstructor name: %s@." indent constr_decl.constructor_name;
+  Fmt.pf
     ppf
     "%sConstructor alphas: %s@."
     indent
@@ -335,24 +334,24 @@ let pp_constructor_declaration_mach
        (List.map
           ~f:(fun t -> Decoded.Var.id t |> Int.to_string)
           constr_decl.constructor_alphas));
-  Format.fprintf ppf "%sConstructor type:@." indent;
+  Fmt.pf ppf "%sConstructor type:@." indent;
   pp_type_expr_mach
     ~indent:(indent_space ^ indent)
     ppf
     constr_decl.constructor_type;
   (match constr_decl.constructor_arg with
-  | None -> ()
-  | Some constr_arg -> pp_constructor_argument_mach ~indent ppf constr_arg);
+   | None -> ()
+   | Some constr_arg -> pp_constructor_argument_mach ~indent ppf constr_arg);
   List.iter
     ~f:(pp_constraint_mach ~indent ppf)
     constr_decl.constructor_constraints
 
 
 let pp_label_declaration_mach ~indent ppf (label_decl : label_declaration) =
-  Format.fprintf ppf "%sLabel declaration:@." indent;
+  Fmt.pf ppf "%sLabel declaration:@." indent;
   let indent = indent_space ^ indent in
-  Format.fprintf ppf "%sLabel name: %s@." indent label_decl.label_name;
-  Format.fprintf
+  Fmt.pf ppf "%sLabel name: %s@." indent label_decl.label_name;
+  Fmt.pf
     ppf
     "%sLabel alphas: %s@."
     indent
@@ -361,7 +360,7 @@ let pp_label_declaration_mach ~indent ppf (label_decl : label_declaration) =
        (List.map
           ~f:(fun t -> Decoded.Var.id t |> Int.to_string)
           label_decl.label_alphas));
-  Format.fprintf
+  Fmt.pf
     ppf
     "%sLabel betas: %s@."
     indent
@@ -375,10 +374,10 @@ let pp_label_declaration_mach ~indent ppf (label_decl : label_declaration) =
 
 
 let pp_alias_mach ~indent ppf alias =
-  Format.fprintf ppf "%sAlias@." indent;
+  Fmt.pf ppf "%sAlias@." indent;
   let indent = indent_space ^ indent in
-  Format.fprintf ppf "%sAlias name: %s@." indent alias.alias_name;
-  Format.fprintf
+  Fmt.pf ppf "%sAlias name: %s@." indent alias.alias_name;
+  Fmt.pf
     ppf
     "%sAlias alphas: %s@."
     indent
@@ -391,24 +390,24 @@ let pp_alias_mach ~indent ppf alias =
 
 
 let pp_type_decl_kind_mach ~indent ppf type_decl_kind =
-  let print = Format.fprintf ppf "%sType declaration kind: %s@." indent in
+  let pr = Fmt.pf ppf "%sType declaration kind: %s@." indent in
   let indent = indent_space ^ indent in
   match type_decl_kind with
   | Type_variant constr_decls ->
-    print "Variant";
+    pr "Variant";
     List.iter constr_decls ~f:(pp_constructor_declaration_mach ~indent ppf)
   | Type_record label_decls ->
-    print "Record";
+    pr "Record";
     List.iter label_decls ~f:(pp_label_declaration_mach ~indent ppf)
-  | Type_abstract -> print "Abstract"
+  | Type_abstract -> pr "Abstract"
   | Type_alias alias ->
-    print "Alias";
+    pr "Alias";
     pp_alias_mach ~indent ppf alias
-  | Type_open -> print "Open"
+  | Type_open -> pr "Open"
 
 
 let pp_type_declaration_mach ~indent ppf type_decl =
-  Format.fprintf ppf "%sType declaration:@." indent;
+  Fmt.pf ppf "%sType declaration:@." indent;
   let indent = indent_space ^ indent in
-  Format.fprintf ppf "%sType name: %s@." indent type_decl.type_name;
+  Fmt.pf ppf "%sType name: %s@." indent type_decl.type_name;
   pp_type_decl_kind_mach ~indent ppf type_decl.type_kind
