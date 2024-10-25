@@ -4,7 +4,7 @@ open Util
 (* Examples taken from https://dev.realworldocaml.org/variants.html *)
 
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       let three = `Int 3;;
 
@@ -23,7 +23,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let
@@ -571,8 +572,9 @@ let%expect_test "" =
                                                                                      └──Type expr: Constructor: unit
                                                                                   └──Type expr: Variable: 90 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list = 
         | Nil 
@@ -589,7 +591,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1"
       (Type 72
@@ -614,8 +617,9 @@ let%expect_test "" =
             (Former (Constr ((Type 87 (Former (Constr () string)))) present)))
            (Type 85 (Var 85))))))))) |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       external gt : 'a. 'a -> 'a -> bool = "%greater_than";;
 
@@ -629,7 +633,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Primitive
@@ -829,8 +834,9 @@ let%expect_test "" =
                                               └──Type expr: Constructor: float
                                               └──Desc: Constant: 0.000000 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list = 
         | Nil 
@@ -855,7 +861,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -1469,8 +1476,9 @@ let%expect_test "" =
                             └──Desc: Variable
                                └──Variable: is_positive |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list = 
         | Nil 
@@ -1505,7 +1513,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -2479,8 +2488,9 @@ let%expect_test "" =
                                               └──Desc: Variable
                                                  └──Variable: b |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       external gt : 'a. 'a -> 'a -> bool = "%greater_than";;
 
@@ -2504,7 +2514,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Primitive
@@ -2924,8 +2935,9 @@ let%expect_test "" =
                                         └──Type expr: Constructor: int
                                         └──Desc: Constant: 4 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       (* Dromedary doesn't yet support alias variants, so no type defs *)
 
@@ -2958,7 +2970,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let

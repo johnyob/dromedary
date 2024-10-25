@@ -1,8 +1,8 @@
 open! Import
 open Util
 
-let%expect_test "" = 
-  let str = 
+let%expect_test "" =
+  let str =
     {|
       type 'a t = 
         | Packed of 'b. ('a -> 'b) * ('b -> 'a)
@@ -35,7 +35,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -372,8 +373,9 @@ let%expect_test "" =
                                         └──Desc: Variable
                                            └──Variable: x |}]
 
-let%expect_test "" = 
-  let str = 
+
+let%expect_test "" =
+  let str =
     {|
       type ('a, 'b) iso = ('a -> 'b) * ('b -> 'a);;
       type 'a ex_iso = 
@@ -391,6 +393,7 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 67 (Var 67)))
      ("Type_expr.decode type_expr2" (Type 72 (Var 72)))) |}]

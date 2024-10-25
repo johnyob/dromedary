@@ -42,12 +42,16 @@ let rec core_type ~substitution t =
     return (vars, variant t)
   | Ptyp_mu (x, t) ->
     let x' = fresh () in
-    let%bind vars, t = core_type ~substitution:(Substitution.add substitution x x') t in
+    let%bind vars, t =
+      core_type ~substitution:(Substitution.add substitution x x') t
+    in
     return (vars, Type.mu x' t)
   | Ptyp_where (t1, x, t2) ->
     let x' = fresh () in
     let%bind vars1, t2 = core_type ~substitution t2 in
-    let%bind vars2, t1 = core_type ~substitution:(Substitution.add substitution x x') t1 in
+    let%bind vars2, t1 =
+      core_type ~substitution:(Substitution.add substitution x x') t1
+    in
     return (vars1 @ vars2, Type.let_ ~binding:(x', t2) ~in_:t1)
 
 
@@ -61,7 +65,10 @@ and row ~substitution (row_fields, closed_flag) =
       [ var ], Type.var var
   in
   let%bind vars, row =
-    List.fold_right row_fields ~init:(return (vars, tl)) ~f:(fun rf tl ->
+    List.fold_right
+      row_fields
+      ~init:(return (vars, tl))
+      ~f:(fun rf tl ->
         let%bind vars1, tl = tl in
         let%bind vars2, row = row_field ~substitution rf tl in
         return (vars1 @ vars2, row))
@@ -69,9 +76,9 @@ and row ~substitution (row_fields, closed_flag) =
   return (vars, row)
 
 
-and row_field ~substitution (Row_tag (tag, t)) tl = 
+and row_field ~substitution (Row_tag (tag, t)) tl =
   let open Result.Let_syntax in
-  let%bind vars, t = 
+  let%bind vars, t =
     match t with
     | None -> return ([], present unit)
     | Some t ->
@@ -79,7 +86,6 @@ and row_field ~substitution (Row_tag (tag, t)) tl =
       return (vars, present t)
   in
   return (vars, row_cons tag t tl)
-
 
 
 (* [type_expr type_expr] converts type expression [type_expr] to [Type.t]. *)
@@ -133,24 +139,24 @@ module With_computation (Computation : Computation.S) = struct
 
   let core_type =
     with_computation ~f:core_type ~message:(fun (`Unbound_type_variable var) ->
-        [%message
-          "Unbound type variable when converting core type" (var : string)])
+      [%message
+        "Unbound type variable when converting core type" (var : string)])
 
 
   let row =
     with_computation ~f:row ~message:(fun (`Unbound_type_variable var) ->
-        [%message "Unbound type variable when converting row" (var : string)])
+      [%message "Unbound type variable when converting row" (var : string)])
 
 
   let type_expr ~substitution t =
     let open Types in
     Computation.of_result (type_expr ~substitution t) ~message:(function
-        | `Unbound_type_variable var ->
-          [%message
-            "Unbound type variable when converting type expression"
-              (var : type_var)]
-        | `Type_expr_is_ill_sorted type_expr ->
-          [%message "Type expression is ill-sorted" (type_expr : type_expr)]
-        | `Type_expr_contains_alias type_expr ->
-          [%message "Type expression contains alias" (type_expr : type_expr)])
+      | `Unbound_type_variable var ->
+        [%message
+          "Unbound type variable when converting type expression"
+            (var : type_var)]
+      | `Type_expr_is_ill_sorted type_expr ->
+        [%message "Type expression is ill-sorted" (type_expr : type_expr)]
+      | `Type_expr_contains_alias type_expr ->
+        [%message "Type expression contains alias" (type_expr : type_expr)])
 end

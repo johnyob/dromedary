@@ -14,35 +14,35 @@
 open Base
 
 (* This module implements an imperative data structure for disjoint sets
-   (commonly known as `union-find'), based on Tarjan and Huet. 
+   (commonly known as `union-find'), based on Tarjan and Huet.
 
    Union find implements a family of disjoint sets on values, where
-   the disjoint sets can dynamically be combined using [union]. 
+   the disjoint sets can dynamically be combined using [union].
 
    A disjoint set [D] is a family of disjoint sets [D = {t1, ..., tn}],
    with the following operations:
-    - [create v]: creates a new set [t] containing [v] in [D].
-    - [find v] returns the (unique) set [t] in [D] that contains [v]. 
-    - [union t1 t2] performs the union of [t1] and [t2] in [D]. 
-    
-   A disjoint set [D] is represeted using a forest, a collection of trees, 
-   each node in the tree storing it's value, with pointers to parents. 
+   - [create v]: creates a new set [t] containing [v] in [D].
+   - [find v] returns the (unique) set [t] in [D] that contains [v].
+   - [union t1 t2] performs the union of [t1] and [t2] in [D].
+
+   A disjoint set [D] is represeted using a forest, a collection of trees,
+   each node in the tree storing it's value, with pointers to parents.
 
    Operations:
-    - [find v]: 
-      This traverses the element [v] back to the root [r] of the set, 
-      creating a path [p] (the `find' path). 
-      
-      Path compression is performed on this operation, which updates the 
-      parent pointer to point directly to the root [r]. 
-      
-    - [union t1 t2]: 
-      We use union by rank. Each set stores the `rank', an upper bound for the 
-      height of the tree. The set with the smallest rank becomes the child,
-      with the edge case of equal ranks. 
+   - [find v]:
+     This traverses the element [v] back to the root [r] of the set,
+     creating a path [p] (the `find' path).
 
-   This implementation is optimized for the representation of equivalent 
-   classes. Each equivalence class containing a "value". 
+   Path compression is performed on this operation, which updates the
+   parent pointer to point directly to the root [r].
+
+   - [union t1 t2]:
+     We use union by rank. Each set stores the `rank', an upper bound for the
+     height of the tree. The set with the smallest rank becomes the child,
+     with the edge case of equal ranks.
+
+   This implementation is optimized for the representation of equivalent
+   classes. Each equivalence class containing a "value".
 *)
 
 (* Trees representing equivalence classes are of the form:
@@ -56,9 +56,9 @@ open Base
       ...   ...   ...
    v}
 
-   With directed edges towards the parents. 
-   The root of the class contains the [rank] and value of type ['a]. 
-   Internal nodes contain a pointer to their parent. 
+   With directed edges towards the parents.
+   The root of the class contains the [rank] and value of type ['a].
+   Internal nodes contain a pointer to their parent.
 *)
 
 type 'a root =
@@ -85,11 +85,11 @@ let create v = ref (Root { rank = 0; value = v })
 
 (* [compress t ~imm_desc ~imm_desc_node ~prop_descs] compresses the path
    from [t] upwards to the root of [t]'s tree, where:
-    - [imm_desc] is the immediate descendent of [t], and 
-    - [prop_descs] are proper descendents of [imm_desc]
+   - [imm_desc] is the immediate descendent of [t], and
+   - [prop_descs] are proper descendents of [imm_desc]
 
    The use of [imm_desc_node] is to avoid additional heap allocation
-   when performing path compression. 
+   when performing path compression.
 *)
 let rec compress t ~imm_desc ~imm_desc_node ~prop_descs =
   match !t with
@@ -120,8 +120,8 @@ let rec get t =
   | Root { value; _ } -> value
   | Inner t' ->
     (match !t' with
-    | Root { value; _ } -> value
-    | Inner _ -> get (root t))
+     | Root { value; _ } -> value
+     | Inner _ -> get (root t))
 
 
 let rec set t v =
@@ -129,8 +129,8 @@ let rec set t v =
   | Root { rank; _ } -> t := Root { rank; value = v }
   | Inner t' ->
     (match !t' with
-    | Root { rank; _ } -> t := Root { rank; value = v }
-    | Inner _ -> set (root t) v)
+     | Root { rank; _ } -> t := Root { rank; value = v }
+     | Inner _ -> set (root t) v)
 
 
 (* TODO: Replace this with STM *)
@@ -151,11 +151,11 @@ let union t1 t2 ~f =
   else if r2 < r1
   then
     try_link ~src:t1 ~dst:t2 ~in_:(fun () ->
-        t1 := Root { rank = r1; value = f v1 v2 })
+      t1 := Root { rank = r1; value = f v1 v2 })
   else (
     let r = if r1 < r2 then r1 else r1 + 1 in
     try_link ~src:t2 ~dst:t1 ~in_:(fun () ->
-        t2 := Root { rank = r; value = f v1 v2 }))
+      t2 := Root { rank = r; value = f v1 v2 }))
 
 
 let is_equiv t1 t2 = phys_equal (root t1) (root t2)

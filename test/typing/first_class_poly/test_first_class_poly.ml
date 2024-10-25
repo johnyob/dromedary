@@ -2,7 +2,7 @@ open! Import
 open Util
 
 let%expect_test "poly-1" =
-  let str = 
+  let str =
     {|
       type 'a t = { t : 'a };;
       type 'a fold = { fold : 'b. ('b -> 'a -> 'b) -> 'b -> 'b };;
@@ -21,7 +21,8 @@ let%expect_test "poly-1" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -363,8 +364,9 @@ let%expect_test "poly-1" =
                                   └──Type expr: Constructor: int
                                   └──Desc: Constant: 0 |}]
 
+
 let%expect_test "poly-2" =
-  let str = 
+  let str =
     {|
       type id = { id : 'a. 'a -> 'a };;
 
@@ -375,7 +377,8 @@ let%expect_test "poly-2" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -480,8 +483,9 @@ let%expect_test "poly-2" =
                                   └──Label type:
                                      └──Type expr: Constructor: id |}]
 
+
 let%expect_test "poly-3" =
-  let str = 
+  let str =
     {|      
       type 'a list = 
         | Nil
@@ -494,7 +498,8 @@ let%expect_test "poly-3" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -558,8 +563,9 @@ let%expect_test "poly-3" =
                                      └──Type expr: Constructor: list
                                         └──Type expr: Variable: 6 |}]
 
+
 let%expect_test "poly-4" =
-  let str = 
+  let str =
     {|
       type 'a list = 
         | Nil
@@ -577,7 +583,8 @@ let%expect_test "poly-4" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -750,8 +757,9 @@ let%expect_test "poly-4" =
                                                     └──Label type:
                                                        └──Type expr: Constructor: pty |}]
 
+
 let%expect_test "poly-5" =
-  let str = 
+  let str =
     {|
       let rec (type 'a) f = 
         fun (x : 'a) -> 1
@@ -775,7 +783,8 @@ let%expect_test "poly-5" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let
@@ -952,8 +961,9 @@ let%expect_test "poly-5" =
                                                     └──Desc: Variable
                                                        └──Variable: x |}]
 
+
 let%expect_test "poly-6" =
-  let str = 
+  let str =
     {|  
       type 'a perfect_tree = 
         | Leaf of 'a
@@ -973,7 +983,8 @@ let%expect_test "poly-6" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -1138,8 +1149,9 @@ let%expect_test "poly-6" =
                                   └──Desc: Variable
                                      └──Variable: x |}]
 
+
 let%expect_test "poly-8" =
-  let str = 
+  let str =
     {|  
       type 'a perfect_tree = 
         | Leaf of 'a
@@ -1157,13 +1169,15 @@ let%expect_test "poly-8" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1" (Type 35 (Former (Constr () int))))
      ("Type_expr.decode type_expr2" (Type 32 (Var 32)))) |}]
 
+
 let%expect_test "poly-9" =
-  let str = 
+  let str =
     {|  
       type 'a perfect_tree = 
         | Leaf of 'a
@@ -1182,7 +1196,8 @@ let%expect_test "poly-9" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1"
       (Type 25 (Former (Constr ((Type 8 (Var 8))) perfect_tree))))
@@ -1193,8 +1208,9 @@ let%expect_test "poly-9" =
          ((Type 29 (Former (Tuple ((Type 18 (Var 18)) (Type 18 (Var 18)))))))
          perfect_tree))))) |}]
 
+
 let%expect_test "poly-10" =
-  let str = 
+  let str =
     {|
       type 'a perfect_tree = 
         | Leaf of 'a
@@ -1212,12 +1228,14 @@ let%expect_test "poly-10" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 33 (Var 33)))
      ("Type_expr.decode type_expr2" (Type 28 (Var 28)))) |}]
 
+
 let%expect_test "poly-11" =
-  let str = 
+  let str =
     {|
       external not : bool -> bool = "%not";;
 
@@ -1229,7 +1247,8 @@ let%expect_test "poly-11" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Primitive

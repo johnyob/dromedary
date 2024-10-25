@@ -61,7 +61,7 @@ module Expression : sig
     val infer_value_bindings
       :  Parsetree.value_binding list
       -> (Typedtree.pattern * Typedtree.expression) let_binding list
-         Computation.t
+           Computation.t
 
     val infer_rec_value_bindings
       :  Parsetree.value_binding list

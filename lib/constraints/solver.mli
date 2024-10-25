@@ -21,14 +21,14 @@ module Make (Algebra : Algebra) : sig
 
   module Decoded :
     Decoded
-      with type label := Types.Label.t
-       and type 'a former := 'a Types.Former.t
+    with type label := Types.Label.t
+     and type 'a former := 'a Types.Former.t
 
   module Algebra_with_decoded :
     Algebra_with_decoded
-      with module Term_var = Term_var
-       and module Types = Types
-       and module Decoded = Decoded
+    with module Term_var = Term_var
+     and module Types = Types
+     and module Decoded = Decoded
 
   module Constraint := Constraint.Make(Algebra_with_decoded)
 
@@ -81,6 +81,6 @@ module Private : sig
 
   module Generalization (Label : Comparable.S) (Type_former : Type_former.S) :
     Generalization.S
-      with type 'a former := 'a Type_former.t
-       and type label := Label.t
+    with type 'a former := 'a Type_former.t
+     and type label := Label.t
 end

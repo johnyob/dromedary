@@ -5,7 +5,7 @@ open Util
    -------------------------------------
    Test count: 13/16
 
-   3 tests are removed due to reliance 
+   3 tests are removed due to reliance
    on modules.
 *)
 
@@ -31,6 +31,7 @@ let%expect_test "ambiguity-1" =
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr" (Type 28 (Var 28)))) |}]
 
+
 let%expect_test "ambiguity-2" =
   let str =
     {|
@@ -52,6 +53,7 @@ let%expect_test "ambiguity-2" =
     {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr" (Type 28 (Var 28)))) |}]
+
 
 let%expect_test "ambiguity-3" =
   let str =
@@ -76,6 +78,7 @@ let%expect_test "ambiguity-3" =
     {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr" (Type 24 (Var 24)))) |}]
+
 
 let%expect_test "ambiguity-4" =
   let str =
@@ -105,6 +108,7 @@ let%expect_test "ambiguity-4" =
      ("Type_expr.decode type_expr"
       (Type 36 (Former (Constr ((Type 59 (Var 59))) list))))) |}]
 
+
 let%expect_test "ambiguity-5" =
   let str =
     {|
@@ -132,6 +136,7 @@ let%expect_test "ambiguity-5" =
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr"
       (Type 36 (Former (Constr ((Type 59 (Var 59))) list))))) |}]
+
 
 let%expect_test "ambiguity-6" =
   let str =
@@ -161,6 +166,7 @@ let%expect_test "ambiguity-6" =
     ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 52 (Var 52)))
      ("Type_expr.decode type_expr2" (Type 74 (Var 74)))) |}]
 
+
 let%expect_test "ambiguity-6" =
   let str =
     {|
@@ -188,6 +194,7 @@ let%expect_test "ambiguity-6" =
     {|
     ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 52 (Var 52)))
      ("Type_expr.decode type_expr2" (Type 74 (Var 74)))) |}]
+
 
 let%expect_test "ambiguity-7" =
   let str =
@@ -217,6 +224,7 @@ let%expect_test "ambiguity-7" =
     ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 52 (Var 52)))
      ("Type_expr.decode type_expr2" (Type 74 (Var 74)))) |}]
 
+
 let%expect_test "ambiguity-8" =
   let str =
     {|
@@ -245,6 +253,7 @@ let%expect_test "ambiguity-8" =
     ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 75 (Var 75)))
      ("Type_expr.decode type_expr2" (Type 97 (Var 97)))) |}]
 
+
 let%expect_test "ambiguity-9" =
   let str =
     {|
@@ -272,6 +281,7 @@ let%expect_test "ambiguity-9" =
     {|
     ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 48 (Var 48)))
      ("Type_expr.decode type_expr2" (Type 70 (Var 70)))) |}]
+
 
 let%expect_test "ambiguity-10" =
   let str =

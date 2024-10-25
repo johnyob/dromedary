@@ -4,7 +4,7 @@ open Util
 (* Examples from https://ocaml.org/manual/polyvariant.html *)
 
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list = 
         | Nil
@@ -30,7 +30,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -695,8 +696,9 @@ let%expect_test "" =
                             └──Desc: Variable
                                └──Variable: f |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       (* Semantically different to OCaml, since we handle 
          default cases differently *)
@@ -711,7 +713,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let
@@ -1028,8 +1031,9 @@ let%expect_test "" =
                                         └──Desc: Variable
                                            └──Variable: x |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       let int = fun n -> `Int n;;
       
@@ -1041,7 +1045,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let
@@ -1288,8 +1293,9 @@ let%expect_test "" =
                                   └──Desc: Variable
                                      └──Variable: t |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       let int = fun n -> `Int n;;
         
@@ -1312,7 +1318,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let

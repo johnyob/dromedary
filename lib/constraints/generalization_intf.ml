@@ -23,16 +23,15 @@ module type S = sig
       [Label]. *)
   type label
 
-  (** The type ['a former] is the type formers (with children of type ['a]), 
+  (** The type ['a former] is the type formers (with children of type ['a]),
       given by the functor argument [Former]. *)
   type 'a former
 
   (** The generalization module maintains several bits of mutable
       state related to it's implemented of efficient level-based
       generalization.
-    
-      We encapsulate this in the abstract type [state].  
-  *)
+
+      We encapsulate this in the abstract type [state]. *)
   type state
 
   (** [make_state ()] creates a new empty state. *)
@@ -42,12 +41,12 @@ module type S = sig
     (** [t] represents a rigid type *)
     type t [@@deriving sexp_of]
 
-    (** [make_rigid_var rigid_var] returns the rigid type 
+    (** [make_rigid_var rigid_var] returns the rigid type
         representing the variable [rigid_var] *)
     val make_rigid_var : Rigid_var.t -> t
 
-    (** [make_former former] returns the rigid type representing the 
-        rigid type former [former].  *)
+    (** [make_former former] returns the rigid type representing the
+        rigid type former [former]. *)
     val make_former : t former -> t
   end
 
@@ -58,7 +57,7 @@ module type S = sig
     (** [make_var ()] returns a new type variable *)
     val make_var : unit -> t
 
-    (** [make_former former] returns the abbreviation type representing the 
+    (** [make_former former] returns the abbreviation type representing the
         type former [former]. *)
     val make_former : t former -> t
   end
@@ -70,7 +69,7 @@ module type S = sig
     (** [empty] is the abbreviation context containing no abbreviations *)
     val empty : t
 
-    (** [add t ~abbrev] adds the abbreviation [abbrev] to [t] -- 
+    (** [add t ~abbrev] adds the abbreviation [abbrev] to [t] --
         an abbreviation is a pair [('a1, ..., 'an) former = type_]. *)
     val add : t -> abbrev:Abbrev_type.t former * Abbrev_type.t -> t
   end
@@ -86,7 +85,7 @@ module type S = sig
     exception Inconsistent
 
     (** [add ~state ~abbrev_ctx t type1 type2] adds the equality [type1 = type2] to
-        the equational context [t] -- [abbrev_ctx] is used to determine the required equalities 
+        the equational context [t] -- [abbrev_ctx] is used to determine the required equalities
         (modulo the abbreviation context) and [state] is used for equational scoping purposes. *)
     val add
       :  state:state
@@ -100,7 +99,7 @@ module type S = sig
   module Structure : sig
     include Structure.S
 
-    (** ['a repr] external representation of a ['a t]  *)
+    (** ['a repr] external representation of a ['a t] *)
     type 'a repr =
       | Flexible_var
       | Row_uniform of 'a
@@ -121,7 +120,6 @@ module type S = sig
       }
 
     val empty_ctx : ctx
-
     val unify : state:state -> ctx:ctx -> Type.t -> Type.t -> unit
   end
 
@@ -147,22 +145,20 @@ module type S = sig
     -> tl:Type.t
     -> Type.t
 
-  (** The type [scheme] defines the abstract notion of a scheme in 
+  (** The type [scheme] defines the abstract notion of a scheme in
       "graphic" types.
-      
+
       A scheme has a notion of "bound" variables, this is encoded in the
-      type [variables]. 
-      
+      type [variables].
+
       We note that all bound variables to a *generalized* scheme
-      are *rigid*. 
-  *)
+      are *rigid*. *)
 
   type scheme
 
   (** The notion of "bound" variables for a scheme is shared between
       instantiation and computing the set of generic variables,
-      given a scheme. 
-*)
+      given a scheme. *)
 
   type variables = Type.t list
 
@@ -177,17 +173,16 @@ module type S = sig
   val mono_scheme : Type.t -> scheme
 
   (** [enter ~state] creates a new "stack frame" in the constraint solver
-     and enters it.  *)
+      and enters it. *)
 
   val enter : state:state -> unit
 
   (** [instantiate ~state scheme] instantates the scheme [scheme]. It does so, by
       taking fresh copies of the generic variables, without necessarily
-      copying other bits of the type. 
-      
+      copying other bits of the type.
+
       This is designed for efficient sharing of nodes within the
-      "graphic type". 
-  *)
+      "graphic type". *)
   val instantiate : state:state -> scheme -> variables * Type.t
 
   exception Cannot_flexize of Rigid_var.t

@@ -158,7 +158,8 @@ let%expect_test "omega-1" =
     |}
   in
   print_infer_result str;
-  [%expect{|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Primitive
@@ -2886,4 +2887,3 @@ let%expect_test "omega-1" =
                                                  └──Type expr: Variable: 1282
                                               └──Desc: Variable
                                                  └──Variable: n |}]
-

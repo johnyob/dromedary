@@ -45,17 +45,17 @@ module Make (Algebra : Algebra_with_decoded) = struct
 
 
   (* The module [Type] provides the concrete representation of types
-     (using constraint type variables) in constraints. 
+     (using constraint type variables) in constraints.
 
      It is the free monad of the functor [Type_former.t].
 
      History: This representation was initially used in constraints [t],
      however, the refactor for "Sharing" now uses [Shallow_type.t].
-     We however, still use [Type] for a rich interface. 
+     We however, still use [Type] for a rich interface.
   *)
 
   module Type = struct
-    (* [t] represents the type defined by the grammar: 
+    (* [t] represents the type defined by the grammar:
        t ::= ɑ | (t, .., t) F *)
     type t =
       | Var of variable
@@ -72,18 +72,16 @@ module Make (Algebra : Algebra_with_decoded) = struct
     (* [former f] returns the representation of the applied type former [f]. *)
     let former former = Former former
     let mu var t = Mu (var, t)
-
-    let let_ ~binding:(var, t1) ~in_:t2 = 
-      Let (var, t1, t2)
+    let let_ ~binding:(var, t1) ~in_:t2 = Let (var, t1, t2)
   end
 
   (* The module [Shallow_type] provides the shallow type definition
-     used within constraints. 
-     
+     used within constraints.
+
      This encoding is required for "(Explicit) sharing" of types
      within constraints.
 
-     Types from [Type] are often referred to as "deep" types. 
+     Types from [Type] are often referred to as "deep" types.
   *)
 
   module Shallow_type = struct
@@ -106,7 +104,7 @@ module Make (Algebra : Algebra_with_decoded) = struct
 
     type encoded_type = Ctx.t * variable [@@deriving sexp_of]
 
-    (* [of_type type_] returns the shallow encoding [Θ |> ɑ] of the 
+    (* [of_type type_] returns the shallow encoding [Θ |> ɑ] of the
        deep type [type_]. *)
     let of_type type_ : encoded_type =
       let variables = ref [] in
@@ -138,7 +136,7 @@ module Make (Algebra : Algebra_with_decoded) = struct
           bind var (Mu (loop t));
           var
         | Type.Let (var, t1, t2) ->
-          bind var (Let (loop t1)); 
+          bind var (Let (loop t1));
           loop t2
       in
       let var = loop type_ in
@@ -151,9 +149,7 @@ module Make (Algebra : Algebra_with_decoded) = struct
   type 'a bound = Decoded.Var.t list * 'a
 
   type term_binding = Term_var.t * Decoded.scheme
-
   and 'a term_let_binding = term_binding list * 'a bound
-
   and 'a term_let_rec_binding = term_binding * 'a bound
 
   (* ['a t] is a constraint with value type ['a]. *)
@@ -175,7 +171,6 @@ module Make (Algebra : Algebra_with_decoded) = struct
     | Implication : equations * 'a t -> 'a t
 
   and binding = Term_var.t * variable
-
   and def_binding = binding
 
   and 'a let_binding =
@@ -203,7 +198,7 @@ module Make (Algebra : Algebra_with_decoded) = struct
         }
 
   let rec sexp_of_t : type a. a t -> Sexp.t =
-   fun t ->
+    fun t ->
     match t with
     | Return _ -> [%sexp Return]
     | True -> [%sexp True]
@@ -227,14 +222,14 @@ module Make (Algebra : Algebra_with_decoded) = struct
   and sexp_of_def_binding def_binding = sexp_of_binding def_binding
 
   and sexp_of_let_binding : type a. a let_binding -> Sexp.t =
-   fun (Let_binding
-         { universal_context
-         ; existential_context
-         ; is_non_expansive
-         ; bindings
-         ; in_
-         ; equations
-         }) ->
+    fun (Let_binding
+          { universal_context
+          ; existential_context
+          ; is_non_expansive
+          ; bindings
+          ; in_
+          ; equations
+          }) ->
     [%sexp
       Let_binding (universal_context : universal_context)
       , (existential_context : existential_context)
@@ -245,7 +240,7 @@ module Make (Algebra : Algebra_with_decoded) = struct
 
 
   and sexp_of_let_rec_binding : type a. a let_rec_binding -> Sexp.t =
-   fun binding ->
+    fun binding ->
     match binding with
     | Let_rec_mono_binding
         { universal_context; existential_context; binding; in_ } ->
@@ -271,16 +266,16 @@ module Make (Algebra : Algebra_with_decoded) = struct
 
        let%map pat and exp in
        Texp_fun (pat, ..., exp)
-     ]}  
+     ]}
   *)
 
   include Applicative.Make (struct
-    type nonrec 'a t = 'a t
+      type nonrec 'a t = 'a t
 
-    let return x = Return x
-    let map = `Custom (fun t ~f -> Map (t, f))
-    let apply t1 t2 = Map (Conj (t1, t2), fun (f, x) -> f x)
-  end)
+      let return x = Return x
+      let map = `Custom (fun t ~f -> Map (t, f))
+      let apply t1 t2 = Map (Conj (t1, t2), fun (f, x) -> f x)
+    end)
 
   (* [both] is explicitly defined for efficiency reasons. *)
   let both t1 t2 = Conj (t1, t2)
@@ -306,7 +301,7 @@ module Make (Algebra : Algebra_with_decoded) = struct
   (* [&~] is an infix alias for [both] *)
   let ( &~ ) = both
 
-  (* [t1 >> t2 >> ... >> tn] solves [t1, ..., tn] yielding the value 
+  (* [t1 >> t2 >> ... >> tn] solves [t1, ..., tn] yielding the value
      of [tn]. It is the monodial operator of constraints. *)
   let ( >> ) t1 t2 = t1 &~ t2 >>| snd
 
@@ -338,8 +333,8 @@ module Make (Algebra : Algebra_with_decoded) = struct
     | [], [] -> t
     | ctx ->
       (match t with
-      | Exist (ctx', t) -> Exist (Shallow_type.Ctx.merge ctx ctx', t)
-      | t -> Exist (ctx, t))
+       | Exist (ctx', t) -> Exist (Shallow_type.Ctx.merge ctx ctx', t)
+       | t -> Exist (ctx, t))
 
 
   (* [forall ~ctx t] binds universal context [ctx] in [t]. *)
@@ -348,8 +343,8 @@ module Make (Algebra : Algebra_with_decoded) = struct
     | [] -> t
     | vars ->
       (match t with
-      | Forall (vars', t) -> Forall (vars @ vars', t)
-      | t -> Forall (vars, t))
+       | Forall (vars', t) -> Forall (vars @ vars', t)
+       | t -> Forall (vars, t))
 
 
   (* [x #= a] yields the binding that binds [x] to [a]. *)
@@ -367,7 +362,7 @@ module Make (Algebra : Algebra_with_decoded) = struct
   (* [let_ ~bindings ~in_] binds the let bindings [bindings] in the constraint [in_]. *)
   let let_ ~bindings ~in_ = Let (bindings, in_)
 
-  (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
+  (* [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the
      constraint [in_]. *)
   let let_rec ~bindings ~in_ = Let_rec (bindings, in_)
 
@@ -375,11 +370,11 @@ module Make (Algebra : Algebra_with_decoded) = struct
     type ctx = universal_context * existential_context [@@deriving sexp_of]
 
     let let_
-        ~ctx:(universal_context, existential_context)
-        ~is_non_expansive
-        ~bindings
-        ~in_
-        ~equations
+      ~ctx:(universal_context, existential_context)
+      ~is_non_expansive
+      ~bindings
+      ~in_
+      ~equations
       =
       Let_binding
         { universal_context
@@ -440,7 +435,7 @@ module Make (Algebra : Algebra_with_decoded) = struct
       let sexp_of_let_rec_binding = sexp_of_let_rec_binding
 
       let sexp_of_let_binding : type a. a let_binding -> Sexp.t =
-       fun t ->
+        fun t ->
         [%sexp
           Let_binding (t.universal_context : universal_context)
           , (t.existential_context : existential_context)
@@ -458,7 +453,7 @@ module Make (Algebra : Algebra_with_decoded) = struct
         | Def : binding list -> unit t
 
       let rec sexp_of_t : type a. a t -> Sexp.t =
-       fun t ->
+        fun t ->
         match t with
         | Return _ -> [%sexp Return]
         | Map (t, _) -> [%sexp Map, (t : t)]
@@ -470,12 +465,12 @@ module Make (Algebra : Algebra_with_decoded) = struct
 
 
       include Applicative.Make (struct
-        type nonrec 'a t = 'a t
+          type nonrec 'a t = 'a t
 
-        let return x = Return x
-        let map = `Custom (fun t ~f -> Map (t, f))
-        let apply t1 t2 = Map (Both (t1, t2), fun (f, x) -> f x)
-      end)
+          let return x = Return x
+          let map = `Custom (fun t ~f -> Map (t, f))
+          let apply t1 t2 = Map (Both (t1, t2), fun (f, x) -> f x)
+        end)
 
       (* [both] is explicitly defined for efficiency reasons. *)
       let both t1 t2 = Both (t1, t2)
@@ -499,11 +494,13 @@ module Make (Algebra : Algebra_with_decoded) = struct
       end
 
       let let_ ~bindings = Let bindings
+
       let let_1 ~binding =
         let_ ~bindings:[ binding ]
         >>| function
         | [ term_binding ] -> term_binding
         | _ -> assert false
+
 
       let let_rec ~bindings = Let_rec bindings
       let def ~bindings = Def bindings
@@ -512,10 +509,10 @@ module Make (Algebra : Algebra_with_decoded) = struct
         include Binding
 
         let let_
-            ~ctx:(universal_context, existential_context)
-            ~is_non_expansive
-            ~bindings
-            ~in_
+          ~ctx:(universal_context, existential_context)
+          ~is_non_expansive
+          ~bindings
+          ~in_
           =
           { universal_context
           ; existential_context

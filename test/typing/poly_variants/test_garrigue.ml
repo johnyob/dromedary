@@ -4,15 +4,14 @@ open Util
 (* Examples from  https://caml.inria.fr/pub/papers/garrigue-polymorphic_variants-ml98.pdf *)
 
 let%expect_test "" =
-  let str = 
-    {|
+  let str = {|
       let a = `Apple;;
 
       let b = `Orange "spain";;
-    |}
-  in
+    |} in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let
@@ -77,8 +76,9 @@ let%expect_test "" =
                             └──Type expr: Constructor: string
                             └──Desc: Constant: spain |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       let a = `Apple;;
       let b = `Orange "spain";;
@@ -92,7 +92,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let
@@ -408,6 +409,7 @@ let%expect_test "" =
                                                                       └──Type expr: Constructor: string
                                                                    └──Type expr: Variable: 57 |}]
 
+
 let%expect_test "" =
   let str =
     {|
@@ -599,8 +601,9 @@ let%expect_test "" =
                                                 └──Desc: Variable
                                                    └──Variable: s |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       external concat : string -> string -> string = "%concat";;
 
@@ -629,7 +632,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1"
       (Type 140
@@ -653,6 +657,7 @@ let%expect_test "" =
            (Type 151
             (Former (Constr ((Type 152 (Former (Constr () unit)))) present)))
            (Type 156 (Row_uniform (Type 157 (Former (Constr () absent)))))))))))) |}]
+
 
 let%expect_test "" =
   let str =
@@ -1144,8 +1149,9 @@ let%expect_test "" =
                                                                   └──Desc: Variable
                                                                      └──Variable: f |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       external concat : string -> string -> string = "%concat";;
 
@@ -1160,7 +1166,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Primitive
@@ -1342,8 +1349,9 @@ let%expect_test "" =
                                         └──Type expr: Constructor: string
                                         └──Desc: Constant: pair |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list = 
         | Nil
@@ -1358,7 +1366,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type

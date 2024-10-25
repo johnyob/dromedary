@@ -8,18 +8,18 @@ let parse_structure_from_string ~f str =
   | Ok pstr -> f pstr
   | Error err ->
     (match err with
-    | `Lexer_error message -> [%sexp ("lexer error: " ^ message : string)]
-    | `Parser_error -> [%sexp ("parse error" : string)])
+     | `Lexer_error message -> [%sexp ("lexer error: " ^ message : string)]
+     | `Parser_error -> [%sexp ("parse error" : string)])
     |> Sexp.to_string_hum
     |> print_endline
 
 
 let print_infer_result ?(debug = false) str =
   parse_structure_from_string str ~f:(fun pstr ->
-      let tstr = Typing.infer_str ~debug pstr in
-      match tstr with
-      | Ok tstr -> Typedtree.pp_structure_mach Format.std_formatter tstr
-      | Error err -> Sexp.to_string_hum err |> print_endline)
+    let tstr = Typing.infer_str ~debug pstr in
+    match tstr with
+    | Ok tstr -> Typedtree.pp_structure_mach Format.std_formatter tstr
+    | Error err -> Sexp.to_string_hum err |> print_endline)
 
 
 let () =

@@ -2,7 +2,7 @@ open! Import
 open Util
 
 let%expect_test "term-conv-1" =
-  let str = 
+  let str =
     {|
       type 'a ty = 
         | Int constraint 'a = int
@@ -160,7 +160,8 @@ let%expect_test "term-conv-1" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type

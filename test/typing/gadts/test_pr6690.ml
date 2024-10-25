@@ -1,8 +1,8 @@
 open! Import
 open Util
 
-let%expect_test "" = 
-  let str = 
+let%expect_test "" =
+  let str =
     {|
       type 'a visit_action;; 
       type insert;;
@@ -32,8 +32,9 @@ let%expect_test "" =
   [%expect {|
     "Non rigid equations" |}]
 
-let%expect_test "" = 
-  let str = 
+
+let%expect_test "" =
+  let str =
     {|
       type 'a visit_action;; 
       type insert;;
@@ -59,7 +60,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type

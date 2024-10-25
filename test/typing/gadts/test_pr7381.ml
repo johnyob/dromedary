@@ -1,8 +1,8 @@
 open! Import
 open Util
 
-let%expect_test "" = 
-  let str = 
+let%expect_test "" =
+  let str =
     {|
       type ('a, 'b) eq = 
         | Refl constraint 'a = 'b
@@ -20,8 +20,9 @@ let%expect_test "" =
   print_infer_result str;
   [%expect {| "Inconsistent equations added by local branches" |}]
 
-let%expect_test "" = 
-  let str = 
+
+let%expect_test "" =
+  let str =
     {|
       type ('a, 'b) eq = 
         | Refl constraint 'a = 'b
@@ -41,7 +42,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
