@@ -146,10 +146,10 @@ let add_term env =
 
 
 let create_test_infer_exp
-    ~name
-    ?(env = Env.empty)
-    ?(abbrevs = Abbreviations.empty)
-    exp
+  ~name
+  ?(env = Env.empty)
+  ?(abbrevs = Abbreviations.empty)
+  exp
   =
   Bench.Test.create
     ~name
@@ -588,11 +588,11 @@ let id_app_stress_test =
     ~name:"id app - stress test"
     ~args:[ 1; 5; 10; 50; 100; 200; 500; 1000; 2000 ]
     (fun n ->
-      Staged.stage (fun () ->
-          Typing.infer_exp
-            ~env:Env.empty
-            ~abbrevs:Abbreviations.empty
-            (def_id ~in_:(loop n))))
+       Staged.stage (fun () ->
+         Typing.infer_exp
+           ~env:Env.empty
+           ~abbrevs:Abbreviations.empty
+           (def_id ~in_:(loop n))))
 
 
 let def_pair ~in_ =
@@ -622,8 +622,8 @@ let id_let_stress_test =
     ~name:"id let - stress test"
     ~args:[ 1; 5; 10; 50; 100; 200; 500; 1000; 2000 ]
     (fun n ->
-      Staged.stage (fun () ->
-          Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty (loop n)))
+       Staged.stage (fun () ->
+         Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty (loop n)))
 
 
 let pair_let_stress_test =
@@ -669,9 +669,9 @@ let pair_let_stress_test =
     ~name:"pair let - stress test"
     ~args:[ 1; 2; 3; 4; 5; 6 ]
     (fun n ->
-      Staged.stage (fun () ->
-          let exp = def_pair ~in_:(def_f0 ~in_:(loop 1 n)) in
-          Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp))
+       Staged.stage (fun () ->
+         let exp = def_pair ~in_:(def_f0 ~in_:(loop 1 n)) in
+         Typing.infer_exp ~env:Env.empty ~abbrevs:Abbreviations.empty exp))
 
 
 let stress_tests = [ pair_let_stress_test ]

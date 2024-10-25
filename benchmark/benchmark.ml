@@ -2,10 +2,10 @@ open Core
 open Core_bench
 
 (* let () =
-  Command_unix.run
-    (Command.group
-       ~summary:"Benchmarks"
-       [ "infer", Benchmark_infer.command
+   Command_unix.run
+   (Command.group
+   ~summary:"Benchmarks"
+   [ "infer", Benchmark_infer.command
        ; "stress-infer", Benchmark_infer.stress_command
        ]) *)
 
@@ -22,8 +22,8 @@ let perform_benchmark tests =
       "results/" ^ Measurement.name measurement ^ ".csv")
     ~analysis_configs:
       (Analysis_config.default
-      |> List.map
-           ~f:(Analysis_config.with_error_estimation ~bootstrap_trials:10000))
+       |> List.map
+            ~f:(Analysis_config.with_error_estimation ~bootstrap_trials:10000))
     tests
 
 

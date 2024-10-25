@@ -16,11 +16,8 @@ module Module_types = Module_types
 
 module Make (Algebra : Algebra) = struct
   module Solver = Solver.Make (Algebra)
-
   module Decoded = Solver.Decoded
   include Constraint.Make (Solver.Algebra_with_decoded)
-
-
   module Abbrev_type = Solver.Abbrev_type
   module Abbreviations = Solver.Abbreviations
 
@@ -28,6 +25,7 @@ module Make (Algebra : Algebra) = struct
 
   module Structure = struct
     include Structure
+
     let solve = Solver.Structure.solve
   end
 end

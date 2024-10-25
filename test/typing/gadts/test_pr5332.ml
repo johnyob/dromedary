@@ -1,8 +1,8 @@
 open! Import
 open Util
 
-let%expect_test "" = 
-  let str = 
+let%expect_test "" =
+  let str =
     {|
       type ('env, 'a) var = 
         | Zero of 'env1. unit constraint 'env = 'a * 'env1
@@ -28,7 +28,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type

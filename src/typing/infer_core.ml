@@ -40,36 +40,29 @@ module Env = struct
         fail [%message "Duplicate type variable" (var : Types.type_var)]
 
 
-    let rng substitution =
-      Map.to_alist substitution |> List.map ~f:snd
-
+    let rng substitution = Map.to_alist substitution |> List.map ~f:snd
 
     let merge substitution1 substitution2 =
-      Map.merge
-        substitution1
-        substitution2
-        ~f:(fun ~key:_type_var var ->
-          Some
-            (match var with
-            | `Both (_, var2) -> var2
-            | `Left var | `Right var -> var))
+      Map.merge substitution1 substitution2 ~f:(fun ~key:_type_var var ->
+        Some
+          (match var with
+           | `Both (_, var2) -> var2
+           | `Left var | `Right var -> var))
 
 
     let convert_type_expr ~substitution type_expr =
       let open Types in
       Convert.type_expr ~substitution type_expr
       |> of_result ~message:(function
-             | `Unbound_type_variable _var ->
-               raise_s [%message "Here" (type_expr : type_expr)]
-             (* [%message
+        | `Unbound_type_variable _var ->
+          raise_s [%message "Here" (type_expr : type_expr)]
+        (* [%message
                  "Unbound type variable when converting type expression"
                    (var : string)] *)
-             | `Type_expr_is_ill_sorted type_expr ->
-               [%message
-                 "Type expression is ill-sorted" (type_expr : type_expr)]
-             | `Type_expr_contains_alias type_expr ->
-               [%message
-                 "Type expression contains alias" (type_expr : type_expr)])
+        | `Type_expr_is_ill_sorted type_expr ->
+          [%message "Type expression is ill-sorted" (type_expr : type_expr)]
+        | `Type_expr_contains_alias type_expr ->
+          [%message "Type expression contains alias" (type_expr : type_expr)])
 
 
     let find_constr constr_name =
@@ -86,8 +79,8 @@ module Env = struct
         =
         Env.find_constr env constr_name
         |> of_result ~message:(fun `Unbound_constructor ->
-               [%message
-                 "Constructor is unbound in environment" (constr_name : string)])
+          [%message
+            "Constructor is unbound in environment" (constr_name : string)])
       in
       (* Compute fresh set of variables for [constr_alphas]. *)
       let%bind substitution = substitution_of_vars constr_alphas in
@@ -128,9 +121,9 @@ module Env = struct
       (* Compute the converted type constraints. *)
       let%bind constr_constraints =
         List.map constr_constraints ~f:(fun (type1, type2) ->
-            let%bind type1 = convert_type_expr ~substitution type1 in
-            let%bind type2 = convert_type_expr ~substitution type2 in
-            return (type1, type2))
+          let%bind type1 = convert_type_expr ~substitution type1 in
+          let%bind type2 = convert_type_expr ~substitution type2 in
+          return (type1, type2))
         |> all
       in
       return (alphas, constr_arg, constr_type, constr_constraints)
@@ -142,8 +135,7 @@ module Env = struct
       let%bind { label_arg; label_type; label_alphas; label_betas; _ } =
         Env.find_label env label_name
         |> of_result ~message:(fun `Unbound_label ->
-               [%message
-                 "Label is unbound in environment" (label_name : string)])
+          [%message "Label is unbound in environment" (label_name : string)])
       in
       (* Redefined due to repeated error function *)
       let substitution_of_vars vars = substitution_of_vars vars in
@@ -187,8 +179,8 @@ let rec is_pat_generalized ~env pat =
     List.exists ~f:Fn.id is_pats_generalized
   | Ppat_variant (_, pat) ->
     (match pat with
-    | Some pat -> is_pat_generalized ~env pat
-    | None -> return false)
+     | Some pat -> is_pat_generalized ~env pat
+     | None -> return false)
   | Ppat_constraint (pat, _) | Ppat_alias (pat, _) ->
     is_pat_generalized ~env pat
   | Ppat_const _ | Ppat_any | Ppat_var _ -> return false
@@ -260,10 +252,10 @@ let rec variant_cases_of_cases cases =
   | [ case1; case2 ] ->
     let%map case = variant_case_of_case case1 in
     (match variant_case_of_case case2 with
-    | Some case' -> { cases = [ case; case' ]; default_case = None }
-    | None ->
-      let default_case = variant_default_case_of_case case2 in
-      { cases = [ case ]; default_case })
+     | Some case' -> { cases = [ case; case' ]; default_case = None }
+     | None ->
+       let default_case = variant_default_case_of_case case2 in
+       { cases = [ case ]; default_case })
   | case :: cases ->
     (* invairant: len cases >= 2 *)
     let%bind case = variant_case_of_case case in
@@ -347,7 +339,7 @@ let rec find_annotation exp =
 
 
 let rec annotation_of_value_binding
-    ({ pvb_pat = pat; pvb_expr = exp; _ } as value_binding)
+  ({ pvb_pat = pat; pvb_expr = exp; _ } as value_binding)
   =
   let open Option.Let_syntax in
   match pat with
@@ -363,10 +355,11 @@ let rec annotation_of_value_binding
 
 
 let annotation_of_rec_value_binding value_binding
-    : ( [ `Annotated of string list * string * Parsetree.expression * core_type
-        | `Unannotated of string list * string * Parsetree.expression
-        ]
-    , _ ) Result.t
+  : ( [ `Annotated of string list * string * Parsetree.expression * core_type
+      | `Unannotated of string list * string * Parsetree.expression
+      ]
+      , _ )
+      Result.t
   =
   let open Result in
   let open Let_syntax in
@@ -375,16 +368,16 @@ let annotation_of_rec_value_binding value_binding
       ({ pvb_forall_vars = forall_vars; pvb_pat = pat; pvb_expr = exp }, type_)
     ->
     (match pat with
-    | Ppat_var term_var ->
-      return (`Annotated (forall_vars, term_var, exp, type_))
-    | _ -> fail `Invalid_recursive_binding)
+     | Ppat_var term_var ->
+       return (`Annotated (forall_vars, term_var, exp, type_))
+     | _ -> fail `Invalid_recursive_binding)
   | None ->
     (match value_binding.pvb_pat with
-    | Ppat_var term_var ->
-      return
-        (`Unannotated
-          (value_binding.pvb_forall_vars, term_var, value_binding.pvb_expr))
-    | _ -> fail `Invalid_recursive_binding)
+     | Ppat_var term_var ->
+       return
+         (`Unannotated
+           (value_binding.pvb_forall_vars, term_var, value_binding.pvb_expr))
+     | _ -> fail `Invalid_recursive_binding)
 
 
 (** {7 : Inference} *)
@@ -529,7 +522,7 @@ module Pattern = struct
           [%message
             "Deep pattern matching for polymorphic variants not supported!"]
     and infer_pats pats
-        : (variable list * Typedtree.pattern list Constraint.t) Binder.t
+      : (variable list * Typedtree.pattern list Constraint.t) Binder.t
       =
       let open Binder.Let_syntax in
       let%bind vars, pats =
@@ -593,10 +586,10 @@ module Expression = struct
 
   let annotation_of_rec_value_binding value_binding =
     of_result (annotation_of_rec_value_binding value_binding) ~message:(function
-        | `Invalid_recursive_binding ->
-        [%message
-          "Invalid recursive value binding form."
-            (value_binding : Parsetree.value_binding)])
+      | `Invalid_recursive_binding ->
+      [%message
+        "Invalid recursive value binding form."
+          (value_binding : Parsetree.value_binding)])
 
 
   let inst_constr constr_name constr_type' =
@@ -666,7 +659,7 @@ module Expression = struct
        and [pat]. *)
     let@ () = forall_ctx ~ctx:universal_ctx in
     let%bind in_ = extend_substitution ~substitution in_ in
-    (* Construct a (pat, in_) pair using [let_1]  *)
+    (* Construct a (pat, in_) pair using [let_1] *)
     return
       (let%map (_, (_, pat)), in_ =
          let_1
@@ -684,9 +677,9 @@ module Expression = struct
 
 
   let bind_variant_pat
-      ~variant_pat:(Vpat_variant (tag, arg_pat))
-      ~variant_pat_row
-      ~in_
+    ~variant_pat:(Vpat_variant (tag, arg_pat))
+    ~variant_pat_row
+    ~in_
     =
     let open Binder.Let_syntax in
     (* Introduce new type for unknown type of [arg_pat] *)
@@ -722,10 +715,10 @@ module Expression = struct
 
 
   let bind_variant_default_pat
-      ~variant_default_pat
-      ~default_pat_type
-      ~pat_type
-      ~in_
+    ~variant_default_pat
+    ~default_pat_type
+    ~pat_type
+    ~in_
     =
     let open Computation.Let_syntax in
     (* Infer the pattern *)
@@ -751,30 +744,30 @@ module Expression = struct
   let bind_forall ~vars ~on_duplicate_var ~in_ ~type_ =
     let open Computation.Let_syntax in
     extend_substitution_vars ~vars ~on_duplicate_var ~in_:(fun vars ->
-        let internal_name = "@dromedary.internal.pexp_forall" in
-        let var = fresh () in
-        let%bind in_ = in_ var in
-        return
-          (let%map (_, (_, exp)), _ =
-             let_1
-               ~binding:
-                 Binding.(
-                   let_
-                     ~ctx:(vars, ([ var ], []))
-                     ~is_non_expansive:true
-                     ~bindings:[ internal_name #= var ]
-                     ~in_
-                     ~equations:[])
-               ~in_:(inst internal_name type_)
-           in
-           exp))
+      let internal_name = "@dromedary.internal.pexp_forall" in
+      let var = fresh () in
+      let%bind in_ = in_ var in
+      return
+        (let%map (_, (_, exp)), _ =
+           let_1
+             ~binding:
+               Binding.(
+                 let_
+                   ~ctx:(vars, ([ var ], []))
+                   ~is_non_expansive:true
+                   ~bindings:[ internal_name #= var ]
+                   ~in_
+                   ~equations:[])
+             ~in_:(inst internal_name type_)
+         in
+         exp))
 
 
   let bind_exists ~vars ~on_duplicate_var ~in_ ~type_ =
     let open Computation.Let_syntax in
     extend_substitution_vars ~vars ~on_duplicate_var ~in_:(fun vars ->
-        let@ () = exists_vars vars in
-        in_ type_)
+      let@ () = exists_vars vars in
+      in_ type_)
 
 
   let infer_primitive prim : Type.t Binder.t =
@@ -1100,7 +1093,7 @@ module Expression = struct
 
 
   and infer_case { pc_lhs = pat; pc_rhs = exp } ~lhs_type ~rhs_type
-      : Typedtree.case Constraint.t Computation.t
+    : Typedtree.case Constraint.t Computation.t
     =
     let open Computation.Let_syntax in
     let%bind pat_exp =
@@ -1112,10 +1105,10 @@ module Expression = struct
 
 
   and infer_variant_default_case
-      { vdc_lhs; vdc_rhs }
-      ~lhs_type
-      ~rhs_type
-      ~default_pat_type
+    { vdc_lhs; vdc_rhs }
+    ~lhs_type
+    ~rhs_type
+    ~default_pat_type
     =
     let open Computation.Let_syntax in
     let%bind pat_exp =
@@ -1181,7 +1174,7 @@ module Expression = struct
 
 
   and infer_value_binding
-      { pvb_forall_vars = forall_vars; pvb_pat = pat; pvb_expr = exp }
+    { pvb_forall_vars = forall_vars; pvb_pat = pat; pvb_expr = exp }
     =
     let open Computation.Let_syntax in
     extend_substitution_vars
@@ -1275,7 +1268,7 @@ module Expression = struct
     open Structure.Item
 
     let infer_value_binding
-        { pvb_forall_vars = forall_vars; pvb_pat = pat; pvb_expr = exp }
+      { pvb_forall_vars = forall_vars; pvb_pat = pat; pvb_expr = exp }
       =
       let open Computation.Let_syntax in
       extend_substitution_vars

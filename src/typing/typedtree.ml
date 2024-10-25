@@ -145,14 +145,14 @@ and pp_pattern_desc_mach ~indent ppf pat_desc =
     print "Construct";
     pp_constructor_description_mach ~indent ppf constr_desc;
     (match pat with
-    | None -> ()
-    | Some pat -> pp_pattern_mach ~indent ppf pat)
+     | None -> ()
+     | Some pat -> pp_pattern_mach ~indent ppf pat)
   | Tpat_variant (variant_desc, pat) ->
     print "Variant";
     pp_variant_description_mach ~indent ppf variant_desc;
     (match pat with
-    | None -> ()
-    | Some pat -> pp_pattern_mach ~indent ppf pat)
+     | None -> ()
+     | Some pat -> pp_pattern_mach ~indent ppf pat)
 
 
 let pp_pattern _ppf = assert false
@@ -194,8 +194,8 @@ and pp_expression_desc_mach ~indent ppf exp_desc =
     print "Construct";
     pp_constructor_description_mach ~indent ppf constr_desc;
     (match exp with
-    | None -> ()
-    | Some exp -> pp_expression_mach ~indent ppf exp)
+     | None -> ()
+     | Some exp -> pp_expression_mach ~indent ppf exp)
   | Texp_record label_exps ->
     print "Record";
     List.iter ~f:(pp_label_exp_mach ~indent ppf) label_exps
@@ -245,8 +245,8 @@ and pp_expression_desc_mach ~indent ppf exp_desc =
     print "Variant";
     pp_variant_description_mach ~indent ppf variant_desc;
     (match exp with
-    | None -> ()
-    | Some exp -> pp_expression_mach ~indent ppf exp)
+     | None -> ()
+     | Some exp -> pp_expression_mach ~indent ppf exp)
 
 
 and pp_value_bindings_mach ~indent ppf value_bindings =
@@ -268,7 +268,7 @@ and pp_abstraction_mach ~indent ~pp ppf ((variables, t) : _ abstraction) =
     "%sVariables: %s@."
     indent
     (List.map variables ~f:(fun var -> var |> Type_var.id |> Int.to_string)
-    |> String.concat ~sep:",");
+     |> String.concat ~sep:",");
   pp ~indent ppf t
 
 
@@ -410,7 +410,7 @@ let pp_rec_value_binding_mach =
 let pp_case_mach = to_pp_mach ~pp:pp_case_mach ~name:"Case"
 
 (* let pp_structure_item_mach =
-  to_pp_mach ~name:"Structure item" ~pp:pp_structure_item_mach *)
+   to_pp_mach ~name:"Structure item" ~pp:pp_structure_item_mach *)
 
 let pp_structure_mach = to_pp_mach ~name:"Structure" ~pp:pp_structure_mach
 let pp_expression _ppf = assert false

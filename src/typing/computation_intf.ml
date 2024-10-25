@@ -42,11 +42,11 @@ open! Import
 
 module type S = sig
   (** A computation ['a Computation.t] represents a monadic computation
-      that produces a value of type ['a]. 
-      
+      that produces a value of type ['a].
+
       Computations are designed for computating (or generating)
       ['a Constraint.t]'s, thus it's syntax provided by [ppx_let]
-      is altered (from standard Monadic Let_syntax) for this. 
+      is altered (from standard Monadic Let_syntax) for this.
 
       Computations are bound using the [let%bind] syntax:
       {[
@@ -55,13 +55,12 @@ module type S = sig
         let%bind pat1 = comp1 in
         let%bind pat2 = comp1 in
         ...
-      ]}
-  *)
+      ]} *)
   type 'a t
 
   include Monad.S with type 'a t := 'a t
 
-  (** [const x] creates a computation that returns a 
+  (** [const x] creates a computation that returns a
       constraint ['a Constraint.t] that evaluates to [x]. *)
   val const : 'a -> 'a Constraint.t t
 
@@ -71,7 +70,7 @@ module type S = sig
   (** [env] returns the environment *)
   val env : Env.t t
 
-  (** [find_label label] returns the corresponding label declaration in 
+  (** [find_label label] returns the corresponding label declaration in
       the environment w/ label [label]. *)
   val find_label : string -> Types.label_declaration t
 
@@ -83,7 +82,12 @@ module type S = sig
   val substitution : Substitution.t t
 
   val extend_substitution : 'a t -> substitution:Substitution.t -> 'a t
-  val extend_substitution_vars : in_:(Constraint.variable list -> 'a t) -> vars:string list -> on_duplicate_var:(string -> Sexp.t) -> 'a t
+
+  val extend_substitution_vars
+    :  in_:(Constraint.variable list -> 'a t)
+    -> vars:string list
+    -> on_duplicate_var:(string -> Sexp.t)
+    -> 'a t
 
   (** [find_var var] returns the corresponding constraint variable for the
       bound type variable [var] in the local substitution. *)
@@ -96,13 +100,12 @@ module type S = sig
   module Binder : sig
     type 'a computation := 'a t
 
-    (** A ['a Binder.t] represents a monadic binding context for a ['b Constraint.t Computation.t]. 
+    (** A ['a Binder.t] represents a monadic binding context for a ['b Constraint.t Computation.t].
 
-        They are designed to provide an intuitive notion of "compositional" binding 
-        (avoiding continuation hell!). 
+        They are designed to provide an intuitive notion of "compositional" binding
+        (avoiding continuation hell!).
 
-        Computations are bound using the let-op [let&].
-    *)
+        Computations are bound using the let-op [let&]. *)
     type 'a t
 
     include Monad.S with type 'a t := 'a t
@@ -133,9 +136,9 @@ module type S = sig
     end
   end
 
-  (** [Let_syntax] does not follow the conventional [Let_syntax] signature for 
+  (** [Let_syntax] does not follow the conventional [Let_syntax] signature for
       a Monad. Instead we have standard [return] and [bind], however, the [map]
-      and [both] are used for constructing constraints. 
+      and [both] are used for constructing constraints.
 
       This allows the pattern for constructing constraints:
       {[
@@ -146,8 +149,7 @@ module type S = sig
            ...)
       ]}
 
-      Binders are bound using the let-op [let@]. 
-  *)
+      Binders are bound using the let-op [let@]. *)
 
   module Let_syntax : sig
     val return : 'a -> 'a t
@@ -192,10 +194,8 @@ module type Intf = sig
 
     val write : Fragment.t -> unit t
     val extend : string -> Constraint.variable -> unit t
-
     val assert_ : Constraint.equations -> unit t
     val extend_fragment_substitution : Substitution.t -> unit t
-
     val run : 'a t -> (Fragment.t * 'a) Expression.t
   end
 end

@@ -19,7 +19,6 @@ module type Identifiable = sig
   val id : 'a t -> int
 end
 
-
 module Rigid_var = struct
   module T = struct
     type t = int [@@deriving sexp_of, compare]
@@ -47,7 +46,7 @@ module Of_former (Former : Type_former.S) = struct
 
   let merge ~ctx:() ~create:_ ~unify t1 t2 =
     (try Former.iter2_exn t1 t2 ~f:unify with
-    | Former.Iter2 -> raise Cannot_merge);
+     | Former.Iter2 -> raise Cannot_merge);
     t1
 end
 
@@ -78,7 +77,7 @@ module First_order (Structure : S) = struct
 
 
   let merge ~ctx ~create ~unify t1 t2 =
-    let create structure = create (Structure structure) in  
+    let create structure = create (Structure structure) in
     match t1, t2 with
     | Var, t | t, Var -> t
     | Structure structure1, Structure structure2 ->
@@ -123,9 +122,9 @@ struct
     let make abbrev_structure abbrev_type =
       let id = Id.id abbrev_structure in
       Structure.iter abbrev_structure ~f:(fun t ->
-          match Type.structure t with
-          | Var -> ()
-          | _ -> assert false);
+        match Type.structure t with
+        | Var -> ()
+        | _ -> assert false);
       { id; abbrev = abbrev_structure, abbrev_type }
 
 
@@ -198,13 +197,13 @@ struct
       match Abbrev.Ctx.find ctx.abbrev_ctx t1 with
       | None ->
         (match Abbrev.Ctx.find ctx.abbrev_ctx t2 with
-        | None -> raise Cannot_merge
-        | Some abbrev ->
-          (* Expand [t2] to [t2'], and merge [t2'] and [t1]. *)
-          let t2' = expand_with_abbrev t2 ~abbrev in
-          (* Merge [t2'] and [t1]. *)
-          t2' =~- t1;
-          t1)
+         | None -> raise Cannot_merge
+         | Some abbrev ->
+           (* Expand [t2] to [t2'], and merge [t2'] and [t1]. *)
+           let t2' = expand_with_abbrev t2 ~abbrev in
+           (* Merge [t2'] and [t1]. *)
+           t2' =~- t1;
+           t1)
       | Some abbrev ->
         (* Expand [t2] to [t2'], and merge [t2'] and [t1]. *)
         let t1' = expand_with_abbrev t1 ~abbrev in
@@ -270,9 +269,7 @@ module Ambivalent (Structure : S) = struct
       exception Cannot_merge = Structure.Cannot_merge
 
       let merge ~ctx ~create ~unify t1 t2 =
-        let create t = 
-          create (Structure t)
-        in
+        let create t = create (Structure t) in
         let ( =~- ) type_ structure =
           let type_' = ctx.make structure in
           unify type_ type_'
@@ -281,40 +278,45 @@ module Ambivalent (Structure : S) = struct
           Log.debug (fun m -> m "Adding equation for %d" rigid_var);
           let type_ = ctx.make structure in
           ctx.equations_ctx
-            <- Equations.Ctx.add_equation
-                 ctx.equations_ctx
-                 rigid_var
-                 type_
-                 ctx.scope
+          <- Equations.Ctx.add_equation
+               ctx.equations_ctx
+               rigid_var
+               type_
+               ctx.scope
         in
         match t1, t2 with
         | Structure structure1, Structure structure2 ->
           Structure
-            (Structure.merge ~ctx:ctx.super_ ~create ~unify structure1 structure2)
+            (Structure.merge
+               ~ctx:ctx.super_
+               ~create
+               ~unify
+               structure1
+               structure2)
         | Rigid_var rigid_var1, Rigid_var rigid_var2
           when Rigid_var.compare rigid_var1 rigid_var2 = 0 ->
           Rigid_var rigid_var1
         | Rigid_var rigid_var, _ ->
           (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var with
-          | None -> add_equation rigid_var t2
-          | Some (rigid_type, scope) ->
-            (* Convert [rigid_type] to ['a] type. *)
-            let t1' = ctx.copy rigid_type in
-            (* Update scope *)
-            if ctx.scope < scope then ctx.scope <- scope;
-            (* Merge [t2'] and [t1]. *)
-            t1' =~- t2);
+           | None -> add_equation rigid_var t2
+           | Some (rigid_type, scope) ->
+             (* Convert [rigid_type] to ['a] type. *)
+             let t1' = ctx.copy rigid_type in
+             (* Update scope *)
+             if ctx.scope < scope then ctx.scope <- scope;
+             (* Merge [t2'] and [t1]. *)
+             t1' =~- t2);
           t1
         | _, Rigid_var rigid_var ->
           (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var with
-          | None -> add_equation rigid_var t1
-          | Some (rigid_type, scope) ->
-            (* Convert [rigid_type] to ['a] type. *)
-            let t2' = ctx.copy rigid_type in
-            (* Update scope *)
-            if ctx.scope < scope then ctx.scope <- scope;
-            (* Merge [t2'] and [t1]. *)
-            t2' =~- t1);
+           | None -> add_equation rigid_var t1
+           | Some (rigid_type, scope) ->
+             (* Convert [rigid_type] to ['a] type. *)
+             let t2' = ctx.copy rigid_type in
+             (* Update scope *)
+             if ctx.scope < scope then ctx.scope <- scope;
+             (* Merge [t2'] and [t1]. *)
+             t2' =~- t1);
           t2
     end
 
@@ -357,13 +359,13 @@ module Ambivalent (Structure : S) = struct
 
       let add ~ctx t type1 type2 scope =
         Log.debug (fun m ->
-            let string_of_rigid_type t =
-              Rigid_type.sexp_of_t t |> Sexp.to_string_hum
-            in
-            m
-              "Adding equation between %s\n and\n %s"
-              (string_of_rigid_type type1)
-              (string_of_rigid_type type2));
+          let string_of_rigid_type t =
+            Rigid_type.sexp_of_t t |> Sexp.to_string_hum
+          in
+          m
+            "Adding equation between %s\n and\n %s"
+            (string_of_rigid_type type1)
+            (string_of_rigid_type type2));
         let ctx : Rigid_type.t Rigid_type.Structure.ctx =
           { equations_ctx = t
           ; scope
@@ -373,7 +375,7 @@ module Ambivalent (Structure : S) = struct
           }
         in
         (try Rigid_type.Unifier.unify ~ctx type1 type2 with
-        | _ -> raise Inconsistent);
+         | _ -> raise Inconsistent);
         ctx.equations_ctx
 
 
@@ -412,8 +414,8 @@ module Ambivalent (Structure : S) = struct
     { t with
       repr =
         (match repr t with
-        | Rigid_var rigid_var -> Rigid_var rigid_var
-        | Structure structure -> Structure (Structure.map structure ~f))
+         | Rigid_var rigid_var -> Rigid_var rigid_var
+         | Structure structure -> Structure (Structure.map structure ~f))
     }
 
 
@@ -426,11 +428,11 @@ module Ambivalent (Structure : S) = struct
   let convert_rigid_type ~ctx rigid_type =
     let rec loop rigid_type =
       (match Rigid_type.structure rigid_type with
-      | Var -> assert false
-      | Structure (Rigid_var rigid_var) -> Rigid_var rigid_var
-      | Structure (Structure structure) ->
-        let structure = Structure.map structure ~f:loop in
-        Structure structure)
+       | Var -> assert false
+       | Structure (Rigid_var rigid_var) -> Rigid_var rigid_var
+       | Structure (Structure structure) ->
+         let structure = Structure.map structure ~f:loop in
+         Structure structure)
       |> make
       |> ctx.make
     in
@@ -446,15 +448,15 @@ module Ambivalent (Structure : S) = struct
       let type_' = ctx.make structure in
       unify type_ type_'
     in
-    (* The new scope is the maximum of the 2 scopes. 
+    (* The new scope is the maximum of the 2 scopes.
 
        We use a reference here, as [scope] may be updated when
        computing the representation. *)
     let scope = ref (Equations.Scope.max t1.scope t2.scope) in
-    (* We perform case analysis on the representation. 
-       Where rigid variables are concerned, we expand only when necessary. 
+    (* We perform case analysis on the representation.
+       Where rigid variables are concerned, we expand only when necessary.
 
-       Optimization: Expansions could be memoized, as in Morel. 
+       Optimization: Expansions could be memoized, as in Morel.
     *)
     let create t = create (make (Structure t)) in
     let repr =
@@ -469,15 +471,15 @@ module Ambivalent (Structure : S) = struct
           match Equations.Ctx.get_equation ctx.equations_ctx rigid_var1 with
           | Some (rigid_type, scope') ->
             Log.debug (fun m ->
-                m "Using equation for %d with scope %d" rigid_var1 scope');
+              m "Using equation for %d with scope %d" rigid_var1 scope');
             rigid_var1, rigid_type, scope', t2
           | None ->
             (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var2 with
-            | Some (rigid_type, scope') ->
-              Log.debug (fun m ->
-                  m "Using equation for %d with scope %d" rigid_var2 scope');
-              rigid_var2, rigid_type, scope', t1
-            | None -> raise Cannot_merge)
+             | Some (rigid_type, scope') ->
+               Log.debug (fun m ->
+                 m "Using equation for %d with scope %d" rigid_var2 scope');
+               rigid_var2, rigid_type, scope', t1
+             | None -> raise Cannot_merge)
         in
         (* Convert [rigid_type] to ['a] type. *)
         let t' = convert_rigid_type ~ctx rigid_type in
@@ -485,41 +487,41 @@ module Ambivalent (Structure : S) = struct
         t' =~- t;
         (* Update scope *)
         Log.debug (fun m ->
-            m
-              "Updating scope: %d = %d w/ scopes %d %d"
-              rigid_var1
-              rigid_var2
-              !scope
-              scope');
+          m
+            "Updating scope: %d = %d w/ scopes %d %d"
+            rigid_var1
+            rigid_var2
+            !scope
+            scope');
         if !scope < scope' then scope := scope';
         (* Representative is the rigid variable *)
         Rigid_var rigid_var
       | Rigid_var rigid_var, _ ->
         (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var with
-        | None -> raise Cannot_merge
-        | Some (rigid_type, scope') ->
-          Log.debug (fun m -> m "Using equation for %d" rigid_var);
-          (* Convert [rigid_type] to ['a] type. *)
-          let t1' = convert_rigid_type ~ctx rigid_type in
-          (* Merge [t2'] and [t1]. *)
-          t1' =~- t2;
-          (* Update scope *)
-          if !scope < scope' then scope := scope';
-          (* Representative is the rigid variable *)
-          Rigid_var rigid_var)
+         | None -> raise Cannot_merge
+         | Some (rigid_type, scope') ->
+           Log.debug (fun m -> m "Using equation for %d" rigid_var);
+           (* Convert [rigid_type] to ['a] type. *)
+           let t1' = convert_rigid_type ~ctx rigid_type in
+           (* Merge [t2'] and [t1]. *)
+           t1' =~- t2;
+           (* Update scope *)
+           if !scope < scope' then scope := scope';
+           (* Representative is the rigid variable *)
+           Rigid_var rigid_var)
       | _, Rigid_var rigid_var ->
         (match Equations.Ctx.get_equation ctx.equations_ctx rigid_var with
-        | None -> raise Cannot_merge
-        | Some (rigid_type, scope') ->
-          Log.debug (fun m -> m "Using equation for %d" rigid_var);
-          (* Convert [rigid_type] to ['a] type. *)
-          let t2' = convert_rigid_type ~ctx rigid_type in
-          (* Merge [t2'] and [t1]. *)
-          t2' =~- t1;
-          (* Update scope *)
-          if !scope < scope' then scope := scope';
-          (* Representative is the rigid variable *)
-          Rigid_var rigid_var)
+         | None -> raise Cannot_merge
+         | Some (rigid_type, scope') ->
+           Log.debug (fun m -> m "Using equation for %d" rigid_var);
+           (* Convert [rigid_type] to ['a] type. *)
+           let t2' = convert_rigid_type ~ctx rigid_type in
+           (* Merge [t2'] and [t1]. *)
+           t2' =~- t1;
+           (* Update scope *)
+           if !scope < scope' then scope := scope';
+           (* Representative is the rigid variable *)
+           Rigid_var rigid_var)
     in
     { scope = !scope; repr }
 end
@@ -528,7 +530,7 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
   module Label = struct
     include Label
 
-    (* Add [sexp_of_t] for label into module scope for 
+    (* Add [sexp_of_t] for label into module scope for
        below [@@deriving sexp_of] *)
     let sexp_of_t = comparator.sexp_of_t
   end
@@ -588,7 +590,8 @@ module Rows (Label : Comparable.S) (Structure : S) = struct
     match t1, t2 with
     | Structure structure1, Structure structure2 ->
       Log.debug (fun m -> m "Merge Rows : structures");
-      Structure (Structure.merge ~ctx:ctx.super_ ~create ~unify structure1 structure2)
+      Structure
+        (Structure.merge ~ctx:ctx.super_ ~create ~unify structure1 structure2)
     | Row_uniform t1, Row_uniform t2 ->
       Log.debug (fun m -> m "Merge Row uniform");
       t1 =~ t2;

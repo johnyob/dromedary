@@ -1,8 +1,8 @@
 open! Import
 open Util
 
-let%expect_test "" = 
-  let str = 
+let%expect_test "" =
+  let str =
     {|
       type 'a t = 
         | Int constraint 'a = int
@@ -18,7 +18,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -118,8 +119,9 @@ let%expect_test "" =
                                                     └──Type expr: Constructor: unit
                                                     └──Desc: Constant: () |}]
 
-let%expect_test "" = 
-  let str = 
+
+let%expect_test "" =
+  let str =
     {|
       type ('a, 'b) eq = 
         | Refl constraint 'a = 'b
@@ -140,12 +142,14 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 51 (Var 51)))
      ("Type_expr.decode type_expr2" (Type 72 (Var 72)))) |}]
 
-let%expect_test "" = 
-  let str = 
+
+let%expect_test "" =
+  let str =
     {|
       type 'a list = 
         | Nil
@@ -163,7 +167,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1" (Type 23 (Former (Constr () string))))
      ("Type_expr.decode type_expr2" (Type 37 (Former (Constr () float))))) |}]

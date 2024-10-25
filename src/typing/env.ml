@@ -71,10 +71,10 @@ let add_type_decl t type_decl =
   match type_decl.type_kind with
   | Type_record label_decls ->
     List.fold_left label_decls ~init:t ~f:(fun t label_decl ->
-        add_label_decl t label_decl)
+      add_label_decl t label_decl)
   | Type_variant constr_decls ->
     List.fold_left constr_decls ~init:t ~f:(fun t constr_decl ->
-        add_constr_decl t constr_decl)
+      add_constr_decl t constr_decl)
   | Type_alias alias ->
     let abbrev = convert_alias alias in
     { t with abbrevs = Constraint.Abbreviations.add t.abbrevs ~abbrev }

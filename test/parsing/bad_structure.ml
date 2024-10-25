@@ -2,16 +2,15 @@ open! Import
 open Util
 
 let%expect_test "no trailing ;;" =
-  let str = 
-    {|
+  let str = {|
       let valid_function = fun () -> 1
-    |}
-  in
+    |} in
   print_structure_parsetree str;
   [%expect {| "parse error" |}]
 
+
 let%expect_test "type definition - empty case" =
-  let str = 
+  let str =
     {|
       type t = 
         |
@@ -25,31 +24,24 @@ let%expect_test "type definition - empty case" =
 
 
 let%expect_test "exception - existentials" =
-  let str = 
-    {|
+  let str = {|
       exception Existential of 'a. 'a;;
-    |}
-  in
+    |} in
   print_structure_parsetree str;
   [%expect {| "parse error" |}]
 
 
 let%expect_test "type definition - empty variant" =
-  let str = 
-    {|
+  let str = {|
       type t = |;;
-    |}
-  in
+    |} in
   print_structure_parsetree str;
   [%expect {| "parse error" |}]
+
 
 let%expect_test "type definition - empty record" =
-  let str = 
-    {|
+  let str = {|
       type t = {};;
-    |}
-  in
+    |} in
   print_structure_parsetree str;
   [%expect {| "parse error" |}]
-
-

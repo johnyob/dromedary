@@ -94,16 +94,16 @@ module Type = struct
     QCheck.Gen.(
       sized
       @@ fix (fun self n ->
-             match n with
-             | 0 -> oneof [ (int >|= fun x -> Ttyp_var x); return Ttyp_int ]
-             | n ->
-               oneof
-                 [ map2
-                     (fun t1 t2 -> Ttyp_arrow (t1, t2))
-                     (self (n / 2))
-                     (self (n / 2))
-                 ; map2 (fun x t -> Ttyp_as (t, x)) int (self (n / 2))
-                 ]))
+        match n with
+        | 0 -> oneof [ (int >|= fun x -> Ttyp_var x); return Ttyp_int ]
+        | n ->
+          oneof
+            [ map2
+                (fun t1 t2 -> Ttyp_arrow (t1, t2))
+                (self (n / 2))
+                (self (n / 2))
+            ; map2 (fun x t -> Ttyp_as (t, x)) int (self (n / 2))
+            ]))
 
 
   let arbitrary =
@@ -123,7 +123,8 @@ module Type = struct
         Unifier.Type.create (Structure (Arrow (t1, t2)))
       | Ttyp_as (t, x) ->
         let x =
-          Hashtbl.find_or_add table x ~default:(fun () -> Unifier.Type.create Var)
+          Hashtbl.find_or_add table x ~default:(fun () ->
+            Unifier.Type.create Var)
         in
         let t = loop t in
         Unifier.unify ~ctx:() x t;

@@ -2,7 +2,7 @@ open! Import
 open Util
 
 let%expect_test "unify-mcbride" =
-  let str = 
+  let str =
     {|
       type zero;;
       type 'n succ;;
@@ -207,7 +207,8 @@ let%expect_test "unify-mcbride" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -5058,4 +5059,3 @@ let%expect_test "unify-mcbride" =
                                                        └──Type expr: Constructor: alist
                                                           └──Type expr: Variable: 2575
                                                           └──Type expr: Variable: 2575 |}]
-

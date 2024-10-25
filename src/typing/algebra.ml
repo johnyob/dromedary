@@ -12,7 +12,6 @@
 (*****************************************************************************)
 open Core
 
-
 module Algebra = struct
   open Constraints.Module_types
 
@@ -86,19 +85,19 @@ module Algebra = struct
                Arrow (t1, t2))
           | Tuple ts1, Tuple ts2 ->
             (match List.map2 ~f ts1 ts2 with
-            | Ok ts ->
-              `Ok
-                (let%map ts = all ts in
-                 Tuple ts)
-            | Unequal_lengths -> `Unequal_structure)
+             | Ok ts ->
+               `Ok
+                 (let%map ts = all ts in
+                  Tuple ts)
+             | Unequal_lengths -> `Unequal_structure)
           | Constr (ts1, constr1), Constr (ts2, constr2)
             when String.(constr1 = constr2) ->
             (match List.map2 ~f ts1 ts2 with
-            | Ok ts ->
-              `Ok
-                (let%map ts = all ts in
-                 Constr (ts, constr1))
-            | Unequal_lengths -> `Unequal_structure)
+             | Ok ts ->
+               `Ok
+                 (let%map ts = all ts in
+                  Constr (ts, constr1))
+             | Unequal_lengths -> `Unequal_structure)
           | Variant t1, Variant t2 ->
             `Ok
               (let%map t = f t1 t2 in
@@ -116,5 +115,4 @@ module Algebra = struct
     module Var = Type_var
     module Former = Type_former
   end
-
 end

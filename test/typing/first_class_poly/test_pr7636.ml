@@ -2,7 +2,7 @@ open! Import
 open Util
 
 let%expect_test "pr7637-1" =
-  let str = 
+  let str =
     {|
       type ('a, 'b) elt = 'a;;
 
@@ -17,7 +17,8 @@ let%expect_test "pr7637-1" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -143,8 +144,9 @@ let%expect_test "pr7637-1" =
                                         └──Desc: Variable
                                            └──Variable: g |}]
 
+
 let%expect_test "pr7637-2" =
-  let str = 
+  let str =
     {|
       type 'a t = int;;
 
@@ -154,7 +156,8 @@ let%expect_test "pr7637-2" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type

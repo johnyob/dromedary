@@ -23,12 +23,12 @@ module Type_former = struct
   (* [tuple [t1; ...; tn]] returns the tuple type [t1 * ... * tn]. *)
   let tuple ts = Type_former.Tuple ts
 
-  (* [constr [t1; ..; tn] constr'] returns the type former (or type constructor) 
-   [(t1, .., tn) constr']. *)
+  (* [constr [t1; ..; tn] constr'] returns the type former (or type constructor)
+     [(t1, .., tn) constr']. *)
   let constr ts constr = Type_former.Constr (ts, constr)
 
-  (* [int, bool] and [unit] are the type formers for the primitive [int, bool, unit] 
-   types. *)
+  (* [int, bool] and [unit] are the type formers for the primitive [int, bool, unit]
+     types. *)
   let int = Type_former.Constr ([], "int")
   let bool = Type_former.Constr ([], "bool")
   let unit = Type_former.Constr ([], "unit")

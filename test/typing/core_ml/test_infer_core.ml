@@ -25,10 +25,10 @@ let print_solve_result ?(debug = false) ?(abbrevs = Abbreviations.empty) cst =
 
 
 let print_infer_result
-    ~env
-    ?(debug = false)
-    ?(abbrevs = Abbreviations.empty)
-    exp
+  ~env
+  ?(debug = false)
+  ?(abbrevs = Abbreviations.empty)
+  exp
   =
   let texp = Typing.infer_exp ~debug ~env ~abbrevs exp in
   match texp with
@@ -45,17 +45,17 @@ let print_infer_result
 
 
 let print_infer_result'
-    ~env
-    ?(debug = false)
-    ?(abbrevs = Abbreviations.empty)
-    exp
+  ~env
+  ?(debug = false)
+  ?(abbrevs = Abbreviations.empty)
+  exp
   =
   match Parsing.parse_expression_from_string exp with
   | Ok exp -> print_infer_result ~env ~debug ~abbrevs exp
   | Error err ->
     (match err with
-    | `Lexer_error message -> [%sexp ("lexer error: " ^ message : string)]
-    | `Parser_error -> [%sexp ("parse error" : string)])
+     | `Lexer_error message -> [%sexp ("lexer error: " ^ message : string)]
+     | `Parser_error -> [%sexp ("parse error" : string)])
     |> Sexp.to_string_hum
     |> print_endline
 
@@ -103,6 +103,7 @@ let%expect_test "constant: int" =
        └──Type expr: Constructor: int
        └──Desc: Constant: 1 |}]
 
+
 let%expect_test "constant: bool" =
   let exp = Pexp_const (Const_bool true) in
   print_infer_result ~env:Env.empty exp;
@@ -114,6 +115,7 @@ let%expect_test "constant: bool" =
        └──Type expr: Constructor: bool
        └──Desc: Constant: true |}]
 
+
 let%expect_test "constant: unit" =
   let exp = Pexp_const Const_unit in
   print_infer_result ~env:Env.empty exp;
@@ -124,6 +126,7 @@ let%expect_test "constant: unit" =
     └──Expression:
        └──Type expr: Constructor: unit
        └──Desc: Constant: () |}]
+
 
 let%expect_test "primitives" =
   let exp =
@@ -245,6 +248,7 @@ let%expect_test "primitives" =
              └──Type expr: Constructor: int
              └──Desc: Constant: 12 |}]
 
+
 let%expect_test "function - identity" =
   let exp =
     (* fun x -> x *)
@@ -267,6 +271,7 @@ let%expect_test "function - identity" =
              └──Type expr: Variable: 2
              └──Desc: Variable
                 └──Variable: x |}]
+
 
 let%expect_test "function - curry" =
   let exp =
@@ -349,6 +354,7 @@ let%expect_test "function - curry" =
                                      └──Desc: Variable
                                         └──Variable: y |}]
 
+
 let%expect_test "function - uncurry" =
   let exp =
     (* fun f (x, y) -> f x y *)
@@ -425,6 +431,7 @@ let%expect_test "function - uncurry" =
                          └──Type expr: Variable: 13
                          └──Desc: Variable
                             └──Variable: y |}]
+
 
 let%expect_test "function - compose" =
   let exp =
@@ -506,6 +513,7 @@ let%expect_test "function - compose" =
                                      └──Desc: Variable
                                         └──Variable: x |}]
 
+
 let%expect_test "function - fst" =
   let exp =
     (* fun (x, y) -> x *)
@@ -539,6 +547,7 @@ let%expect_test "function - fst" =
              └──Desc: Variable
                 └──Variable: x |}]
 
+
 let%expect_test "function - snd" =
   let exp =
     (* fun (x, y) -> y *)
@@ -571,6 +580,7 @@ let%expect_test "function - snd" =
              └──Type expr: Variable: 2
              └──Desc: Variable
                 └──Variable: y |}]
+
 
 let%expect_test "function - hd" =
   let env = add_list Env.empty in
@@ -624,6 +634,7 @@ let%expect_test "function - hd" =
                 └──Variable: x
                 └──Type expr: Variable: 2 |}]
 
+
 let%expect_test "annotation - identity" =
   let exp =
     (* exists 'a -> fun (x : 'a) -> x *)
@@ -649,6 +660,7 @@ let%expect_test "annotation - identity" =
              └──Desc: Variable
                 └──Variable: x |}]
 
+
 let%expect_test "annotation - identity" =
   let exp =
     (* forall 'a -> fun (x : 'a) -> x *)
@@ -673,6 +685,7 @@ let%expect_test "annotation - identity" =
              └──Type expr: Variable: 6
              └──Desc: Variable
                 └──Variable: x |}]
+
 
 let%expect_test "annotation - succ" =
   let exp =
@@ -721,6 +734,7 @@ let%expect_test "annotation - succ" =
                    └──Type expr: Constructor: int
                    └──Desc: Constant: 1 |}]
 
+
 let%expect_test "annotation - succ" =
   let exp =
     (* forall 'a -> fun (x : 'a) -> x + 1 *)
@@ -738,6 +752,7 @@ let%expect_test "annotation - succ" =
     ("Cannot unify types"
      ("Type_expr.decode type_expr1" (Type 11 (Former (Constr () int))))
      ("Type_expr.decode type_expr2" (Type 24 (Var 24)))) |}]
+
 
 let%expect_test "let - identity" =
   let exp =
@@ -812,6 +827,7 @@ let%expect_test "let - identity" =
                 └──Expression:
                    └──Type expr: Constructor: unit
                    └──Desc: Constant: () |}]
+
 
 (* ('a -> 'a) -> (unit -> 'b) *)
 (* 'a -> 'a *)
@@ -1123,6 +1139,7 @@ let%expect_test "let - map" =
                                   └──Type expr: Constructor: list
                                      └──Type expr: Constructor: int |}]
 
+
 let%expect_test "let rec - monomorphic recursion" =
   let env = add_list Env.empty in
   let exp =
@@ -1204,6 +1221,7 @@ let%expect_test "let rec - monomorphic recursion" =
                 └──Type expr: Constructor: int
              └──Desc: Variable
                 └──Variable: id |}]
+
 
 let%expect_test "let rec - mutual recursion (monomorphic)" =
   let exp =
@@ -1405,6 +1423,7 @@ let%expect_test "let rec - mutual recursion (monomorphic)" =
              └──Desc: Variable
                 └──Variable: is_even |}]
 
+
 let%expect_test "let rec - mutual recursion (polymorphic)" =
   let exp =
     (* let rec foo x = 1 and bar y = true in foo *)
@@ -1470,6 +1489,7 @@ let%expect_test "let rec - mutual recursion (polymorphic)" =
                 └──Variable: foo
                 └──Type expr: Variable: 16 |}]
 
+
 let%expect_test "f-pottier elaboration 1" =
   let exp =
     (* let u = (fun f -> ()) (fun x -> x) in u *)
@@ -1534,6 +1554,7 @@ let%expect_test "f-pottier elaboration 1" =
              └──Type expr: Constructor: unit
              └──Desc: Variable
                 └──Variable: u |}]
+
 
 let%expect_test "let rec - polymorphic recursion" =
   let env = add_list Env.empty in
@@ -1620,6 +1641,7 @@ let%expect_test "let rec - polymorphic recursion" =
              └──Desc: Variable
                 └──Variable: id
                 └──Type expr: Variable: 38 |}]
+
 
 let add_eq env =
   let name = "eq" in
@@ -1731,6 +1753,7 @@ let%expect_test "ambiv-f" =
              └──Type expr: Constructor: unit
              └──Desc: Constant: () |}]
 
+
 let%expect_test "ambiv-f1" =
   let env = add_eq Env.empty in
   let exp =
@@ -1817,6 +1840,7 @@ let%expect_test "ambiv-f1" =
           └──Expression:
              └──Type expr: Constructor: unit
              └──Desc: Constant: () |}]
+
 
 let%expect_test "ambiv-f2" =
   let env = add_eq Env.empty in
@@ -1940,6 +1964,7 @@ let%expect_test "ambiv-f2" =
           └──Expression:
              └──Type expr: Constructor: unit
              └──Desc: Constant: () |}]
+
 
 let%expect_test "ambiv-g" =
   let env = add_eq Env.empty in
@@ -2080,6 +2105,7 @@ let%expect_test "ambiv-g" =
              └──Type expr: Constructor: unit
              └──Desc: Constant: () |}]
 
+
 let%expect_test "ambiv-p" =
   let env = add_eq Env.empty in
   let exp =
@@ -2209,6 +2235,7 @@ let%expect_test "ambiv-p" =
              └──Type expr: Constructor: unit
              └──Desc: Constant: () |}]
 
+
 let%expect_test "coerce" =
   (* let (type a b) coerce eq (x : a) = match (eq : (a, b) eq) with Refl -> (x : b) in () *)
   let env = add_eq Env.empty in
@@ -2323,58 +2350,59 @@ let%expect_test "coerce" =
              └──Type expr: Constructor: unit
              └──Desc: Constant: () |}]
 
+
 (* let%expect_test "solve" =
-  let open Constraint in
-  let cst =
-    let a1 = fresh () in
-    let a2 = fresh () in
-    forall
-      [ a1; a2 ]
-      (def_poly
-         ~flexible_vars:[]
-         ~bindings:[ "x" #= a1 ]
-         ~in_:[ Var a1, Var a2 ] #=> (inst "x" a2))
-  in
-  print_solve_result cst;
-  [%expect
+   let open Constraint in
+   let cst =
+   let a1 = fresh () in
+   let a2 = fresh () in
+   forall
+   [ a1; a2 ]
+   (def_poly
+   ~flexible_vars:[]
+   ~bindings:[ "x" #= a1 ]
+   ~in_:[ Var a1, Var a2 ] #=> (inst "x" a2))
+   in
+   print_solve_result cst;
+   [%expect
     {|
     ((Forall (481 482))
      ((Def_poly ()) ((x 481))
       ((Implication (((Var 481) (Var 482)))) ((Instance x) 482))))
     Constraint is true. |}] *)
-(* 
-let%expect_test "solve-1" =
-  let open Constraint in
-  let open Algebra.Type_former in
-  let cst =
-    let a1 = fresh () in
-    let a2 = fresh () in
-    let a3 = fresh () in
-    forall
-      [ a1 ]
-      (def_poly
-         ~flexible_vars:
-           [ a2, Some (Former (Constr ([], "int")))
+(*
+   let%expect_test "solve-1" =
+   let open Constraint in
+   let open Algebra.Type_former in
+   let cst =
+   let a1 = fresh () in
+   let a2 = fresh () in
+   let a3 = fresh () in
+   forall
+   [ a1 ]
+   (def_poly
+   ~flexible_vars:
+   [ a2, Some (Former (Constr ([], "int")))
            ; a3, Some (Former (Constr ([ a1; a2 ], "eq")))
            ]
-         ~bindings:[ "x" #= a3 ]
-         ~in_:
-           (let a4 = fresh () in
-            let a5 = fresh () in
-            let a6 = fresh () in
-            let a7 = fresh () in
-            exists
-              [ a4, None ]
-              (inst "x" a4
-              &~ exists
-                   [ a5, None
+   ~bindings:[ "x" #= a3 ]
+   ~in_:
+   (let a4 = fresh () in
+   let a5 = fresh () in
+   let a6 = fresh () in
+   let a7 = fresh () in
+   exists
+   [ a4, None ]
+   (inst "x" a4
+   &~ exists
+   [ a5, None
                    ; a6, Some (Former (Constr ([], "int")))
                    ; a7, Some (Former (Constr ([ a5; a6 ], "eq")))
                    ]
-                   (a4 =~ a7 &~ [ Var a5, Var a6 ] #=> (return ())))))
-  in
-  print_solve_result cst;
-  [%expect
+   (a4 =~ a7 &~ [ Var a5, Var a6 ] #=> (return ())))))
+   in
+   print_solve_result cst;
+   [%expect
     {|
     ((Forall (483))
      ((Def_poly
@@ -2491,6 +2519,7 @@ let%expect_test "abbrev - morel" =
                             └──Type expr: Constructor: int
                          └──Desc: Variable
                             └──Variable: x |}]
+
 
 let add_term env =
   let name = "term" in
@@ -2621,16 +2650,16 @@ let def_snd ~in_ =
 
 
 let%expect_test "term - eval" =
-  (*  let rec eval (type a) (t : a term) : a = 
-          match t with
-          | Int x -> x
-          | Succ t -> eval t + 1
-          | Bool x -> x
-          | If (t1, t2, t3) -> if (eval t1) then (eval t2) else (eval t3)
-          | Pair (t1, t2) -> (eval t1, eval t2)
-          | Fst t -> fst (eval t)
-          | Snd t -> snd (eval t)   
-    *)
+  (*  let rec eval (type a) (t : a term) : a =
+      match t with
+      | Int x -> x
+      | Succ t -> eval t + 1
+      | Bool x -> x
+      | If (t1, t2, t3) -> if (eval t1) then (eval t2) else (eval t3)
+      | Pair (t1, t2) -> (eval t1, eval t2)
+      | Fst t -> fst (eval t)
+      | Snd t -> snd (eval t)
+  *)
   let env = add_term Env.empty in
   let exp =
     def_fst
@@ -3210,6 +3239,7 @@ let%expect_test "term - eval" =
                          └──Type expr: Constructor: unit
                          └──Desc: Constant: () |}]
 
+
 let add_boxed_id env =
   let name = "boxed_id" in
   let alphas = [] in
@@ -3339,6 +3369,7 @@ let%expect_test "semi-explicit first-class poly-1" =
                       └──Expression:
                          └──Type expr: Constructor: bool
                          └──Desc: Constant: true |}]
+
 
 let add_tree env =
   let name = "tree" in

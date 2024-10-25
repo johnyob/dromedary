@@ -1,8 +1,8 @@
-open! Import 
+open! Import
 open Util
 
 let%expect_test "principality-1" =
-  let str = 
+  let str =
     {|
       type t = 
         | A
@@ -26,7 +26,8 @@ let%expect_test "principality-1" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -146,8 +147,9 @@ let%expect_test "principality-1" =
                                         └──Type expr: Constructor: unit
                                         └──Desc: Constant: () |}]
 
+
 let%expect_test "principality-2" =
-  let str = 
+  let str =
     {|
       type 'a t = 
         | Int constraint 'a = int
@@ -167,12 +169,14 @@ let%expect_test "principality-2" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr" (Type 46 (Var 46)))) |}]
 
+
 let%expect_test "principality-3" =
-  let str = 
+  let str =
     {|
       type 'a t = 
         | Int constraint 'a = int
@@ -192,12 +196,14 @@ let%expect_test "principality-3" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr" (Type 46 (Var 46)))) |}]
 
+
 let%expect_test "principality-4" =
-  let str = 
+  let str =
     {|
       type 'a t = 
         | Int constraint 'a = int
@@ -221,7 +227,7 @@ let%expect_test "principality-4" =
 
 
 let%expect_test "principality-5" =
-  let str = 
+  let str =
     {|
       type 'a t = 
         | Int constraint 'a = int
@@ -243,8 +249,9 @@ let%expect_test "principality-5" =
   print_infer_result str;
   [%expect {| "Non rigid equations" |}]
 
+
 let%expect_test "principality-6" =
-  let str = 
+  let str =
     {|
       type 'a ab = A | B;;
 
@@ -270,7 +277,7 @@ let%expect_test "principality-6" =
 
 
 let%expect_test "principality-7" =
-  let str = 
+  let str =
     {|
       type 'a ab = A | B;;
 
@@ -300,7 +307,8 @@ let%expect_test "principality-7" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -478,8 +486,9 @@ let%expect_test "principality-7" =
                                         └──Type expr: Constructor: bool
                                         └──Desc: Constant: false |}]
 
+
 let%expect_test "principality-8" =
-  let str = 
+  let str =
     {|
       type ('a, 'b) eq = 
         | Refl constraint 'a = 'b
@@ -503,7 +512,8 @@ let%expect_test "principality-8" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -711,8 +721,9 @@ let%expect_test "principality-8" =
                                                     └──Desc: Variable
                                                        └──Variable: x |}]
 
+
 let%expect_test "principality-9" =
-  let str = 
+  let str =
     {|
       type foo = int;;
       type 'a gadt = 
@@ -725,7 +736,8 @@ let%expect_test "principality-9" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -769,8 +781,9 @@ let%expect_test "principality-9" =
                    └──Type expr: Constructor: t
                       └──Type expr: Variable: 140 |}]
 
+
 let%expect_test "principality-10" =
-  let str = 
+  let str =
     {|
       type foo = int;;
 
@@ -785,7 +798,8 @@ let%expect_test "principality-10" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type

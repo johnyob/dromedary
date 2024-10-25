@@ -18,5 +18,4 @@ include Core
 include Parsing_
 include Algebra
 module Constraint = Constraints.Make (Algebra)
-
 module Decoded = Constraint.Decoded

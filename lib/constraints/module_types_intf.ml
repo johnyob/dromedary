@@ -21,7 +21,7 @@ module type Term_var = sig
 end
 
 module type Type_var = sig
-  (** The type [t] of reconstucted type variables. In [??], F. Pottier defines 
+  (** The type [t] of reconstucted type variables. In [??], F. Pottier defines
       [t] as [int]. *)
   type t [@@deriving sexp_of]
 
@@ -31,11 +31,10 @@ end
 
 module Type_former = struct
   module type Basic = sig
-    (** The type ['a t] defines the type former w/ children of type ['a]. 
-    
-        It is a functor, the fixpoint of ['a t] defines the set of 
-        types. See {!Type} 
-    *)
+    (** The type ['a t] defines the type former w/ children of type ['a].
+
+        It is a functor, the fixpoint of ['a t] defines the set of
+        types. See {!Type} *)
     type 'a t [@@deriving sexp_of]
 
     val id : 'a t -> int
@@ -96,7 +95,7 @@ module type Decoded_type = sig
   (** [t] describes the decoded type *)
   type t [@@deriving sexp_of]
 
-  (** [desc] is an "external" descriptor -- which may be used 
+  (** [desc] is an "external" descriptor -- which may be used
       to decode the type. *)
   type 'a desc =
     | Var of variable
@@ -114,8 +113,8 @@ module type Decoded_type = sig
   (** [make desc] creates the decoded type with descriptor [desc] *)
   val make : t desc -> t
 
-  (** [mu a t] returns the equi-recursive (cyclic) type 
-      w/ body [t] binding [a] cyclically.  *)
+  (** [mu a t] returns the equi-recursive (cyclic) type
+      w/ body [t] binding [a] cyclically. *)
   val mu : variable -> t -> t
 
   val let_ : binding:variable * t -> in_:t -> t
@@ -136,9 +135,9 @@ module type Decoded = sig
 
   module Type :
     Decoded_type
-      with type label := label
-       and type variable := Var.t
-       and type 'a former := 'a former
+    with type label := label
+     and type variable := Var.t
+     and type 'a former := 'a former
 
   type scheme = Var.t list * Type.t [@@deriving sexp_of]
 end
@@ -153,8 +152,8 @@ module type Algebra_with_decoded = sig
 
   module Decoded :
     Decoded
-      with type label := Types.Label.t
-       and type 'a former := 'a Types.Former.t
+    with type label := Types.Label.t
+     and type 'a former := 'a Types.Former.t
 end
 
 module type Intf = sig

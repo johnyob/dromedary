@@ -5,17 +5,17 @@ open Util
    -------------------------------------------
    Test count: 2/8
 
-   2 tests are removed due to reliance on 
+   2 tests are removed due to reliance on
    abstract types as "equatable" variables.
    This is an implementation detail of GADTs
    in OCaml.
 
-   4 tests are removed due to reliance on 
+   4 tests are removed due to reliance on
    modules
 *)
 
 let%expect_test "nested-equations-1" =
-  let str = 
+  let str =
     {|
       type 'a t = 
         | Int constraint 'a = int
@@ -28,7 +28,8 @@ let%expect_test "nested-equations-1" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -103,8 +104,9 @@ let%expect_test "nested-equations-1" =
                                               └──Desc: Variable
                                                  └──Variable: x |}]
 
+
 let%expect_test "nested-equations-2" =
-  let str = 
+  let str =
     {|
       type 'a t = 
         | Int constraint 'a = int
@@ -120,6 +122,4 @@ let%expect_test "nested-equations-2" =
     |}
   in
   print_infer_result str;
-  [%expect{| "Inconsistent equations added by local branches" |}]
-
-
+  [%expect {| "Inconsistent equations added by local branches" |}]

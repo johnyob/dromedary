@@ -13,8 +13,8 @@
 
 open Core
 
-(* [Ast_types] defines auxiliary AST types used by both [Parsetree] 
-    and [Typedtree]. *)
+(* [Ast_types] defines auxiliary AST types used by both [Parsetree]
+   and [Typedtree]. *)
 
 type constant =
   | Const_int of int
@@ -78,5 +78,3 @@ let string_of_direction_flag direction_flag =
   match direction_flag with
   | Upto -> "to"
   | Downto -> "downto"
-
-

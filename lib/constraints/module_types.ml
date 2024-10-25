@@ -78,12 +78,12 @@ module Type_former = struct
     exception Fold2
 
     let[@landmark] fold2_exn
-        (type a b c)
-        (t1 : a t)
-        (t2 : b t)
-        ~(f : a -> b -> c -> c)
-        ~(init : c)
-        : c
+      (type a b c)
+      (t1 : a t)
+      (t2 : b t)
+      ~(f : a -> b -> c -> c)
+      ~(init : c)
+      : c
       =
       let module Traverse =
         T.Traverse (Endo_const (struct

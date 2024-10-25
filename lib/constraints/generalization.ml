@@ -11,7 +11,7 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-(* This module implements a notion of generalization based on "graphic 
+(* This module implements a notion of generalization based on "graphic
    types". *)
 
 open! Import
@@ -23,23 +23,23 @@ open Structure
 
 module Make (Label : Comparable.S) (Former : Type_former.S) = struct
   (* We implement efficient level-based generalization by Remy [??].
-  
+
      In theory, each unification variable has a "level" (or "rank").
-     Each variable with the current scope (stack frame [S]) has a level, 
+     Each variable with the current scope (stack frame [S]) has a level,
      with the outermost level being 0. This is isomorphic to a de Bruijn
-     level, denoting the number of binders (stack frames). 
+     level, denoting the number of binders (stack frames).
 
      Variables not within the current scope, but within the environment
      frame are "generic".
 
      We use the efficient presentation from Oleg's blog post ??,
      taking a "lazy" approach. Hence each node within the graphic type
-     stores a level, this allows us to delay the propagation of levels 
-     to generalization. 
+     stores a level, this allows us to delay the propagation of levels
+     to generalization.
   *)
 
   (* Our approach differs compared the approach describe by Oleg.
-     
+
      There are several problems with representing a "scheme"
      as a type with some quantified variables (determined at generalization).
 
@@ -48,19 +48,19 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
      - Representation of [var list * type] relies on the invariant that
        all pointers in the var list are indeed variables (our implementation
        doesn't allow this to be distinguished at the type level), and would
-       indeed rely on invariants.  
+       indeed rely on invariants.
 
-     - We must generalize immediately after exiting (due to mutable data in 
+     - We must generalize immediately after exiting (due to mutable data in
        graph). Thus the interface defines implementation behavior. BAD!
-     
-     - Cannot recompute quantified variables after generalization (due to 
-       mutated data). This doesn't fit well with notions of 
-       higher-rank polymorphism.  
+
+     - Cannot recompute quantified variables after generalization (due to
+       mutated data). This doesn't fit well with notions of
+       higher-rank polymorphism.
 
      Requirements of  solution:
-     
+
      - Quantified variables are re-computable in any given level
-     
+
      - Representation mimics "graphic types"
   *)
 
@@ -83,7 +83,7 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
       
      This removes the notion of a "generic level" (used within the OCaml type 
      checker). Our actual representation is optimized (but provides a similar 
-     interface to the one above). 
+     interface to the one above).
   *)
 
   type level = int [@@deriving sexp_of]
@@ -162,7 +162,7 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
       let structure =
         First_order.merge
           ~ctx:(to_row_ctx ctx)
-          ~create 
+          ~create
           ~unify
           t1.structure
           t2.structure
@@ -184,8 +184,8 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
       | Structure (Row_cons (l, t1, t2)) -> Row_cons (l, t1, t2)
       | Structure (Structure structure) ->
         (match Ambivalent.repr structure with
-        | Rigid_var rigid_var -> Rigid_var rigid_var
-        | Structure structure -> Former (Abbreviations.repr structure))
+         | Rigid_var rigid_var -> Rigid_var rigid_var
+         | Structure structure -> Former (Abbreviations.repr structure))
   end
 
   module U = Unifier.Make (Structure)
@@ -213,30 +213,30 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
   let generalize_type type_ = (U.Type.structure type_).is_generic <- true
 
   (* Generalization regions
-  
+
      Types (and variables) are partitioned into distincted regions,
-     each region related to the stack frame of the type (See levels). 
-     
+     each region related to the stack frame of the type (See levels).
+
      This allows us to update levels in a lazy manner, as described
-     here: ??. 
-     
-     When we unify two variables, we merge their levels, however, we 
+     here: ??.
+
+     When we unify two variables, we merge their levels, however, we
      do not propagate this throughout the type. We perform this update
-     on levels at generalization (after occurs checks). 
-     
+     on levels at generalization (after occurs checks).
+
      To perform this update, we need regions to keep track of
-     the nodes w/ a given level. 
+     the nodes w/ a given level.
   *)
 
   type region = U.Type.t list
 
   (* State
-  
+
      We have two elements of persistent state in generalization.
-     
-     The current level (the number of stack frames) and the regions (1 for 
-     each current stack frame). Hence the length of regions is bounded by 
-     the current level. 
+
+     The current level (the number of stack frames) and the regions (1 for
+     each current stack frame). Hence the length of regions is bounded by
+     the current level.
 
      Invariant: [length regions = current_level + 1]
   *)
@@ -265,7 +265,9 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
 
 
   let make ~state structure =
-    let new_type = U.Type.create (Structure.make structure state.current_level) in
+    let new_type =
+      U.Type.create (Structure.make structure state.current_level)
+    in
     set_region state new_type;
     new_type
 
@@ -358,10 +360,7 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
 
   let pp_region ppf i region =
     Format.fprintf ppf "Region %d\n" i;
-    List.iter
-      ~f:(fun type_ ->
-        pp_type ppf type_)
-      region
+    List.iter ~f:(fun type_ -> pp_type ppf type_) region
 
 
   let pp_regions ppf state = Vec.iteri (pp_region ppf) state.regions
@@ -387,14 +386,14 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
   let make_rigid_var ~state rigid_var =
     let var = make ~state (make_rigid_var rigid_var) in
     Log.debug (fun m ->
-        m "New rigid variable: %d.\n %a" (rigid_var :> int) pp_type var);
+      m "New rigid variable: %d.\n %a" (rigid_var :> int) pp_type var);
     var
 
 
-  (* [make_former] creates a fresh unification type node 
-     w/ the structure provided by the former [former]. 
-      
-     It initialize the level to the current level. 
+  (* [make_former] creates a fresh unification type node
+     w/ the structure provided by the former [former].
+
+     It initialize the level to the current level.
   *)
   let make_former ~state former =
     let former = make ~state (make_former former) in
@@ -416,7 +415,7 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
 
   let flexize ~state src dst =
     Log.debug (fun m ->
-        m "Flexize: %d -> %d.\n" (U.Type.id src) (U.Type.id dst));
+      m "Flexize: %d -> %d.\n" (U.Type.id src) (U.Type.id dst));
     set_structure src Var;
     unify ~state ~ctx:empty_ctx src dst
 
@@ -431,15 +430,15 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
 
 
   (* A scheme in "graphic types" simply consists of a node w/ a pointer
-     to a graphic type node. 
-     
+     to a graphic type node.
+
      For generalization and levels, we add the notion of the "bound level"
-     to a scheme node within the graphic type. 
-     
+     to a scheme node within the graphic type.
+
      Graphic type nodes are marked generic if they are variables
-     and their level >= the bound level. The notion of the bound 
+     and their level >= the bound level. The notion of the bound
      level also allows for the reconstruction of all quantified
-     variables within the type. 
+     variables within the type.
   *)
 
   type scheme =
@@ -450,23 +449,23 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
   type young_region =
     { region : Type.t list (* A list of all types in the young region. *)
     ; by_level : Type.t array
-          (* An array of all types in the young region -- ordered by 
-             level (lowest to highest) *)
+        (* An array of all types in the young region -- ordered by
+           level (lowest to highest) *)
     ; by_scope : Type.t array
-          (* An array of all types in the young region -- ordered by
-             scope (highest to lowest) *)
+        (* An array of all types in the young region -- ordered by
+           scope (highest to lowest) *)
     ; is_young : Type.t -> bool
-          (* [is_young] returns whether a type satisfies 
-             [level type = state.current_level] *)
+    (* [is_young] returns whether a type satisfies
+       [level type = state.current_level] *)
     }
 
   (* Region management
-  
+
      When performing region updates, we often only care about maintaing
      and update nodes within the "young" region (the current region),
      leaving updates in older regions to later phases of generalization.
-     
-     This notion of region corresponds to Oleg's update queue, however, 
+
+     This notion of region corresponds to Oleg's update queue, however,
      we split this queue into regions (so we don't need to traverse the
      entire queue when updating).
   *)
@@ -484,11 +483,11 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
     let region_arr = Array.of_list region in
     let by_level =
       Array.sorted_copy region_arr ~compare:(fun t1 t2 ->
-          Int.compare (level t1) (level t2))
+        Int.compare (level t1) (level t2))
     in
     let by_scope =
       Array.sorted_copy region_arr ~compare:(fun t1 t2 ->
-          -Int.compare (scope t1) (scope t2))
+        -Int.compare (scope t1) (scope t2))
     in
     let is_young =
       let set =
@@ -500,36 +499,36 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
 
 
   (* Generalization performs 4 functions:
-      1) Propagate delayed level updated to nodes
-      2) Check no rigid variables have escpaed
-      3) Generalize variables or update regions of variables
-      4) Clear the current region
-      
+     1) Propagate delayed level updated to nodes
+     2) Check no rigid variables have escpaed
+     3) Generalize variables or update regions of variables
+     4) Clear the current region
+
      As such, these phases have been split into the following
      relevant functions:
-      1) [update_levels]
-      2) [update_regions]
-      3) [generalize]
-      
-     See below for documentation of the various functions. 
+     1) [update_levels]
+     2) [update_regions]
+     3) [generalize]
+
+     See below for documentation of the various functions.
   *)
 
-  (* [update_levels state] updates the levels of all types within the 
-     young region of [state]. 
-     
-     It traverses all nodes (as roots) from the young generation, 
-     using a depth-first traversal. The traversal stops when we 
-     reach nodes within the old region. 
+  (* [update_levels state] updates the levels of all types within the
+     young region of [state].
 
-     Historically: This function assumed that all types 
+     It traverses all nodes (as roots) from the young generation,
+     using a depth-first traversal. The traversal stops when we
+     reach nodes within the old region.
+
+     Historically: This function assumed that all types
      within the current region were acyclic (a problem!)
-     Moreover this function visited nodes multiple times! 
-     The point of update levels is to ensure that every 
-     node within young generation has it's correct level. 
-     
+     Moreover this function visited nodes multiple times!
+     The point of update levels is to ensure that every
+     node within young generation has it's correct level.
+
      However, we now visit nodes in order of increasing levels,
      since levels can only decrease, it follows that we only need to visit
-     nodes once (defining a partial order).    
+     nodes once (defining a partial order).
   *)
 
   let[@landmark] update_scopes young_region =
@@ -540,7 +539,7 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
         Ambivalent.update_scope structure scope
       | _ -> ()
     in
-    (* Hash set records whether we've visited a given 
+    (* Hash set records whether we've visited a given
        graphic type node. Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
     let rec loop type_ scope1 =
@@ -555,11 +554,11 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
           update_scope
             type_
             (U.Type.structure type_
-            |> Structure.fold
-                 ~init:Ambivalent.Equations.Scope.outermost_scope
-                 ~f:(fun type_ scope2 ->
-                   loop type_ scope1;
-                   Ambivalent.Equations.Scope.max (scope type_) scope2)))
+             |> Structure.fold
+                  ~init:Ambivalent.Equations.Scope.outermost_scope
+                  ~f:(fun type_ scope2 ->
+                    loop type_ scope1;
+                    Ambivalent.Equations.Scope.max (scope type_) scope2)))
     in
     List.iter ~f:(fun type_ -> loop type_ (scope type_)) young_region.region;
     Log.debug (fun m -> m "Finished updating scopes.")
@@ -570,14 +569,14 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
   let[@landmark] update_levels young_region =
     Log.debug (fun m -> m "Updating levels.\n");
     (* We note that levels only decrease (since we take the minimum when merging),
-       hence we process nodes in level order. 
-       
-       This allows us to only visit each node once, providing the invariant that 
-       at the current level [level], all nodes visited are of level [<= level]. 
-       
+       hence we process nodes in level order.
+
+       This allows us to only visit each node once, providing the invariant that
+       at the current level [level], all nodes visited are of level [<= level].
+
        To implement this, we convert the young region into a sorted array
        which we iterate over to begin the traversal. *)
-    (* Hash set records whether we've visited a given graphic type node. 
+    (* Hash set records whether we've visited a given graphic type node.
        Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
     let rec loop type_ level' =
@@ -587,19 +586,19 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
         (* Mark as visited first. This is required with graphic types
            containing cycles. Allows us to reduce # of occurs checks. *)
         Hash_set.add visited type_;
-        (* Regardless of whether a node is young or old, 
-          we update it's level. *)
+        (* Regardless of whether a node is young or old,
+           we update it's level. *)
         update_level type_ level';
         Log.debug (fun m -> m "Updating level w/ %d.\n" level');
         (* If a node is old, then we stop traversing (hence the [is_young] check). *)
         if young_region.is_young type_
         then
-          (* If the node is a type former, then we need to traverse it's 
-            children and determine it's correct level.
-            
-            Levels must satisfy the following monotonicty condition:
-            level type <= k => get_type type' <= k where type' is a 
-            child of type. 
+          (* If the node is a type former, then we need to traverse it's
+             children and determine it's correct level.
+
+             Levels must satisfy the following monotonicty condition:
+             level type <= k => get_type type' <= k where type' is a
+             child of type.
           *)
           U.Type.structure type_
           |> Structure.iter ~f:(fun type_ -> loop type_ level'))
@@ -609,19 +608,19 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
 
   let[@landmark] scope_check young_region =
     List.iter young_region.region ~f:(fun type_ ->
-        match structure type_ with
-        | Structure (Structure structure) ->
-          let scope = Ambivalent.scope structure in
-          if level type_ < scope
-          then (
-            Log.debug (fun m ->
-                m
-                  "Scope escape: id=%d, level=%d, scope=%d\n"
-                  (U.Type.id type_)
-                  (level type_)
-                  scope);
-            raise (Scope_escape type_))
-        | _ -> ())
+      match structure type_ with
+      | Structure (Structure structure) ->
+        let scope = Ambivalent.scope structure in
+        if level type_ < scope
+        then (
+          Log.debug (fun m ->
+            m
+              "Scope escape: id=%d, level=%d, scope=%d\n"
+              (U.Type.id type_)
+              (level type_)
+              scope);
+          raise (Scope_escape type_))
+      | _ -> ())
 
 
   exception Rigid_variable_escape of Rigid_var.t
@@ -629,52 +628,52 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
 
   (* [generalize state] generalizes variables in the current
      region according to the new levels propagated by [update_levels].
-     
-     If a node has a level < !current_level, then it belongs in an 
+
+     If a node has a level < !current_level, then it belongs in an
      older region. It is moved using [set_region].
-     
-     Otherwise, if the node has level = !current_level, then it may 
-     be generalized, using [generalize_type]. 
-     
+
+     Otherwise, if the node has level = !current_level, then it may
+     be generalized, using [generalize_type].
+
      Once generalized, we compute the list of generalizable
-     variables. 
+     variables.
 
      The process of flexization, the conversion of rigid variables to
      generic flexible variables also occurs here.
   *)
   let[@landmark] generalize ~state young_region =
-    (* Iterate through the young region, generalizing variables (or updating their region), 
-       adding rigid variables to flexization queue.  *)
+    (* Iterate through the young region, generalizing variables (or updating their region),
+       adding rigid variables to flexization queue. *)
     List.iter young_region.region ~f:(fun type_ ->
-        if level type_ < state.current_level
-        then set_region state type_
-        else generalize_type type_;
-        match structure type_ with
-        | Structure (Structure structure) ->
-          (match Ambivalent.repr structure with
-          | Rigid_var rigid_var ->
-            Hashtbl.update state.rigid_vars rigid_var ~f:(function
-                | None -> [ type_ ]
-                | Some types -> type_ :: types)
-          | _ -> ())
-        | _ -> ());
+      if level type_ < state.current_level
+      then set_region state type_
+      else generalize_type type_;
+      match structure type_ with
+      | Structure (Structure structure) ->
+        (match Ambivalent.repr structure with
+         | Rigid_var rigid_var ->
+           Hashtbl.update state.rigid_vars rigid_var ~f:(function
+             | None -> [ type_ ]
+             | Some types -> type_ :: types)
+         | _ -> ())
+      | _ -> ());
     (* Iterate through the young region, computing the list
        of generalizable variables. *)
     let generalizable =
       List.filter young_region.region ~f:(fun type_ ->
-          is_generic_at type_ state.current_level
-          &&
-          match structure type_ with
-          | Var -> true
-          | _ -> false)
+        is_generic_at type_ state.current_level
+        &&
+        match structure type_ with
+        | Var -> true
+        | _ -> false)
     in
     generalizable
 
 
   (* [exit state ~rigid_vars ~types] performs generalization
      of [types], returns the list of generalized variables and schemes.
-     
-     Ensures [rigid_vars] do not escape. 
+
+     Ensures [rigid_vars] do not escape.
   *)
   let exit ~state ~rigid_vars ~types =
     Log.debug (fun m -> m "Exiting level: %d\n" state.current_level);
@@ -694,16 +693,16 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
     (* Flexize the variable *)
     let rigid_vars =
       List.map rigid_vars ~f:(fun rigid_var ->
-          let var = make_flexible_var ~state in
-          (match Hashtbl.find state.rigid_vars rigid_var with
-          | Some rigid_vars ->
-            List.iter rigid_vars ~f:(fun x -> 
-              (* if level x < state.current_level then raise (Rigid_variable_escape rigid_var);  *)
-              flexize ~state x var);
-            Hashtbl.remove state.rigid_vars rigid_var
-          | None -> ());
-          generalize_type var;
-          var)
+        let var = make_flexible_var ~state in
+        (match Hashtbl.find state.rigid_vars rigid_var with
+         | Some rigid_vars ->
+           List.iter rigid_vars ~f:(fun x ->
+             (* if level x < state.current_level then raise (Rigid_variable_escape rigid_var); *)
+             flexize ~state x var);
+           Hashtbl.remove state.rigid_vars rigid_var
+         | None -> ());
+        generalize_type var;
+        var)
     in
     (* Helper function for constructing a new type scheme *)
     let make_scheme =
@@ -722,14 +721,14 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
 
   let root { root; _ } = root
 
-  (* Usage of abbreviations in type schemes, etc. Abbreviations are dropped in type schemes. 
+  (* Usage of abbreviations in type schemes, etc. Abbreviations are dropped in type schemes.
 
      This is because the representative is used to avoid additional expansions, and abbreviations
      are typically local.
   *)
 
   let variables { root; level } =
-    (* Hash set records whether we've visited a given 
+    (* Hash set records whether we've visited a given
        graphic type node. Prevents cyclic execution of [loop]. *)
     let visited : U.Type.t Hash_set.t = Hash_set.create (module U.Type) in
     let variables = ref [] in
@@ -738,14 +737,14 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
          w/ level [level]. *)
       if is_generic_at type_ level && not (Hash_set.mem visited type_)
       then (
-        (* We mark node visited here to ensure that 
+        (* We mark node visited here to ensure that
            when we recurse below, we don't reach an infinite loop
-           due to cycles in [root]. 
+           due to cycles in [root].
         *)
         Hash_set.add visited type_;
-        (* Check the structure of the type [typ]. 
+        (* Check the structure of the type [typ].
            If [Var], add to the relevant quantifier list,
-           otherwise recurse.  
+           otherwise recurse.
         *)
         match structure type_ with
         | Var -> variables := type_ :: !variables
@@ -757,18 +756,18 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
 
   let mono_scheme type_ = { root = type_; level = level type_ + 1 }
 
-  (* When instantiating a scheme [scheme], we must traverse it's body, 
-     creating new (copied) variables for each generic variable, returning 
+  (* When instantiating a scheme [scheme], we must traverse it's body,
+     creating new (copied) variables for each generic variable, returning
      the new root and new variables.
-  
-     This is equivalent to the theortical notion of a "substitution". 
+
+     This is equivalent to the theortical notion of a "substitution".
   *)
 
   let instantiate ~state { root; level = level' } =
     (* Caml.Format.printf "Instantiating: %d\n" (U.Type.id root); *)
-    (* The [copied] hash table stores a mapping from graphic type nodes 
-       to their related copied forms. This ensures only 1 copy per 
-       variable. 
+    (* The [copied] hash table stores a mapping from graphic type nodes
+       to their related copied forms. This ensures only 1 copy per
+       variable.
     *)
     let copied : (U.Type.t, U.Type.t) Hashtbl.t =
       Hashtbl.create (module U.Type)
@@ -777,14 +776,14 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
        using a [instance variables] record. *)
     let instance_variables = ref [] in
     (* We traverse the type, if it is generic, then we copy it
-       and recursivly traverse. Otherwise, we return the type 
-       as is. 
+       and recursivly traverse. Otherwise, we return the type
+       as is.
     *)
     let rec copy type_ =
       let open Structure in
       (* We use [is_generic] instead of [is_generic_at],
          since we may have to copy generic variables that
-         have been generalized by a different scheme. 
+         have been generalized by a different scheme.
       *)
       if not (is_generic type_)
       then type_
@@ -792,29 +791,29 @@ module Make (Label : Comparable.S) (Former : Type_former.S) = struct
         (* Caml.Format.printf "%d is generic\n" (U.Type.id type_); *)
         try Hashtbl.find_exn copied type_ with
         | Not_found_s _ ->
-          (* We now update the structure according to the original 
-             structure of [typ].  *)
+          (* We now update the structure according to the original
+             structure of [typ]. *)
           let new_type = make_flexible_var ~state in
           Hashtbl.set copied ~key:type_ ~data:new_type;
           (match structure type_ with
-          | Var ->
-            if level type_ = level'
-            then instance_variables := new_type :: !instance_variables
-          | Structure (Row_uniform type_) ->
-            set_structure new_type (make_row_uniform (copy type_))
-          | Structure (Row_cons (l, type1, type2)) ->
-            set_structure
-              new_type
-              (make_row_cons ~label:l ~field:(copy type1) ~tl:(copy type2))
-          | Structure (Structure structure) ->
-            (match Ambivalent.repr structure with
-            | Rigid_var rigid_var ->
-              set_structure new_type (make_rigid_var rigid_var)
-            | Structure structure ->
-              set_structure
-                new_type
-                (make_former
-                   (Former.map ~f:copy (Abbreviations.repr structure)))));
+           | Var ->
+             if level type_ = level'
+             then instance_variables := new_type :: !instance_variables
+           | Structure (Row_uniform type_) ->
+             set_structure new_type (make_row_uniform (copy type_))
+           | Structure (Row_cons (l, type1, type2)) ->
+             set_structure
+               new_type
+               (make_row_cons ~label:l ~field:(copy type1) ~tl:(copy type2))
+           | Structure (Structure structure) ->
+             (match Ambivalent.repr structure with
+              | Rigid_var rigid_var ->
+                set_structure new_type (make_rigid_var rigid_var)
+              | Structure structure ->
+                set_structure
+                  new_type
+                  (make_former
+                     (Former.map ~f:copy (Abbreviations.repr structure)))));
           new_type)
     in
     (* Copy the root, yielding the instance variables (as a side-effect). *)
