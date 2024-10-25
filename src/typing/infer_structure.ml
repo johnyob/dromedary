@@ -29,7 +29,7 @@ end
 let rec transl_core_type ~substitution core_type =
   let open Types in
   match core_type with
-  | Ptyp_var x -> [], String.Map.find_exn substitution x
+  | Ptyp_var x -> [], Map.find_exn substitution x
   | Ptyp_arrow (core_type1, core_type2) ->
     let vars1, t1 = transl_core_type ~substitution core_type1 in
     let vars2, t2 = transl_core_type ~substitution core_type2 in
@@ -50,7 +50,7 @@ let rec transl_core_type ~substitution core_type =
   | Ptyp_mu (var, core_type) ->
     let var' = Type_var.make () in
     let substitution =
-      String.Map.set
+      Map.set
         substitution
         ~key:var
         ~data:(Type_expr.make (Ttyp_var var'))
@@ -59,7 +59,7 @@ let rec transl_core_type ~substitution core_type =
     vars, Type_expr.mu var' t
   | Ptyp_where (core_type1, var, core_type2) ->
     let vars2, t2 = transl_core_type ~substitution core_type2 in
-    let substitution = String.Map.set substitution ~key:var ~data:t2 in
+    let substitution = Map.set substitution ~key:var ~data:t2 in
     let vars1, t1 = transl_core_type ~substitution core_type1 in
     vars1 @ vars2, t1
 
@@ -104,7 +104,7 @@ let transl_constr_arg ~substitution constr_arg =
         ~init:(substitution, [])
         ~f:(fun (substitution, betas) beta ->
           let var = Type_var.make () in
-          ( String.Map.set
+          ( Map.set
               substitution
               ~key:beta
               ~data:(Type_expr.make (Ttyp_var var))
@@ -172,7 +172,7 @@ let transl_label_decl label_decl ~substitution ~type_params ~type_name =
       ~init:(substitution, [])
       ~f:(fun (substitution, betas) beta ->
         let var = Type_var.make () in
-        ( String.Map.set
+        ( Map.set
             substitution
             ~key:beta
             ~data:(Type_expr.make (Ttyp_var var))

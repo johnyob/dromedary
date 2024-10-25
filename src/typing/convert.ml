@@ -89,7 +89,7 @@ let rec type_expr ~substitution t =
   let open Let_syntax in
   match Type_expr.desc t with
   | Ttyp_var var ->
-    Type_var.Map.find substitution var
+    Map.find substitution var
     |> Result.of_option ~error:(`Unbound_type_variable var)
     >>| Type.var
   | Ttyp_arrow (t1, t2) ->

@@ -13,7 +13,7 @@
 
 
 include Base
-module Format = Caml.Format
+module Format = Stdlib.Format
 
 module Unifier = Dromedary_lib_unifier
 
@@ -30,7 +30,7 @@ let reporter =
       k ()
     in
     let with_header h fmt =
-      Caml.(Format.kfprintf k Format.std_formatter ("%a @[" ^^ fmt ^^ "@]@."))
+      Stdlib.(Format.kfprintf k Format.std_formatter ("%a @[" ^^ fmt ^^ "@]@."))
         Logs.pp_header
         (level', h)
     in

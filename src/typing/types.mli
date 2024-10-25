@@ -20,7 +20,7 @@ type tag = string
 module Type_var : sig
   type t [@@deriving sexp_of]
 
-  include Comparable with type t := t
+  include Comparable.S with type t := t
 
   val make : unit -> t
   val id : t -> int
@@ -42,7 +42,7 @@ module Type_expr : sig
 
   and 'a type_constr = 'a list * string
 
-  include Comparable with type t := t
+  include Comparable.S with type t := t
 
   (** [make desc] creates a type expr w/ descriptor [desc] *)
   val make : t desc -> t

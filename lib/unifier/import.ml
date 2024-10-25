@@ -19,7 +19,7 @@ let src = Logs.Src.create "unifier" ~doc:"logs unifier events"
 module Log = (val Logs.src_log src : Logs.LOG)
 
 let reporter =
-  let open Caml in
+  let open Stdlib in
   let report _src level' ~over k msgf =
     let k _ =
       over ();

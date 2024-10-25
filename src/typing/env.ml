@@ -54,7 +54,7 @@ let convert_alias { alias_alphas; alias_name; alias_type } =
   let alias_former = Constr (List.map ~f:snd substitution_alist, alias_name) in
   let rec convert type_expr =
     match Type_expr.desc type_expr with
-    | Ttyp_var var -> Type_var.Map.find_exn substitution var
+    | Ttyp_var var -> Map.find_exn substitution var
     | Ttyp_arrow (t1, t2) ->
       Abbrev_type.make_former (Arrow (convert t1, convert t2))
     | Ttyp_tuple ts -> Abbrev_type.make_former (Tuple (List.map ts ~f:convert))

@@ -41,11 +41,11 @@ module Env = struct
 
 
     let rng substitution =
-      Types.Type_var.Map.to_alist substitution |> List.map ~f:snd
+      Map.to_alist substitution |> List.map ~f:snd
 
 
     let merge substitution1 substitution2 =
-      Types.Type_var.Map.merge
+      Map.merge
         substitution1
         substitution2
         ~f:(fun ~key:_type_var var ->
