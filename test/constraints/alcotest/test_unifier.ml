@@ -31,9 +31,11 @@ module Type_former = struct
         module type S = sig end
       end
 
+      module Impl = struct end
+
       module F = struct
         include F
-        include Applicative.Make_let_syntax (F) (Intf) ()
+        include Applicative.Make_let_syntax (F) (Intf) (Impl)
       end
 
       open F
