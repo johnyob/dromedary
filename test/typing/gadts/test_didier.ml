@@ -4,8 +4,8 @@ open Util
 (* Tests from typing-gadts/didier.ml
    -------------------------------------------
    Test count: 5/7
-   
-   2 test are removed due to reliance 
+
+   2 test are removed due to reliance
    on exhaustive pattern matching.
 *)
 
@@ -31,6 +31,7 @@ let%expect_test "didier-1" =
     {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr" (Type 8 (Var 8)))) |}]
+
 
 let%expect_test "didier-2" =
   let str =
@@ -67,6 +68,7 @@ let%expect_test "didier-2" =
           (Former
            (Arrow (Type 27 (Former (Constr () int)))
             (Type 33 (Former (Constr () bool))))))))))) |}]
+
 
 let%expect_test "didier-3" =
   let str =
@@ -205,6 +207,7 @@ let%expect_test "didier-3" =
                                                  └──Expression:
                                                     └──Type expr: Constructor: int
                                                     └──Desc: Constant: 0 |}]
+
 
 let%expect_test "didier-4" =
   let str =

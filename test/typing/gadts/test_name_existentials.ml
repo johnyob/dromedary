@@ -1,14 +1,13 @@
 open! Import
 open Util
 
-
 (* Tests from typing-gadts/name_existentials.ml
    --------------------------------------------
    Test count: 12/12
 *)
 
 let%expect_test "name-existentials-1" =
-  let str = 
+  let str =
     {|
       type 'a ty = 
         | Int constraint 'a = int
@@ -33,7 +32,8 @@ let%expect_test "name-existentials-1" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -184,7 +184,7 @@ let%expect_test "name-existentials-1" =
 
 
 let%expect_test "name-existentials-2" =
-  let str = 
+  let str =
     {|
       type 'a ty = 
         | Int constraint 'a = int
@@ -207,7 +207,8 @@ let%expect_test "name-existentials-2" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -327,7 +328,7 @@ let%expect_test "name-existentials-2" =
 
 
 let%expect_test "name-existentials-3" =
-  let str = 
+  let str =
     {|
       type 'a ty = 
         | Int constraint 'a = int
@@ -348,8 +349,9 @@ let%expect_test "name-existentials-3" =
   print_infer_result str;
   [%expect {| "Constructor existential variable mistmatch with definition" |}]
 
+
 let%expect_test "name-existentials-4" =
-  let str = 
+  let str =
     {|
       type u = 
         | C of 'a 'b. 'a * ('a -> 'b list)
@@ -365,7 +367,8 @@ let%expect_test "name-existentials-4" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -455,8 +458,9 @@ let%expect_test "name-existentials-4" =
                                   └──Desc: Variable
                                      └──Variable: x |}]
 
+
 let%expect_test "name-existentials-5" =
-  let str = 
+  let str =
     {|
       type u = 
         | C of 'a 'b. 'a * ('a -> 'b list)
@@ -473,8 +477,9 @@ let%expect_test "name-existentials-5" =
   print_infer_result str;
   [%expect {| "Constructor existential variable mistmatch with definition" |}]
 
+
 let%expect_test "name-existentials-6" =
-  let str = 
+  let str =
     {|
       type 'a expr = 
         | Int of int constraint 'a = int
@@ -495,7 +500,8 @@ let%expect_test "name-existentials-6" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -718,8 +724,9 @@ let%expect_test "name-existentials-6" =
                                                     └──Desc: Variable
                                                        └──Variable: x |}]
 
+
 let%expect_test "name-existentials-7" =
-  let str = 
+  let str =
     {|
       type 'a expr = 
         | Int of int constraint 'a = int
@@ -742,8 +749,9 @@ let%expect_test "name-existentials-7" =
   print_infer_result str;
   [%expect {| "Constructor existential variable mistmatch with definition" |}]
 
+
 let%expect_test "name-existentials-8" =
-  let str = 
+  let str =
     {|
       type 'a option =
         | None
@@ -759,7 +767,8 @@ let%expect_test "name-existentials-8" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Constructor argument mismatch in pattern"
      (pat
       (Ppat_construct None
@@ -767,8 +776,9 @@ let%expect_test "name-existentials-8" =
          (Ppat_constraint Ppat_any
           (Ptyp_tuple ((Ptyp_var a) (Ptyp_constr () int))))))))) |}]
 
+
 let%expect_test "name-existentials-9" =
-  let str = 
+  let str =
     {|
       type 'a option =
         | None
@@ -784,12 +794,14 @@ let%expect_test "name-existentials-9" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Constructor argument mismatch in pattern"
      (pat (Ppat_construct None ((() Ppat_any))))) |}]
 
+
 let%expect_test "name-existentials-10" =
-  let str = 
+  let str =
     {|
       type ('a, 'b) pair = Pair of 'a * 'b;;
 
@@ -800,7 +812,8 @@ let%expect_test "name-existentials-10" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type

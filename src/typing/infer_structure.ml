@@ -50,10 +50,7 @@ let rec transl_core_type ~substitution core_type =
   | Ptyp_mu (var, core_type) ->
     let var' = Type_var.make () in
     let substitution =
-      Map.set
-        substitution
-        ~key:var
-        ~data:(Type_expr.make (Ttyp_var var'))
+      Map.set substitution ~key:var ~data:(Type_expr.make (Ttyp_var var'))
     in
     let vars, t = transl_core_type ~substitution core_type in
     vars, Type_expr.mu var' t
@@ -73,8 +70,8 @@ and transl_row ~substitution (row_fields, closed_flag) =
       [ var ], Type_expr.make (Ttyp_var var)
   in
   List.fold_right row_fields ~init:(vars, tl) ~f:(fun rf (vars1, tl) ->
-      let vars2, row = transl_row_field ~substitution rf tl in
-      vars1 @ vars2, row)
+    let vars2, row = transl_row_field ~substitution rf tl in
+    vars1 @ vars2, row)
 
 
 and transl_row_field ~substitution (Row_tag (tag, t)) tl =
@@ -104,10 +101,7 @@ let transl_constr_arg ~substitution constr_arg =
         ~init:(substitution, [])
         ~f:(fun (substitution, betas) beta ->
           let var = Type_var.make () in
-          ( Map.set
-              substitution
-              ~key:beta
-              ~data:(Type_expr.make (Ttyp_var var))
+          ( Map.set substitution ~key:beta ~data:(Type_expr.make (Ttyp_var var))
           , var :: betas ))
         constr_arg_betas
     in
@@ -172,10 +166,7 @@ let transl_label_decl label_decl ~substitution ~type_params ~type_name =
       ~init:(substitution, [])
       ~f:(fun (substitution, betas) beta ->
         let var = Type_var.make () in
-        ( Map.set
-            substitution
-            ~key:beta
-            ~data:(Type_expr.make (Ttyp_var var))
+        ( Map.set substitution ~key:beta ~data:(Type_expr.make (Ttyp_var var))
         , var :: betas ))
       label_betas
   in
@@ -291,13 +282,13 @@ let convert_core_scheme (vars, core_type) =
   let%bind substitution =
     Substitution.of_alist (List.map vars ~f:(fun x -> x, fresh ()))
     |> map_error ~f:(fun (`Duplicate_type_variable var) ->
-           [%message "Duplicate type variable" (var : string)])
+      [%message "Duplicate type variable" (var : string)])
   in
   let%bind vars, core_type =
     Convert.core_type ~substitution core_type
     |> map_error ~f:(fun (`Unbound_type_variable var) ->
-           [%message
-             "Unbound type variable when converting core type" (var : string)])
+      [%message
+        "Unbound type variable when converting core type" (var : string)])
   in
   return (vars @ Substitution.rng substitution, core_type)
 
@@ -309,23 +300,23 @@ let infer_primitive { pval_name; pval_type; pval_prim } =
   let ctx = [], Shallow_type.Ctx.merge (vars, []) ctx in
   return
     (let open Item in
-    let%map.Item vars, type_ =
-      let_1
-        ~binding:
-          Binding.(
-            let_
-              ~ctx
-              ~is_non_expansive:true
-              ~bindings:[ pval_name #= var ]
-              ~in_:(Constraint.return ()))
-      >>| function
-      | [ (_, scheme) ], _ -> scheme
-      | _ -> assert false
-    in
-    { tval_name = pval_name
-    ; tval_type = List.map ~f:Type_var.decode vars, Type_expr.decode type_
-    ; tval_prim = pval_prim
-    })
+     let%map.Item vars, type_ =
+       let_1
+         ~binding:
+           Binding.(
+             let_
+               ~ctx
+               ~is_non_expansive:true
+               ~bindings:[ pval_name #= var ]
+               ~in_:(Constraint.return ()))
+       >>| function
+       | [ (_, scheme) ], _ -> scheme
+       | _ -> assert false
+     in
+     { tval_name = pval_name
+     ; tval_type = List.map ~f:Type_var.decode vars, Type_expr.decode type_
+     ; tval_prim = pval_prim
+     })
 
 
 let infer_exception ~env type_exn =
@@ -338,7 +329,7 @@ let infer_type_decl ~env type_decls =
   let type_decls = List.map type_decls ~f:transl_type_decl in
   let env =
     List.fold_right type_decls ~init:env ~f:(fun type_decl env ->
-        Env.add_type_decl env type_decl)
+      Env.add_type_decl env type_decl)
   in
   env, type_decls
 

@@ -20,13 +20,13 @@ open! Import
 include Unifier_intf
 
 module Make (Structure : Structure.S) = struct
-  (* Unification involves unification types, using the union-find 
-     data structure. 
-     
-     These are referred to as "graphical types" in the dissertation. 
-     
-     While are formalization doesn't exactly match our implementation, 
-     the notion provides useful insight. 
+  (* Unification involves unification types, using the union-find
+     data structure.
+
+     These are referred to as "graphical types" in the dissertation.
+
+     While are formalization doesn't exactly match our implementation,
+     the notion provides useful insight.
   *)
 
   type 'a structure = 'a Structure.t [@@deriving sexp_of]
@@ -35,31 +35,31 @@ module Make (Structure : Structure.S) = struct
   module Type = struct
     module T = struct
       (* A graphical type consists of a [Union_find] node,
-     allowing reasoning w/ multi-equations of nodes. *)
+         allowing reasoning w/ multi-equations of nodes. *)
 
       type t = desc Union_find.t
 
-      (* Graphical type node descriptors contain information related to the 
-      node that dominates the multi-equation.
+      (* Graphical type node descriptors contain information related to the
+         node that dominates the multi-equation.
 
-      Each node contains a global unique identifier [id]. 
-      This is allocated on [fresh]. On [union], an arbitrary 
-      identifier is used from the 2 arguments. 
-      
-      We use this identifier [id] for a total ordering on nodes, often 
-      used for efficient datastructures such as [Hashtbl] or [Hash_set]. 
+         Each node contains a global unique identifier [id].
+         This is allocated on [fresh]. On [union], an arbitrary
+         identifier is used from the 2 arguments.
 
-      Each descriptor stores the node structure [structure].
-      It is either a variable or a type former (with graph type node 
-      children). 
-      
-      Each node also maintains some mutable metadata [metadata], whose
-      purpose is not related to unification. 
-      
-      Note: the only operation performed by the unifier wrt metadata is
-      the merging of metadata on unification. No further traversals / updates
-      are implemented here. 
-    *)
+         We use this identifier [id] for a total ordering on nodes, often
+         used for efficient datastructures such as [Hashtbl] or [Hash_set].
+
+         Each descriptor stores the node structure [structure].
+         It is either a variable or a type former (with graph type node
+         children).
+
+         Each node also maintains some mutable metadata [metadata], whose
+         purpose is not related to unification.
+
+         Note: the only operation performed by the unifier wrt metadata is
+         the merging of metadata on unification. No further traversals / updates
+         are implemented here.
+      *)
       and desc =
         { id : int
         ; mutable structure : t structure
@@ -86,12 +86,12 @@ module Make (Structure : Structure.S) = struct
 
 
       (* [compare t1 t2] computes the ordering of [t1, t2],
-       based on their unique identifiers. *)
+         based on their unique identifiers. *)
 
       let compare t1 t2 = Int.compare (id t1) (id t2)
 
-      (* [hash t] computes the hash of the graphical type [t]. 
-       Based on it's integer field: id. *)
+      (* [hash t] computes the hash of the graphical type [t].
+         Based on it's integer field: id. *)
 
       let hash t = Hashtbl.hash (id t)
       let sexp_of_t_hum = sexp_of_t
@@ -115,16 +115,16 @@ module Make (Structure : Structure.S) = struct
 
 
     let fold
-        (type a)
-        type_
-        ~(f : t -> a Structure.t -> a)
-        ~(var : t -> a)
-        ~(mu : t -> a -> a)
-        : a
+      (type a)
+      type_
+      ~(f : t -> a Structure.t -> a)
+      ~(var : t -> a)
+      ~(mu : t -> a -> a)
+      : a
       =
       Log.debug (fun m -> m "Folding over type: %d" (id type_));
       (* Hash table records the variables that are grey ([false])
-       or black ([true]). *)
+         or black ([true]). *)
       let table = Hashtbl.create (module T) in
       (* Recursive loop that traverses the graph. *)
       let rec loop type_ =
@@ -193,8 +193,8 @@ module Make (Structure : Structure.S) = struct
             Hashtbl.set table ~key:(id t) ~data:me;
             structure t
             |> Structure.iter ~f:(fun t ->
-                   let from = loop t in
-                   arrow state ~from ~to_:me);
+              let from = loop t in
+              arrow state ~from ~to_:me);
             me
         in
         loop t
@@ -217,7 +217,7 @@ module Make (Structure : Structure.S) = struct
      - [Former.Iter2], raised when executing Former.iter2 in {unify_form}.
      - [Clash], raised when incorrectly unifying a rigid variable.
 
-     See {!unify}. 
+     See {!unify}.
   *)
   let rec unify_exn ~ctx t1 t2 = Union_find.union ~f:(unify_desc ~ctx) t1 t2
 

@@ -2,7 +2,7 @@ open! Import
 open Util
 
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       let rec power = fun x n -> 
         if n = 0 
@@ -12,7 +12,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let
@@ -129,8 +130,9 @@ let%expect_test "" =
                                                           └──Type expr: Constructor: int
                                                           └──Desc: Constant: 1 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       external mod : int -> int -> int = "%mod";;
 
@@ -146,7 +148,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Primitive
@@ -430,8 +433,9 @@ let%expect_test "" =
                                                                 └──Type expr: Constructor: int
                                                                 └──Desc: Constant: 2 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       let rec sum = 
         fun n -> 
@@ -441,7 +445,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let
@@ -537,8 +542,9 @@ let%expect_test "" =
                                                     └──Type expr: Constructor: int
                                                     └──Desc: Constant: 1 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       let rec sum = fun n ->
         let rec loop = fun n acc ->
@@ -549,7 +555,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let
@@ -696,8 +703,9 @@ let%expect_test "" =
                                         └──Desc: Variable
                                            └──Variable: n |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list =
         | Nil
@@ -715,7 +723,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -932,8 +941,9 @@ let%expect_test "" =
                                                                 └──Desc: Variable
                                                                    └──Variable: equal |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list =
         | Nil
@@ -953,8 +963,9 @@ let%expect_test "" =
   print_infer_result str;
   [%expect {| "parse error" |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list =
         | Nil
@@ -973,7 +984,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -1249,8 +1261,9 @@ let%expect_test "" =
                                                                 └──Desc: Variable
                                                                    └──Variable: t2 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list =
         | Nil
@@ -1276,7 +1289,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -1646,8 +1660,9 @@ let%expect_test "" =
                                                                             └──Desc: Variable
                                                                                └──Variable: c |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list =
         | Nil
@@ -1680,7 +1695,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -2301,8 +2317,9 @@ let%expect_test "" =
                                                                       └──Desc: Variable
                                                                          └──Variable: amt |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list =
         | Nil
@@ -2327,7 +2344,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -2949,8 +2967,9 @@ let%expect_test "" =
                                                           └──Type expr: Constructor: list
                                                              └──Type expr: Constructor: int |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type vehicle = 
         | Bike
@@ -2973,7 +2992,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -3087,8 +3107,9 @@ let%expect_test "" =
                                         └──Type expr: Constructor: int
                                         └──Desc: Constant: 18 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type vehicle = 
         | Bike
@@ -3109,7 +3130,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -3243,8 +3265,9 @@ let%expect_test "" =
                                         └──Desc: Variable
                                            └──Variable: w |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       exception Failure;;
 
@@ -3269,7 +3292,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Exception
@@ -3430,8 +3454,9 @@ let%expect_test "" =
                                         └──Type expr: Constructor: string
                                         └──Desc: Constant: handled a No_change exception |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a option = 
         | None
@@ -3444,7 +3469,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -3508,8 +3534,9 @@ let%expect_test "" =
                                └──Type expr: Constructor: option
                                   └──Type expr: Variable: 7 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list =
         | Nil
@@ -3536,7 +3563,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -3951,8 +3979,9 @@ let%expect_test "" =
                                                                       └──Desc: Variable
                                                                          └──Variable: amt |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type shape = 
         | Null
@@ -3962,7 +3991,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -3993,8 +4023,9 @@ let%expect_test "" =
                          └──Type expr: Constructor: shape
                          └──Type expr: Constructor: shape |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a tree = 
         | Lf
@@ -4073,7 +4104,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -5438,8 +5470,9 @@ let%expect_test "" =
                                         └──Desc: Variable
                                            └──Variable: t |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list =
         | Nil
@@ -5470,7 +5503,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -5912,8 +5946,9 @@ let%expect_test "" =
                                         └──Type expr: Constructor: bool
                                         └──Desc: Constant: false |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list =
         | Nil
@@ -5950,7 +5985,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -6632,8 +6668,9 @@ let%expect_test "" =
                                               └──Desc: Variable
                                                  └──Variable: a |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a tree = 
         | Lf
@@ -6689,7 +6726,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -7697,8 +7735,9 @@ let%expect_test "" =
                                                                 └──Type expr: Constructor: int
                                                                 └──Desc: Constant: 2 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a tree = 
         | Lf
@@ -7758,7 +7797,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -8907,8 +8947,9 @@ let%expect_test "" =
                                                                       └──Desc: Variable
                                                                          └──Variable: r |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a seq = 
         | Nil

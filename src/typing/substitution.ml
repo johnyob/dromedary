@@ -21,8 +21,7 @@ let find_var t var =
   Result.of_option (Map.find t var) ~error:(`Unbound_type_variable var)
 
 
-let add t var cvar = 
-  Map.set t ~key:var ~data:cvar
+let add t var cvar = Map.set t ~key:var ~data:cvar
 
 let of_alist alist =
   match Map.of_alist (module String) alist with

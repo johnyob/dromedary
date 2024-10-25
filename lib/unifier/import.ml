@@ -41,6 +41,6 @@ let init_logs ~level:level_ =
     Src.set_level
       src
       (match level_ with
-      | `Debug -> Some Debug
-      | `Info -> Some Info
-      | `None -> None))
+       | `Debug -> Some Debug
+       | `Info -> Some Info
+       | `None -> None))

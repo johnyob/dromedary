@@ -6,15 +6,18 @@ let%expect_test "unterminated string" =
   print_tokens str;
   [%expect {| "lexer error: String is not terminated" |}]
 
+
 let%expect_test "unterminated comment" =
   let str = {| (* This is a very interesting comment |} in
   print_tokens str;
   [%expect {| "lexer error: Unclosed comment" |}]
 
+
 let%expect_test "single-line comment" =
   let str = {| (* Some comment here *) |} in
   print_tokens str;
   [%expect {| |}]
+
 
 let%expect_test "multi-line comment" =
   let str =
@@ -26,6 +29,7 @@ let%expect_test "multi-line comment" =
   in
   print_tokens str;
   [%expect {| |}]
+
 
 let%expect_test "keywords" =
   [ "let"
@@ -86,8 +90,8 @@ let%expect_test "keywords" =
   ; "where"
   ]
   |> List.iter ~f:(fun keyword ->
-         Format.fprintf Format.std_formatter "Keyword: %s @.Output: " keyword;
-         print_tokens keyword);
+    Format.fprintf Format.std_formatter "Keyword: %s @.Output: " keyword;
+    print_tokens keyword);
   [%expect
     {|
     Keyword: let
@@ -203,10 +207,12 @@ let%expect_test "keywords" =
     Keyword: where
     Output: WHERE |}]
 
+
 let%expect_test "string" =
   let str = {| "some string" |} in
   print_tokens str;
   [%expect {| STRING(some string) |}]
+
 
 let%expect_test "string - escape chars" =
   let str =
@@ -222,6 +228,7 @@ let%expect_test "string - escape chars" =
      Char:'c'
      Tab:	 test) |}]
 
+
 let%expect_test "char" =
   let str = {| 'a' 'b' 'c' 'd' 'e' |} in
   print_tokens str;
@@ -231,6 +238,7 @@ let%expect_test "char" =
     CHAR(c)
     CHAR(d)
     CHAR(e) |}]
+
 
 let%expect_test "char - escape chars" =
   let str = {| 
@@ -245,11 +253,12 @@ let%expect_test "char - escape chars" =
   CHAR(')
   CHAR(\) |}]
 
+
 let%expect_test "ints" =
   [ "1"; "0"; "0123456789"; "-42" ]
   |> List.iter ~f:(fun int_ ->
-         Format.fprintf Format.std_formatter "Int: %s @.Output: " int_;
-         print_tokens int_);
+    Format.fprintf Format.std_formatter "Int: %s @.Output: " int_;
+    print_tokens int_);
   [%expect
     {|
     Int: 1
@@ -261,11 +270,12 @@ let%expect_test "ints" =
     Int: -42
     Output: INT(-42) |}]
 
+
 let%expect_test "floats" =
   [ "1."; "-42."; ".66"; "-.1"; "-.28190328901"; "3.99999"; "4.0"; "-4.0" ]
   |> List.iter ~f:(fun float_ ->
-         Format.fprintf Format.std_formatter "Float: %s @.Output: " float_;
-         print_tokens float_);
+    Format.fprintf Format.std_formatter "Float: %s @.Output: " float_;
+    print_tokens float_);
   [%expect
     {|
     Float: 1.
@@ -285,6 +295,7 @@ let%expect_test "floats" =
     Float: -4.0
     Output: FLOAT(-4.000000) |}]
 
+
 let%expect_test "lident" =
   [ "x"
   ; "type_"
@@ -295,8 +306,8 @@ let%expect_test "lident" =
   ; "prime_numbers10998927898723178923''''"
   ]
   |> List.iter ~f:(fun lident ->
-         Format.fprintf Format.std_formatter "Lident: %s @.Output: " lident;
-         print_tokens lident);
+    Format.fprintf Format.std_formatter "Lident: %s @.Output: " lident;
+    print_tokens lident);
   [%expect
     {|
     Lident: x
@@ -314,6 +325,7 @@ let%expect_test "lident" =
     Lident: prime_numbers10998927898723178923''''
     Output: IDENT(prime_numbers10998927898723178923'''') |}]
 
+
 let%expect_test "uident" =
   [ "X"
   ; "Cons"
@@ -326,9 +338,10 @@ let%expect_test "uident" =
   ; "Everything_1234_foo_bar''''''"
   ]
   |> List.iter ~f:(fun lident ->
-         Format.fprintf Format.std_formatter "Lident: %s @.Output: " lident;
-         print_tokens lident);
-  [%expect {|
+    Format.fprintf Format.std_formatter "Lident: %s @.Output: " lident;
+    print_tokens lident);
+  [%expect
+    {|
     Lident: X
     Output: CON_IDENT(X)
     Lident: Cons

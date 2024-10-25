@@ -39,7 +39,6 @@ module Type_former = struct
 
   include T
   include Type_former.Make (T)
-
 end
 
 module Unifier =
@@ -52,14 +51,15 @@ let make_flexible_var () = Unifier.Type.create Var
 
 let make_rigid_var =
   let next_rigid = ref (-1) in
-  fun () -> Unifier.Type.create
-    (Structure
-       (Constr
-          ( []
-          , "rigid"
-            ^
-            (Int.incr next_rigid;
-             Int.to_string !next_rigid) )))
+  fun () ->
+    Unifier.Type.create
+      (Structure
+         (Constr
+            ( []
+            , "rigid"
+              ^
+              (Int.incr next_rigid;
+               Int.to_string !next_rigid) )))
 
 
 let ( @ ) f ts = Unifier.Type.create (Structure (Constr (ts, f)))
@@ -90,6 +90,7 @@ let%expect_test "Test unify : correctness 1" =
       │  (Structure (Constr ("") P))   │
       └────────────────────────────────┘ |}]
 
+
 let%expect_test "Test unify : correctness 2" =
   let t1 = "P" @ [ "f" @ [ make_rigid_var (); make_flexible_var () ] ]
   and t2 =
@@ -98,7 +99,8 @@ let%expect_test "Test unify : correctness 2" =
   in
   unify t1 t2;
   print_type t1;
-  [%expect{|
+  [%expect
+    {|
     ┌────────────────────────────────┐
     │ (Structure (Constr () rigid1)) │ ─┐
     └────────────────────────────────┘  │
@@ -120,6 +122,7 @@ let%expect_test "Test unify : correctness 2" =
     ┌────────────────────────────────┐
     │  (Structure (Constr ("") P))   │
     └────────────────────────────────┘ |}]
+
 
 let%expect_test "Test unify : correctness 3" =
   let t1 =

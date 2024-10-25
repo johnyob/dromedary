@@ -1,8 +1,8 @@
 open! Import
 open Util
 
-let%expect_test "" = 
-  let str = 
+let%expect_test "" =
+  let str =
     {|
       type 'a t = 
         | Int of int constraint 'a = int
@@ -23,7 +23,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type

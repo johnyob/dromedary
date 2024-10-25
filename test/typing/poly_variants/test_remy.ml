@@ -4,7 +4,7 @@ open Util
 (* Example from the appendix of https://www.cs.tufts.edu/~nr/cs257/archive/didier-remy/type-checking-records.pdf *)
 
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       external failwith : 'a. string -> 'a = "%failwith";;
 
@@ -56,7 +56,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Primitive

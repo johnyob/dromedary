@@ -21,25 +21,21 @@ module Make (Algebra : Algebra) : sig
   module Type_former := Types.Former
 
   module Decoded :
-    Decoded
-      with type label := Label.t
-       and type 'a former := 'a Type_former.t
+    Decoded with type label := Label.t and type 'a former := 'a Type_former.t
 
-  (** Constraints require an explicit term algebra for types. 
-      
+  (** Constraints require an explicit term algebra for types.
+
       Which we define by taking the fixpoint of [Type_former.t]
-      with constraint variables.      
-  *)
+      with constraint variables. *)
 
   (** [variable] is the for the constraint variables *)
   type variable = private int
 
   (** A constraint of type ['a Constraint.t] represents a constraint of
-    type ['a]. 
-    
-    To acquire the a constraint, we first specify it's term variables
-    and types using an [Algebra].
-  *)
+      type ['a].
+
+      To acquire the a constraint, we first specify it's term variables
+      and types using an [Algebra]. *)
 
   type 'a t
   and binding = Term_var.t * variable
@@ -54,17 +50,16 @@ module Make (Algebra : Algebra) : sig
   val fresh : unit -> variable
 
   (** The module [Type] provides the concrete representation of types
-      (using constraint type variables) in constraints. 
+      (using constraint type variables) in constraints.
 
       It is the free monad of the functor [Type_former.t].
 
       History: This representation was initially used in constraints [t],
       however, the refactor for "Sharing" now uses [Shallow_type.t].
-      We however, still use [Type] for a rich interface. 
-  *)
+      We however, still use [Type] for a rich interface. *)
 
   module Type : sig
-    (** [t] represents the type defined by the grammar: 
+    (** [t] represents the type defined by the grammar:
         t ::= ɑ | (t, .., t) F *)
     type t =
       | Var of variable
@@ -75,8 +70,8 @@ module Make (Algebra : Algebra) : sig
       | Let of variable * t * t
     [@@deriving sexp_of]
 
-    (** [var 'a] is the representation of the type variable ['a] as the 
-        type [t].  *)
+    (** [var 'a] is the representation of the type variable ['a] as the
+        type [t]. *)
     val var : variable -> t
 
     (** [former f] is the representation of the concrete type former [f] in
@@ -90,13 +85,12 @@ module Make (Algebra : Algebra) : sig
   end
 
   (** The module [Shallow_type] provides the shallow type definition
-      used within constraints. 
-      
+      used within constraints.
+
       This encoding is required for "(Explicit) sharing" of types
       within constraints.
 
-      Types from [Type] are often referred to as "deep" types. 
-  *)
+      Types from [Type] are often referred to as "deep" types. *)
 
   module Shallow_type : sig
     (** [t] represents a shallow type [ρ] is defined by the grammar:
@@ -120,11 +114,11 @@ module Make (Algebra : Algebra) : sig
     end
 
     (** [encoded_type] represents the shallow encoding [Θ |> ɑ]
-            of a deep type. *)
+        of a deep type. *)
     type encoded_type = Ctx.t * variable [@@deriving sexp_of]
 
-    (** [of_type type_] returns the shallow encoding [Θ |> ɑ] of the deep 
-            type [type_]. *)
+    (** [of_type type_] returns the shallow encoding [Θ |> ɑ] of the deep
+        type [type_]. *)
     val of_type : Type.t -> encoded_type
   end
 
@@ -137,8 +131,7 @@ module Make (Algebra : Algebra) : sig
 
         let%map pat and exp in
         Texp_fun (pat, ..., exp)
-      ]} 
-  *)
+      ]} *)
 
   include Applicative.S with type 'a t := 'a t
   include Applicative.Let_syntax with type 'a t := 'a t
@@ -171,7 +164,7 @@ module Make (Algebra : Algebra) : sig
       ]
   end
 
-  (** [solve t] solves the constraint [t], returning it's value 
+  (** [solve t] solves the constraint [t], returning it's value
       or an error. *)
   val solve
     :  ?debug:bool
@@ -186,7 +179,7 @@ module Make (Algebra : Algebra) : sig
   (** [&~] is an infix alias for [both]. *)
   val ( &~ ) : 'a t -> 'b t -> ('a * 'b) t
 
-  (** [t1 >> t2 >> ... >> tn] solves [t1, ..., tn] yielding the value 
+  (** [t1 >> t2 >> ... >> tn] solves [t1, ..., tn] yielding the value
       of [tn]. It is the monodial operator of constraints. *)
   val ( >> ) : 'a t -> 'b t -> 'b t
 
@@ -216,7 +209,7 @@ module Make (Algebra : Algebra) : sig
   (** [forall ~ctx t] binds universal context [ctx] in [t]. *)
   val forall : ctx:universal_context -> 'a t -> 'a t
 
-  (** [x #= a] yields the binding that binds [x] to [a].  *)
+  (** [x #= a] yields the binding that binds [x] to [a]. *)
   val ( #= ) : Term_var.t -> variable -> binding
 
   (** [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
@@ -234,7 +227,7 @@ module Make (Algebra : Algebra) : sig
   val let_0 : in_:'a t -> 'a bound t
   val let_1 : binding:'a let_binding -> in_:'b t -> ('a term_let_binding * 'b) t
 
-  (** [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
+  (** [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the
       constraint [in_]. *)
   val let_rec
     :  bindings:'a let_rec_binding list
@@ -262,12 +255,11 @@ module Make (Algebra : Algebra) : sig
       -> 'a let_rec_binding
   end
 
-  (** Constraints may be used to define "structures" of constraints. 
+  (** Constraints may be used to define "structures" of constraints.
 
-      Intuitively these correspond to structures in the expression language. 
-      
-      These structures also form applicatives functors :) 
-  *)
+      Intuitively these correspond to structures in the expression language.
+
+      These structures also form applicatives functors :) *)
 
   module Structure : sig
     module Item : sig

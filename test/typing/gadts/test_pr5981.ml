@@ -1,8 +1,8 @@
 open! Import
 open Util
 
-let%expect_test "" = 
-  let str = 
+let%expect_test "" =
+  let str =
     {|
       type 'a s_t;;
 

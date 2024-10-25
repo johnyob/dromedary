@@ -11,12 +11,9 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-
 include Base
 module Format = Stdlib.Format
-
 module Unifier = Dromedary_lib_unifier
-
 include Logs
 
 let src =
@@ -36,7 +33,7 @@ let reporter =
     in
     msgf (fun ?header ?tags:_ fmt -> with_header header fmt)
   in
-  { Logs.report = report }
+  { Logs.report }
 
 
 module Log = (val Logs.src_log src : Logs.LOG)
@@ -46,6 +43,7 @@ let post_incr r =
   let result = !r in
   Int.incr r;
   result
+
 
 module Constraint = Constraint
 include Constraint.Module_types

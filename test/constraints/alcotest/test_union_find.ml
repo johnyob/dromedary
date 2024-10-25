@@ -106,6 +106,7 @@ let test_equiv_is_reflexive =
       Union_find.(node === node))
   |> QCheck_alcotest.to_alcotest
 
+
 let tests =
   [ ( "Union_find"
     , [ test_union_nodes_have_equal_descriptors

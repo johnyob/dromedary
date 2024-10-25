@@ -18,7 +18,7 @@ open Base
 module type S = sig
   (** Abstract types to be substituted by functor arguments. *)
 
-  (** The type ['a structure] is the unification structures (with children of type ['a]), 
+  (** The type ['a structure] is the unification structures (with children of type ['a]),
       given by the functor argument [Structure]. *)
   type 'a structure
 
@@ -46,7 +46,7 @@ module type S = sig
     (** [set_structure t structure] sets the structure of [t] to [structure]. *)
     val set_structure : t -> t structure -> unit
 
-    (** [hash t] computes the hash of the graphical type [t]. 
+    (** [hash t] computes the hash of the graphical type [t].
         Based on it's integer field: id. *)
     val hash : t -> int
 
@@ -54,7 +54,7 @@ module type S = sig
     val create : t structure -> t
 
     (** [fold t ~f ~var ~mu] will perform a fold over
-      the (potentially) cyclic graph defined by the type [t]. *)
+        the (potentially) cyclic graph defined by the type [t]. *)
     val fold
       :  t
       -> f:(t -> 'a structure -> 'a)
@@ -69,9 +69,9 @@ module type S = sig
     val reset_id_cnt : unit -> unit
   end
 
-  (** [unify ~ctx t1 t2] equates the graphical type nodes [t1] and [t2], 
+  (** [unify ~ctx t1 t2] equates the graphical type nodes [t1] and [t2],
       and forms a multi-equation node.
-      
+
       [Unify (t1, t2)] is raised if the two node cannot
       be unified. *)
 

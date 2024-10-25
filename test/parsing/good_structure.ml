@@ -2,13 +2,12 @@ open! Import
 open Util
 
 let%expect_test "top level function definition" =
-  let str = 
-    {| 
+  let str = {| 
       let smallest_integer = 0;;
-    |} 
-  in
+    |} in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let: Nonrecursive
@@ -17,15 +16,17 @@ let%expect_test "top level function definition" =
                 └──Pattern: Variable: smallest_integer
                 └──Expression: Constant: 0 |}]
 
+
 let%expect_test "multiple nonrecursive top level definitions" =
-  let str = 
+  let str =
     {|
       let smallest_integer = 0 
       and () = print_endline "Hello world!";;
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let: Nonrecursive
@@ -39,8 +40,9 @@ let%expect_test "multiple nonrecursive top level definitions" =
                    └──Expression: Variable: print_endline
                    └──Expression: Constant: Hello world! |}]
 
+
 let%expect_test "recursive top level definitions" =
-  let str = 
+  let str =
     {|
       let rec map = fun t f ->
         match t with
@@ -53,7 +55,8 @@ let%expect_test "recursive top level definitions" =
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let: Recursive
@@ -139,6 +142,7 @@ let%expect_test "type definitions - ADTs" =
                             └──Type: Variable
                                └──Variable: a |}]
 
+
 let%expect_test "type definition - records" =
   let str =
     {|
@@ -206,7 +210,7 @@ let%expect_test "type definition - records" =
 
 
 let%expect_test "type definition - GADTs" =
-  let str = 
+  let str =
     {|
       type 'a term =
         | Int of int constraint 'a = int
@@ -219,7 +223,8 @@ let%expect_test "type definition - GADTs" =
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -310,8 +315,9 @@ let%expect_test "type definition - GADTs" =
                             └──Type: Variable
                                └──Variable: a |}]
 
+
 let%expect_test "type definition - GADT" =
-  let str = 
+  let str =
     {|
       type 'a key = 
         | Int of int constraint 'a = string
@@ -322,7 +328,8 @@ let%expect_test "type definition - GADT" =
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -369,8 +376,9 @@ let%expect_test "type definition - GADT" =
                          └──Type: Variable
                             └──Variable: value |}]
 
+
 let%expect_test "type definition - poly records" =
-  let str = 
+  let str =
     {|
       type elem_mapper = 
         { f : 'value. 'value key -> 'value -> 'value }
@@ -384,7 +392,8 @@ let%expect_test "type definition - poly records" =
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -438,8 +447,9 @@ let%expect_test "type definition - poly records" =
                    └──Type: Constructor
                       └──Constructor: elem |}]
 
+
 let%expect_test "top-level definition -- polymorphic recursion" =
-  let str = 
+  let str =
     {|
       type 'a perfect_tree = 
         | Leaf of 'a
@@ -456,7 +466,8 @@ let%expect_test "top-level definition -- polymorphic recursion" =
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -524,8 +535,9 @@ let%expect_test "top-level definition -- polymorphic recursion" =
                       └──Type: Constructor
                          └──Constructor: int |}]
 
+
 let%expect_test "eval example" =
-  let str = 
+  let str =
     {|
       type bin_op = Add | Sub;;
 
@@ -566,7 +578,8 @@ let%expect_test "eval example" =
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -763,8 +776,9 @@ let%expect_test "eval example" =
                                      └──Expression: Variable: binding
                                      └──Label: exp |}]
 
+
 let%expect_test "exceptions - no argument" =
-  let str = 
+  let str =
     {|
       exception Not_found;;
 
@@ -777,7 +791,8 @@ let%expect_test "exceptions - no argument" =
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Exception
@@ -821,8 +836,9 @@ let%expect_test "exceptions - no argument" =
                                         └──Expression: Variable: t
                                      └──Expression: Variable: p |}]
 
+
 let%expect_test "exceptions - argument" =
-  let str = 
+  let str =
     {|
       exception Lexer_error of string;;
 
@@ -835,7 +851,8 @@ let%expect_test "exceptions - argument" =
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Exception
@@ -869,8 +886,9 @@ let%expect_test "exceptions - argument" =
                                   └──Constructor: Lexer_error
                                   └──Expression: Constant: Unexpected token! |}]
 
+
 let%expect_test "top level external definitions" =
-  let str = 
+  let str =
     {|
       external greater_than : int -> int -> bool = "%greater_than";;
 
@@ -882,7 +900,8 @@ let%expect_test "top level external definitions" =
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Primitive
@@ -929,8 +948,9 @@ let%expect_test "top level external definitions" =
                    └──Expression: Variable: print_endline
                    └──Expression: Constant: Hello world! |}]
 
+
 let%expect_test "type definition - abstract types" =
-  let str = 
+  let str =
     {|
       type zero;;
       type 'n succ;;
@@ -942,7 +962,8 @@ let%expect_test "type definition - abstract types" =
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -988,14 +1009,16 @@ let%expect_test "type definition - abstract types" =
                          └──Type: Variable
                             └──Variable: m |}]
 
+
 let%expect_test "where" =
-  let str = 
+  let str =
     {|
       external length : 'a. ('c -> int) where 'c = 'a list = "%length";;
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Primitive
@@ -1016,8 +1039,9 @@ let%expect_test "where" =
                          └──Constructor: int
              └──Primitive name: %length |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a eff = ..;;
 
@@ -1028,7 +1052,8 @@ let%expect_test "" =
     |}
   in
   print_structure_parsetree str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type

@@ -50,7 +50,7 @@ module Expression = struct
   include Computation
 
   let of_result result ~message : 'a t =
-   fun _input -> Result.map_error result ~f:message
+    fun _input -> Result.map_error result ~f:message
 
 
   let const x = return (Constraint.return x)
@@ -58,19 +58,19 @@ module Expression = struct
   let env : Env.t t = fun input -> Ok (Input.env input)
 
   let find_label label : Types.label_declaration t =
-   fun input ->
+    fun input ->
     Env.find_label (Input.env input) label
     |> Result.map_error ~f:(fun `Unbound_label -> assert false)
 
 
   let find_constr name : Types.constructor_declaration t =
-   fun input ->
+    fun input ->
     Env.find_constr (Input.env input) name
     |> Result.map_error ~f:(fun `Unbound_constructor -> assert false)
 
 
   let substitution : Substitution.t t =
-   fun input -> Ok (Input.substitution input)
+    fun input -> Ok (Input.substitution input)
 
 
   let extend_substitution t ~substitution input =
@@ -90,7 +90,7 @@ module Expression = struct
 
 
   let find_var var : Constraint.variable t =
-   fun input ->
+    fun input ->
     Substitution.find_var (Input.substitution input) var
     |> Result.map_error ~f:(fun (`Unbound_type_variable _var) -> assert false)
 
@@ -293,7 +293,7 @@ module Pattern = struct
   include Computation
 
   let lift m : 'a t =
-   fun input -> Result.(m input >>| fun x -> Fragment.empty, x)
+    fun input -> Result.(m input >>| fun x -> Fragment.empty, x)
 
 
   let run t input = t input

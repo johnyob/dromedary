@@ -14,18 +14,17 @@
 open Base
 
 (** This module implements an imperative data structure for disjoint sets
-    (commonly known as `union-find'), based on Tarjan and Huet. 
+    (commonly known as `union-find'), based on Tarjan and Huet.
 
     Union find implements a family of disjoint sets on values, where
-    the disjoint sets can dynamically be combined using [union]. 
+    the disjoint sets can dynamically be combined using [union].
 
-    This implementation is optimized for the representation of equivalent 
-    classes. Each equivalence class containing a "value". 
+    This implementation is optimized for the representation of equivalent
+    classes. Each equivalence class containing a "value".
 
-    This implementation is not (yet) thread-safe. 
-*)
+    This implementation is not (yet) thread-safe. *)
 
-(** The type ['a t] denotes a node in an equivalence class associated with a 
+(** The type ['a t] denotes a node in an equivalence class associated with a
     unique value of type ['a]. *)
 type 'a t
 
@@ -41,8 +40,8 @@ val get : 'a t -> 'a
 val set : 'a t -> 'a -> unit
 
 (** [union t1 t2 ~f] merges the equivalence classes of [t1] and [t2].
-    The value of the combined class is given by [f (get t1) (get t2)]. 
-    
+    The value of the combined class is given by [f (get t1) (get t2)].
+
     After [union t1 t2 ~f], [t1 === t2] always holds true. *)
 val union : 'a t -> 'a t -> f:('a -> 'a -> 'a) -> unit
 

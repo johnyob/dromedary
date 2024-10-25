@@ -5,11 +5,11 @@ open Util
    -------------------------------------------
    Test count: 4/4
 
-   Passes 2 test that should fail. 
-   
-   The PR mentions a "bug" in the original 
-   ambivalentspaper which the author was not 
-   aware of. Thus considered out of scope. 
+   Passes 2 test that should fail.
+
+   The PR mentions a "bug" in the original
+   ambivalentspaper which the author was not
+   aware of. Thus considered out of scope.
 *)
 
 let%expect_test "ambivalent-apply-1" =
@@ -196,6 +196,7 @@ let%expect_test "ambivalent-apply-1" =
                                                                       └──Type expr: Variable: 17
                                                                       └──Desc: Constant: 3 |}]
 
+
 let%expect_test "ambivalent-apply-2" =
   let str =
     {|
@@ -379,6 +380,7 @@ let%expect_test "ambivalent-apply-2" =
                                                                    └──Expression:
                                                                       └──Type expr: Constructor: int
                                                                       └──Desc: Constant: 3 |}]
+
 
 let%expect_test "ambivalent-apply-3" =
   let str =

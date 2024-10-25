@@ -1,9 +1,8 @@
 open! Import
 open Util
 
-
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       (* Prelude / Stdlib *)
       type 'a list =
@@ -144,7 +143,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -3069,7 +3069,7 @@ let%expect_test "" =
 
 
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       let id = fun x -> x;;
 
@@ -3081,13 +3081,15 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1" (Type 18 (Former (Constr () bool))))
      ("Type_expr.decode type_expr2" (Type 45 (Former (Constr () int))))) |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       let id = fun x -> x;;
 
@@ -3101,13 +3103,15 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1" (Type 19 (Former (Constr () bool))))
      ("Type_expr.decode type_expr2" (Type 62 (Former (Constr () int))))) |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       let id = fun x -> x;;
 
@@ -3121,7 +3125,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Let
@@ -3300,7 +3305,7 @@ let%expect_test "" =
 
 
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a list =
         | Nil
@@ -3326,7 +3331,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1"
       (Type 151 (Former (Constr ((Type 25 (Former (Constr () int)))) list))))

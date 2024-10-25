@@ -53,12 +53,11 @@ module Ambivalent (S : S) : sig
 
   module Equations : sig
     module Scope : sig
-      (** [t] represents the "scope" of the equation. It is used to track 
+      (** [t] represents the "scope" of the equation. It is used to track
           consistency in level-based generalization *)
       type t = int
 
       val outermost_scope : t
-
       val max : t -> t -> t
     end
 
@@ -71,7 +70,7 @@ module Ambivalent (S : S) : sig
 
       exception Inconsistent
 
-      (** [add t type1 type2 scope] adds the equation [type1 = type2] 
+      (** [add t type1 type2 scope] adds the equation [type1 = type2]
           in the scope [scope]. *)
       val add
         :  ctx:Rigid_type.t S.ctx
@@ -163,4 +162,3 @@ module Rows (Label : Comparable.S) (S : S) : sig
 
   include S with type 'a t := 'a t and type 'a ctx := 'a ctx
 end
-

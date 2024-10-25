@@ -1,8 +1,8 @@
 open! Import
 open Util
 
-let%expect_test "" = 
-  let str = 
+let%expect_test "" =
+  let str =
     {|
       type ab = A | B;;
 
@@ -26,7 +26,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -338,8 +339,9 @@ let%expect_test "" =
                                                                 └──Type expr: Constructor: int
                                                                 └──Desc: Constant: 4 |}]
 
-let%expect_test "" = 
-  let str = 
+
+let%expect_test "" =
+  let str =
     {|
       type 'a ab = A | B;;
 
@@ -365,7 +367,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type

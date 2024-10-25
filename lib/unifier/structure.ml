@@ -16,7 +16,7 @@
 open Base
 
 module type S = sig
-  (** A structure defines the internal structure of terms in the unification 
+  (** A structure defines the internal structure of terms in the unification
       problem. *)
   type 'a t [@@deriving sexp_of]
 
@@ -28,14 +28,13 @@ module type S = sig
 
   (** [merge ~ctx ~create ~unify t1 t2] determines computes the merged
       structure of [t1] and [t2]. If the structures are inconsistent, then
-      {!Cannot_merge} is raised. 
+      {!Cannot_merge} is raised.
 
-      [merge] can emit first-order equalities using [unify], or create new 
-      terms from structures using [create]. 
+      [merge] can emit first-order equalities using [unify], or create new
+      terms from structures using [create].
 
       An additional context [ctx] is provided since consistency might
-      be contextual.  
-  *)
+      be contextual. *)
   val merge
     :  ctx:'a ctx
     -> create:('a t -> 'a)
@@ -54,4 +53,3 @@ module type S = sig
       over [t] with the initial accumulator value of [init]. *)
   val fold : 'a t -> f:('a -> 'b -> 'b) -> init:'b -> 'b
 end
-

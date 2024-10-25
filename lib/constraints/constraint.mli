@@ -21,7 +21,7 @@ module Module_types = Module_types
 open Module_types
 
 (** The [Make] functor defines the constraint syntax, parameterized
-    by the Algebra.  *)
+    by the Algebra. *)
 
 module Make (Algebra : Algebra_with_decoded) : sig
   open Algebra
@@ -38,17 +38,16 @@ module Make (Algebra : Algebra_with_decoded) : sig
   val fresh : unit -> variable
 
   (** The module [Type] provides the concrete representation of types
-      (using constraint type variables) in constraints. 
+      (using constraint type variables) in constraints.
 
       It is the free monad of the functor [Type_former.t].
 
       History: This representation was initially used in constraints [t],
       however, the refactor for "Sharing" now uses [Shallow_type.t].
-      We however, still use [Type] for a rich interface. 
-  *)
+      We however, still use [Type] for a rich interface. *)
 
   module Type : sig
-    (** [t] represents the type defined by the grammar: 
+    (** [t] represents the type defined by the grammar:
         t ::= ɑ | (t, .., t) F *)
     type t =
       | Var of variable
@@ -59,8 +58,8 @@ module Make (Algebra : Algebra_with_decoded) : sig
       | Let of variable * t * t
     [@@deriving sexp_of]
 
-    (** [var 'a] is the representation of the type variable ['a] as the 
-        type [t].  *)
+    (** [var 'a] is the representation of the type variable ['a] as the
+        type [t]. *)
     val var : variable -> t
 
     (** [former f] is the representation of the concrete type former [f] in
@@ -74,13 +73,12 @@ module Make (Algebra : Algebra_with_decoded) : sig
   end
 
   (** The module [Shallow_type] provides the shallow type definition
-      used within constraints. 
-      
+      used within constraints.
+
       This encoding is required for "(Explicit) sharing" of types
       within constraints.
 
-      Types from [Type] are often referred to as "deep" types. 
-  *)
+      Types from [Type] are often referred to as "deep" types. *)
 
   module Shallow_type : sig
     (** [t] represents a shallow type [ρ] is defined by the grammar:
@@ -107,7 +105,7 @@ module Make (Algebra : Algebra_with_decoded) : sig
         of a deep type. *)
     type encoded_type = Ctx.t * variable [@@deriving sexp_of]
 
-    (** [of_type type_] returns the shallow encoding [Θ |> ɑ] of the deep 
+    (** [of_type type_] returns the shallow encoding [Θ |> ɑ] of the deep
         type [type_]. *)
     val of_type : Type.t -> encoded_type
   end
@@ -124,45 +122,33 @@ module Make (Algebra : Algebra_with_decoded) : sig
   type binding = Term_var.t * variable [@@deriving sexp_of]
   and def_binding = binding
 
-  (** ['a t] is a constraint with value type ['a]. 
-          
+  (** ['a t] is a constraint with value type ['a].
+
       In the meta-theory, the constraint language has a defined type
-      system. 
-      
-      In our implementation, we use GADTs to implement the 
-      type system, where the type parameter ['a] denotes the type of 
-      the constraint. 
-  *)
+      system.
+
+      In our implementation, we use GADTs to implement the
+      type system, where the type parameter ['a] denotes the type of
+      the constraint. *)
 
   type _ t =
-    | True : unit t 
-        (** [true] *)
-    | Return : 'a -> 'a t 
-        (** [return a] *)
-    | Conj : 'a t * 'b t -> ('a * 'b) t 
-        (** [C₁ && C₂] *)
-    | Eq : variable * variable -> unit t 
-        (** [ɑ₁ = ɑ₂] *)
-    | Exist : existential_context * 'a t -> 'a t 
-        (** [exists Θ. C] *)
-    | Forall : universal_context * 'a t -> 'a t 
-        (** [forall Λ. C] *)
-    | Instance : Term_var.t * variable -> Decoded.Type.t list t 
-        (** [x <= ɑ] *)
+    | True : unit t (** [true] *)
+    | Return : 'a -> 'a t (** [return a] *)
+    | Conj : 'a t * 'b t -> ('a * 'b) t (** [C₁ && C₂] *)
+    | Eq : variable * variable -> unit t (** [ɑ₁ = ɑ₂] *)
+    | Exist : existential_context * 'a t -> 'a t (** [exists Θ. C] *)
+    | Forall : universal_context * 'a t -> 'a t (** [forall Λ. C] *)
+    | Instance : Term_var.t * variable -> Decoded.Type.t list t (** [x <= ɑ] *)
     | Def : binding list * 'a t -> 'a t
-        (** [def x1 : t1 and ... and xn : tn in C] *)
+    (** [def x1 : t1 and ... and xn : tn in C] *)
     | Let : 'a let_binding list * 'b t -> ('a term_let_binding list * 'b) t
-        (** [let Γ in C] *)
+    (** [let Γ in C] *)
     | Let_rec :
         'a let_rec_binding list * 'b t
-        -> ('a term_let_rec_binding list * 'b) t 
-        (** [let rec Γ in C] *)
-    | Map : 'a t * ('a -> 'b) -> 'b t 
-        (** [map C f]. *)
-    | Decode : variable -> Decoded.Type.t t 
-        (** [decode ɑ] *)
-    | Implication : equations * 'a t -> 'a t 
-        (** [E => C] *)
+        -> ('a term_let_rec_binding list * 'b) t (** [let rec Γ in C] *)
+    | Map : 'a t * ('a -> 'b) -> 'b t (** [map C f]. *)
+    | Decode : variable -> Decoded.Type.t t (** [decode ɑ] *)
+    | Implication : equations * 'a t -> 'a t (** [E => C] *)
 
   and 'a let_binding =
     | Let_binding of
@@ -199,8 +185,7 @@ module Make (Algebra : Algebra_with_decoded) : sig
 
         let%map pat and exp in
         Texp_fun (pat, ..., exp)
-      ]}  
-  *)
+      ]} *)
 
   include Applicative.S with type 'a t := 'a t
   include Applicative.Let_syntax with type 'a t := 'a t
@@ -208,7 +193,7 @@ module Make (Algebra : Algebra_with_decoded) : sig
   (** [&~] is an infix alias for [both]. *)
   val ( &~ ) : 'a t -> 'b t -> ('a * 'b) t
 
-  (** [t1 >> t2 >> ... >> tn] solves [t1, ..., tn] yielding the value 
+  (** [t1 >> t2 >> ... >> tn] solves [t1, ..., tn] yielding the value
       of [tn]. It is the monodial operator of constraints. *)
   val ( >> ) : 'a t -> 'b t -> 'b t
 
@@ -233,7 +218,7 @@ module Make (Algebra : Algebra_with_decoded) : sig
   (** [forall ~ctx t] binds universal context [ctx] in [t]. *)
   val forall : ctx:universal_context -> 'a t -> 'a t
 
-  (** [x #= a] yields the binding that binds [x] to [a].  *)
+  (** [x #= a] yields the binding that binds [x] to [a]. *)
   val ( #= ) : Term_var.t -> variable -> binding
 
   (** [def ~bindings ~in_] binds [bindings] in the constraint [in_]. *)
@@ -270,13 +255,9 @@ module Make (Algebra : Algebra_with_decoded) : sig
     -> ('a term_let_binding list * 'b) t
 
   val let_0 : in_:'a t -> 'a bound t
+  val let_1 : binding:'a let_binding -> in_:'b t -> ('a term_let_binding * 'b) t
 
-  val let_1 
-    :  binding:'a let_binding 
-    -> in_:'b t 
-    -> ('a term_let_binding * 'b) t
-
-  (** [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the 
+  (** [let_rec ~bindings ~in_] recursively binds the let bindings [bindings] in the
       constraint [in_]. *)
   val let_rec
     :  bindings:'a let_rec_binding list
@@ -286,6 +267,7 @@ module Make (Algebra : Algebra_with_decoded) : sig
   module Structure : sig
     module Item : sig
       type nonrec 'a let_rec_binding = 'a let_rec_binding
+
       val sexp_of_let_rec_binding : _ let_rec_binding -> Sexp.t
 
       type 'a let_binding =
@@ -295,7 +277,7 @@ module Make (Algebra : Algebra_with_decoded) : sig
         ; bindings : binding list
         ; in_ : 'a t
         }
-      
+
       val sexp_of_let_binding : _ let_binding -> Sexp.t
 
       module Binding : sig
@@ -338,8 +320,8 @@ module Make (Algebra : Algebra_with_decoded) : sig
       val let_ : bindings:'a let_binding list -> 'a term_let_binding list t
       val let_1 : binding:'a let_binding -> 'a term_let_binding t
 
-      val let_rec 
-        :  bindings:'a let_rec_binding list 
+      val let_rec
+        :  bindings:'a let_rec_binding list
         -> 'a term_let_rec_binding list t
 
       val def : bindings:def_binding list -> unit t

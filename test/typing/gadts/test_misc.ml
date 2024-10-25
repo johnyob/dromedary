@@ -503,8 +503,9 @@ let%expect_test "test-1" =
                                           └──Type expr: Constructor: int
                                           └──Desc: Constant: 5 |}]
 
+
 let%expect_test "test-2" =
-  let str = 
+  let str =
     {|
       type zero;;
       type 'a t =
@@ -532,7 +533,8 @@ let%expect_test "test-2" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -787,8 +789,9 @@ let%expect_test "test-2" =
                                                     └──Desc: Variable
                                                        └──Variable: t |}]
 
+
 let%expect_test "test-3" =
-  let str = 
+  let str =
     {|
       type 'a u = 
         | C1 of int constraint 'a = int
@@ -808,7 +811,8 @@ let%expect_test "test-3" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -907,8 +911,9 @@ let%expect_test "test-3" =
                                         └──Desc: Variable
                                            └──Variable: x |}]
 
+
 let%expect_test "test-4" =
-  let str = 
+  let str =
     {|
       type t = int;;
       type u = bool;;
@@ -928,7 +933,8 @@ let%expect_test "test-4" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -1117,8 +1123,9 @@ let%expect_test "test-4" =
                                               └──Type expr: Constructor: bool
                                               └──Desc: Constant: true |}]
 
+
 let%expect_test "test-5" =
-  let str = 
+  let str =
     {|
       type 'a t = 
         | Int constraint 'a = int
@@ -1136,7 +1143,8 @@ let%expect_test "test-5" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -1224,8 +1232,9 @@ let%expect_test "test-5" =
                                         └──Type expr: Constructor: unit
                                         └──Desc: Constant: () |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t = 
         | Int constraint 'a = int
@@ -1247,7 +1256,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -1355,8 +1365,9 @@ let%expect_test "" =
                                         └──Type expr: Constructor: int
                                         └──Desc: Constant: 2 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type ('a, 'b) eq = 
         | Refl constraint 'a = 'b
@@ -1377,7 +1388,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -1501,8 +1513,9 @@ let%expect_test "" =
                                         └──Desc: Variable
                                            └──Variable: empty |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type ('a, 'b) ctx = 
         | Nil constraint 'a = unit and 'b = unit
@@ -1525,7 +1538,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -1814,8 +1828,9 @@ let%expect_test "" =
                                                           └──Desc: Variable
                                                              └──Variable: v |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a value = 
         | String of string constraint 'a = string
@@ -1832,7 +1847,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -1939,8 +1955,9 @@ let%expect_test "" =
                                               └──Desc: Variable
                                                  └──Variable: s |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type ('a, 'b) eq = 
         | Refl constraint 'a = 'b
@@ -1953,7 +1970,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -2037,8 +2055,9 @@ let%expect_test "" =
                                         └──Type expr: Constructor: unit
                                         └──Desc: Constant: () |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t =
         | Int of int constraint 'a = int
@@ -2056,7 +2075,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -2158,8 +2178,9 @@ let%expect_test "" =
                                         └──Desc: Variable
                                            └──Variable: b |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|  
       type 'a t =
         | Int of int constraint 'a = int
@@ -2178,12 +2199,14 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr" (Type 12 (Var 12)))) |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type a = A;;
       type b = B;;
@@ -2198,13 +2221,15 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1" (Type 10 (Former (Constr () b))))
      ("Type_expr.decode type_expr2" (Type 6 (Former (Constr () a))))) |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t = 
         | Foo constraint 'a = int
@@ -2217,14 +2242,16 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types"
      ("Type_expr.decode type_expr1"
       (Type 19 (Former (Constr ((Type 18 (Var 18))) t))))
      ("Type_expr.decode type_expr2" (Type 17 (Former (Constr () int))))) |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t =
         | Int constraint 'a = int
@@ -2245,7 +2272,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -2405,8 +2433,9 @@ let%expect_test "" =
                                               └──Type expr: Constructor: int
                                               └──Desc: Constant: 1 |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t =
         | Int constraint 'a = int
@@ -2426,12 +2455,14 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr" (Type 40 (Var 40)))) |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t =
         | Int constraint 'a = int
@@ -2451,12 +2482,14 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Type escape it's equational scope"
      ("Type_expr.decode type_expr" (Type 50 (Var 50)))) |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t =
         | Int constraint 'a = int
@@ -2476,12 +2509,14 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     ("Cannot unify types" ("Type_expr.decode type_expr1" (Type 77 (Var 77)))
      ("Type_expr.decode type_expr2" (Type 50 (Former (Constr () int))))) |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t =
         | Int constraint 'a = int
@@ -2501,7 +2536,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -2675,8 +2711,9 @@ let%expect_test "" =
                                   └──Desc: Variable
                                      └──Variable: r |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t =
         | Int constraint 'a = int
@@ -2697,7 +2734,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -2852,8 +2890,9 @@ let%expect_test "" =
                                   └──Desc: Variable
                                      └──Variable: r |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t =
         | Int constraint 'a = int
@@ -2887,7 +2926,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -3201,8 +3241,9 @@ let%expect_test "" =
                                               └──Desc: Variable
                                                  └──Variable: r |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t = 
         | Int constraint 'a = int
@@ -3227,7 +3268,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type
@@ -3442,8 +3484,9 @@ let%expect_test "" =
                                         └──Desc: Variable
                                            └──Variable: r |}]
 
+
 let%expect_test "" =
-  let str = 
+  let str =
     {|
       type 'a t = 
         | Int of int constraint 'a = int
@@ -3464,7 +3507,8 @@ let%expect_test "" =
     |}
   in
   print_infer_result str;
-  [%expect {|
+  [%expect
+    {|
     Structure:
     └──Structure:
        └──Structure item: Type

@@ -14,11 +14,10 @@
 open! Import
 
 (** A substitution θ is a mapping from type variables to constraint variables.
-    
+
     During inference, a computation ['a Computation.t] must keep track of
     a local substitution between explicitly bound type variables and their
-    generated constraint variables. 
-*)
+    generated constraint variables. *)
 
 (** type [t] encodes a substitution θ. *)
 type t
