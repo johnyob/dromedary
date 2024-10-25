@@ -1,7 +1,6 @@
 # 🐪 Dromedary 
 > An experimental subset of OCaml, using constraint-based type inference!
 
-[![CircleCI](https://circleci.com/gh/johnyob/dromedary/tree/main.svg?style=svg)](https://circleci.com/gh/johnyob/dromedary/tree/main)
 [![Coverage Status](https://coveralls.io/repos/github/johnyob/dromedary/badge.svg?branch=main)](https://coveralls.io/github/johnyob/dromedary?branch=main)
 
 ## What is Dromedary?
