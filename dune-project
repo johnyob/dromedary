@@ -2,8 +2,6 @@
 
 (name dromedary)
 
-(generate_opam_files true)
-
 (license MIT)
 
 (maintainers "ajo41@cam.ac.uk")
