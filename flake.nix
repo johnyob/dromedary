@@ -31,6 +31,10 @@
           projectRootFile = "flake.nix";
 
           programs.alejandra.enable = true;
+          programs.ocamlformat = {
+            enable = true;
+            package = pkgs.ocamlformat_0_26_2;
+          };
 
           settings.global.excludes = ["result" ".direnv" "_build" "_coverage"];
         };
@@ -50,7 +54,7 @@
             # Formatters
             alejandra
             shellcheck
-            # ocamlformat
+            ocamlformat_0_26_2
 
             # OCaml devenv
             ocamlPackages.utop
@@ -58,6 +62,7 @@
             ocamlPackages.merlin
             ocamlPackages.merlin-lib
 
+            # Test dependencies
             graph-easy
           ];
         };
