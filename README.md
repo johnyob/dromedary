@@ -22,14 +22,6 @@ Dromedary implements *significantly* more features than the language presented i
 
 For a description of the thoery of these extensions in a constraint-based setting, see the [accompanying dissertation](dissertation/main.pdf). 
 
-## Installation
-
-Dromedary is written in OCaml. You'll need to install OCaml version 4.12.0 and `opam`. 
-Once installed, run these commands to get started!
-```
-make install
-make build
-```
 
 
 
